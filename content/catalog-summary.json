@@ -1,0 +1,49 @@
+{
+  "systems": [
+    {
+      "slug": "grab-go",
+      "title": "Grab & Go",
+      "item_count": 14
+    },
+    {
+      "slug": "ready-bag",
+      "title": "Ready Bag",
+      "item_count": 105
+    },
+    {
+      "slug": "vehicle-suitcase",
+      "title": "Vehicle & Suitcase",
+      "item_count": 47
+    },
+    {
+      "slug": "home-resilience",
+      "title": "Home Resilience",
+      "item_count": 45
+    },
+    {
+      "slug": "off-grid",
+      "title": "Off-Grid Systems",
+      "item_count": 20
+    },
+    {
+      "slug": "water-purification",
+      "title": "Water Purification",
+      "item_count": 18
+    },
+    {
+      "slug": "cooling-heat",
+      "title": "Cooling & Heat Resilience",
+      "item_count": 17
+    },
+    {
+      "slug": "battery-solar",
+      "title": "Home Battery & Solar",
+      "item_count": 16
+    },
+    {
+      "slug": "long-term-food",
+      "title": "Long-Term Food",
+      "item_count": 17
+    }
+  ]
+}

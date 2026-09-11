@@ -1,0 +1,16 @@
+project_id = "rhjarmxgglvwcxiwqcsq"
+
+[functions.create-paypal-order]
+verify_jwt = false
+
+[functions.capture-paypal-order]
+verify_jwt = false
+
+[functions.purchase-device-slot]
+verify_jwt = true
+
+[functions.upgrade-plan]
+verify_jwt = true
+
+[functions.subscribe-checklist]
+verify_jwt = false
