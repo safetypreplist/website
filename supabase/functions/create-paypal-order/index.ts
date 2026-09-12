@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
     if (isProbe) {
       amountCents = LAUNCH_PROBE_CENTS;
-      description = "Safety Prep List — $1 live checkout test";
+      description = "Safety Prep List — $0.50 live checkout test";
     }
 
     const value = dollarsFromCents(amountCents);

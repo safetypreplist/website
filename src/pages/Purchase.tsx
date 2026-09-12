@@ -121,7 +121,7 @@ export function CheckoutPage() {
           <p className="eyebrow">Your Plan</p>
           <h1>{title}</h1>
           <p className="muted">
-            {isProbe ? "One-time $1 charge to confirm live PayPal." : people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
+            {isProbe ? "One-time $0.50 charge to confirm live PayPal." : people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
           </p>
           {isProbe ? (
             <p className="checkout-rate">{money(LAUNCH_PROBE_CENTS)}</p>
@@ -171,7 +171,7 @@ export function CheckoutPage() {
           </p>
           <p className="muted">
             {isProbe
-              ? "This is a live $1 PayPal charge. Public pricing stays $11.99/month."
+              ? "This is a live $0.50 PayPal charge. Public pricing stays $11.99/month."
               : access === "annual"
               ? `Renews annually at ${money(breakdown.recurringCents)}.`
               : `Renews monthly at ${money(breakdown.recurringCents)}.`}
@@ -286,7 +286,7 @@ export function ThankYouPage() {
             : "Your personal Safety Prep Checklist is ready."}
           {vault ? " Survival Vault is included as a one-time add-on." : ""}{" "}
           {isProbe
-            ? "This $1 live PayPal test is complete. Create an account to open the checklists."
+            ? "This $0.50 live PayPal test is complete. Create an account to open the checklists."
             : access === "annual"
             ? `Renews annually at ${money(breakdown.recurringCents)}.`
             : `Renews monthly at ${money(breakdown.recurringCents)}.`}

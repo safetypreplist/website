@@ -34,4 +34,4 @@ export function parseCustomId(customId: string, fallbackSlug: string) {
 }
 
 export const LAUNCH_PROBE_TOKEN = "spl-dollar";
-export const LAUNCH_PROBE_CENTS = 100;
+export const LAUNCH_PROBE_CENTS = 50;
