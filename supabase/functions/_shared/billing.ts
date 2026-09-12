@@ -29,5 +29,9 @@ export function parseCustomId(customId: string, fallbackSlug: string) {
     quantity: Math.max(1, Number(qtyMatch?.[1] || 1) || 1),
     includeHousehold: /h=1/.test(customId),
     access: parseAccessInterval(accessMatch?.[1] || null),
+    probe: /p=1/.test(customId),
   };
 }
+
+export const LAUNCH_PROBE_TOKEN = "spl-dollar";
+export const LAUNCH_PROBE_CENTS = 100;

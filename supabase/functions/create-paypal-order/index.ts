@@ -1,5 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
-import { buildCustomId, parseAccessInterval } from "../_shared/billing.ts";
+import { buildCustomId, LAUNCH_PROBE_CENTS, LAUNCH_PROBE_TOKEN, parseAccessInterval } from "../_shared/billing.ts";
 import { dollarsFromCents, paypalFetch } from "../_shared/paypal.ts";
 import { productBySlug, requireUser } from "../_shared/supabase.ts";
 
@@ -11,9 +11,10 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const slug = String(body.productSlug || "");
-    const quantity = Math.max(1, Number(body.quantity || 1) || 1);
-    const includeHousehold = Boolean(body.includeHousehold);
-    const access = slug === "core" ? parseAccessInterval(body.accessInterval) : null;
+    const isProbe = body.probe === LAUNCH_PROBE_TOKEN && slug === "core";
+    const quantity = isProbe ? 1 : Math.max(1, Number(body.quantity || 1) || 1);
+    const includeHousehold = isProbe ? false : Boolean(body.includeHousehold);
+    const access = slug === "core" ? (isProbe ? "monthly" : parseAccessInterval(body.accessInterval)) : null;
     const allowedGuest = ["core"];
     const allowedAuth = ["upgrade_full", "core"];
 
@@ -52,15 +53,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (isProbe) {
+      amountCents = LAUNCH_PROBE_CENTS;
+      description = "Safety Prep List — $1 live checkout test";
+    }
+
     const value = dollarsFromCents(amountCents);
     const appUrl = Deno.env.get("APP_URL") || "http://localhost:5173";
-    const customId = buildCustomId({ slug, quantity, includeHousehold, access });
+    const customId = buildCustomId({ slug, quantity, includeHousehold, access }) + (isProbe ? "|p=1" : "");
     const plan = quantity > 1 ? "family" : String(body.plan || "individual");
     const thankYou = new URL("/thank-you", appUrl);
     thankYou.searchParams.set("plan", plan === "family" ? "family" : "individual");
     thankYou.searchParams.set("qty", String(quantity));
     thankYou.searchParams.set("vault", includeHousehold ? "1" : "0");
     thankYou.searchParams.set("access", access || "monthly");
+    if (isProbe) thankYou.searchParams.set("probe", LAUNCH_PROBE_TOKEN);
 
     const { ok, status, body: paypalBody } = await paypalFetch("/v2/checkout/orders", {
       method: "POST",

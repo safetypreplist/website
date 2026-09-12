@@ -11,6 +11,8 @@ import { isPaypalConfigured } from "../lib/paypal";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   ANNUAL_MONTHLY_EQUIVALENT_CENTS,
+  LAUNCH_PROBE_CENTS,
+  LAUNCH_PROBE_TOKEN,
   MONTHLY_CENTS,
   SURVIVAL_VAULT_CENTS,
   SURVIVAL_VAULT_DESCRIPTION,
@@ -53,18 +55,30 @@ export function CheckoutPage() {
   const { products } = useApp();
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const planKind = params.get("plan") === "family" ? "family" : "individual";
-  const people = planKind === "family"
+  const isProbe = params.get("probe") === LAUNCH_PROBE_TOKEN;
+  const planKind = isProbe ? "individual" : params.get("plan") === "family" ? "family" : "individual";
+  const people = isProbe ? 1 : planKind === "family"
     ? Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS)
     : 1;
-  const access: AccessInterval = params.get("access") === "annual" ? "annual" : "monthly";
-  const [vault, setVault] = useState(params.get("vault") === "1" || params.get("household") === "1");
+  const access: AccessInterval = isProbe ? "monthly" : params.get("access") === "annual" ? "annual" : "monthly";
+  const [vault, setVault] = useState(isProbe ? false : params.get("vault") === "1" || params.get("household") === "1");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
   const upgrade = products.find((p) => p.slug === "upgrade_full");
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
-  const breakdown = checkoutBreakdown(people, access, vault);
-  const title = planKind === "family" ? "Family Plan" : "Individual Plan";
+  const breakdown = isProbe
+    ? {
+        seats: 1,
+        subscriptionCents: LAUNCH_PROBE_CENTS,
+        vaultCents: 0,
+        dueTodayCents: LAUNCH_PROBE_CENTS,
+        recurringCents: MONTHLY_CENTS,
+        interval: "monthly" as const,
+        unitCents: LAUNCH_PROBE_CENTS,
+        monthlyEquivalentCents: LAUNCH_PROBE_CENTS,
+      }
+    : checkoutBreakdown(people, access, vault);
+  const title = isProbe ? "Live checkout test" : planKind === "family" ? "Family Plan" : "Individual Plan";
   const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
   const paypalReady = isPaypalConfigured();
 
@@ -74,7 +88,8 @@ export function CheckoutPage() {
     sessionStorage.setItem("spl.vault", vault ? "1" : "0");
     sessionStorage.setItem("spl.household", vault ? "1" : "0");
     sessionStorage.setItem("spl.access", access);
-  }, [planKind, people, vault, access]);
+    sessionStorage.setItem("spl.probe", isProbe ? LAUNCH_PROBE_TOKEN : "");
+  }, [planKind, people, vault, access, isProbe]);
 
   const onCaptured = useMemo(
     () => (result: { productCode: string; productType: string }) => {
@@ -84,9 +99,10 @@ export function CheckoutPage() {
       sessionStorage.setItem("spl.vault", vault ? "1" : "0");
       sessionStorage.setItem("spl.household", vault ? "1" : "0");
       sessionStorage.setItem("spl.access", access);
-      navigate(`/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}`);
+      sessionStorage.setItem("spl.probe", isProbe ? LAUNCH_PROBE_TOKEN : "");
+      navigate(`/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}${isProbe ? `&probe=${LAUNCH_PROBE_TOKEN}` : ""}`);
     },
-    [navigate, people, vault, planKind, access],
+    [navigate, people, vault, planKind, access, isProbe],
   );
 
   return (
@@ -105,9 +121,11 @@ export function CheckoutPage() {
           <p className="eyebrow">Your Plan</p>
           <h1>{title}</h1>
           <p className="muted">
-            {people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
+            {isProbe ? "One-time $1 charge to confirm live PayPal." : people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
           </p>
-          {access === "annual" ? (
+          {isProbe ? (
+            <p className="checkout-rate">{money(LAUNCH_PROBE_CENTS)}</p>
+          ) : access === "annual" ? (
             <>
               <p className="plan-line">{money(unit)}/person/month</p>
               <p className="checkout-rate">{money(breakdown.subscriptionCents)}/year</p>
@@ -120,6 +138,7 @@ export function CheckoutPage() {
           )}
         </section>
 
+        {!isProbe ? (
         <section className="checkout-step">
           <p className="eyebrow">Optional</p>
           <div className={`vault-add ${vault ? "added" : ""}`}>
@@ -135,6 +154,7 @@ export function CheckoutPage() {
             </button>
           </div>
         </section>
+        ) : null}
 
         <section className="checkout-step checkout-summary">
           {vault ? (
@@ -150,10 +170,12 @@ export function CheckoutPage() {
             <b>{money(breakdown.dueTodayCents)}</b>
           </p>
           <p className="muted">
-            {access === "annual"
+            {isProbe
+              ? "This is a live $1 PayPal charge. Public pricing stays $11.99/month."
+              : access === "annual"
               ? `Renews annually at ${money(breakdown.recurringCents)}.`
               : `Renews monthly at ${money(breakdown.recurringCents)}.`}
-            {vault ? " Survival Vault does not renew." : ""}
+            {!isProbe && vault ? " Survival Vault does not renew." : ""}
           </p>
         </section>
 
@@ -161,12 +183,13 @@ export function CheckoutPage() {
           <>
             {error && <p className="form-error">{error}</p>}
             <PayPalCheckout
-              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}`}
+              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${isProbe ? "probe" : "live"}`}
               productSlug="core"
               quantity={people}
               includeHousehold={vault}
               accessInterval={access}
               planKind={planKind}
+              probe={isProbe}
               onCaptured={onCaptured}
               onError={setError}
             />
@@ -207,8 +230,11 @@ export function ThankYouPage() {
     sessionStorage.getItem("spl.vault") === "1" ||
     sessionStorage.getItem("spl.household") === "1";
   const access = (params.get("access") || sessionStorage.getItem("spl.access") || "monthly") === "annual" ? "annual" : "monthly";
+  const isProbe = params.get("probe") === LAUNCH_PROBE_TOKEN || sessionStorage.getItem("spl.probe") === LAUNCH_PROBE_TOKEN;
   const [copied, setCopied] = useState(false);
-  const breakdown = checkoutBreakdown(plan === "family" ? qty : 1, access, vault);
+  const breakdown = isProbe
+    ? { dueTodayCents: LAUNCH_PROBE_CENTS, recurringCents: MONTHLY_CENTS }
+    : checkoutBreakdown(plan === "family" ? qty : 1, access, vault);
 
   useEffect(() => {
     if (code || !paypalToken || capturing.current) return;
@@ -220,13 +246,14 @@ export function ThankYouPage() {
       quantity: qty,
       includeHousehold: vault,
       accessInterval: access,
+      ...(isProbe ? { probe: LAUNCH_PROBE_TOKEN } : {}),
     })
       .then((captured) => {
         if (!captured?.productCode) throw new Error("No Product ID was returned.");
         sessionStorage.setItem("spl.productCode", captured.productCode);
         setCode(captured.productCode);
         navigate(
-          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}`,
+          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}${isProbe ? `&probe=${LAUNCH_PROBE_TOKEN}` : ""}`,
           { replace: true },
         );
       })
@@ -258,7 +285,9 @@ export function ThankYouPage() {
             ? `Your Family Plan includes ${qty} personal Safety Prep Checklists.`
             : "Your personal Safety Prep Checklist is ready."}
           {vault ? " Survival Vault is included as a one-time add-on." : ""}{" "}
-          {access === "annual"
+          {isProbe
+            ? "This $1 live PayPal test is complete. Create an account to open the checklists."
+            : access === "annual"
             ? `Renews annually at ${money(breakdown.recurringCents)}.`
             : `Renews monthly at ${money(breakdown.recurringCents)}.`}
         </p>
