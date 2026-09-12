@@ -13,11 +13,13 @@ function PasswordField({
   onChange,
   autoComplete,
   hint,
+  minLength,
 }: {
   value: string;
   onChange: (value: string) => void;
   autoComplete: string;
   hint?: string;
+  minLength?: number;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -27,7 +29,7 @@ function PasswordField({
         <input
           type={visible ? "text" : "password"}
           required
-          minLength={8}
+          minLength={minLength}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
@@ -164,6 +166,7 @@ export function UpdatePasswordPage() {
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
+          minLength={8}
           hint="At least 8 characters."
         />
         {error && <p className="form-error">{error}</p>}
@@ -237,6 +240,7 @@ export function CreateAccountPage() {
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
+          minLength={8}
           hint="At least 8 characters."
         />
         {error && <p className="form-error">{error}</p>}
