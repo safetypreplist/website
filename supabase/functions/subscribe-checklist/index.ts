@@ -32,7 +32,14 @@ Deno.serve(async (req) => {
     });
     return json({ ok: true });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error(err);
+    if (/unrecognised IP|unauthorized/i.test(message)) {
+      return json(
+        { error: "Could not join the mailing list right now. You can still download the checklist." },
+        503,
+      );
+    }
     return json({ error: "Could not join the list. Please try again." }, 502);
   }
 });
