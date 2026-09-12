@@ -3,22 +3,22 @@
     {
       "slug": "grab-go",
       "title": "Grab & Go Bag",
-      "item_count": 14
+      "item_count": 19
     },
     {
       "slug": "ready-bag",
       "title": "Ready Duffel",
-      "item_count": 105
+      "item_count": 107
     },
     {
       "slug": "vehicle-suitcase",
       "title": "Vehicle & Suitcase",
-      "item_count": 47
+      "item_count": 55
     },
     {
       "slug": "home-resilience",
       "title": "Home Resilience",
-      "item_count": 45
+      "item_count": 57
     },
     {
       "slug": "off-grid",
@@ -28,7 +28,7 @@
     {
       "slug": "water-purification",
       "title": "Water Purification",
-      "item_count": 18
+      "item_count": 19
     },
     {
       "slug": "cooling-heat",

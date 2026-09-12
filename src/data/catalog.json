@@ -146,7 +146,7 @@
       "system_id": "523ba31f-ac77-54e8-8bf0-516b17bd8235",
       "slug": "survival",
       "title": "Immediate Survival",
-      "intro": "One set per person.",
+      "intro": "One set per person, plus a compact kit for the bag.",
       "sort_order": 50
     },
     {
@@ -154,7 +154,7 @@
       "system_id": "f13edaad-1f96-5514-b93a-469e88263b5b",
       "slug": "documents",
       "title": "Documents",
-      "intro": "Store originals in a fireproof, waterproof safe. Carry copies in the bag.",
+      "intro": "Store originals in a fireproof, waterproof safe. Carry copies of IDs, insurance, and vital records. Keep financial numbers and credentials in encrypted storage \u2014 never written plainly in the bag.",
       "sort_order": 0
     },
     {
@@ -186,8 +186,16 @@
       "system_id": "f13edaad-1f96-5514-b93a-469e88263b5b",
       "slug": "communications",
       "title": "Communications",
-      "intro": "Stay informed when networks are strained.",
+      "intro": "Stay informed when networks are strained. One emergency radio is enough.",
       "sort_order": 40
+    },
+    {
+      "id": "cff81dac-b0c4-5d63-905e-9c51a9ac3d34",
+      "system_id": "f13edaad-1f96-5514-b93a-469e88263b5b",
+      "slug": "tools-shelter",
+      "title": "Tools & Shelter",
+      "intro": "Ready.gov basics that sit beside clothing and communications.",
+      "sort_order": 50
     },
     {
       "id": "577058c7-22d0-5aa4-aba6-c3b3b0e0b678",
@@ -195,7 +203,7 @@
       "slug": "food-water",
       "title": "Food & Water",
       "intro": "Aim for 2,000 calories per person per day for 3 days. No-cook foods first.",
-      "sort_order": 50
+      "sort_order": 60
     },
     {
       "id": "bffdab8d-abc9-51d1-b567-68446396347f",
@@ -254,12 +262,20 @@
       "sort_order": 60
     },
     {
+      "id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "system_id": "f159213a-8875-5e4a-ab60-c57b7e0d39e3",
+      "slug": "plan",
+      "title": "Emergency Plan",
+      "intro": "Decisions to make before an emergency \u2014 then practice them.",
+      "sort_order": 0
+    },
+    {
       "id": "041f9e2b-7939-577c-93eb-6a1ec112ff33",
       "system_id": "f159213a-8875-5e4a-ab60-c57b7e0d39e3",
       "slug": "detection",
       "title": "Safety & Detection",
       "intro": "Test monthly. Replace batteries on a schedule.",
-      "sort_order": 0
+      "sort_order": 10
     },
     {
       "id": "fd7241a0-46c0-5356-810b-cbcb1daf5130",
@@ -267,7 +283,7 @@
       "slug": "utilities",
       "title": "Utility Management",
       "intro": "",
-      "sort_order": 10
+      "sort_order": 20
     },
     {
       "id": "8f3e365c-adec-5a77-abfe-b1a117d7a36a",
@@ -275,7 +291,7 @@
       "slug": "lighting",
       "title": "Lighting & Power",
       "intro": "",
-      "sort_order": 20
+      "sort_order": 30
     },
     {
       "id": "532edb11-457b-5d60-8856-d946d0d79fe2",
@@ -283,7 +299,7 @@
       "slug": "water",
       "title": "Water",
       "intro": "",
-      "sort_order": 30
+      "sort_order": 40
     },
     {
       "id": "4a2e6e87-7c74-5aec-8021-a40feeefecc5",
@@ -291,7 +307,7 @@
       "slug": "food",
       "title": "Food Stores",
       "intro": "",
-      "sort_order": 40
+      "sort_order": 50
     },
     {
       "id": "e826888e-bbc5-5329-b802-1ee7b5f49243",
@@ -299,7 +315,7 @@
       "slug": "communications",
       "title": "Communications",
       "intro": "",
-      "sort_order": 50
+      "sort_order": 60
     },
     {
       "id": "c9ef5f63-d5e4-59bb-884e-d2b647a1abdb",
@@ -307,7 +323,7 @@
       "slug": "home-readiness",
       "title": "Home Readiness",
       "intro": "",
-      "sort_order": 60
+      "sort_order": 70
     },
     {
       "id": "ffdcaba5-b215-5fd9-8013-923f896c3f39",
@@ -315,7 +331,7 @@
       "slug": "skills",
       "title": "Skills Checklist",
       "intro": "",
-      "sort_order": 70
+      "sort_order": 80
     },
     {
       "id": "84945035-324b-5c7f-826b-6f46af6be8ed",
@@ -338,7 +354,7 @@
       "system_id": "1a6728d3-5483-5d81-b2b8-03c67ecfad59",
       "slug": "cooking",
       "title": "Alternative Cooking",
-      "intro": "",
+      "intro": "Fuel-burning camping equipment can cause fatal carbon monoxide poisoning indoors. Use it outdoors only \u2014 never in homes, garages, or other enclosed spaces.",
       "sort_order": 20
     },
     {
@@ -606,6 +622,51 @@
       "active": true
     },
     {
+      "id": "b03e4cf9-77b6-5b76-aa56-607988603a00",
+      "section_id": "7ec90e59-b784-5608-b794-a488b7afa84f",
+      "permanent_key": "grab.survival.first-aid",
+      "text": "Small first-aid kit",
+      "description": "One compact kit for the bag.",
+      "sort_order": 20,
+      "active": true
+    },
+    {
+      "id": "63f13ef7-ad1f-50ee-b732-c20f06603795",
+      "section_id": "7ec90e59-b784-5608-b794-a488b7afa84f",
+      "permanent_key": "grab.survival.masks",
+      "text": "N95 or dust masks",
+      "description": "One per person.",
+      "sort_order": 30,
+      "active": true
+    },
+    {
+      "id": "b3c06e2a-6c08-52d4-97e7-151ff0782dc3",
+      "section_id": "7ec90e59-b784-5608-b794-a488b7afa84f",
+      "permanent_key": "grab.survival.whistle",
+      "text": "Whistle",
+      "description": "One per person.",
+      "sort_order": 40,
+      "active": true
+    },
+    {
+      "id": "528dd5a9-b293-5569-897c-3aa61aac80b8",
+      "section_id": "7ec90e59-b784-5608-b794-a488b7afa84f",
+      "permanent_key": "grab.survival.blanket",
+      "text": "Emergency blanket",
+      "description": "One per person.",
+      "sort_order": 50,
+      "active": true
+    },
+    {
+      "id": "2bc4ca64-dcc1-5506-acd3-7c1889e049e4",
+      "section_id": "7ec90e59-b784-5608-b794-a488b7afa84f",
+      "permanent_key": "grab.survival.snack",
+      "text": "One high-calorie snack per person",
+      "description": "",
+      "sort_order": 60,
+      "active": true
+    },
+    {
       "id": "e9d7b81e-03dc-5dc2-a976-9545c71e1b18",
       "section_id": "1f38859b-7e3e-5060-962d-04911d22f10e",
       "permanent_key": "ready.documents.passport",
@@ -627,8 +688,8 @@
       "id": "ae595685-2dc0-5e19-a791-5cb84b9e3342",
       "section_id": "1f38859b-7e3e-5060-962d-04911d22f10e",
       "permanent_key": "ready.documents.ssn",
-      "text": "Social Security card copies",
-      "description": "",
+      "text": "Secure copy of Social Security information",
+      "description": "Encrypted digital copy or a locked original at home. Do not carry an exposed Social Security card in the bag.",
       "sort_order": 20,
       "active": true
     },
@@ -717,18 +778,9 @@
       "id": "1b02c147-065d-57d5-a191-77a0eddf819d",
       "section_id": "1f38859b-7e3e-5060-962d-04911d22f10e",
       "permanent_key": "ready.documents.bank",
-      "text": "Bank account information",
-      "description": "Account numbers and bank contact info.",
+      "text": "Secure copies or encrypted records of critical financial and identity information",
+      "description": "Bank contacts and encrypted records only. Do not write passwords, PINs, or full account numbers on paper in the bag.",
       "sort_order": 120,
-      "active": true
-    },
-    {
-      "id": "26bb4663-188b-53af-af68-81cd2f039800",
-      "section_id": "1f38859b-7e3e-5060-962d-04911d22f10e",
-      "permanent_key": "ready.documents.credit",
-      "text": "Credit card information",
-      "description": "Emergency contact numbers for banks.",
-      "sort_order": 130,
       "active": true
     },
     {
@@ -737,7 +789,7 @@
       "permanent_key": "ready.documents.cash",
       "text": "Small-bill cash ($100\u2013$300 per household)",
       "description": "",
-      "sort_order": 140,
+      "sort_order": 130,
       "active": true
     },
     {
@@ -746,7 +798,7 @@
       "permanent_key": "ready.documents.emergency-sheet",
       "text": "Laminated emergency contact sheet",
       "description": "Include out-of-state contacts.",
-      "sort_order": 150,
+      "sort_order": 140,
       "active": true
     },
     {
@@ -755,25 +807,16 @@
       "permanent_key": "ready.documents.phone-list",
       "text": "Important phone numbers",
       "description": "Doctors, veterinarians, schools, employers.",
-      "sort_order": 160,
+      "sort_order": 150,
       "active": true
     },
     {
       "id": "2b249285-82fe-5088-b33a-2a05c37f2cd0",
       "section_id": "1f38859b-7e3e-5060-962d-04911d22f10e",
       "permanent_key": "ready.documents.usb",
-      "text": "Encrypted USB drive",
-      "description": "Scanned copies of vital documents.",
-      "sort_order": 170,
-      "active": true
-    },
-    {
-      "id": "3ee835c4-33db-5277-902d-31ed0c951c6f",
-      "section_id": "1f38859b-7e3e-5060-962d-04911d22f10e",
-      "permanent_key": "ready.documents.cloud",
-      "text": "Cloud storage access details",
-      "description": "",
-      "sort_order": 180,
+      "text": "Encrypted USB drive of vital documents",
+      "description": "Scanned IDs and insurance. Never store passwords in plain text.",
+      "sort_order": 160,
       "active": true
     },
     {
@@ -1236,12 +1279,21 @@
       "active": true
     },
     {
+      "id": "62ecbc57-22c0-5ee9-8dde-93421cbd8e3a",
+      "section_id": "9a6525a1-48ee-565e-b715-bd2325416ee8",
+      "permanent_key": "ready.medical.reference",
+      "text": "Compact first-aid reference card or booklet",
+      "description": "",
+      "sort_order": 210,
+      "active": true
+    },
+    {
       "id": "efe9027f-efb1-51cf-9eda-907d448cc813",
       "section_id": "9a6525a1-48ee-565e-b715-bd2325416ee8",
       "permanent_key": "ready.medical.prescriptions",
       "text": "Prescription medications (7\u201330 day supply)",
       "description": "",
-      "sort_order": 210,
+      "sort_order": 220,
       "active": true
     },
     {
@@ -1250,34 +1302,16 @@
       "permanent_key": "ready.medical.devices",
       "text": "Personal medical devices",
       "description": "Glucose meter, BP cuff, spare glasses.",
-      "sort_order": 220,
+      "sort_order": 230,
       "active": true
     },
     {
       "id": "973e1117-f393-517f-a662-2adb2db64d49",
       "section_id": "595b6488-fab8-5b1c-99a6-1541a5fcb95e",
       "permanent_key": "ready.comms.noaa",
-      "text": "NOAA weather radio",
-      "description": "Battery-powered or hand-crank.",
+      "text": "Battery-powered or hand-crank NOAA/AM/FM emergency radio",
+      "description": "",
       "sort_order": 0,
-      "active": true
-    },
-    {
-      "id": "ddb05c55-c1e7-5f4f-9a92-70dc0f2bdcc8",
-      "section_id": "595b6488-fab8-5b1c-99a6-1541a5fcb95e",
-      "permanent_key": "ready.comms.amfm",
-      "text": "Portable AM/FM radio",
-      "description": "",
-      "sort_order": 10,
-      "active": true
-    },
-    {
-      "id": "5bea924a-4335-5302-9921-613111d26828",
-      "section_id": "595b6488-fab8-5b1c-99a6-1541a5fcb95e",
-      "permanent_key": "ready.comms.hand-crank",
-      "text": "Hand-crank or solar-powered radio backup",
-      "description": "",
-      "sort_order": 20,
       "active": true
     },
     {
@@ -1286,7 +1320,7 @@
       "permanent_key": "ready.comms.powerbanks",
       "text": "Portable power banks (10,000 mAh+)",
       "description": "",
-      "sort_order": 30,
+      "sort_order": 10,
       "active": true
     },
     {
@@ -1295,7 +1329,7 @@
       "permanent_key": "ready.comms.cables",
       "text": "Charging cables for all phones and devices",
       "description": "",
-      "sort_order": 40,
+      "sort_order": 20,
       "active": true
     },
     {
@@ -1304,7 +1338,7 @@
       "permanent_key": "ready.comms.solar",
       "text": "Solar charger",
       "description": "",
-      "sort_order": 50,
+      "sort_order": 30,
       "active": true
     },
     {
@@ -1313,7 +1347,7 @@
       "permanent_key": "ready.comms.batteries",
       "text": "Extra batteries (AA, AAA, D, 9V)",
       "description": "",
-      "sort_order": 60,
+      "sort_order": 40,
       "active": true
     },
     {
@@ -1322,7 +1356,7 @@
       "permanent_key": "ready.comms.whistle",
       "text": "Whistle (1 per person)",
       "description": "",
-      "sort_order": 70,
+      "sort_order": 50,
       "active": true
     },
     {
@@ -1331,7 +1365,7 @@
       "permanent_key": "ready.comms.signal-mirror",
       "text": "Signal mirror",
       "description": "",
-      "sort_order": 80,
+      "sort_order": 60,
       "active": true
     },
     {
@@ -1340,7 +1374,7 @@
       "permanent_key": "ready.comms.maps",
       "text": "Physical local and regional maps",
       "description": "",
-      "sort_order": 90,
+      "sort_order": 70,
       "active": true
     },
     {
@@ -1349,7 +1383,7 @@
       "permanent_key": "ready.comms.compass",
       "text": "Compass",
       "description": "",
-      "sort_order": 100,
+      "sort_order": 80,
       "active": true
     },
     {
@@ -1358,7 +1392,7 @@
       "permanent_key": "ready.comms.meeting-points",
       "text": "Family meeting points written down",
       "description": "Local and out-of-area.",
-      "sort_order": 110,
+      "sort_order": 90,
       "active": true
     },
     {
@@ -1367,7 +1401,7 @@
       "permanent_key": "ready.comms.out-of-state",
       "text": "Out-of-state check-in contact",
       "description": "",
-      "sort_order": 120,
+      "sort_order": 100,
       "active": true
     },
     {
@@ -1376,7 +1410,52 @@
       "permanent_key": "ready.comms.written-numbers",
       "text": "Laminated list of important phone numbers",
       "description": "",
-      "sort_order": 130,
+      "sort_order": 110,
+      "active": true
+    },
+    {
+      "id": "e699e90a-a1d1-51dd-a92e-2b8fa5745d6b",
+      "section_id": "cff81dac-b0c4-5d63-905e-9c51a9ac3d34",
+      "permanent_key": "ready.tools.masks",
+      "text": "N95 or dust masks",
+      "description": "One per person.",
+      "sort_order": 0,
+      "active": true
+    },
+    {
+      "id": "16ef9322-4d50-54e8-a26b-1660c42b5189",
+      "section_id": "cff81dac-b0c4-5d63-905e-9c51a9ac3d34",
+      "permanent_key": "ready.tools.blankets",
+      "text": "Emergency blankets",
+      "description": "One per person.",
+      "sort_order": 10,
+      "active": true
+    },
+    {
+      "id": "867aba64-c63b-587e-b037-1567ec43a885",
+      "section_id": "cff81dac-b0c4-5d63-905e-9c51a9ac3d34",
+      "permanent_key": "ready.tools.bags",
+      "text": "Heavy-duty garbage bags and plastic ties",
+      "description": "",
+      "sort_order": 20,
+      "active": true
+    },
+    {
+      "id": "e6f9e7ce-9a20-5206-b531-f3da3203f344",
+      "section_id": "cff81dac-b0c4-5d63-905e-9c51a9ac3d34",
+      "permanent_key": "ready.tools.multitool",
+      "text": "Multipurpose tool",
+      "description": "Wrench/pliers or a sturdy multitool.",
+      "sort_order": 30,
+      "active": true
+    },
+    {
+      "id": "b29e2e82-02bd-5b43-81b7-30208708afd4",
+      "section_id": "cff81dac-b0c4-5d63-905e-9c51a9ac3d34",
+      "permanent_key": "ready.tools.notebook",
+      "text": "Small notebook and permanent marker",
+      "description": "",
+      "sort_order": 40,
       "active": true
     },
     {
@@ -1560,12 +1639,57 @@
       "active": true
     },
     {
+      "id": "ddd931e6-839a-51f6-91d1-c48fa36e3cfe",
+      "section_id": "bffdab8d-abc9-51d1-b567-68446396347f",
+      "permanent_key": "vehicle.safety.spare-tire",
+      "text": "Spare tire or tire-repair provisions appropriate to the vehicle",
+      "description": "",
+      "sort_order": 10,
+      "active": true
+    },
+    {
+      "id": "cd721458-a853-513f-b825-6bea975a3998",
+      "section_id": "bffdab8d-abc9-51d1-b567-68446396347f",
+      "permanent_key": "vehicle.safety.jack",
+      "text": "Jack",
+      "description": "",
+      "sort_order": 20,
+      "active": true
+    },
+    {
+      "id": "1a3418c6-9c01-566c-ba5a-12e3ffcf630d",
+      "section_id": "bffdab8d-abc9-51d1-b567-68446396347f",
+      "permanent_key": "vehicle.safety.lug-wrench",
+      "text": "Lug wrench",
+      "description": "",
+      "sort_order": 30,
+      "active": true
+    },
+    {
+      "id": "da426cc9-9c29-5925-afbb-182f290b7d11",
+      "section_id": "bffdab8d-abc9-51d1-b567-68446396347f",
+      "permanent_key": "vehicle.safety.gauge",
+      "text": "Tire-pressure gauge",
+      "description": "",
+      "sort_order": 40,
+      "active": true
+    },
+    {
       "id": "9ee6827d-91c1-595e-b9ad-75b9439a5331",
       "section_id": "bffdab8d-abc9-51d1-b567-68446396347f",
       "permanent_key": "vehicle.safety.tire-inflator",
       "text": "12V tire inflator and plug kit",
       "description": "",
-      "sort_order": 10,
+      "sort_order": 50,
+      "active": true
+    },
+    {
+      "id": "6dd3245d-393d-5e6c-b7b8-7a5d985400d3",
+      "section_id": "bffdab8d-abc9-51d1-b567-68446396347f",
+      "permanent_key": "vehicle.safety.washer-fluid",
+      "text": "Windshield washer fluid",
+      "description": "",
+      "sort_order": 60,
       "active": true
     },
     {
@@ -1574,7 +1698,7 @@
       "permanent_key": "vehicle.safety.tool-kit",
       "text": "Basic tool kit",
       "description": "",
-      "sort_order": 20,
+      "sort_order": 70,
       "active": true
     },
     {
@@ -1583,7 +1707,7 @@
       "permanent_key": "vehicle.safety.tow-strap",
       "text": "Tow strap rated for your vehicle",
       "description": "",
-      "sort_order": 30,
+      "sort_order": 80,
       "active": true
     },
     {
@@ -1592,7 +1716,7 @@
       "permanent_key": "vehicle.safety.tape",
       "text": "Duct tape or electrical tape",
       "description": "",
-      "sort_order": 40,
+      "sort_order": 90,
       "active": true
     },
     {
@@ -1601,16 +1725,25 @@
       "permanent_key": "vehicle.safety.fuses",
       "text": "Spare fuses",
       "description": "",
-      "sort_order": 50,
+      "sort_order": 100,
+      "active": true
+    },
+    {
+      "id": "d60de04d-4b0b-5f7c-a201-114b1d3f0c95",
+      "section_id": "cf72826d-ed96-5131-9f4e-1d65f9d31344",
+      "permanent_key": "vehicle.visibility.triangles",
+      "text": "Reflective triangles",
+      "description": "Primary visibility item.",
+      "sort_order": 0,
       "active": true
     },
     {
       "id": "656ecb48-c822-5ff2-b012-b91bbffb3d4d",
       "section_id": "cf72826d-ed96-5131-9f4e-1d65f9d31344",
       "permanent_key": "vehicle.visibility.flares",
-      "text": "Road flares or reflective triangles",
-      "description": "",
-      "sort_order": 0,
+      "text": "Road flares (optional)",
+      "description": "Skip these if an open flame is not appropriate.",
+      "sort_order": 10,
       "active": true
     },
     {
@@ -1619,7 +1752,7 @@
       "permanent_key": "vehicle.visibility.vest",
       "text": "Reflective safety vest",
       "description": "",
-      "sort_order": 10,
+      "sort_order": 20,
       "active": true
     },
     {
@@ -1628,7 +1761,7 @@
       "permanent_key": "vehicle.visibility.extinguisher",
       "text": "ABC-rated automotive fire extinguisher",
       "description": "",
-      "sort_order": 20,
+      "sort_order": 30,
       "active": true
     },
     {
@@ -1637,7 +1770,7 @@
       "permanent_key": "vehicle.visibility.window-tool",
       "text": "Seat belt cutter and window breaker",
       "description": "",
-      "sort_order": 30,
+      "sort_order": 40,
       "active": true
     },
     {
@@ -1875,6 +2008,24 @@
       "active": true
     },
     {
+      "id": "fb23e3a6-13cb-5889-afd1-cf6c05217f37",
+      "section_id": "d0b58985-3be2-5ad1-8c06-59f2771d1aea",
+      "permanent_key": "vehicle.pets.microchip",
+      "text": "Verify microchip registration and contact information is current",
+      "description": "",
+      "sort_order": 60,
+      "active": true
+    },
+    {
+      "id": "0faa34d8-b3ef-5bf0-bd35-aad856f69f62",
+      "section_id": "d0b58985-3be2-5ad1-8c06-59f2771d1aea",
+      "permanent_key": "vehicle.pets.shelter",
+      "text": "Pet-friendly evacuation or shelter location identified",
+      "description": "",
+      "sort_order": 70,
+      "active": true
+    },
+    {
       "id": "b21406dd-bb68-5286-9f7a-08a3df4a6476",
       "section_id": "5bd4173c-481c-5a46-841e-d6d7af049422",
       "permanent_key": "vehicle.babies.diapers",
@@ -1974,10 +2125,100 @@
       "active": true
     },
     {
+      "id": "30e39b50-bda6-5f4f-a7f3-6c176efdc4e6",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.evacuate",
+      "text": "Know where you will evacuate",
+      "description": "",
+      "sort_order": 0,
+      "active": true
+    },
+    {
+      "id": "30b6052c-cf9b-595d-a49b-f5df7c808ef9",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.routes",
+      "text": "Know two routes out of your neighborhood",
+      "description": "",
+      "sort_order": 10,
+      "active": true
+    },
+    {
+      "id": "0cb23ca2-806e-5940-997a-93fb3cc4585a",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.centers",
+      "text": "Identify local shelter, cooling, and warming options",
+      "description": "",
+      "sort_order": 20,
+      "active": true
+    },
+    {
+      "id": "449d2d5e-12e2-5b42-ad0f-8e6363f6e410",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.children",
+      "text": "Decide who picks up children if the household is separated",
+      "description": "",
+      "sort_order": 30,
+      "active": true
+    },
+    {
+      "id": "e7d1da2a-ba98-5213-9ef1-705d901da944",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.out-of-area",
+      "text": "Choose an out-of-area contact",
+      "description": "",
+      "sort_order": 40,
+      "active": true
+    },
+    {
+      "id": "e2b32bcc-cebf-5d86-a115-c6a73e0bab73",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.pets",
+      "text": "Know how you will transport pets",
+      "description": "",
+      "sort_order": 50,
+      "active": true
+    },
+    {
+      "id": "43594f67-00a6-5478-be6b-73edd2ae3c73",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.assist",
+      "text": "Decide how you will help household members who need mobility or medical support",
+      "description": "",
+      "sort_order": 60,
+      "active": true
+    },
+    {
+      "id": "6128f309-27c4-5e3f-a4a5-4e16e8c605ad",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.alerts",
+      "text": "Download and enable emergency alerts",
+      "description": "",
+      "sort_order": 70,
+      "active": true
+    },
+    {
+      "id": "1a4b9906-75d7-5769-ad1d-78d63f0ac01f",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.practice",
+      "text": "Practice the plan",
+      "description": "",
+      "sort_order": 80,
+      "active": true
+    },
+    {
+      "id": "ee227175-555d-58a3-a710-ae298748b046",
+      "section_id": "2b0fdbcc-2426-5f71-8021-7e2cccf26409",
+      "permanent_key": "home.plan.review",
+      "text": "Review the plan twice a year",
+      "description": "",
+      "sort_order": 90,
+      "active": true
+    },
+    {
       "id": "7a3ed4d5-37d5-529b-a377-ce1973e9b0f4",
       "section_id": "041f9e2b-7939-577c-93eb-6a1ec112ff33",
       "permanent_key": "home.safety.smoke",
-      "text": "Smoke detectors on each floor and sleeping area",
+      "text": "Working smoke alarms inside every bedroom, outside each sleeping area, and on every level of the home",
       "description": "",
       "sort_order": 0,
       "active": true
@@ -1986,7 +2227,7 @@
       "id": "64c1f651-a739-5dbb-b17d-79bf1397e916",
       "section_id": "041f9e2b-7939-577c-93eb-6a1ec112ff33",
       "permanent_key": "home.safety.co",
-      "text": "Carbon monoxide detectors near sleeping areas",
+      "text": "CO alarms outside each separate sleeping area and on every level",
       "description": "",
       "sort_order": 10,
       "active": true
@@ -2010,12 +2251,21 @@
       "active": true
     },
     {
+      "id": "34d5052f-172d-5268-b04f-8699b0f17530",
+      "section_id": "041f9e2b-7939-577c-93eb-6a1ec112ff33",
+      "permanent_key": "home.safety.ladder",
+      "text": "Escape ladder where upper-story bedrooms need a secondary exit",
+      "description": "",
+      "sort_order": 40,
+      "active": true
+    },
+    {
       "id": "587e83c0-ad94-544b-8879-3bbfb6de3ddd",
       "section_id": "041f9e2b-7939-577c-93eb-6a1ec112ff33",
       "permanent_key": "home.safety.meeting",
       "text": "Household meeting place posted inside the home",
       "description": "",
-      "sort_order": 40,
+      "sort_order": 50,
       "active": true
     },
     {
@@ -2049,8 +2299,8 @@
       "id": "ef88dc97-f1f7-5693-a014-ef351561095a",
       "section_id": "fd7241a0-46c0-5356-810b-cbcb1daf5130",
       "permanent_key": "home.utilities.practice",
-      "text": "Practice shutting off water, gas, and power",
-      "description": "",
+      "text": "Know and practice the procedure for utility shutoffs; do not actually shut off natural gas for practice",
+      "description": "If gas is shut off, a qualified professional should restore service.",
       "sort_order": 30,
       "active": true
     },
@@ -2100,12 +2350,21 @@
       "active": true
     },
     {
+      "id": "14c1077a-fe76-5571-a776-fdc51099e8a5",
+      "section_id": "8f3e365c-adec-5a77-abfe-b1a117d7a36a",
+      "permanent_key": "home.power.thermometers",
+      "text": "Refrigerator and freezer appliance thermometers",
+      "description": "So you can tell if food stayed safe during an outage.",
+      "sort_order": 50,
+      "active": true
+    },
+    {
       "id": "7a158dd8-ea90-526f-9e46-faf66144f311",
       "section_id": "8f3e365c-adec-5a77-abfe-b1a117d7a36a",
       "permanent_key": "home.power.generator-plan",
-      "text": "Generator plan if you own one",
-      "description": "Never run indoors. Know fuel storage rules.",
-      "sort_order": 50,
+      "text": "Portable generators outdoors only, at least 20 feet from windows, doors, and vents",
+      "description": "Use outdoor-rated extension cords and working CO alarms. Never run a generator indoors or in a garage.",
+      "sort_order": 60,
       "active": true
     },
     {
@@ -2113,7 +2372,7 @@
       "section_id": "532edb11-457b-5d60-8856-d946d0d79fe2",
       "permanent_key": "home.water.storage",
       "text": "Stored water: 1 gallon per person per day, 14 days",
-      "description": "",
+      "description": "Hotter climates and some households need more. Commercially bottled water is the easiest reserve when practical.",
       "sort_order": 0,
       "active": true
     },
@@ -2346,7 +2605,7 @@
       "id": "58eb4465-eae4-5f4d-9034-106e47c5c4bf",
       "section_id": "ffdcaba5-b215-5fd9-8013-923f896c3f39",
       "permanent_key": "home.skills.shutoffs",
-      "text": "Adults can locate and operate utility shutoffs",
+      "text": "Adults can locate utility shutoffs and demonstrate the procedure without actually shutting off natural gas",
       "description": "",
       "sort_order": 20,
       "active": true
@@ -2473,7 +2732,7 @@
       "section_id": "3f58ffbd-3417-5597-a8f6-db725a0a25f6",
       "permanent_key": "offgrid.cooking.outdoor",
       "text": "Outdoor-only cooking method identified",
-      "description": "",
+      "description": "Never use fuel-burning camping stoves, grills, or generators inside a home, garage, or enclosed space.",
       "sort_order": 0,
       "active": true
     },
@@ -2500,7 +2759,7 @@
       "section_id": "3f58ffbd-3417-5597-a8f6-db725a0a25f6",
       "permanent_key": "offgrid.cooking.ventilation",
       "text": "Ventilation and carbon monoxide awareness",
-      "description": "",
+      "description": "Working CO alarms. Any combustion stays outdoors.",
       "sort_order": 30,
       "active": true
     },
@@ -2559,12 +2818,21 @@
       "active": true
     },
     {
+      "id": "4fa5fdad-e6df-567a-bf4e-0481b761b1e1",
+      "section_id": "6815d541-82d5-5f0d-860f-2a0a8af4b078",
+      "permanent_key": "water.storage.bottled",
+      "text": "Commercially bottled water is the preferred emergency drinking-water reserve when practical",
+      "description": "",
+      "sort_order": 0,
+      "active": true
+    },
+    {
       "id": "0a8ccac2-920b-5bd7-acd4-985fd00b16ba",
       "section_id": "6815d541-82d5-5f0d-860f-2a0a8af4b078",
       "permanent_key": "water.storage.volume",
       "text": "Calculate household gallons for 14 days",
-      "description": "",
-      "sort_order": 0,
+      "description": "At least one gallon per person per day. Hotter climates and some households need more.",
+      "sort_order": 10,
       "active": true
     },
     {
@@ -2573,7 +2841,7 @@
       "permanent_key": "water.storage.containers",
       "text": "Food-grade containers only",
       "description": "",
-      "sort_order": 10,
+      "sort_order": 20,
       "active": true
     },
     {
@@ -2582,7 +2850,7 @@
       "permanent_key": "water.storage.cool-dark",
       "text": "Store in a cool, dark place off concrete when possible",
       "description": "",
-      "sort_order": 20,
+      "sort_order": 30,
       "active": true
     },
     {
@@ -2591,7 +2859,7 @@
       "permanent_key": "water.storage.date",
       "text": "Date every container",
       "description": "",
-      "sort_order": 30,
+      "sort_order": 40,
       "active": true
     },
     {
@@ -2600,7 +2868,7 @@
       "permanent_key": "water.storage.spigot",
       "text": "A way to dispense without contaminating the supply",
       "description": "",
-      "sort_order": 40,
+      "sort_order": 50,
       "active": true
     },
     {
@@ -2724,8 +2992,8 @@
       "id": "b306315b-e2c4-5457-b942-05b9aa710b01",
       "section_id": "321761d8-dfc8-5efa-975c-9b1032387e1a",
       "permanent_key": "climate.cool.fan",
-      "text": "Battery or USB fan for a single sleep space",
-      "description": "",
+      "text": "Battery/USB fan when indoor conditions are safe for fan use",
+      "description": "Use when indoor temperatures are below 90\u00b0F. Above that, a fan can raise body temperature. Have an air-conditioned relocation or cooling-center plan for extreme heat.",
       "sort_order": 0,
       "active": true
     },
@@ -2814,7 +3082,7 @@
       "id": "2e2ae6e3-fc48-5f1c-a312-badb974b9d3e",
       "section_id": "becbc5c2-53ee-5a33-b050-dd0f1e6a6b23",
       "permanent_key": "climate.blackout.fridge",
-      "text": "Fridge/freezer: keep closed; freeze water bottles",
+      "text": "Fridge/freezer: keep closed; freeze water bottles; use appliance thermometers",
       "description": "",
       "sort_order": 10,
       "active": true

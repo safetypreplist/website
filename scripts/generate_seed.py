@@ -81,10 +81,15 @@ SYSTEMS = [
             {
                 "slug": "survival",
                 "title": "Immediate Survival",
-                "intro": "One set per person.",
+                "intro": "One set per person, plus a compact kit for the bag.",
                 "items": [
                     item("grab.survival.water", "Water bottle (16–20 oz per person)"),
                     item("grab.survival.flashlight", "Compact flashlight", "Fresh batteries or a hand-crank option."),
+                    item("grab.survival.first-aid", "Small first-aid kit", "One compact kit for the bag."),
+                    item("grab.survival.masks", "N95 or dust masks", "One per person."),
+                    item("grab.survival.whistle", "Whistle", "One per person."),
+                    item("grab.survival.blanket", "Emergency blanket", "One per person."),
+                    item("grab.survival.snack", "One high-calorie snack per person"),
                 ],
             },
         ],
@@ -101,11 +106,11 @@ SYSTEMS = [
             {
                 "slug": "documents",
                 "title": "Documents",
-                "intro": "Store originals in a fireproof, waterproof safe. Carry copies in the bag.",
+                "intro": "Store originals in a fireproof, waterproof safe. Carry copies of IDs, insurance, and vital records. Keep financial numbers and credentials in encrypted storage — never written plainly in the bag.",
                 "items": [
                     item("ready.documents.passport", "Passport copies (current, 1 per family member)"),
                     item("ready.documents.state-id", "Driver's license / state ID copies"),
-                    item("ready.documents.ssn", "Social Security card copies"),
+                    item("ready.documents.ssn", "Secure copy of Social Security information", "Encrypted digital copy or a locked original at home. Do not carry an exposed Social Security card in the bag."),
                     item("ready.documents.birth-certs", "Birth certificates"),
                     item("ready.documents.marriage", "Marriage certificate (if applicable)"),
                     item("ready.documents.property", "Property deeds or lease agreements"),
@@ -115,13 +120,11 @@ SYSTEMS = [
                     item("ready.documents.vaccinations", "Vaccination records"),
                     item("ready.documents.health-insurance", "Health insurance cards"),
                     item("ready.documents.policies", "Home, auto, and life insurance policies"),
-                    item("ready.documents.bank", "Bank account information", "Account numbers and bank contact info."),
-                    item("ready.documents.credit", "Credit card information", "Emergency contact numbers for banks."),
+                    item("ready.documents.bank", "Secure copies or encrypted records of critical financial and identity information", "Bank contacts and encrypted records only. Do not write passwords, PINs, or full account numbers on paper in the bag."),
                     item("ready.documents.cash", "Small-bill cash ($100–$300 per household)"),
                     item("ready.documents.emergency-sheet", "Laminated emergency contact sheet", "Include out-of-state contacts."),
                     item("ready.documents.phone-list", "Important phone numbers", "Doctors, veterinarians, schools, employers."),
-                    item("ready.documents.usb", "Encrypted USB drive", "Scanned copies of vital documents."),
-                    item("ready.documents.cloud", "Cloud storage access details"),
+                    item("ready.documents.usb", "Encrypted USB drive of vital documents", "Scanned IDs and insurance. Never store passwords in plain text."),
                 ],
             },
             {
@@ -194,6 +197,7 @@ SYSTEMS = [
                     item("ready.medical.cpr", "CPR face shield"),
                     item("ready.medical.blister", "Moleskin or blister treatment"),
                     item("ready.medical.eyewash", "Eye wash solution"),
+                    item("ready.medical.reference", "Compact first-aid reference card or booklet"),
                     item("ready.medical.prescriptions", "Prescription medications (7–30 day supply)"),
                     item("ready.medical.devices", "Personal medical devices", "Glucose meter, BP cuff, spare glasses."),
                 ],
@@ -201,11 +205,9 @@ SYSTEMS = [
             {
                 "slug": "communications",
                 "title": "Communications",
-                "intro": "Stay informed when networks are strained.",
+                "intro": "Stay informed when networks are strained. One emergency radio is enough.",
                 "items": [
-                    item("ready.comms.noaa", "NOAA weather radio", "Battery-powered or hand-crank."),
-                    item("ready.comms.amfm", "Portable AM/FM radio"),
-                    item("ready.comms.hand-crank", "Hand-crank or solar-powered radio backup"),
+                    item("ready.comms.noaa", "Battery-powered or hand-crank NOAA/AM/FM emergency radio"),
                     item("ready.comms.powerbanks", "Portable power banks (10,000 mAh+)"),
                     item("ready.comms.cables", "Charging cables for all phones and devices"),
                     item("ready.comms.solar", "Solar charger"),
@@ -217,6 +219,18 @@ SYSTEMS = [
                     item("ready.comms.meeting-points", "Family meeting points written down", "Local and out-of-area."),
                     item("ready.comms.out-of-state", "Out-of-state check-in contact"),
                     item("ready.comms.written-numbers", "Laminated list of important phone numbers"),
+                ],
+            },
+            {
+                "slug": "tools-shelter",
+                "title": "Tools & Shelter",
+                "intro": "Ready.gov basics that sit beside clothing and communications.",
+                "items": [
+                    item("ready.tools.masks", "N95 or dust masks", "One per person."),
+                    item("ready.tools.blankets", "Emergency blankets", "One per person."),
+                    item("ready.tools.bags", "Heavy-duty garbage bags and plastic ties"),
+                    item("ready.tools.multitool", "Multipurpose tool", "Wrench/pliers or a sturdy multitool."),
+                    item("ready.tools.notebook", "Small notebook and permanent marker"),
                 ],
             },
             {
@@ -262,7 +276,12 @@ SYSTEMS = [
                 "intro": "Keep a durable kit in the trunk. Review quarterly.",
                 "items": [
                     item("vehicle.safety.jumper-cables", "Jumper cables or portable jump starter"),
+                    item("vehicle.safety.spare-tire", "Spare tire or tire-repair provisions appropriate to the vehicle"),
+                    item("vehicle.safety.jack", "Jack"),
+                    item("vehicle.safety.lug-wrench", "Lug wrench"),
+                    item("vehicle.safety.gauge", "Tire-pressure gauge"),
                     item("vehicle.safety.tire-inflator", "12V tire inflator and plug kit"),
+                    item("vehicle.safety.washer-fluid", "Windshield washer fluid"),
                     item("vehicle.safety.tool-kit", "Basic tool kit"),
                     item("vehicle.safety.tow-strap", "Tow strap rated for your vehicle"),
                     item("vehicle.safety.tape", "Duct tape or electrical tape"),
@@ -273,7 +292,8 @@ SYSTEMS = [
                 "slug": "vehicle-visibility",
                 "title": "Safety & Visibility",
                 "items": [
-                    item("vehicle.visibility.flares", "Road flares or reflective triangles"),
+                    item("vehicle.visibility.triangles", "Reflective triangles", "Primary visibility item."),
+                    item("vehicle.visibility.flares", "Road flares (optional)", "Skip these if an open flame is not appropriate."),
                     item("vehicle.visibility.vest", "Reflective safety vest"),
                     item("vehicle.visibility.extinguisher", "ABC-rated automotive fire extinguisher"),
                     item("vehicle.visibility.window-tool", "Seat belt cutter and window breaker"),
@@ -322,6 +342,8 @@ SYSTEMS = [
                     item("vehicle.pets.meds", "Pet medications and vaccination records"),
                     item("vehicle.pets.waste", "Waste bags and litter supplies"),
                     item("vehicle.pets.photo", "Current photo of each pet"),
+                    item("vehicle.pets.microchip", "Verify microchip registration and contact information is current"),
+                    item("vehicle.pets.shelter", "Pet-friendly evacuation or shelter location identified"),
                 ],
             },
             {
@@ -359,14 +381,32 @@ SYSTEMS = [
         "description": "Water, food, power, communications, and home preparedness.",
         "sections": [
             {
+                "slug": "plan",
+                "title": "Emergency Plan",
+                "intro": "Decisions to make before an emergency — then practice them.",
+                "items": [
+                    item("home.plan.evacuate", "Know where you will evacuate"),
+                    item("home.plan.routes", "Know two routes out of your neighborhood"),
+                    item("home.plan.centers", "Identify local shelter, cooling, and warming options"),
+                    item("home.plan.children", "Decide who picks up children if the household is separated"),
+                    item("home.plan.out-of-area", "Choose an out-of-area contact"),
+                    item("home.plan.pets", "Know how you will transport pets"),
+                    item("home.plan.assist", "Decide how you will help household members who need mobility or medical support"),
+                    item("home.plan.alerts", "Download and enable emergency alerts"),
+                    item("home.plan.practice", "Practice the plan"),
+                    item("home.plan.review", "Review the plan twice a year"),
+                ],
+            },
+            {
                 "slug": "detection",
                 "title": "Safety & Detection",
                 "intro": "Test monthly. Replace batteries on a schedule.",
                 "items": [
-                    item("home.safety.smoke", "Smoke detectors on each floor and sleeping area"),
-                    item("home.safety.co", "Carbon monoxide detectors near sleeping areas"),
+                    item("home.safety.smoke", "Working smoke alarms inside every bedroom, outside each sleeping area, and on every level of the home"),
+                    item("home.safety.co", "CO alarms outside each separate sleeping area and on every level"),
                     item("home.safety.extinguishers", "ABC fire extinguishers (1 per floor)"),
                     item("home.safety.escape", "Two exit paths from every bedroom"),
+                    item("home.safety.ladder", "Escape ladder where upper-story bedrooms need a secondary exit"),
                     item("home.safety.meeting", "Household meeting place posted inside the home"),
                 ],
             },
@@ -377,7 +417,7 @@ SYSTEMS = [
                     item("home.utilities.water-wrench", "Water shutoff wrench", "Know the main valve location."),
                     item("home.utilities.gas-tool", "Gas shutoff tool (if applicable)"),
                     item("home.utilities.panel", "Electrical panel diagram with labeled circuits"),
-                    item("home.utilities.practice", "Practice shutting off water, gas, and power"),
+                    item("home.utilities.practice", "Know and practice the procedure for utility shutoffs; do not actually shut off natural gas for practice", "If gas is shut off, a qualified professional should restore service."),
                 ],
             },
             {
@@ -389,14 +429,15 @@ SYSTEMS = [
                     item("home.power.radio", "NOAA weather radio in a central location"),
                     item("home.power.power-station", "Portable power station for phones and medical devices"),
                     item("home.power.cords", "Heavy-duty extension cords and power strips"),
-                    item("home.power.generator-plan", "Generator plan if you own one", "Never run indoors. Know fuel storage rules."),
+                    item("home.power.thermometers", "Refrigerator and freezer appliance thermometers", "So you can tell if food stayed safe during an outage."),
+                    item("home.power.generator-plan", "Portable generators outdoors only, at least 20 feet from windows, doors, and vents", "Use outdoor-rated extension cords and working CO alarms. Never run a generator indoors or in a garage."),
                 ],
             },
             {
                 "slug": "water",
                 "title": "Water",
                 "items": [
-                    item("home.water.storage", "Stored water: 1 gallon per person per day, 14 days"),
+                    item("home.water.storage", "Stored water: 1 gallon per person per day, 14 days", "Hotter climates and some households need more. Commercially bottled water is the easiest reserve when practical."),
                     item("home.water.containers", "Food-grade water containers, labeled and dated"),
                     item("home.water.rotation", "Water rotation schedule (every 6–12 months)"),
                     item("home.water.bleach", "Unscented household bleach for emergency disinfection", "Follow CDC / Ready.gov guidance only."),
@@ -446,7 +487,7 @@ SYSTEMS = [
                 "items": [
                     item("home.skills.first-aid", "Household members know basic first aid and CPR"),
                     item("home.skills.fire", "Everyone can use a fire extinguisher"),
-                    item("home.skills.shutoffs", "Adults can locate and operate utility shutoffs"),
+                    item("home.skills.shutoffs", "Adults can locate utility shutoffs and demonstrate the procedure without actually shutting off natural gas"),
                     item("home.skills.routes", "Two evacuation routes from home are practiced"),
                     item("home.skills.water", "Someone can treat water by boiling or filtering"),
                     item("home.skills.radio", "Someone can operate the weather radio"),
@@ -488,11 +529,12 @@ SYSTEMS = [
             {
                 "slug": "cooking",
                 "title": "Alternative Cooking",
+                "intro": "Fuel-burning camping equipment can cause fatal carbon monoxide poisoning indoors. Use it outdoors only — never in homes, garages, or other enclosed spaces.",
                 "items": [
-                    item("offgrid.cooking.outdoor", "Outdoor-only cooking method identified"),
+                    item("offgrid.cooking.outdoor", "Outdoor-only cooking method identified", "Never use fuel-burning camping stoves, grills, or generators inside a home, garage, or enclosed space."),
                     item("offgrid.cooking.fuel", "Stored fuel appropriate to that method"),
                     item("offgrid.cooking.kettle", "Kettle or pot that works on that heat source"),
-                    item("offgrid.cooking.ventilation", "Ventilation and carbon monoxide awareness"),
+                    item("offgrid.cooking.ventilation", "Ventilation and carbon monoxide awareness", "Working CO alarms. Any combustion stays outdoors."),
                     item("offgrid.cooking.fire-safe", "Fire-safe surface and extinguisher nearby"),
                 ],
             },
@@ -522,7 +564,8 @@ SYSTEMS = [
                 "slug": "storage",
                 "title": "Water Storage",
                 "items": [
-                    item("water.storage.volume", "Calculate household gallons for 14 days"),
+                    item("water.storage.bottled", "Commercially bottled water is the preferred emergency drinking-water reserve when practical"),
+                    item("water.storage.volume", "Calculate household gallons for 14 days", "At least one gallon per person per day. Hotter climates and some households need more."),
                     item("water.storage.containers", "Food-grade containers only"),
                     item("water.storage.cool-dark", "Store in a cool, dark place off concrete when possible"),
                     item("water.storage.date", "Date every container"),
@@ -575,7 +618,7 @@ SYSTEMS = [
                 "slug": "cooling",
                 "title": "Battery-Powered Cooling",
                 "items": [
-                    item("climate.cool.fan", "Battery or USB fan for a single sleep space"),
+                    item("climate.cool.fan", "Battery/USB fan when indoor conditions are safe for fan use", "Use when indoor temperatures are below 90°F. Above that, a fan can raise body temperature. Have an air-conditioned relocation or cooling-center plan for extreme heat."),
                     item("climate.cool.power", "Power budget for fans vs medical devices"),
                     item("climate.cool.towels", "Cooling towels and water for wrists/neck"),
                     item("climate.cool.hydration", "Extra water and electrolytes in heat"),
@@ -597,7 +640,7 @@ SYSTEMS = [
                 "title": "Blackout Strategies",
                 "items": [
                     item("climate.blackout.meds", "Know which medications need temperature control"),
-                    item("climate.blackout.fridge", "Fridge/freezer: keep closed; freeze water bottles"),
+                    item("climate.blackout.fridge", "Fridge/freezer: keep closed; freeze water bottles; use appliance thermometers"),
                     item("climate.blackout.neighbors", "Check-on plan for neighbors at higher risk"),
                     item("climate.blackout.cooling-center", "Know how you will learn about local cooling or warming centers"),
                 ],
@@ -717,6 +760,16 @@ SYSTEMS = [
             },
         ],
     },
+]
+
+
+# Keep these keys in the database so existing checkmarks are not lost,
+# but hide them from new lists after consolidating wording elsewhere.
+RETIRED_KEYS = [
+    "ready.comms.amfm",
+    "ready.comms.hand-crank",
+    "ready.documents.credit",
+    "ready.documents.cloud",
 ]
 
 
@@ -978,6 +1031,11 @@ def build() -> str:
                     f" where sys.slug = {esc(sys['slug'])} and sec.slug = {esc(sec['slug'])}"
                     f" on conflict (permanent_key) do update set text = excluded.text, description = excluded.description, sort_order = excluded.sort_order, section_id = excluded.section_id, active = true;"
                 )
+        lines.append("")
+
+    if RETIRED_KEYS:
+        keys = ", ".join(esc(k) for k in RETIRED_KEYS)
+        lines.append(f"update public.checklist_items set active = false where permanent_key in ({keys});")
         lines.append("")
 
     catalog_sql = "\n".join(lines) + "\n"
