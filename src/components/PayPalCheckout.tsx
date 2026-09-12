@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { isPaypalConfigured, loadPaypalSdk } from "../lib/paypal";
-import { LAUNCH_PROBE_TOKEN, type AccessInterval } from "../lib/pricing";
+import type { AccessInterval } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
   includeHousehold?: boolean;
   accessInterval?: AccessInterval;
   planKind?: "individual" | "family";
-  probe?: boolean;
   onReady?: () => void;
   onCaptured: (result: { productCode: string; productType: string }) => void;
   onError: (message: string) => void;
@@ -21,7 +20,6 @@ export function PayPalCheckout({
   includeHousehold = false,
   accessInterval,
   planKind = "individual",
-  probe = false,
   onCaptured,
   onError,
   onReady,
@@ -56,7 +54,6 @@ export function PayPalCheckout({
               includeHousehold,
               accessInterval,
               plan: planKind,
-              ...(probe ? { probe: LAUNCH_PROBE_TOKEN } : {}),
             });
             if (!data?.orderId) throw new Error("No PayPal order was created.");
             return data.orderId;
@@ -65,7 +62,7 @@ export function PayPalCheckout({
             try {
               const captured = await invokeFunction<{ productCode: string; productType: string }>(
                 "capture-paypal-order",
-                { orderId: data.orderID, productSlug, quantity, includeHousehold, accessInterval, ...(probe ? { probe: LAUNCH_PROBE_TOKEN } : {}) },
+                { orderId: data.orderID, productSlug, quantity, includeHousehold, accessInterval },
               );
               if (!captured?.productCode) {
                 throw new Error("Payment went through, but no Product ID came back. Stay on the thank-you page if it opens.");
@@ -93,7 +90,7 @@ export function PayPalCheckout({
     return () => {
       cancelled = true;
     };
-  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, probe, onReady]);
+  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, onReady]);
 
   return (
     <div>

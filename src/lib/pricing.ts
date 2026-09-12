@@ -7,8 +7,6 @@ export const SURVIVAL_VAULT_DESCRIPTION =
   "Off-grid systems, water purification, backup battery and solar, emergency heating and cooling, long-term food, and How-To Videos. $10 one time, not $10 per person. Does not renew.";
 export const FAMILY_MIN_SEATS = 2;
 export const ANNUAL_SAVINGS_PER_PERSON_YEAR_CENTS = 2400;
-export const LAUNCH_PROBE_TOKEN = "spl-dollar";
-export const LAUNCH_PROBE_CENTS = 50;
 
 export const ACCESS_MONTHLY_CENTS = MONTHLY_CENTS;
 export const ACCESS_ANNUAL_CENTS = ANNUAL_CENTS;

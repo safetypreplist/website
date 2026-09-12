@@ -1,5 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
-import { LAUNCH_PROBE_CENTS, parseAccessInterval, parseCustomId } from "../_shared/billing.ts";
+import { parseAccessInterval, parseCustomId } from "../_shared/billing.ts";
 import { generateProductCode, paypalFetch } from "../_shared/paypal.ts";
 import {
   productBySlug,
@@ -92,18 +92,13 @@ Deno.serve(async (req) => {
     let expected = slug === "core" ? 0 : product.amount_cents;
     if (slug === "core") {
       if (!access) return json({ error: "Billing selection missing from payment" }, 400);
-      if (parsed.probe) {
-        accessCents = LAUNCH_PROBE_CENTS;
-        expected = LAUNCH_PROBE_CENTS;
-      } else {
-        const accessProduct = await productBySlug(access === "annual" ? "access_annual" : "access_monthly");
-        accessCents = (accessProduct?.amount_cents || 0) * quantity;
-        expected = accessCents;
-        if (includeHousehold) {
-          const household = await productBySlug("upgrade_full");
-          vaultCents = household?.amount_cents || 0;
-          expected += vaultCents;
-        }
+      const accessProduct = await productBySlug(access === "annual" ? "access_annual" : "access_monthly");
+      accessCents = (accessProduct?.amount_cents || 0) * quantity;
+      expected = accessCents;
+      if (includeHousehold) {
+        const household = await productBySlug("upgrade_full");
+        vaultCents = household?.amount_cents || 0;
+        expected += vaultCents;
       }
     }
 
