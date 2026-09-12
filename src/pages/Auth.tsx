@@ -164,7 +164,7 @@ export function UpdatePasswordPage() {
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
-          hint="At least 8 characters. Use a mix of letters and numbers so it’s easier to remember and harder to guess."
+          hint="At least 8 characters."
         />
         {error && <p className="form-error">{error}</p>}
         <button className="btn btn-primary btn-block" style={{ marginTop: 18 }} type="submit">
@@ -196,15 +196,11 @@ export function CreateAccountPage() {
       setPreviewNote(true);
       return;
     }
-    if (!validCode) {
-      setError("We could not find a Product ID from checkout. Complete purchase first.");
-      return;
-    }
     const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name, product_code: code },
+        data: { full_name: name, ...(validCode ? { product_code: code } : {}) },
         emailRedirectTo: `${window.location.origin}/app`,
       },
     });
@@ -217,12 +213,17 @@ export function CreateAccountPage() {
       navigate("/app");
       return;
     }
-    setError("Check your email to confirm the account, then sign in. Your Product ID is already attached.");
+    setError("Check your email to confirm the account, then sign in.");
   }
 
   return (
       <Card title="Create my account" progress={2}>
-      {code && <p className="product-id">{code}</p>}
+      {validCode ? (
+        <p className="purchase-ref" style={{ marginTop: 0, marginBottom: 8 }}>
+          <span>Purchase reference</span>
+          <code>{code}</code>
+        </p>
+      ) : null}
       <form onSubmit={onSubmit}>
         <label className="field">
           <span>Name</span>
@@ -236,7 +237,7 @@ export function CreateAccountPage() {
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
-          hint="At least 8 characters. Use a mix of letters and numbers so it’s easier to remember and harder to guess."
+          hint="At least 8 characters."
         />
         {error && <p className="form-error">{error}</p>}
         {previewNote && (

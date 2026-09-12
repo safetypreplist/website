@@ -90,7 +90,7 @@ const vaultExtras = [
 
 const coreFeatures = [
   { label: "5-mins Grab & Go Bag", Icon: IconBackpack },
-  { label: "15-mins Ready Duffel", Icon: IconDuffel },
+  { label: "15-mins Ready Duffel Bag", Icon: IconDuffel },
   { label: "20-mins Vehicle & Suitcase", Icon: IconCar },
   { label: "60-mins Home Resilience", Icon: IconHouse },
   { label: "Up to 5 custom items per section", Icon: IconNotes },
@@ -148,8 +148,8 @@ export function LandingPage() {
             <p className="hero-tagline">Hope for the best. Prepare for the rest.</p>
             <p className="hero-sub">4 Digital & Printable Preparedness Checklists</p>
             <p className="lead">
-              Prepare your bag, vehicle, home, and emergency essentials with four simple guided checklists. Use them on
-              your phone, tablet, or computer, or print them anytime for offline access.
+              Prepare your bag, vehicle, and home with guided checklists you can use on any device—or print for offline
+              access.
             </p>
             <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
           </div>
@@ -175,10 +175,9 @@ export function LandingPage() {
           </div>
           <div className="story-copy">
             <h2>Be ready before you need to be.</h2>
-            <p className="story-kicker">A clear checklist makes all the difference.</p>
-            <p>Know what to pack, what to store, and what to do next.</p>
             <p>
-              Check off items as you prepare, add personal notes, and keep your household’s readiness organized in one place.
+              Know what to pack, what to store, and what to do next. Check items off, add personal notes, and keep your
+              household organized in one place.
             </p>
             <ul className="story-platforms" aria-label="Works as a printable list, and on desktop, tablet, and phone">
               <li>
@@ -263,8 +262,8 @@ export function LandingPage() {
                 <MarkImg name="bag" />
               </span>
               <span className="step-num">Step 2</span>
-              <h3>Quick & Easy Purchase</h3>
-              <p>Choose monthly or annually, saving 16% with annual billing.</p>
+              <h3>Complete your purchase</h3>
+              <p>Check out securely. Choose monthly or annual billing, and optionally add Survival Vault.</p>
             </li>
             <li>
               <span className="how-icon">
@@ -341,7 +340,7 @@ export function LandingPage() {
               <p className="plan-line">{familyQty} Personal Checklists</p>
               {billing === "annual" ? <p className="plan-save">Save 16% with annual billing</p> : null}
               <div className="qty-picker landing-qty">
-                <span>People</span>
+                <span>Family Members</span>
                 <div>
                   <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => Math.max(FAMILY_MIN_SEATS, n - 1))}>-</button>
                   <b>{familyQty}</b>
@@ -349,7 +348,7 @@ export function LandingPage() {
                 </div>
               </div>
               <ul>
-                <li><IconUser /> Every person gets their own checklist</li>
+                <li><IconUser /> Each family member gets their own Personal Checklist</li>
                 <li><IconChecklist /> Connect checklists under one Family Plan</li>
                 <li><IconNotes /> Each owner chooses View Only or Can Edit</li>
               </ul>

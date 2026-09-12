@@ -106,9 +106,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function ViewingBanner() {
+  const { viewing } = useApp();
   return (
     <div className="viewing-banner view">
-      <span>View Only</span>
+      <span>Viewing {checklistTitle(viewing.ownerName)} · View only</span>
     </div>
   );
 }

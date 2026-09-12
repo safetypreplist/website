@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { itemsForSections } from "../lib/customItems";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
+import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 
@@ -60,7 +61,6 @@ export function DashboardPage() {
           {viewing.isOwn ? <p className="dash-greeting">{greeting(viewing.ownerName)}</p> : null}
           <h1 className="dash-heading">{isHousehold ? "Survival Vault" : viewing.title}</h1>
           {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
-          {!viewing.isOwn && !isHousehold && !viewing.canEdit ? <p className="muted">View Only</p> : null}
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export function DashboardPage() {
         <div className="readiness-photo" aria-hidden="true">
           <img src={PHOTO_LIBRARY.landscape} alt="" />
         </div>
-        <div className="eyebrow">Your Readiness</div>
+        <div className="eyebrow">Checklist Progress</div>
         <div className="readiness-meter">
           <svg className="ring" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(230,226,214,.18)" strokeWidth="10" />
@@ -100,7 +100,7 @@ export function DashboardPage() {
 
       {!entitled && (
         <div className="status-banner">
-          This account does not have a personal checklist yet. Complete purchase, then create the account with your Product ID.
+          This account does not have a personal checklist yet. Purchase a plan, then create your account.
           <div style={{ marginTop: 10 }}>
             <Link className="btn btn-primary" to="/pricing">Get My Checklist</Link>
           </div>
@@ -142,8 +142,7 @@ export function DashboardPage() {
             <div className="locked-panel" style={{ textAlign: "left", padding: "28px 22px" }}>
               <h2>Want to go beyond the basics?</h2>
               <p className="muted" style={{ color: "rgba(244,240,229,.72)", marginTop: 8 }}>
-                Unlock advanced preparedness resources for off-grid systems, water purification, backup battery and solar,
-                emergency heating and cooling, long-term food, and How-To Videos. $10 one time, not $10 per person.
+                {SURVIVAL_VAULT_DESCRIPTION}
               </p>
               <Link className="btn btn-primary" style={{ marginTop: 18 }} to="/app/account#addons">
                 Add Survival Vault

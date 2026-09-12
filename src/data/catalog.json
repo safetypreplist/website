@@ -3,7 +3,7 @@
     {
       "id": "523ba31f-ac77-54e8-8bf0-516b17bd8235",
       "slug": "grab-go",
-      "title": "Grab & Go",
+      "title": "Grab & Go Bag",
       "description": "Immediate evacuation essentials you can secure in minutes.",
       "time_label": "05 MIN",
       "illustration_key": "backpack",
@@ -14,7 +14,7 @@
     {
       "id": "f13edaad-1f96-5514-b93a-469e88263b5b",
       "slug": "ready-bag",
-      "title": "Ready Bag",
+      "title": "Ready Duffel",
       "description": "A complete 72-hour preparedness bag, packed and ready.",
       "time_label": "15 MIN",
       "illustration_key": "duffel",

@@ -2,12 +2,12 @@
   "systems": [
     {
       "slug": "grab-go",
-      "title": "Grab & Go",
+      "title": "Grab & Go Bag",
       "item_count": 14
     },
     {
       "slug": "ready-bag",
-      "title": "Ready Bag",
+      "title": "Ready Duffel",
       "item_count": 105
     },
     {

@@ -52,9 +52,9 @@ export async function sendPurchaseEmail(opts: {
   deviceAllowance: string;
 }) {
   const key = Deno.env.get("RESEND_API_KEY");
-  const from = Deno.env.get("EMAIL_FROM") || "Safety Prep List <noreply@example.com>";
+  const from = Deno.env.get("EMAIL_FROM") || "Safety Prep List <info@safetypreplist.com>";
   const appUrl = Deno.env.get("APP_URL") || "https://example.com";
-  const support = Deno.env.get("SUPPORT_EMAIL") || "support@example.com";
+  const support = Deno.env.get("SUPPORT_EMAIL") || "info@safetypreplist.com";
   if (!key || !opts.to) return { skipped: true };
 
   const html = `

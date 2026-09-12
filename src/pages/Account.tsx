@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PayPalCheckout } from "../components/PayPalCheckout";
 import { useApp } from "../context/AppContext";
-import { money, formatDate } from "../lib/format";
+import { formatDate } from "../lib/format";
 import { checklistTitle, initialsFrom, planTypeLabel } from "../lib/identity";
+import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 
 export function AccountPage() {
   const {
     profile,
-    products,
     signOut,
     refreshAccount,
     user,
@@ -20,7 +20,6 @@ export function AccountPage() {
     hasSurvivalVault,
   } = useApp();
   const location = useLocation();
-  const upgrade = products.find((p) => p.slug === "upgrade_full");
   const fileRef = useRef<HTMLInputElement>(null);
   const [first, setFirst] = useState(profile?.first_name || "");
   const [last, setLast] = useState(profile?.last_name || "");
@@ -168,11 +167,7 @@ export function AccountPage() {
         {!hasSurvivalVault && (profile?.plan === "core" || profile?.plan === "full") ? (
           <div className="account-upgrade">
             <h3>Survival Vault</h3>
-            <p className="muted">
-              Off-grid systems, water purification, backup battery and solar, emergency heating and cooling, long-term
-              food, and How-To Videos. {upgrade ? money(upgrade.amount_cents, upgrade.currency) : "$10"} one time, not
-              per person.
-            </p>
+            <p className="muted">{SURVIVAL_VAULT_DESCRIPTION}</p>
             <button className="btn btn-primary" type="button" onClick={() => setShowUpgrade(true)}>
               Add Survival Vault
             </button>

@@ -11,8 +11,8 @@ After a **verified** PayPal capture, `capture-paypal-order` sends mail through [
 
 ```bash
 supabase secrets set RESEND_API_KEY=re_...
-supabase secrets set EMAIL_FROM="Safety Prep List <noreply@yourdomain.com>"
-supabase secrets set SUPPORT_EMAIL=support@yourdomain.com
+supabase secrets set EMAIL_FROM="Safety Prep List <info@safetypreplist.com>"
+supabase secrets set SUPPORT_EMAIL=info@safetypreplist.com
 supabase secrets set APP_URL=https://yourdomain.com
 ```
 
@@ -30,9 +30,9 @@ If `RESEND_API_KEY` is missing, purchase still completes; email is skipped.
 
 The HTML is assembled on the server. No email keys ship to the browser.
 
-## Support placeholder
+## Support address
 
-Until you have a real inbox, `SUPPORT_EMAIL` can be any address you monitor. Update it in secrets and in `VITE_SUPPORT_EMAIL` for in-app copy.
+The public support address is `info@safetypreplist.com`. Keep `SUPPORT_EMAIL` and `VITE_SUPPORT_EMAIL` in sync.
 
 ---
 

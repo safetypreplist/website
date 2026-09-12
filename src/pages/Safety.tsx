@@ -8,7 +8,7 @@ type Pane = "state" | "national";
 export function SafetyPage() {
   const { safety, profile, setPreferredState } = useApp();
   const [state, setState] = useState(profile?.preferred_state || "");
-  const [pane, setPane] = useState<Pane>(profile?.preferred_state ? "state" : "national");
+  const [pane, setPane] = useState<Pane>("national");
 
   useEffect(() => {
     if (profile?.preferred_state) setState(profile.preferred_state);
@@ -26,6 +26,12 @@ export function SafetyPage() {
 
   return (
     <div className="safety-page">
+      <h1 className="page-title">Safety Resources</h1>
+      <p className="muted safety-lead">
+        National emergency numbers are always available. Choose your state for additional local resources.
+      </p>
+      <p className="muted safety-lead">Tap a number to call.</p>
+
       <label className="state-picker">
         <span>Select your state</span>
         <span className="state-picker-control">
@@ -40,19 +46,7 @@ export function SafetyPage() {
         </span>
       </label>
 
-      <h1 className="page-title">Safety Resources</h1>
-      <p className="muted safety-lead">Tap a number to call.</p>
-
       <div className="safety-tabs" role="tablist" aria-label="Number lists">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={pane === "state"}
-          className={pane === "state" ? "on" : ""}
-          onClick={() => setPane("state")}
-        >
-          {stateName || "Your state"}
-        </button>
         <button
           type="button"
           role="tab"
@@ -61,6 +55,15 @@ export function SafetyPage() {
           onClick={() => setPane("national")}
         >
           National
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={pane === "state"}
+          className={pane === "state" ? "on" : ""}
+          onClick={() => setPane("state")}
+        >
+          {stateName || "Choose State"}
         </button>
       </div>
 

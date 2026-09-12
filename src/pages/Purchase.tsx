@@ -13,12 +13,22 @@ import {
   ANNUAL_MONTHLY_EQUIVALENT_CENTS,
   MONTHLY_CENTS,
   SURVIVAL_VAULT_CENTS,
+  SURVIVAL_VAULT_DESCRIPTION,
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
 const PROGRESS = ["Choose Plan", "Purchase", "Create Account", "Get Ready"] as const;
+
+function CopyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M10.5 5.5V3.8A1.3 1.3 0 0 0 9.2 2.5H3.8A1.3 1.3 0 0 0 2.5 3.8v5.4A1.3 1.3 0 0 0 3.8 10.5H5.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
 
 export function CheckoutProgress({ current }: { current: number }) {
   return (
@@ -117,7 +127,7 @@ export function CheckoutPage() {
               <input type="checkbox" checked={vault} onChange={(e) => setVault(e.target.checked)} />
               <span>
                 <b>Add Survival Vault, $10 one time</b>
-                <small>Advanced preparedness resources for your household. Optional. Does not renew.</small>
+                <small>{SURVIVAL_VAULT_DESCRIPTION}</small>
               </span>
             </label>
             <button type="button" className="vault-details" onClick={() => setDetailsOpen(true)}>
@@ -252,24 +262,32 @@ export function ThankYouPage() {
             ? `Renews annually at ${money(breakdown.recurringCents)}.`
             : `Renews monthly at ${money(breakdown.recurringCents)}.`}
         </p>
-        <p className="muted">
-          PayPal emails the receipt to the address on the PayPal account you paid with. Check that inbox
-          (and spam). Safety Prep List does not send a second copy.
-        </p>
-        <div className="product-id">{code || (finishing ? "Finishing your purchase…" : "Processing…")}</div>
+        <p className="muted">PayPal will email your receipt to the address on the PayPal account you paid with.</p>
         {captureError ? <p className="form-error">{captureError}</p> : null}
-        <button className="btn btn-ghost btn-block" type="button" onClick={() => void copy()} disabled={!code}>
-          {copied ? "Copied" : "Copy Product ID"}
-        </button>
         {code ? (
-          <Link className="btn btn-primary btn-block" style={{ marginTop: 12 }} to={`/create-account?code=${encodeURIComponent(code)}`}>
+          <Link className="btn btn-primary btn-block" style={{ marginTop: 18 }} to={`/create-account?code=${encodeURIComponent(code)}`}>
             Create My Account
           </Link>
         ) : (
-          <p className="muted" style={{ marginTop: 12 }}>
-            Stay on this page until your Product ID appears. Then you can create your account.
+          <p className="muted" style={{ marginTop: 18 }}>
+            {finishing ? "Finishing your purchase…" : "Hang tight while we confirm your purchase."}
           </p>
         )}
+        {code ? (
+          <p className="purchase-ref">
+            <span>Purchase reference</span>
+            <code>{code}</code>
+            <button
+              className="purchase-ref-copy"
+              type="button"
+              onClick={() => void copy()}
+              aria-label={copied ? "Copied purchase reference" : "Copy purchase reference"}
+              title={copied ? "Copied" : "Copy"}
+            >
+              {copied ? "✓" : <CopyIcon />}
+            </button>
+          </p>
+        ) : null}
       </div>
     </div>
   );

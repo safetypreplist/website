@@ -23,7 +23,7 @@ Tables:
 
 | Table | Purpose |
 |---|---|
-| `checklist_systems` | Grab & Go, Ready Bag, advanced systems, `access_tier`, `sort_order`, `active` |
+| `checklist_systems` | Grab & Go Bag, Ready Duffel, advanced systems, `access_tier`, `sort_order`, `active` |
 | `checklist_sections` | Categories inside a system |
 | `checklist_items` | `permanent_key`, wording, `sort_order`, `active` |
 | `video_resources` | Vault titles, URLs, thumbnails, `active` |

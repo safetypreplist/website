@@ -1,5 +1,6 @@
 import { useEffect, type MouseEvent } from "react";
 import { PHOTO_LIBRARY } from "../lib/photos";
+import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 
 const VAULT_PANELS = [
   {
@@ -84,12 +85,7 @@ export function SurvivalVaultModal({
         <div className="modal-intro">
           <p className="eyebrow">Optional add-on</p>
           <h2 id="survival-vault-title">Survival Vault</h2>
-          <p>
-            Unlock advanced preparedness resources for situations that require more than everyday emergency planning.
-          </p>
-          <p>
-            <b>At checkout, you can add the Survival Vault for an extra $10 one-time fee.</b>
-          </p>
+          <p>{SURVIVAL_VAULT_DESCRIPTION}</p>
         </div>
         {VAULT_PANELS.map((panel) => (
           <article className="modal-item" key={panel.tag}>

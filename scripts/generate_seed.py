@@ -24,7 +24,7 @@ def item(key: str, text: str, description: str = "") -> dict:
 SYSTEMS = [
     {
         "slug": "grab-go",
-        "title": "Grab & Go",
+        "title": "Grab & Go Bag",
         "time_label": "05 MIN",
         "illustration_key": "backpack",
         "access_tier": "core",
@@ -91,7 +91,7 @@ SYSTEMS = [
     },
     {
         "slug": "ready-bag",
-        "title": "Ready Bag",
+        "title": "Ready Duffel",
         "time_label": "15 MIN",
         "illustration_key": "duffel",
         "access_tier": "core",

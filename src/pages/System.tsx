@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { useApp } from "../context/AppContext";
 import {
   ITEM_LIMIT_ERROR,
@@ -8,6 +9,7 @@ import {
   itemsForSection,
 } from "../lib/customItems";
 import { formatDateTime } from "../lib/format";
+import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 
 export function SystemPage() {
   const { slug } = useParams();
@@ -20,6 +22,7 @@ export function SystemPage() {
   const [openNote, setOpenNote] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
+  const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
 
   const lastSavedAt = useMemo(() => {
     const stamps = sections
@@ -36,7 +39,7 @@ export function SystemPage() {
       <div className="locked-panel">
         <p className="eyebrow">Survival Vault</p>
         <h2>Want to go beyond the basics?</h2>
-        <p className="muted">This list is part of Survival Vault.</p>
+        <p className="muted">{SURVIVAL_VAULT_DESCRIPTION}</p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault
         </Link>
@@ -135,10 +138,7 @@ export function SystemPage() {
                           className="custom-remove"
                           type="button"
                           aria-label={`Remove ${item.text}`}
-                          onClick={() => {
-                            if (!confirm("Remove this item from the list?")) return;
-                            void removeCustomItem(item.id);
-                          }}
+                          onClick={() => setRemoveItem({ id: item.id, text: item.text })}
                         >
                           ×
                         </button>
@@ -211,6 +211,19 @@ export function SystemPage() {
           onAdd={async (text, description) => {
             await addCustomItem(addingTo.id, text, description);
             setAddingTo(null);
+          }}
+        />
+      ) : null}
+      {removeItem ? (
+        <ConfirmDialog
+          title="Remove this item?"
+          body={`Remove “${removeItem.text}” from this list?`}
+          confirmLabel="Remove item"
+          danger
+          onClose={() => setRemoveItem(null)}
+          onConfirm={() => {
+            void removeCustomItem(removeItem.id);
+            setRemoveItem(null);
           }}
         />
       ) : null}

@@ -7,7 +7,7 @@ import { useApp } from "../context/AppContext";
 import { checklistTitle, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
+import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, SURVIVAL_VAULT_DESCRIPTION, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
 import { Photo } from "../components/Photo";
 import { SystemRow } from "./Dashboard";
 
@@ -286,11 +286,7 @@ export function HouseholdPage() {
       <div className="locked-panel">
         <p className="eyebrow">Survival Vault</p>
         <h2>Want to go beyond the basics?</h2>
-        <p className="muted">
-          Add Survival Vault to an Individual Plan or Family Plan for off-grid preparedness, water purification, backup
-          battery and solar, emergency heating and cooling, long-term food, and How-To Videos. $10 one time, not $10
-          per person.
-        </p>
+        <p className="muted">{SURVIVAL_VAULT_DESCRIPTION}</p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault
         </Link>

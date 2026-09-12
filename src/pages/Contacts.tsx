@@ -143,7 +143,7 @@ export function ContactsPage() {
                 <input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" inputMode="tel" />
               </label>
               <label className="field">
-                <span>Label</span>
+                <span>Relationship or Type</span>
                 <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Neighbor, school, doctor" />
               </label>
               {error && <p className="form-error">{error}</p>}

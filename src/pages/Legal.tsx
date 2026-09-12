@@ -31,7 +31,7 @@ export function PrivacyPage() {
 
       </p>
       <p>
-        Questions about privacy can be sent through Support.
+        Questions about privacy can be sent to info@safetypreplist.com.
       </p>
     </LegalShell>
   );
@@ -59,7 +59,7 @@ export function TermsPage() {
 }
 
 export function SupportPage() {
-  const email = import.meta.env.VITE_SUPPORT_EMAIL || "support@safetypreplist.com";
+  const email = import.meta.env.VITE_SUPPORT_EMAIL || "info@safetypreplist.com";
   const name = import.meta.env.VITE_SUPPORT_NAME || "Safety Prep List Support";
 
   return (

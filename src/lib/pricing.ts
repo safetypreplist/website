@@ -3,6 +3,8 @@ export const ANNUAL_MONTHLY_EQUIVALENT_CENTS = 999;
 export const ANNUAL_CENTS = 11988;
 export const SURVIVAL_VAULT_CENTS = 1000;
 export const SURVIVAL_VAULT_NAME = "Survival Vault";
+export const SURVIVAL_VAULT_DESCRIPTION =
+  "Off-grid systems, water purification, backup battery and solar, emergency heating and cooling, long-term food, and How-To Videos. $10 one time, not $10 per person. Does not renew.";
 export const FAMILY_MIN_SEATS = 2;
 export const ANNUAL_SAVINGS_PER_PERSON_YEAR_CENTS = 2400;
 
