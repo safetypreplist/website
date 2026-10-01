@@ -353,7 +353,7 @@ export function demoSignIn(email: string, password: string) {
   localStorage.setItem(SESSION_KEY, "1");
   localStorage.setItem("spl.demo.loginEmail", loginEmail);
   if (loginEmail === DEMO_PREVIEW_EMAIL) localStorage.removeItem(`spl.onboarding.v1.${DEMO_USER_ID}`);
-  const state = loginEmail === DEMO_PREVIEW_EMAIL ? defaultState() : readState();
+  const state = readState();
   state.profile.email = loginEmail;
   state.profile.role = loginEmail === DEMO_EMAIL ? "owner" : "customer";
   const own = state.members.find((m) => m.permission === "own") || state.members[0];

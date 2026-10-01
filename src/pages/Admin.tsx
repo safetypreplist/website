@@ -4,8 +4,9 @@ import { useApp } from "../context/AppContext";
 import { supabase } from "../lib/supabase";
 import { SAFETY_CATEGORY_LABELS, US_STATES } from "../lib/format";
 import { COPY_KEY, DEFAULT_STEPS, loadCopy } from "../components/OnboardingTour";
+import { AdminAccounts } from "../components/AdminAccounts";
 
-type AdminTab = "overview" | "customers" | "families" | "traffic" | "discounts" | "content" | "onboarding";
+type AdminTab = "overview" | "customers" | "accounts" | "families" | "traffic" | "discounts" | "content" | "onboarding";
 type CustomerStatus = "Active" | "Past due" | "Deactivated";
 type Customer = {
   id: string;
@@ -105,6 +106,7 @@ export function AdminPage() {
           <p className="admin-rail-label">Workspace</p>
           <AdminNavButton active={tab === "overview"} label="Overview" icon="⌂" onClick={() => setTab("overview")} />
           <AdminNavButton active={tab === "customers"} label="Customers & billing" icon="◉" onClick={() => setTab("customers")} count="42" />
+          <AdminNavButton active={tab === "accounts"} label="Accounts & access" icon="◇" onClick={() => setTab("accounts")} />
           <AdminNavButton active={tab === "families"} label="Families" icon="⌁" onClick={() => setTab("families")} count="18" />
           <AdminNavButton active={tab === "traffic"} label="Traffic & security" icon="◌" onClick={() => setTab("traffic")} count="3" alert />
           <AdminNavButton active={tab === "discounts"} label="Discount codes" icon="%" onClick={() => setTab("discounts")} />
@@ -122,6 +124,7 @@ export function AdminPage() {
           {message && <div className="admin-toast" role="status"><span>✓</span>{message}<button type="button" onClick={() => setMessage("")} aria-label="Dismiss">×</button></div>}
           {tab === "overview" && <Overview onNavigate={setTab} />}
           {tab === "customers" && <Customers customers={filteredCustomers} search={search} setSearch={setSearch} onToggle={toggleCustomer} />}
+          {tab === "accounts" && <AdminAccounts />}
           {tab === "families" && <Families />}
           {tab === "traffic" && <Traffic blockedIps={blockedIps} onToggleIp={toggleIp} />}
           {tab === "discounts" && <Discounts discounts={discounts} showForm={showDiscountForm} setShowForm={setShowDiscountForm} onSave={saveDiscount} />}
