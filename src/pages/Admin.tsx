@@ -52,7 +52,7 @@ const initialDiscounts: Discount[] = [
 ];
 
 export function AdminPage() {
-  const { profile, catalog, safety, refreshAccount } = useApp();
+  const { profile, catalog, safety, refreshAccount, signOut } = useApp();
   const [tab, setTab] = useState<AdminTab>("overview");
   const [message, setMessage] = useState("");
   const [customers, setCustomers] = useState(customerSeed);
@@ -113,6 +113,7 @@ export function AdminPage() {
           <p className="admin-rail-label admin-rail-label-spaced">Manage content</p>
           <AdminNavButton active={tab === "content"} label="Checklist & resources" icon="▤" onClick={() => setTab("content")} />
           <AdminNavButton active={tab === "onboarding"} label="Onboarding" icon="✦" onClick={() => setTab("onboarding")} />
+          <AdminNavButton active={false} label="Log out" icon="↪" onClick={() => void signOut()} />
           <div className="admin-help-card">
             <span className="admin-help-icon">?</span>
             <strong>Need a hand?</strong>

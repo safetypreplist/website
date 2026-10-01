@@ -11,6 +11,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const initial = initialsFrom(profile?.full_name || viewing.ownerName, user?.email);
   const vaultActive = location.pathname.startsWith("/app/survival");
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     const onPersonalHome = location.pathname === "/app" || location.pathname === "/app/lists";
@@ -20,7 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [location.pathname, viewing.kind, myChecklist?.id, switchChecklist]);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isAdminRoute ? " admin-console-shell" : ""}`}>
       <header className="app-top">
         <div className="brand">
           <BrandMark />

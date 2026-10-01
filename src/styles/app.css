@@ -5069,6 +5069,12 @@ p {
 .admin-workspace { max-width: 1440px; margin: 0 auto; }
 .admin-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 28px; }
 .admin-header .page-title { margin: 10px 0 8px; }
+.app-shell.admin-console-shell { display: block; min-height: 100vh; }
+.app-shell.admin-console-shell .app-top,
+.app-shell.admin-console-shell .desktop-sidebar,
+.app-shell.admin-console-shell .bottom-nav { display: none; }
+.app-shell.admin-console-shell .app-main { width: 100%; max-width: none; min-width: 0; margin: 0; padding: clamp(20px, 3vw, 36px) clamp(16px, 3vw, 40px) 48px; }
+.app-shell.admin-console-shell .admin-rail { top: 24px; }
 .admin-lead { max-width: 650px; margin: 0; }
 .admin-header-actions { display: flex; align-items: center; gap: 12px; padding-bottom: 4px; }
 .admin-live-dot, .traffic-live { display: inline-flex; align-items: center; gap: 7px; color: var(--moss); font-size: 12px; font-weight: 700; white-space: nowrap; }
