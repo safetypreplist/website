@@ -10,6 +10,7 @@ export function AccountPage() {
   const {
     profile,
     signOut,
+    changePassword,
     refreshAccount,
     user,
     devices,
@@ -29,6 +30,9 @@ export function AccountPage() {
   const [saved, setSaved] = useState("");
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaved, setPasswordSaved] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [copied, setCopied] = useState(false);
   const used = devices.length;
@@ -78,6 +82,27 @@ export function AccountPage() {
     } finally {
       setPhotoBusy(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function savePassword() {
+    setError("");
+    setPasswordSaved("");
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    try {
+      await changePassword(newPassword);
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSaved("Password updated.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update password.");
     }
   }
 
@@ -134,6 +159,23 @@ export function AccountPage() {
           {saving ? "Saving…" : "Save details"}
         </button>
         {saved ? <p className="account-saved">{saved}</p> : null}
+      </article>
+
+      <article className="account-card">
+        <h2>Security</h2>
+        <p className="muted">Change the password for this account. Your email remains the sign-in username.</p>
+        <label className="account-field">
+          <span>New password</span>
+          <input type="password" minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" placeholder="At least 8 characters" />
+        </label>
+        <label className="account-field">
+          <span>Confirm new password</span>
+          <input type="password" minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" placeholder="Enter it again" />
+        </label>
+        <button className="btn btn-forest" type="button" onClick={() => void savePassword()}>
+          Change password
+        </button>
+        {passwordSaved ? <p className="account-saved">{passwordSaved}</p> : null}
       </article>
 
       <article className="account-card">

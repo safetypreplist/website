@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Photo } from "../components/Photo";
 import { useApp } from "../context/AppContext";
@@ -63,6 +64,8 @@ export function DashboardPage() {
           {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
         </div>
       </div>
+
+      <NotificationPrompt />
 
       <div className="readiness">
         <div className="readiness-photo" aria-hidden="true">
@@ -155,6 +158,17 @@ export function DashboardPage() {
   );
 }
 
+function NotificationPrompt() {
+  const supported = typeof window !== "undefined" && "Notification" in window;
+  const [permission, setPermission] = useState<NotificationPermission>(supported ? Notification.permission : "denied");
+  if (!supported || permission === "granted") return null;
+  async function enable() {
+    const next = await Notification.requestPermission();
+    setPermission(next);
+  }
+  return <aside className="notification-prompt" role="status"><span className="notification-prompt-icon">●</span><span><b>Turn notifications on</b><small>Get a browser alert when a support chat is waiting for you.</small></span><button className="btn btn-forest" type="button" onClick={() => void enable()}>Turn on</button></aside>;
+}
+
 export function ListsPage() {
   const { catalog, viewing, switchChecklist, hasSurvivalVault } = useApp();
   const coreSystems = catalog.systems.filter((s) => s.access_tier === "core");
@@ -237,7 +251,7 @@ export function SystemRow({ slug }: { slug: string }) {
         : `/app/lists/${system.slug}`;
 
   return (
-    <article className={`system-card ${locked ? "locked" : ""}`}>
+    <article data-onboarding="checklist-card" className={`system-card ${locked ? "locked" : ""}`}>
       <div className="illu">
         <Photo alt={system.title} subject={SYSTEM_PHOTOS[system.slug]} ratio="square" accent={SYSTEM_ACCENTS[system.slug] ?? "forest"} />
       </div>

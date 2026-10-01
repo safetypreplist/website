@@ -25,7 +25,8 @@ import type {
 } from "../types";
 import { customItemCap, ITEM_LIMIT_ERROR } from "./customItems";
 
-export const DEMO_EMAIL = "demo@demo.com";
+export const DEMO_EMAIL = "iflipbrands@gmail.com";
+export const DEMO_PREVIEW_EMAIL = "demo@demo.com";
 export const DEMO_PASSWORD = "Abc123!";
 export const DEMO_USER_ID = "00000000-0000-4000-8000-000000000001";
 export const DEMO_JIMMY_ID = "00000000-0000-4000-8000-000000000002";
@@ -190,7 +191,7 @@ function defaultState(): DemoState {
       checklist_fee_paid: true,
       device_limit: 2,
       custom_item_bonus: 0,
-      role: "customer",
+      role: "owner",
       preferred_state: "CA",
       created_at: created,
       updated_at: created,
@@ -295,8 +296,11 @@ function writeState(state: DemoState) {
 }
 
 function normalizeDemoProfile(row: Profile): Profile {
+  const loginEmail = localStorage.getItem("spl.demo.loginEmail") || DEMO_EMAIL;
   return {
     ...row,
+    email: loginEmail,
+    role: loginEmail === DEMO_EMAIL ? "owner" : "customer",
     first_name: row.first_name ?? personName(row).split(" ")[0] ?? null,
     last_name: row.last_name ?? null,
     display_name: row.display_name ?? row.first_name ?? personName(row),
@@ -318,7 +322,7 @@ export function demoSignedIn() {
 export function demoUser(): User {
   return {
     id: DEMO_USER_ID,
-    email: DEMO_EMAIL,
+    email: localStorage.getItem("spl.demo.loginEmail") || DEMO_EMAIL,
     app_metadata: {},
     user_metadata: { full_name: "Jasmine Carter" },
     aud: "authenticated",
@@ -338,14 +342,25 @@ export function demoSession(): Session {
 }
 
 export function demoSignIn(email: string, password: string) {
-  if (email.trim().toLowerCase() !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
-    throw new Error("Invalid login. Use demo@demo.com / Abc123!");
+  const loginEmail = email.trim().toLowerCase();
+  const storedPassword = localStorage.getItem("spl.demo.ownerPassword") || DEMO_PASSWORD;
+  const expectedPassword = loginEmail === DEMO_PREVIEW_EMAIL ? DEMO_PASSWORD : storedPassword;
+  if (![DEMO_EMAIL, DEMO_PREVIEW_EMAIL].includes(loginEmail) || password !== expectedPassword) {
+    throw new Error("Invalid email or password.");
   }
   localStorage.setItem(SESSION_KEY, "1");
+  localStorage.setItem("spl.demo.loginEmail", loginEmail);
+  localStorage.removeItem(`spl.onboarding.v1.${DEMO_USER_ID}`);
   const state = readState();
+  state.profile.email = loginEmail;
+  state.profile.role = loginEmail === DEMO_EMAIL ? "owner" : "customer";
   const own = state.members.find((m) => m.permission === "own") || state.members[0];
   state.activeView = { kind: "personal", checklistId: own.checklist.id };
   writeState(state);
+}
+
+export function demoChangePassword(password: string) {
+  localStorage.setItem("spl.demo.ownerPassword", password);
 }
 
 export function demoSignOut() {

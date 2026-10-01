@@ -61,9 +61,13 @@ export function CheckoutPage() {
   const [vault, setVault] = useState(params.get("vault") === "1" || params.get("household") === "1");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountMessage, setDiscountMessage] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(0);
   const upgrade = products.find((p) => p.slug === "upgrade_full");
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
+  const discountedDueToday = Math.max(0, breakdown.dueTodayCents - discountApplied);
   const title = planKind === "family" ? "Family Plan" : "Individual Plan";
   const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
   const paypalReady = isPaypalConfigured();
@@ -74,7 +78,8 @@ export function CheckoutPage() {
     sessionStorage.setItem("spl.vault", vault ? "1" : "0");
     sessionStorage.setItem("spl.household", vault ? "1" : "0");
     sessionStorage.setItem("spl.access", access);
-  }, [planKind, people, vault, access]);
+    sessionStorage.setItem("spl.discountCode", discountCode);
+  }, [planKind, people, vault, access, discountCode]);
 
   const onCaptured = useMemo(
     () => (result: { productCode: string; productType: string }) => {
@@ -136,6 +141,35 @@ export function CheckoutPage() {
           </div>
         </section>
 
+        <section className="checkout-step discount-checkout">
+          <p className="eyebrow">Have a code?</p>
+          <div className="discount-entry">
+            <input
+              value={discountCode}
+              onChange={(e) => {
+                setDiscountCode(e.target.value.toUpperCase());
+                setDiscountApplied(0);
+                setDiscountMessage("");
+              }}
+              placeholder="Enter discount code"
+              aria-label="Discount code"
+            />
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                const normalized = discountCode.trim().toUpperCase();
+                const amount = normalized === "READY10" ? Math.round(breakdown.subscriptionCents * 0.1) : normalized === "FAMILY25" && planKind === "family" ? Math.round(breakdown.subscriptionCents * 0.25) : normalized === "WELCOME5" ? 500 : 0;
+                setDiscountApplied(amount);
+                setDiscountMessage(amount ? `${normalized} applied — you save ${money(amount)}.` : "That code is not active or does not apply to this plan.");
+              }}
+            >
+              Apply
+            </button>
+          </div>
+          {discountMessage ? <p className={`discount-result ${discountApplied ? "success" : "error"}`}>{discountMessage}</p> : null}
+        </section>
+
         <section className="checkout-step checkout-summary">
           {vault ? (
             <div className="summary-block">
@@ -145,9 +179,17 @@ export function CheckoutPage() {
               </p>
             </div>
           ) : null}
+          {discountApplied ? (
+            <div className="summary-block discount-summary">
+              <p>
+                <span>Discount ({discountCode})</span>
+                <b>−{money(discountApplied)}</b>
+              </p>
+            </div>
+          ) : null}
           <p className="checkout-due">
             Due today
-            <b>{money(breakdown.dueTodayCents)}</b>
+            <b>{money(discountedDueToday)}</b>
           </p>
           <p className="muted">
             {access === "annual"
@@ -167,6 +209,7 @@ export function CheckoutPage() {
               includeHousehold={vault}
               accessInterval={access}
               planKind={planKind}
+              discountCode={discountCode}
               onCaptured={onCaptured}
               onError={setError}
             />

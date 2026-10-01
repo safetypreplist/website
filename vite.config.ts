@@ -6,6 +6,10 @@ import { subscribeChecklistPlugin } from "./vite.subscribe";
 
 export default defineConfig({
   base: "/",
+  server: {
+    host: "0.0.0.0",
+    allowedHosts: true,
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

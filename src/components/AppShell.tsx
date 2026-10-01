@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "./Brand";
 import { HeaderClock, SidebarWeather } from "./LocationStatus";
 import { useApp } from "../context/AppContext";
+import { OnboardingTour } from "./OnboardingTour";
 import { checklistTitle, initialsFrom } from "../lib/identity";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -41,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink to="/app" end className={({ isActive }) => (isActive ? "active" : "")}>
           Home
         </NavLink>
-        <NavLink to="/app/lists" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink data-onboarding="my-checklist" to="/app/lists" className={({ isActive }) => (isActive ? "active" : "")}>
           My Checklist
         </NavLink>
         <NavLink to="/app/contacts" className={({ isActive }) => (isActive ? "active" : "")}>
@@ -60,16 +61,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         )}
         <p className="sidebar-label">Family</p>
-        <NavLink to="/app/family" end className={({ isActive }) => (isActive ? "active" : "")}>
+        <NavLink data-onboarding="family" to="/app/family" end className={({ isActive }) => (isActive ? "active" : "")}>
           Manage Family Plan
         </NavLink>
         <p className="sidebar-label">Account</p>
-        <NavLink to="/app/account" className={({ isActive }) => (isActive ? "active" : "")}>
+        <NavLink data-onboarding="profile" to="/app/account" className={({ isActive }) => (isActive ? "active" : "")}>
           Profile
         </NavLink>
         <NavLink to="/app/devices" className={({ isActive }) => (isActive ? "active" : "")}>
           My Devices
         </NavLink>
+        {profile?.role === "owner" ? (
+          <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
+            Owner Console
+          </NavLink>
+        ) : null}
         <button className="btn btn-ghost sidebar-logout" type="button" onClick={() => void signOut()}>
           Log out
         </button>
@@ -101,6 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           Account
         </NavLink>
       </nav>
+      <OnboardingTour />
     </div>
   );
 }

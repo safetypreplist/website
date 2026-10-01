@@ -108,6 +108,7 @@ export function SystemPage() {
                   <article className={`check-item${checked ? " is-done" : ""}${note || noteOpen ? " has-note" : ""}`} key={item.id}>
                     <div className="check-row">
                       <button
+                        data-onboarding="check-item"
                         className={`check ${checked ? "on" : ""}`}
                         aria-pressed={checked}
                         aria-label={item.text}
@@ -145,6 +146,7 @@ export function SystemPage() {
                       ) : null}
                       {viewing.canEdit ? (
                       <button
+                        data-onboarding="notes"
                         className={`note-toggle${note ? " has-note" : ""}`}
                         type="button"
                         aria-expanded={noteOpen}

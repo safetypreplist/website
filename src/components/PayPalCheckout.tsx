@@ -9,6 +9,7 @@ type Props = {
   includeHousehold?: boolean;
   accessInterval?: AccessInterval;
   planKind?: "individual" | "family";
+  discountCode?: string;
   onReady?: () => void;
   onCaptured: (result: { productCode: string; productType: string }) => void;
   onError: (message: string) => void;
@@ -20,6 +21,7 @@ export function PayPalCheckout({
   includeHousehold = false,
   accessInterval,
   planKind = "individual",
+  discountCode = "",
   onCaptured,
   onError,
   onReady,
@@ -54,6 +56,7 @@ export function PayPalCheckout({
               includeHousehold,
               accessInterval,
               plan: planKind,
+              discountCode: discountCode || undefined,
             });
             if (!data?.orderId) throw new Error("No PayPal order was created.");
             return data.orderId;
@@ -62,7 +65,7 @@ export function PayPalCheckout({
             try {
               const captured = await invokeFunction<{ productCode: string; productType: string }>(
                 "capture-paypal-order",
-                { orderId: data.orderID, productSlug, quantity, includeHousehold, accessInterval },
+                { orderId: data.orderID, productSlug, quantity, includeHousehold, accessInterval, discountCode: discountCode || undefined },
               );
               if (!captured?.productCode) {
                 throw new Error("Payment went through, but no Product ID came back. Stay on the thank-you page if it opens.");
@@ -90,7 +93,7 @@ export function PayPalCheckout({
     return () => {
       cancelled = true;
     };
-  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, onReady]);
+  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, discountCode, onReady]);
 
   return (
     <div>

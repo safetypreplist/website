@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { CHECKLIST_PDF_PATH, subscribeChecklist } from "../lib/subscribe";
 
 export function ChecklistSignupModal({
@@ -10,6 +10,7 @@ export function ChecklistSignupModal({
   onClose: () => void;
   onJoined: () => void;
 }) {
+  const nameRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [honeypot, setHoneypot] = useState("");
@@ -24,14 +25,12 @@ export function ChecklistSignupModal({
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    const tawk = (window as Window & { Tawk_API?: { hideWidget?: () => void; showWidget?: () => void } }).Tawk_API;
-    tawk?.hideWidget?.();
+    if (!alreadyJoined) nameRef.current?.focus();
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
-      tawk?.showWidget?.();
     };
-  }, [onClose]);
+  }, [alreadyJoined, onClose]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -49,7 +48,7 @@ export function ChecklistSignupModal({
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
+    <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div
         className="modal-panel lead-modal"
         role="dialog"
@@ -93,6 +92,7 @@ export function ChecklistSignupModal({
               <label className="field">
                 <span>Name</span>
                 <input
+                  ref={nameRef}
                   name="name"
                   required
                   autoComplete="name"
@@ -112,14 +112,7 @@ export function ChecklistSignupModal({
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </label>
-              {error ? (
-                <>
-                  <p className="form-error">{error}</p>
-                  <a className="btn btn-ghost btn-block" href={CHECKLIST_PDF_PATH} download>
-                    Download the checklist anyway
-                  </a>
-                </>
-              ) : null}
+              {error ? <p className="form-error">{error}</p> : null}
               <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
                 {busy ? "Sending…" : <>Get <span className="lead-free-btn">FREE</span> Checklist</>}
               </button>

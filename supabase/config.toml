@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.subscribe-checklist]
 verify_jwt = false
+
+[functions.tawk-webhook]
+verify_jwt = false

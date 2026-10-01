@@ -13,7 +13,7 @@ function PasswordField({
   onChange,
   autoComplete,
   hint,
-  minLength,
+  minLength = 8,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -83,7 +83,7 @@ export function SignInPage() {
     setError("");
     try {
       await signIn(email, password);
-      navigate("/app");
+      navigate(email.trim().toLowerCase() === "iflipbrands@gmail.com" ? "/admin" : "/app");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign in.");
     }
@@ -96,7 +96,7 @@ export function SignInPage() {
           <span>Email</span>
           <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <PasswordField value={password} onChange={setPassword} autoComplete="current-password" />
+      <PasswordField value={password} onChange={setPassword} autoComplete="current-password" minLength={1} />
         {error && <p className="form-error">{error}</p>}
         <button className="btn btn-primary btn-block" style={{ marginTop: 18 }} type="submit">
           Sign In
@@ -166,7 +166,6 @@ export function UpdatePasswordPage() {
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
-          minLength={8}
           hint="At least 8 characters."
         />
         {error && <p className="form-error">{error}</p>}
@@ -240,7 +239,6 @@ export function CreateAccountPage() {
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
-          minLength={8}
           hint="At least 8 characters."
         />
         {error && <p className="form-error">{error}</p>}

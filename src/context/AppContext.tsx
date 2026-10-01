@@ -14,6 +14,7 @@ import {
   demoAddCustomItem,
   demoCancelInvitation,
   demoCatalog,
+  demoChangePassword,
   demoInviteMember,
   demoRemoveContact,
   demoRemoveCustomItem,
@@ -102,6 +103,7 @@ type AppState = {
   saveProgress: (itemId: string, checked: boolean, note: string) => Promise<void>;
   refreshAccount: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  changePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
   addContact: (name: string, phone: string, label: string) => Promise<void>;
   removeContact: (id: string) => Promise<void>;
@@ -601,6 +603,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await refreshAccount();
   }, [refreshAccount]);
 
+  const changePassword = useCallback(async (password: string) => {
+    if (isDemoMode()) {
+      demoChangePassword(password);
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     if (isDemoMode()) demoSignOut();
     else await supabase.auth.signOut();
@@ -880,6 +891,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveProgress,
       refreshAccount,
       signIn,
+      changePassword,
       signOut,
       addContact,
       removeContact,
@@ -922,6 +934,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveProgress,
       refreshAccount,
       signIn,
+      changePassword,
       signOut,
       addContact,
       removeContact,
