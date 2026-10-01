@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { DEMO_PREVIEW_EMAIL } from "../lib/demo";
 
 type Step = { title: string; body: string; selector: string; path: string };
 type Copy = Pick<Step, "title" | "body">[];
@@ -23,6 +24,7 @@ export function OnboardingTour() {
   const location = useLocation();
   const navigate = useNavigate();
   const storageKey = profile ? `spl.onboarding.v1.${profile.id}` : "";
+  const isPreviewAccount = profile?.email?.trim().toLowerCase() === DEMO_PREVIEW_EMAIL;
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"welcome" | "tour">("welcome");
   const [slide, setSlide] = useState(0);
@@ -32,9 +34,18 @@ export function OnboardingTour() {
   const step = { ...DEFAULT_STEPS[stepIndex], ...copy[stepIndex] };
 
   useEffect(() => {
-    if (!profile?.id || profile.plan === "none") return;
-    if (localStorage.getItem(storageKey) !== "done") setOpen(true);
-  }, [profile?.id, profile?.plan, storageKey]);
+    if (!profile?.id || (profile.plan === "none" && !isPreviewAccount)) return;
+    if (isPreviewAccount) {
+      localStorage.removeItem(storageKey);
+      setMode("welcome");
+      setSlide(0);
+      setStepIndex(0);
+      setRect(null);
+      setOpen(true);
+      return;
+    }
+    setOpen(localStorage.getItem(storageKey) !== "done");
+  }, [profile?.id, profile?.plan, storageKey, isPreviewAccount]);
 
   useEffect(() => {
     if (!open || mode !== "tour") return;

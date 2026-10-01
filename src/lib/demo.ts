@@ -36,6 +36,8 @@ export const DEMO_JIMMY_LIST = "00000000-0000-4000-8000-000000000102";
 export const DEMO_BOBBY_LIST = "00000000-0000-4000-8000-000000000103";
 const SESSION_KEY = "spl.demo.signedIn";
 const STATE_KEY = "spl.demo.state.v4";
+const OWNER_PASSWORD_KEY = "spl.demo.ownerPassword";
+const PREVIEW_PASSWORD_KEY = "spl.demo.previewPassword";
 
 export function isDemoMode() {
   return !isSupabaseConfigured();
@@ -343,15 +345,15 @@ export function demoSession(): Session {
 
 export function demoSignIn(email: string, password: string) {
   const loginEmail = email.trim().toLowerCase();
-  const storedPassword = localStorage.getItem("spl.demo.ownerPassword") || DEMO_PASSWORD;
-  const expectedPassword = loginEmail === DEMO_PREVIEW_EMAIL ? DEMO_PASSWORD : storedPassword;
+  const passwordKey = loginEmail === DEMO_PREVIEW_EMAIL ? PREVIEW_PASSWORD_KEY : OWNER_PASSWORD_KEY;
+  const expectedPassword = localStorage.getItem(passwordKey) || DEMO_PASSWORD;
   if (![DEMO_EMAIL, DEMO_PREVIEW_EMAIL].includes(loginEmail) || password !== expectedPassword) {
     throw new Error("Invalid email or password.");
   }
   localStorage.setItem(SESSION_KEY, "1");
   localStorage.setItem("spl.demo.loginEmail", loginEmail);
-  localStorage.removeItem(`spl.onboarding.v1.${DEMO_USER_ID}`);
-  const state = readState();
+  if (loginEmail === DEMO_PREVIEW_EMAIL) localStorage.removeItem(`spl.onboarding.v1.${DEMO_USER_ID}`);
+  const state = loginEmail === DEMO_PREVIEW_EMAIL ? defaultState() : readState();
   state.profile.email = loginEmail;
   state.profile.role = loginEmail === DEMO_EMAIL ? "owner" : "customer";
   const own = state.members.find((m) => m.permission === "own") || state.members[0];
@@ -360,7 +362,9 @@ export function demoSignIn(email: string, password: string) {
 }
 
 export function demoChangePassword(password: string) {
-  localStorage.setItem("spl.demo.ownerPassword", password);
+  const email = (localStorage.getItem("spl.demo.loginEmail") || DEMO_EMAIL).trim().toLowerCase();
+  const passwordKey = email === DEMO_PREVIEW_EMAIL ? PREVIEW_PASSWORD_KEY : OWNER_PASSWORD_KEY;
+  localStorage.setItem(passwordKey, password);
 }
 
 export function demoSignOut() {
