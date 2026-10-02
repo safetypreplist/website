@@ -168,13 +168,18 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="section cream" id="included">
+      <section className="section forest story-section" id="included">
         <div className="wrap story-split">
-          <div className="story-photo">
-            <img src={PHOTO_LIBRARY.devices} alt="Safety Prep List on a phone and desktop, showing the checklist and dashboard" />
+          <div className="story-photo story-phone">
+            <div className="story-device-stage">
+              <img className="story-phone-render" src="/images/safety-prep-phone.png" alt="Safety Prep List checklist displayed on a smartphone" />
+              <div className="story-dashboard-frame">
+                <img src="/images/desktop-dashboard.webp" alt="Safety Prep List checklist dashboard on desktop" />
+              </div>
+            </div>
           </div>
           <div className="story-copy">
-            <h2>Be ready before you need to be.</h2>
+            <h2>Your #1 Resource During an Emergency</h2>
             <p>
               Know what to pack, what to store, and what to do next. Check items off, add personal notes, and keep your
               household organized in one place.

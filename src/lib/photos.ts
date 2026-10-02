@@ -11,7 +11,7 @@ export const PHOTO_LIBRARY = {
   home: "/images/pantry-home.jpg",
   packing: "/images/family-checklist.jpg",
   devices: "/images/app-phone-desktop.jpg",
-  forestfloor: "/images/forest-background.jpg",
+  forestfloor: "/images/how-it-works-mountains.jpg",
   offgrid: "/images/power-outage.jpg",
   water: "/images/water-filter.jpg",
   power: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1600&q=80",

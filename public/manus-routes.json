@@ -1,0 +1,16 @@
+{
+  "routes": [
+    { "path": "/", "title": "Safety Prep List" },
+    { "path": "/pricing", "title": "Pricing" },
+    { "path": "/checkout", "title": "Checkout" },
+    { "path": "/thank-you", "title": "Thank You" },
+    { "path": "/create-account", "title": "Create Account" },
+    { "path": "/privacy", "title": "Privacy" },
+    { "path": "/terms", "title": "Terms" },
+    { "path": "/support", "title": "Support" },
+    { "path": "/signin", "title": "Sign In" },
+    { "path": "/reset-password", "title": "Reset Password" },
+    { "path": "/update-password", "title": "Update Password" },
+    { "path": "/invite/:token", "title": "Invite" }
+  ]
+}
