@@ -5239,6 +5239,7 @@ p {
   height: clamp(520px, 72vh, 720px);
   min-height: 520px;
   background: var(--reference-forest);
+  box-shadow: inset 0 -36px 48px -10px rgba(0, 0, 0, 0.55);
 }
 
 .marketing-page .hero-copy-col {
@@ -5287,9 +5288,15 @@ p {
   object-position: 68% center;
 }
 
-.marketing-page .hero-slash,
-.marketing-page .hero-studio::after {
+.marketing-page .hero-slash {
   display: none;
+}
+
+.marketing-page .hero-studio::after {
+  display: block;
+  height: 88px;
+  background: linear-gradient(to top, rgba(5, 12, 10, 0.62), transparent 78%);
+  box-shadow: inset 0 -28px 36px -8px rgba(0, 0, 0, 0.5);
 }
 
 .marketing-page .story-section {
