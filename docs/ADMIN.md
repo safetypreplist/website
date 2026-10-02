@@ -1,11 +1,6 @@
-# Content management
+# Owner console
 
-Checklist progress is stored against `checklist_items.permanent_key` via the item UUID. You can change `text` and `description` at any time. **Do not change `permanent_key`** for an existing item.
-
-## Option A — Owner tools in the app
-
-1. Sign in with your account
-2. In SQL:
+Grant owner access in SQL only:
 
 ```sql
 update public.profiles
@@ -13,40 +8,45 @@ set role = 'owner'
 where email = 'you@yourdomain.com';
 ```
 
-3. Open `/admin`
+Then sign in and open `/admin`. The console only shows live tools:
 
-You can edit item wording (first 80 rows), add Video Vault rows, and add verified safety resources.
+| Tab | What it does |
+|---|---|
+| Accounts & access | Real customer accounts. Reset passwords through the owner-only edge function. |
+| Discount codes | Live checkout codes. PayPal charges the discounted subscription amount. Survival Vault is never discounted. |
+| Support chats | Tawk.to visitors from the webhook table. |
+| Checklist & resources | Edit item wording (first 80 rows), add How-To Videos, add verified safety resources. |
+| Onboarding | Tour copy stored in `app_config` and shown to every customer. |
 
-## Option B — Supabase Table Editor (recommended for bulk work)
+Do **not** change `checklist_items.permanent_key` for an existing item.
 
-Tables:
+## Discount codes
+
+Create codes in the owner console. `READY10` (10% all plans) and `FAMILY25` (25% family) ship as examples. `WELCOME5` is stored but off.
+
+Checkout calls `preview-discount`, then `create-paypal-order` / `capture-paypal-order` re-check the same code before charging.
+
+## Bulk content (Supabase Table Editor)
 
 | Table | Purpose |
 |---|---|
-| `checklist_systems` | Grab & Go Bag, Ready Duffel, advanced systems, `access_tier`, `sort_order`, `active` |
+| `checklist_systems` | Grab & Go Bag, Ready Duffel, Survival Vault lists, `access_tier`, `sort_order`, `active` |
 | `checklist_sections` | Categories inside a system |
 | `checklist_items` | `permanent_key`, wording, `sort_order`, `active` |
-| `video_resources` | Vault titles, URLs, thumbnails, `active` |
+| `video_resources` | How-To Video titles, URLs, thumbnails, `active` |
 | `safety_contacts` | National and state records; include `source_url` and `verified_at` |
 | `products` | Amounts in cents |
-| `app_config` | Upgrade pricing JSON |
-
-To add a new Full System list later: insert a `checklist_systems` row with `access_tier = 'full'`, then sections and items with new keys. The dashboard renders systems from the database — no frontend redesign.
+| `discount_codes` | Checkout offers |
+| `app_config` | Pricing JSON and onboarding copy |
 
 ## Safety directory policy
 
-Do not invent phone numbers. Seed data includes:
+Do not invent phone numbers. Seed data includes Ready.gov, SAMHSA/988, Poison.org, FEMA, and official state emergency-management websites. Add a state-specific phone only after you confirm it on that agency’s current public page.
 
-- National numbers published by Ready.gov, SAMHSA/988, Poison.org, and FEMA (with source URLs and `verified_at`)
-- Official state emergency-management **websites** from the USA.gov / FEMA directory
-- National poison (1-800-222-1222), 988, FEMA, and weather.gov repeated per state as verified national services
+## How-To Videos
 
-Add a state-specific phone only after you confirm it on that agency’s current public page. Record `source_url` and today’s `verified_at`.
-
-## Video Vault
-
-Rows in `video_resources` with `active = false` or a blank `video_url` stay hidden. Paste a URL, set `active = true`, and the vault updates without a rebuild.
+Rows in `video_resources` with `active = false` or a blank `video_url` stay hidden.
 
 ## Devices
 
-Customers get 2 slots. They can rename or remove a registration. Browsers can be reset, so removal is the recovery path — enforcement is intentionally reasonable, not invasive. The raw device token never leaves the device; only a SHA-256 hash is stored.
+Customers get 2 slots. They can rename or remove a registration. The raw device token never leaves the device; only a SHA-256 hash is stored.

@@ -5,7 +5,6 @@ import { registerSW } from "virtual:pwa-register";
 import App from "./App";
 import { AppProvider } from "./context/AppContext";
 import "./styles/app.css";
-import "./styles/landing-reference.css";
 
 registerSW({ immediate: true });
 

@@ -30,14 +30,12 @@ Sandbox client IDs do not work in live mode. Use a real PayPal account on the li
 
 ## How checkout works
 
-## How checkout works
-
-1. The browser asks `create-paypal-order` for a product slug (`core` or `upgrade_full`) plus `quantity`, `includeHousehold`, and `accessInterval` (`monthly` or `annual`).
-2. The function looks up **price in the database**, not the UI.
+1. The browser asks `create-paypal-order` for a product slug (`core` or `upgrade_full`) plus `quantity`, `includeHousehold`, `accessInterval` (`monthly` or `annual`), and an optional `discountCode`.
+2. The function looks up **price in the database**, not the UI. Discount codes are looked up in `discount_codes` and applied to the subscription only.
 3. For a new plan (`core`), the captured amount is:
 
-   `Monthly ($11.99) or Annual ($119.88) × people` + optional Survival Vault (`$10` once, never multiplied by family size)
-4. PayPal creates an order for that **due today** amount.
+   `Monthly ($11.99) or Annual ($119.88) × people` + optional Survival Vault (`$10` once, never multiplied by family size) − optional subscription discount
+4. PayPal creates an order for that **due today** amount. Checkout preview uses `preview-discount` so the page matches what PayPal will charge.
 5. The PayPal Buttons SDK collects payment.
 6. The browser sends the `orderId` to `capture-paypal-order`.
 7. The function **captures and verifies** with PayPal:

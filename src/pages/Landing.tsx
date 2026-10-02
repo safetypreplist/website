@@ -386,8 +386,7 @@ export function LandingPage() {
             <p className="eyebrow">Bonus checklist</p>
             <h2>Get your <span className="lead-free">FREE</span> Emergency Documents Checklist.</h2>
             <p>
-              Sign up for our mailing list and get IDs, insurance, medical records, and the papers you’ll want in an
-              emergency.
+              Join the list and get IDs, insurance, medical records, and the papers you’ll want in an emergency.
             </p>
           </div>
           <p className="closing-cta-action">

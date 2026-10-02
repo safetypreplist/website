@@ -94,6 +94,6 @@ Primary colors are defined in `src/styles/app.css`:
 
 `#1E2A1F` forest · `#556B2F` moss · `#A67C52` clay · `#C75A2B` terracotta · `#E6E2D6` sand · `#F4F0E5` cream
 
-Headings: Oswald. Body: Inter.
+Headings: Inter Tight. Body: Inter.
 
-Illustration slots are vintage field-guide placeholders (backpack, duffel, SUV, cabin, and related motifs). Replace the SVG components in `src/components/Illustrations.tsx` with final art when it is ready.
+Photographs and product screenshots live in `public/images/`.

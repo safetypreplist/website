@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.tawk-webhook]
 verify_jwt = false
+
+[functions.preview-discount]
+verify_jwt = false

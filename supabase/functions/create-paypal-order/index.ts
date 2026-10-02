@@ -1,5 +1,12 @@
 import { json, preflight } from "../_shared/http.ts";
 import { buildCustomId, parseAccessInterval } from "../_shared/billing.ts";
+import {
+  isDiscountUsable,
+  loadDiscount,
+  normalizeCode,
+  planKindFromQuantity,
+  quoteWithDiscount,
+} from "../_shared/discounts.ts";
 import { dollarsFromCents, paypalFetch } from "../_shared/paypal.ts";
 import { productBySlug, requireUser } from "../_shared/supabase.ts";
 
@@ -34,27 +41,45 @@ Deno.serve(async (req) => {
     const product = await productBySlug(slug);
     if (!product) return json({ error: "Product unavailable" }, 400);
 
+    let subscriptionCents = 0;
+    let vaultCents = 0;
     let amountCents = product.amount_cents * (slug === "core" ? 0 : 1);
     let description = `Safety Prep List — ${product.name}`;
+    const planKind = planKindFromQuantity(quantity, body.plan);
+    const requestedCode = normalizeCode(body.discountCode);
     if (slug === "core") {
       if (!access) return json({ error: "Choose Monthly or Annual" }, 400);
       const accessProduct = await productBySlug(access === "annual" ? "access_annual" : "access_monthly");
       if (!accessProduct) return json({ error: "Subscription pricing unavailable" }, 400);
-      amountCents = accessProduct.amount_cents * quantity;
+      subscriptionCents = accessProduct.amount_cents * quantity;
+      amountCents = subscriptionCents;
       description = quantity > 1
         ? `Safety Prep List Family Plan — ${quantity} personal checklists, ${access === "annual" ? "Annual" : "Monthly"}`
         : `Safety Prep List Individual Plan, ${access === "annual" ? "Annual" : "Monthly"}`;
       if (includeHousehold) {
         const household = await productBySlug("upgrade_full");
         if (!household) return json({ error: "Survival Vault unavailable" }, 400);
-        amountCents += household.amount_cents;
+        vaultCents = household.amount_cents;
+        amountCents += vaultCents;
         description += " + Survival Vault";
       }
     }
 
+    let discountCode = "";
+    if (requestedCode && slug === "core") {
+      const row = await loadDiscount(requestedCode);
+      const quote = quoteWithDiscount({ row, planKind, subscriptionCents, vaultCents });
+      if (!isDiscountUsable(row) || !row || !quote.discountCents) {
+        return json({ error: "That code is not active or does not apply to this plan." }, 400);
+      }
+      discountCode = row.code;
+      amountCents = quote.dueTodayCents;
+      description += ` (${row.code})`;
+    }
+
     const value = dollarsFromCents(amountCents);
     const appUrl = Deno.env.get("APP_URL") || "http://localhost:5173";
-    const customId = buildCustomId({ slug, quantity, includeHousehold, access });
+    const customId = buildCustomId({ slug, quantity, includeHousehold, access, discountCode });
     const plan = quantity > 1 ? "family" : String(body.plan || "individual");
     const thankYou = new URL("/thank-you", appUrl);
     thankYou.searchParams.set("plan", plan === "family" ? "family" : "individual");

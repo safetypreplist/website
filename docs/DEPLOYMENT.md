@@ -36,8 +36,10 @@ The workflow is `.github/workflows/deploy.yml`. It copies `index.html` to `404.h
 1. In the repo, add `public/CNAME` containing only your domain, one line:
 
 ```
-yourdomain.com
+safetypreplist.com
 ```
+
+Production already uses this CNAME in `public/CNAME`. For a new environment, replace it with that environment’s domain.
 
 2. At your DNS host, point the domain at GitHub Pages:
 

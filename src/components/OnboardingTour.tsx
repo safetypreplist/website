@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { DEMO_PREVIEW_EMAIL } from "../lib/demo";
+import { supabase } from "../lib/supabase";
 
 type Step = { title: string; body: string; selector: string; path: string };
-type Copy = Pick<Step, "title" | "body">[];
+export type TourCopy = Pick<Step, "title" | "body">[];
 
 const DEFAULT_STEPS: Step[] = [
   { title: "Start with your checklist", body: "Your readiness plan is organized into simple systems. Open any list to see what to gather and what is already complete.", selector: '[data-onboarding="checklist-card"]', path: "/app" },
@@ -15,7 +16,7 @@ const DEFAULT_STEPS: Step[] = [
 ];
 
 const COPY_KEY = "spl.onboarding.copy.v1";
-function loadCopy(): Copy {
+function loadCopy(): TourCopy {
   try { return JSON.parse(localStorage.getItem(COPY_KEY) || "null") || DEFAULT_STEPS.map(({ title, body }) => ({ title, body })); } catch { return DEFAULT_STEPS.map(({ title, body }) => ({ title, body })); }
 }
 
@@ -27,18 +28,27 @@ export function OnboardingTour() {
   const isPreviewAccount = profile?.email?.trim().toLowerCase() === DEMO_PREVIEW_EMAIL;
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"welcome" | "tour">("welcome");
-  const [slide, setSlide] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [copy] = useState<Copy>(loadCopy);
+  const [copy, setCopy] = useState<TourCopy>(loadCopy);
   const step = { ...DEFAULT_STEPS[stepIndex], ...copy[stepIndex] };
+
+  useEffect(() => {
+    void supabase.from("app_config").select("value").eq("key", "onboarding_copy").maybeSingle().then(({ data, error }) => {
+      if (error) return;
+      const stored = Array.isArray(data?.value) ? data.value as TourCopy : [];
+      if (stored.length) {
+        setCopy(stored);
+        localStorage.setItem(COPY_KEY, JSON.stringify(stored));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!profile?.id || (profile.plan === "none" && !isPreviewAccount)) return;
     if (isPreviewAccount) {
       localStorage.removeItem(storageKey);
       setMode("welcome");
-      setSlide(0);
       setStepIndex(0);
       setRect(null);
       setOpen(true);
@@ -63,16 +73,38 @@ export function OnboardingTour() {
 
   function finish() { if (storageKey) localStorage.setItem(storageKey, "done"); setOpen(false); }
   function startTour() { setMode("tour"); setStepIndex(0); navigate(DEFAULT_STEPS[0].path); }
-  function nextWelcome() { if (slide === 0) setSlide(1); else startTour(); }
   function nextTour() { if (stepIndex === DEFAULT_STEPS.length - 1) { finish(); return; } const nextIndex = stepIndex + 1; setStepIndex(nextIndex); navigate(DEFAULT_STEPS[nextIndex].path); }
 
-  return <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : ""}`}>
-    {mode === "welcome" ? <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-      <div className="onboarding-slide-dots" aria-label={`Welcome slide ${slide + 1} of 2`}>{[0, 1].map((dot) => <span className={dot === slide ? "active" : ""} key={dot} />)}</div>
-      {slide === 0 ? <><div className="onboarding-video"><span className="onboarding-play">▶</span><span>Welcome to your safety checklist</span><small>Watch the quick welcome video</small></div><p className="eyebrow">A calmer way to prepare</p><h2 id="onboarding-title">Welcome to Safety Prep List.</h2><p className="onboarding-copy">Watch the welcome video now, or skip it and learn more on the next slide.</p><div className="onboarding-actions onboarding-actions-stacked"><button className="btn btn-primary" type="button" onClick={nextWelcome}>Watch welcome video</button><button className="onboarding-skip-inline" type="button" onClick={nextWelcome}>Skip video</button></div></> : null}
-      {slide === 1 ? <><p className="eyebrow">Your checklist is ready</p><h2 id="onboarding-title">Do you want a guided tour?</h2><p className="onboarding-copy">We can show you where to check items, leave notes, connect family members, and manage your account. You can exit at any time.</p><div className="onboarding-actions"><button className="btn btn-ghost" type="button" onClick={finish}>Start on my own</button><button className="btn btn-primary" type="button" onClick={startTour}>Take the guided tour</button></div></> : null}
-    </div> : <><div className="onboarding-scrim" aria-hidden="true" />{rect ? <div className="onboarding-spotlight" style={{ top: rect.top - 30, left: rect.left - 40, width: rect.width + 80, height: rect.height + 60 }} /> : null}<aside className={`onboarding-tour-card ${rect && rect.top > window.innerHeight * .55 ? "above" : ""}`} role="dialog" aria-modal="true" aria-labelledby="tour-title"><div className="onboarding-tour-head"><span>{progress}</span><button type="button" onClick={finish}>×</button></div><p className="eyebrow">Guided tour</p><h2 id="tour-title">{step.title}</h2><p>{step.body}</p><div className="onboarding-tour-actions"><button className="btn btn-ghost" type="button" onClick={finish}>Exit tour</button><button className="btn btn-primary" type="button" onClick={nextTour}>{stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}</button></div></aside></>}
-  </div>;
+  return (
+    <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : ""}`}>
+      {mode === "welcome" ? (
+        <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+          <p className="eyebrow">Your checklist is ready</p>
+          <h2 id="onboarding-title">Do you want a guided tour?</h2>
+          <p className="onboarding-copy">We can show you where to check items, leave notes, connect family members, and manage your account. You can exit at any time.</p>
+          <div className="onboarding-actions">
+            <button className="btn btn-ghost" type="button" onClick={finish}>Start on my own</button>
+            <button className="btn btn-primary" type="button" onClick={startTour}>Take the guided tour</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="onboarding-scrim" aria-hidden="true" />
+          {rect ? <div className="onboarding-spotlight" style={{ top: rect.top - 30, left: rect.left - 40, width: rect.width + 80, height: rect.height + 60 }} /> : null}
+          <aside className={`onboarding-tour-card ${rect && rect.top > window.innerHeight * 0.55 ? "above" : ""}`} role="dialog" aria-modal="true" aria-labelledby="tour-title">
+            <div className="onboarding-tour-head"><span>{progress}</span><button type="button" onClick={finish}>×</button></div>
+            <p className="eyebrow">Guided tour</p>
+            <h2 id="tour-title">{step.title}</h2>
+            <p>{step.body}</p>
+            <div className="onboarding-tour-actions">
+              <button className="btn btn-ghost" type="button" onClick={finish}>Exit tour</button>
+              <button className="btn btn-primary" type="button" onClick={nextTour}>{stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}</button>
+            </div>
+          </aside>
+        </>
+      )}
+    </div>
+  );
 }
 
 export { COPY_KEY, DEFAULT_STEPS, loadCopy };

@@ -1,5 +1,12 @@
 import { json, preflight } from "../_shared/http.ts";
 import { parseAccessInterval, parseCustomId } from "../_shared/billing.ts";
+import {
+  incrementDiscountRedemption,
+  isDiscountUsable,
+  loadDiscount,
+  planKindFromQuantity,
+  quoteWithDiscount,
+} from "../_shared/discounts.ts";
 import { generateProductCode, paypalFetch } from "../_shared/paypal.ts";
 import {
   productBySlug,
@@ -89,6 +96,8 @@ Deno.serve(async (req) => {
     let checklistCents = 0;
     let accessCents = 0;
     let vaultCents = 0;
+    let discountCents = 0;
+    const discountCode = parsed.discountCode || "";
     let expected = slug === "core" ? 0 : product.amount_cents;
     if (slug === "core") {
       if (!access) return json({ error: "Billing selection missing from payment" }, 400);
@@ -99,6 +108,20 @@ Deno.serve(async (req) => {
         const household = await productBySlug("upgrade_full");
         vaultCents = household?.amount_cents || 0;
         expected += vaultCents;
+      }
+      if (discountCode) {
+        const row = await loadDiscount(discountCode);
+        const quote = quoteWithDiscount({
+          row,
+          planKind: planKindFromQuantity(quantity),
+          subscriptionCents: accessCents,
+          vaultCents,
+        });
+        if (!isDiscountUsable(row) || !row || !quote.discountCents) {
+          return json({ error: "Payment amount did not match the product" }, 402);
+        }
+        discountCents = quote.discountCents;
+        expected = quote.dueTodayCents;
       }
     }
 
@@ -144,6 +167,8 @@ Deno.serve(async (req) => {
         checklist_cents: checklistCents,
         access_cents: accessCents,
         vault_cents: vaultCents,
+        discount_code: discountCode || null,
+        discount_cents: discountCents,
       })
       .select("*")
       .single();
@@ -171,6 +196,8 @@ Deno.serve(async (req) => {
         p_purchase_id: insert.data.id,
       });
     }
+
+    if (discountCode) await incrementDiscountRedemption(discountCode);
 
     const emailTo = details.payerEmail || user?.email;
     if (emailTo) {

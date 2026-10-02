@@ -102,7 +102,7 @@ type AppState = {
   hasSurvivalVault: boolean;
   saveProgress: (itemId: string, checked: boolean, note: string) => Promise<void>;
   refreshAccount: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ role: string | null }>;
   changePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
   addContact: (name: string, phone: string, label: string) => Promise<void>;
@@ -596,11 +596,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (isDemoMode()) {
       demoSignIn(email, password);
       await refreshAccount();
-      return;
+      return { role: loadDemoAccount().profile.role };
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await refreshAccount();
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return { role: null };
+    const { data } = await supabase.from("profiles").select("role").eq("id", auth.user.id).maybeSingle();
+    return { role: data?.role ?? null };
   }, [refreshAccount]);
 
   const changePassword = useCallback(async (password: string) => {

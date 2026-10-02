@@ -1,12 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { BrandMark } from "../components/Brand";
 import { PayPalCheckout } from "../components/PayPalCheckout";
-import { PublicHeader } from "../components/PublicChrome";
 import { useApp } from "../context/AppContext";
 import { checklistTitle, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
 import { money } from "../lib/format";
-import { PHOTO_LIBRARY } from "../lib/photos";
 import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, SURVIVAL_VAULT_DESCRIPTION, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
 import { Photo } from "../components/Photo";
 import { SystemRow } from "./Dashboard";
@@ -78,11 +75,8 @@ export function ManageFamilyPage() {
             </div>
             {member.pending ? (
               <div className="toolbar">
-                <button className="btn btn-ghost" type="button" onClick={() => void inviteFamilyMember(member.firstName || "", member.lastName || "", member.email || "")}>
-                  Resend
-                </button>
                 <button className="btn btn-ghost" type="button" onClick={() => void cancelInvitation(member.id)}>
-                  Cancel
+                  Cancel invite
                 </button>
               </div>
             ) : member.permission !== "own" ? (
@@ -319,30 +313,3 @@ export function HouseholdPage() {
   );
 }
 
-export function InviteClaimPage() {
-  return (
-    <div className="checkout-stage">
-      <div
-        className="checkout-bg"
-        style={{ backgroundImage: `url(${PHOTO_LIBRARY.landscape})` }}
-        aria-hidden="true"
-      />
-      <PublicHeader />
-      <div className="checkout-panel">
-        <BrandMark />
-        <p className="eyebrow">Family Plan</p>
-        <h1>Set Up My Checklist</h1>
-        <p className="muted">
-          Someone purchased a Safety Prep Checklist for you. Create or sign in to your account to claim it. After that,
-          you own the checklist and choose who can view or edit it.
-        </p>
-        <Link className="btn btn-primary btn-block" to="/create-account">
-          Set Up My Checklist
-        </Link>
-        <p className="muted" style={{ marginTop: 16 }}>
-          Already have an account? <Link to="/signin">Sign in</Link>
-        </p>
-      </div>
-    </div>
-  );
-}

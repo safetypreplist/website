@@ -62,8 +62,10 @@ export function CheckoutPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
   const [discountCode, setDiscountCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState("");
   const [discountMessage, setDiscountMessage] = useState("");
   const [discountApplied, setDiscountApplied] = useState(0);
+  const [checkingCode, setCheckingCode] = useState(false);
   const upgrade = products.find((p) => p.slug === "upgrade_full");
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
@@ -78,8 +80,8 @@ export function CheckoutPage() {
     sessionStorage.setItem("spl.vault", vault ? "1" : "0");
     sessionStorage.setItem("spl.household", vault ? "1" : "0");
     sessionStorage.setItem("spl.access", access);
-    sessionStorage.setItem("spl.discountCode", discountCode);
-  }, [planKind, people, vault, access, discountCode]);
+    sessionStorage.setItem("spl.discountCode", appliedCode);
+  }, [planKind, people, vault, access, appliedCode]);
 
   const onCaptured = useMemo(
     () => (result: { productCode: string; productType: string }) => {
@@ -148,6 +150,7 @@ export function CheckoutPage() {
               value={discountCode}
               onChange={(e) => {
                 setDiscountCode(e.target.value.toUpperCase());
+                setAppliedCode("");
                 setDiscountApplied(0);
                 setDiscountMessage("");
               }}
@@ -157,14 +160,40 @@ export function CheckoutPage() {
             <button
               type="button"
               className="btn btn-ghost"
+              disabled={checkingCode}
               onClick={() => {
-                const normalized = discountCode.trim().toUpperCase();
-                const amount = normalized === "READY10" ? Math.round(breakdown.subscriptionCents * 0.1) : normalized === "FAMILY25" && planKind === "family" ? Math.round(breakdown.subscriptionCents * 0.25) : normalized === "WELCOME5" ? 500 : 0;
-                setDiscountApplied(amount);
-                setDiscountMessage(amount ? `${normalized} applied — you save ${money(amount)}.` : "That code is not active or does not apply to this plan.");
+                void (async () => {
+                  const normalized = discountCode.trim().toUpperCase();
+                  if (!normalized) {
+                    setDiscountMessage("Enter a discount code.");
+                    return;
+                  }
+                  setCheckingCode(true);
+                  try {
+                    const preview = await invokeFunction<{ code: string; discountCents: number; dueTodayCents: number }>(
+                      "preview-discount",
+                      {
+                        code: normalized,
+                        plan: planKind,
+                        quantity: people,
+                        subscriptionCents: breakdown.subscriptionCents,
+                        vaultCents: vault ? vaultCents : 0,
+                      },
+                    );
+                    setAppliedCode(preview.code);
+                    setDiscountApplied(preview.discountCents);
+                    setDiscountMessage(`${preview.code} applied — you save ${money(preview.discountCents)}.`);
+                  } catch (err) {
+                    setAppliedCode("");
+                    setDiscountApplied(0);
+                    setDiscountMessage(err instanceof Error ? err.message : "That code is not active or does not apply to this plan.");
+                  } finally {
+                    setCheckingCode(false);
+                  }
+                })();
               }}
             >
-              Apply
+              {checkingCode ? "Checking…" : "Apply"}
             </button>
           </div>
           {discountMessage ? <p className={`discount-result ${discountApplied ? "success" : "error"}`}>{discountMessage}</p> : null}
@@ -203,13 +232,13 @@ export function CheckoutPage() {
           <>
             {error && <p className="form-error">{error}</p>}
             <PayPalCheckout
-              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}`}
+              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}`}
               productSlug="core"
               quantity={people}
               includeHousehold={vault}
               accessInterval={access}
               planKind={planKind}
-              discountCode={discountCode}
+              discountCode={appliedCode}
               onCaptured={onCaptured}
               onError={setError}
             />

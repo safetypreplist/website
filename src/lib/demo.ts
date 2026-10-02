@@ -27,7 +27,7 @@ import { customItemCap, ITEM_LIMIT_ERROR } from "./customItems";
 
 export const DEMO_EMAIL = "iflipbrands@gmail.com";
 export const DEMO_PREVIEW_EMAIL = "demo@demo.com";
-export const DEMO_PASSWORD = "Abc123!";
+export const DEMO_PASSWORD = import.meta.env.PROD ? "" : "Abc123!";
 export const DEMO_USER_ID = "00000000-0000-4000-8000-000000000001";
 export const DEMO_JIMMY_ID = "00000000-0000-4000-8000-000000000002";
 export const DEMO_BOBBY_ID = "00000000-0000-4000-8000-000000000003";

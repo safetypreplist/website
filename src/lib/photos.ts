@@ -9,8 +9,6 @@ export const PHOTO_LIBRARY = {
   ready: "/images/packing-kit.jpg",
   vehicle: "/images/family-packing-car.jpg",
   home: "/images/pantry-home.jpg",
-  packing: "/images/family-checklist.jpg",
-  devices: "/images/app-phone-desktop.jpg",
   forestfloor: "/images/how-it-works-mountains.jpg",
   offgrid: "/images/power-outage.jpg",
   water: "/images/water-filter.jpg",

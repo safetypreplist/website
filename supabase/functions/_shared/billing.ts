@@ -15,19 +15,23 @@ export function buildCustomId(args: {
   quantity: number;
   includeHousehold: boolean;
   access: AccessInterval | null;
+  discountCode?: string;
 }) {
   const access = args.access ? `|a=${accessToken(args.access)}` : "";
-  return `${args.slug}|q=${args.quantity}|h=${args.includeHousehold ? 1 : 0}${access}`;
+  const discount = args.discountCode ? `|d=${args.discountCode}` : "";
+  return `${args.slug}|q=${args.quantity}|h=${args.includeHousehold ? 1 : 0}${access}${discount}`;
 }
 
 export function parseCustomId(customId: string, fallbackSlug: string) {
   const slug = customId.split("|")[0] || fallbackSlug;
   const qtyMatch = customId.match(/q=(\d+)/);
   const accessMatch = customId.match(/a=([my])/);
+  const discountMatch = customId.match(/d=([A-Z0-9]+)/);
   return {
     slug,
     quantity: Math.max(1, Number(qtyMatch?.[1] || 1) || 1),
     includeHousehold: /h=1/.test(customId),
     access: parseAccessInterval(accessMatch?.[1] || null),
+    discountCode: discountMatch?.[1] || "",
   };
 }

@@ -82,8 +82,8 @@ export function SignInPage() {
     e.preventDefault();
     setError("");
     try {
-      await signIn(email, password);
-      navigate(email.trim().toLowerCase() === "iflipbrands@gmail.com" ? "/admin" : "/app");
+      const result = await signIn(email, password);
+      navigate(result.role === "owner" ? "/admin" : "/app");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign in.");
     }

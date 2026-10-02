@@ -14,7 +14,6 @@ import {
   ChecklistAccessPage,
   ConnectedChecklistsPage,
   HouseholdPage,
-  InviteClaimPage,
   ManageFamilyPage,
 } from "./pages/Family";
 import { SafetyPage } from "./pages/Safety";
@@ -181,7 +180,7 @@ export default function App() {
           </RequireAuth>
         }
       />
-      <Route path="/invite/:token" element={<InviteClaimPage />} />
+      <Route path="/invite/:token" element={<Navigate to="/create-account" replace />} />
       <Route
         path="/app/survival/videos"
         element={
