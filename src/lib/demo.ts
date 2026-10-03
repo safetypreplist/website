@@ -43,6 +43,10 @@ export function isDemoMode() {
   return !isSupabaseConfigured();
 }
 
+export function demoPreviewPassword() {
+  return localStorage.getItem(PREVIEW_PASSWORD_KEY) || DEMO_PASSWORD;
+}
+
 type DemoMember = {
   checklist: PersonalChecklist;
   permission: ChecklistPermission | "own";
@@ -352,7 +356,6 @@ export function demoSignIn(email: string, password: string) {
   }
   localStorage.setItem(SESSION_KEY, "1");
   localStorage.setItem("spl.demo.loginEmail", loginEmail);
-  if (loginEmail === DEMO_PREVIEW_EMAIL) localStorage.removeItem(`spl.onboarding.v1.${DEMO_USER_ID}`);
   const state = readState();
   state.profile.email = loginEmail;
   state.profile.role = loginEmail === DEMO_EMAIL ? "owner" : "customer";
@@ -471,6 +474,43 @@ function writeActiveProgress(itemId: string, checked: boolean, note: string) {
 
 export function demoSaveProgress(itemId: string, checked: boolean, note: string) {
   return writeActiveProgress(itemId, checked, note);
+}
+
+export function demoSaveProgressBatch(updates: { itemId: string; checked: boolean; note: string }[]) {
+  const state = readState();
+  const viewing = demoViewing();
+  if (!viewing.canEdit) throw new Error("CHECKLIST_VIEW_ONLY");
+  const now = nowIso();
+  const progressRows: Record<string, ProgressRow> = {};
+  let customList = viewing.kind === "household" ? [...state.householdCustomItems] : [...activeMember(state).customItems];
+
+  for (const update of updates) {
+    const note = update.note.slice(0, 100);
+    progressRows[update.itemId] = {
+      id: `prog-${update.itemId}`,
+      user_id: viewing.ownerUserId || DEMO_USER_ID,
+      checklist_item_id: update.itemId,
+      checked: update.checked,
+      note,
+      updated_by_device_id: state.currentDeviceId,
+      updated_at: now,
+    };
+    customList = customList.map((item) =>
+      item.id === update.itemId ? { ...item, checked: update.checked, note, updated_at: now } : item,
+    );
+  }
+
+  if (viewing.kind === "household") {
+    state.householdProgress = { ...state.householdProgress, ...progressRows };
+    state.householdCustomItems = customList;
+  } else {
+    const member = activeMember(state);
+    member.progress = { ...member.progress, ...progressRows };
+    member.customItems = customList;
+    state.members = state.members.map((row) => (row.checklist.id === member.checklist.id ? member : row));
+  }
+  writeState(state);
+  return { progress: progressRows, customItems: customList };
 }
 
 export function demoAddContact(name: string, phone: string, label: string) {

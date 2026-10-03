@@ -287,7 +287,7 @@ export function LandingPage() {
         <img className="botanical botanical-right" src="/images/botanical-corner.png" alt="" />
         <div className="wrap">
           <div className="section-head">
-            <h2>Choose how you’d like to pay</h2>
+            <h2>Choose a Plan</h2>
             <div className="billing-toggle" role="group" aria-label="Billing">
               <button
                 type="button"

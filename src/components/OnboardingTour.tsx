@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { DEMO_PREVIEW_EMAIL } from "../lib/demo";
 import { supabase } from "../lib/supabase";
 
 type Step = { title: string; body: string; selector: string; path: string };
@@ -16,8 +15,76 @@ const DEFAULT_STEPS: Step[] = [
 ];
 
 const COPY_KEY = "spl.onboarding.copy.v1";
+const VIDEO_CACHE_KEY = "spl.onboarding.video.v1";
+const PREVIEW_KEY = "spl.onboarding.preview";
+const PREVIEW_EVENT = "spl:preview-onboarding";
+const REPLAY_KEY = "spl.onboarding.replay";
+const REPLAY_EVENT = "spl:replay-onboarding";
+
 function loadCopy(): TourCopy {
-  try { return JSON.parse(localStorage.getItem(COPY_KEY) || "null") || DEFAULT_STEPS.map(({ title, body }) => ({ title, body })); } catch { return DEFAULT_STEPS.map(({ title, body }) => ({ title, body })); }
+  try {
+    return JSON.parse(localStorage.getItem(COPY_KEY) || "null") || DEFAULT_STEPS.map(({ title, body }) => ({ title, body }));
+  } catch {
+    return DEFAULT_STEPS.map(({ title, body }) => ({ title, body }));
+  }
+}
+
+function loadCachedVideo(): string {
+  return localStorage.getItem(VIDEO_CACHE_KEY) || "";
+}
+
+function configString(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "url" in value && typeof (value as { url: unknown }).url === "string") {
+    return (value as { url: string }).url;
+  }
+  return "";
+}
+
+export function onboardingVideoSrc(url: string): { type: "iframe" | "video"; src: string } | null {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.replace(/^www\./, "");
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    if (host === "youtu.be" && parts[0]) {
+      return { type: "iframe", src: `https://www.youtube-nocookie.com/embed/${parts[0]}?rel=0` };
+    }
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+      const id = parsed.searchParams.get("v") || (parts[0] === "embed" || parts[0] === "shorts" ? parts[1] : parts.at(-1));
+      if (id && id !== "watch") return { type: "iframe", src: `https://www.youtube-nocookie.com/embed/${id}?rel=0` };
+    }
+    if (host === "vimeo.com" && parts[0]) {
+      return { type: "iframe", src: `https://player.vimeo.com/video/${parts[0]}` };
+    }
+    if (/\.(mp4|webm|ogg)(\?|$)/i.test(parsed.pathname)) return { type: "video", src: trimmed };
+    return { type: "iframe", src: trimmed };
+  } catch {
+    return null;
+  }
+}
+
+export function startOnboardingPreview() {
+  sessionStorage.setItem(PREVIEW_KEY, "1");
+  window.dispatchEvent(new Event(PREVIEW_EVENT));
+}
+
+export function isOnboardingPreview() {
+  return sessionStorage.getItem(PREVIEW_KEY) === "1";
+}
+
+export function startOnboardingReplay() {
+  sessionStorage.setItem(REPLAY_KEY, "1");
+  window.dispatchEvent(new Event(REPLAY_EVENT));
+}
+
+function previewActive() {
+  return sessionStorage.getItem(PREVIEW_KEY) === "1";
+}
+
+function replayActive() {
+  return sessionStorage.getItem(REPLAY_KEY) === "1";
 }
 
 export function OnboardingTour() {
@@ -25,72 +92,219 @@ export function OnboardingTour() {
   const location = useLocation();
   const navigate = useNavigate();
   const storageKey = profile ? `spl.onboarding.v1.${profile.id}` : "";
-  const isPreviewAccount = profile?.email?.trim().toLowerCase() === DEMO_PREVIEW_EMAIL;
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"welcome" | "tour">("welcome");
+  const [mode, setMode] = useState<"welcome" | "tour" | "done">("welcome");
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [copy, setCopy] = useState<TourCopy>(loadCopy);
-  const step = { ...DEFAULT_STEPS[stepIndex], ...copy[stepIndex] };
+  const [videoUrl, setVideoUrl] = useState(loadCachedVideo);
+  const step = { ...(DEFAULT_STEPS[stepIndex] ?? DEFAULT_STEPS[0]), ...copy[stepIndex] };
+  const video = onboardingVideoSrc(videoUrl);
 
   useEffect(() => {
-    void supabase.from("app_config").select("value").eq("key", "onboarding_copy").maybeSingle().then(({ data, error }) => {
-      if (error) return;
-      const stored = Array.isArray(data?.value) ? data.value as TourCopy : [];
-      if (stored.length) {
-        setCopy(stored);
-        localStorage.setItem(COPY_KEY, JSON.stringify(stored));
+    void supabase.from("app_config").select("key, value").in("key", ["onboarding_copy", "onboarding_video_url"]).then(({ data, error }) => {
+      if (error || !data) return;
+      for (const row of data) {
+        if (row.key === "onboarding_copy" && Array.isArray(row.value)) {
+          const stored = row.value as TourCopy;
+          if (stored.length) {
+            setCopy(stored);
+            localStorage.setItem(COPY_KEY, JSON.stringify(stored));
+          }
+        }
+        if (row.key === "onboarding_video_url") {
+          const url = configString(row.value);
+          setVideoUrl(url);
+          localStorage.setItem(VIDEO_CACHE_KEY, url);
+        }
       }
     });
   }, []);
 
   useEffect(() => {
-    if (!profile?.id || (profile.plan === "none" && !isPreviewAccount)) return;
-    if (isPreviewAccount) {
-      localStorage.removeItem(storageKey);
-      setMode("welcome");
-      setStepIndex(0);
-      setRect(null);
-      setOpen(true);
-      return;
+    function syncOpen() {
+      if (!profile?.id) return;
+      if (replayActive()) {
+        sessionStorage.removeItem(REPLAY_KEY);
+        setMode("tour");
+        setStepIndex(0);
+        setRect(null);
+        setOpen(true);
+        navigate(DEFAULT_STEPS[0].path);
+        return;
+      }
+      if (previewActive()) {
+        setMode("welcome");
+        setStepIndex(0);
+        setRect(null);
+        setOpen(true);
+        return;
+      }
+      if (profile.plan === "none") {
+        setOpen(false);
+        return;
+      }
+      setOpen(localStorage.getItem(storageKey) !== "done");
     }
-    setOpen(localStorage.getItem(storageKey) !== "done");
-  }, [profile?.id, profile?.plan, storageKey, isPreviewAccount]);
+    syncOpen();
+    window.addEventListener(PREVIEW_EVENT, syncOpen);
+    window.addEventListener(REPLAY_EVENT, syncOpen);
+    return () => {
+      window.removeEventListener(PREVIEW_EVENT, syncOpen);
+      window.removeEventListener(REPLAY_EVENT, syncOpen);
+    };
+  }, [profile?.id, profile?.plan, storageKey, navigate]);
 
   useEffect(() => {
     if (!open || mode !== "tour") return;
-    const target = document.querySelector(step.selector) as HTMLElement | null;
-    target?.classList.add("onboarding-target-highlight");
-    const timer = window.setTimeout(() => setRect(target?.getBoundingClientRect() || null), 120);
-    const update = () => setRect(target?.getBoundingClientRect() || null);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => { window.clearTimeout(timer); target?.classList.remove("onboarding-target-highlight"); window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
-  }, [open, mode, step.selector, location.pathname]);
+    let cancelled = false;
+    let target: HTMLElement | null = null;
+    const pad = 16;
+    const expectedPath = DEFAULT_STEPS[stepIndex]?.path;
+
+    function measure() {
+      if (!target) return;
+      const box = target.getBoundingClientRect();
+      setRect(new DOMRect(box.left - pad, box.top - pad, box.width + pad * 2, box.height + pad * 2));
+    }
+
+    async function locate() {
+      for (let attempt = 0; attempt < 50 && !cancelled; attempt += 1) {
+        target = document.querySelector(step.selector) as HTMLElement | null;
+        if (target) {
+          target.classList.add("onboarding-target-highlight");
+          target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+          await new Promise((resolve) => window.setTimeout(resolve, 80));
+          if (!cancelled) measure();
+          return;
+        }
+        if (expectedPath && window.location.pathname !== expectedPath) {
+          await new Promise((resolve) => window.setTimeout(resolve, 80));
+          continue;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 80));
+      }
+      if (!cancelled) setRect(null);
+    }
+
+    void locate();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      cancelled = true;
+      target?.classList.remove("onboarding-target-highlight");
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [open, mode, step.selector, stepIndex, location.pathname]);
+
+  useEffect(() => {
+    if (!open || mode !== "done") return;
+    const timer = window.setTimeout(() => {
+      const preview = previewActive();
+      sessionStorage.removeItem(PREVIEW_KEY);
+      if (!preview && storageKey) localStorage.setItem(storageKey, "done");
+      setOpen(false);
+      navigate("/app/lists");
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [open, mode, navigate, storageKey]);
 
   const progress = useMemo(() => `${stepIndex + 1} of ${DEFAULT_STEPS.length}`, [stepIndex]);
   if (!open || !profile) return null;
 
-  function finish() { if (storageKey) localStorage.setItem(storageKey, "done"); setOpen(false); }
-  function startTour() { setMode("tour"); setStepIndex(0); navigate(DEFAULT_STEPS[0].path); }
-  function nextTour() { if (stepIndex === DEFAULT_STEPS.length - 1) { finish(); return; } const nextIndex = stepIndex + 1; setStepIndex(nextIndex); navigate(DEFAULT_STEPS[nextIndex].path); }
+  function finish() {
+    const preview = previewActive();
+    sessionStorage.removeItem(PREVIEW_KEY);
+    if (!preview && storageKey) localStorage.setItem(storageKey, "done");
+    setOpen(false);
+  }
+  function completeTour() {
+    setMode("done");
+    setRect(null);
+  }
+  function startTour() {
+    setRect(null);
+    setMode("tour");
+    setStepIndex(0);
+    navigate(DEFAULT_STEPS[0].path);
+  }
+  function nextTour() {
+    if (stepIndex >= DEFAULT_STEPS.length - 1) {
+      completeTour();
+      return;
+    }
+    const nextIndex = stepIndex + 1;
+    const next = DEFAULT_STEPS[nextIndex];
+    setRect(null);
+    setStepIndex(nextIndex);
+    if (next?.path && next.path !== location.pathname) navigate(next.path);
+  }
+
+  const hole = rect
+    ? {
+        top: Math.max(0, rect.top),
+        left: Math.max(0, rect.left),
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      }
+    : null;
 
   return (
-    <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : ""}`}>
+    <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
       {mode === "welcome" ? (
         <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+          <div className="onboarding-video">
+            {video?.type === "video" ? (
+              <video src={video.src} controls playsInline />
+            ) : video ? (
+              <iframe
+                src={video.src}
+                title="Welcome video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <>
+                <span className="onboarding-play" aria-hidden="true">▶</span>
+                <span>Welcome video</span>
+                <small>Your intro video will play here</small>
+              </>
+            )}
+          </div>
           <p className="eyebrow">Your checklist is ready</p>
-          <h2 id="onboarding-title">Do you want a guided tour?</h2>
+          <h2 id="onboarding-title">Welcome</h2>
           <p className="onboarding-copy">We can show you where to check items, leave notes, connect family members, and manage your account. You can exit at any time.</p>
           <div className="onboarding-actions">
             <button className="btn btn-ghost" type="button" onClick={finish}>Start on my own</button>
             <button className="btn btn-primary" type="button" onClick={startTour}>Take the guided tour</button>
           </div>
         </div>
+      ) : mode === "done" ? (
+        <div className="onboarding-done-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-done-title">
+          <span className="onboarding-done-check" aria-hidden="true">✓</span>
+          <h2 id="onboarding-done-title">You’re all set.</h2>
+          <div className="onboarding-loader" aria-hidden="true" />
+          <p className="onboarding-copy">Loading your checklist…</p>
+        </div>
       ) : (
         <>
-          <div className="onboarding-scrim" aria-hidden="true" />
-          {rect ? <div className="onboarding-spotlight" style={{ top: rect.top - 30, left: rect.left - 40, width: rect.width + 80, height: rect.height + 60 }} /> : null}
+          {hole ? (
+            <>
+              <div className="onboarding-tint" style={{ top: 0, left: 0, right: 0, height: hole.top }} />
+              <div className="onboarding-tint" style={{ top: hole.bottom, left: 0, right: 0, bottom: 0 }} />
+              <div className="onboarding-tint" style={{ top: hole.top, left: 0, width: hole.left, height: hole.height }} />
+              <div className="onboarding-tint" style={{ top: hole.top, left: hole.right, right: 0, height: hole.height }} />
+              <div
+                className="onboarding-spotlight"
+                style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
+              />
+            </>
+          ) : (
+            <div className="onboarding-tint onboarding-tint-full" aria-hidden="true" />
+          )}
           <aside className={`onboarding-tour-card ${rect && rect.top > window.innerHeight * 0.55 ? "above" : ""}`} role="dialog" aria-modal="true" aria-labelledby="tour-title">
             <div className="onboarding-tour-head"><span>{progress}</span><button type="button" onClick={finish}>×</button></div>
             <p className="eyebrow">Guided tour</p>
@@ -107,4 +321,4 @@ export function OnboardingTour() {
   );
 }
 
-export { COPY_KEY, DEFAULT_STEPS, loadCopy };
+export { COPY_KEY, DEFAULT_STEPS, VIDEO_CACHE_KEY, loadCopy };

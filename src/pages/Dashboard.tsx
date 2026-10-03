@@ -103,9 +103,9 @@ export function DashboardPage() {
 
       {!entitled && (
         <div className="status-banner">
-          This account does not have a personal checklist yet. Purchase a plan, then create your account.
+          We couldn’t confirm this subscription yet. If you just purchased, give it a moment — or contact help if payment didn’t go through.
           <div style={{ marginTop: 10 }}>
-            <Link className="btn btn-primary" to="/pricing">Get My Checklist</Link>
+            <Link className="btn btn-ghost" to="/app/help">Get help</Link>
           </div>
         </div>
       )}

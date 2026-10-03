@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PayPalCheckout } from "../components/PayPalCheckout";
+import { ProfileWeather } from "../components/LocationStatus";
 import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
-import { checklistTitle, initialsFrom, planTypeLabel } from "../lib/identity";
+import { checklistTitle, initialsFrom, personName, planTypeLabel } from "../lib/identity";
+import { PHOTO_LIBRARY } from "../lib/photos";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 
 export function AccountPage() {
@@ -38,6 +40,8 @@ export function AccountPage() {
   const used = devices.length;
   const familySize = familyMembers.filter((m) => m.status !== "cancelled").length || 1;
   const planName = planTypeLabel({ plan: profile?.plan, familySize });
+  const greetingName = personName(profile);
+  const welcome = greetingName === "My" ? "Welcome" : `Welcome, ${greetingName}`;
 
   useEffect(() => {
     setFirst(profile?.first_name || "");
@@ -114,46 +118,69 @@ export function AccountPage() {
 
   return (
     <div className="account-page">
-      <h1 className="page-title">Profile</h1>
-
-      <article className="account-card">
-        <div className="account-photo">
-          <span className="account-photo-mark">
-            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <span>{initialsFrom(display || first, user?.email)}</span>}
-          </span>
-          <div>
-            <input
-              ref={fileRef}
-              className="sr-only"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => void onPhoto(e.target.files?.[0])}
-            />
-            <button className="btn btn-ghost" type="button" disabled={photoBusy} onClick={() => fileRef.current?.click()}>
-              {photoBusy ? "Saving photo…" : profile?.avatar_url ? "Change photo" : "Upload photo"}
+      <section className="profile-hero">
+        <div className="profile-hero-banner">
+          <img src={PHOTO_LIBRARY.landscape} alt="" />
+          <ProfileWeather />
+        </div>
+        <div className="profile-hero-body">
+          <input
+            ref={fileRef}
+            className="sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => void onPhoto(e.target.files?.[0])}
+          />
+          <div className="profile-hero-identity">
+            <button
+              className="profile-avatar"
+              type="button"
+              disabled={photoBusy}
+              onClick={() => fileRef.current?.click()}
+              aria-label={profile?.avatar_url ? "Change photo" : "Upload photo"}
+            >
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="" />
+              ) : (
+                <span>{initialsFrom(display || first, user?.email)}</span>
+              )}
             </button>
+            <div>
+              <p className="profile-kicker">Your profile</p>
+              <h1 className="page-title">{welcome}</h1>
+              <p className="profile-hero-meta">{planName}</p>
+              <button className="profile-photo-link" type="button" disabled={photoBusy} onClick={() => fileRef.current?.click()}>
+                {photoBusy ? "Saving photo…" : profile?.avatar_url ? "Change photo" : "Upload photo"}
+              </button>
+            </div>
           </div>
         </div>
+      </section>
 
-        <label className="account-field">
-          <span>First name</span>
-          <input value={first} onChange={(e) => setFirst(e.target.value)} placeholder="First name" />
-        </label>
-        <label className="account-field">
-          <span>Last name</span>
-          <input value={last} onChange={(e) => setLast(e.target.value)} placeholder="Last name" />
-        </label>
-        <label className="account-field">
-          <span>Display name</span>
-          <input value={display} onChange={(e) => setDisplay(e.target.value)} placeholder="How your checklist is labeled" />
-        </label>
-        <label className="account-field">
-          <span>Phone number</span>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-5555" inputMode="tel" />
-        </label>
-        <div className="account-field">
-          <span>Email</span>
-          <p>{user?.email || profile?.email || "—"}</p>
+      <article className="account-card">
+        <h2>Your details</h2>
+        <p className="muted">Keep your name and contact information current so your checklist stays labeled for you.</p>
+        <div className="account-details-grid">
+          <label className="account-field">
+            <span>First name</span>
+            <input value={first} onChange={(e) => setFirst(e.target.value)} placeholder="First name" />
+          </label>
+          <label className="account-field">
+            <span>Last name</span>
+            <input value={last} onChange={(e) => setLast(e.target.value)} placeholder="Last name" />
+          </label>
+          <label className="account-field">
+            <span>Display name</span>
+            <input value={display} onChange={(e) => setDisplay(e.target.value)} placeholder="How your checklist is labeled" />
+          </label>
+          <label className="account-field">
+            <span>Phone number</span>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-5555" inputMode="tel" />
+          </label>
+          <div className="account-field account-field-wide">
+            <span>Email</span>
+            <p>{user?.email || profile?.email || "—"}</p>
+          </div>
         </div>
         <button className="btn btn-forest" type="button" disabled={saving} onClick={() => void saveDetails()}>
           {saving ? "Saving…" : "Save details"}

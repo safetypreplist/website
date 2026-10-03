@@ -8,48 +8,6 @@ import {
   type WeatherKind,
 } from "../lib/weather";
 
-const HIDE_KEY = "spl-hide-weather";
-
-function readHidden() {
-  try {
-    return localStorage.getItem(HIDE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function useWeatherHidden() {
-  const [hidden, setHidden] = useState(readHidden);
-
-  useEffect(() => {
-    const sync = () => setHidden(readHidden());
-    window.addEventListener("spl-weather-hide", sync);
-    return () => window.removeEventListener("spl-weather-hide", sync);
-  }, []);
-
-  const hide = () => {
-    try {
-      localStorage.setItem(HIDE_KEY, "1");
-    } catch {
-      /* private mode */
-    }
-    setHidden(true);
-    window.dispatchEvent(new Event("spl-weather-hide"));
-  };
-
-  const show = () => {
-    try {
-      localStorage.removeItem(HIDE_KEY);
-    } catch {
-      /* private mode */
-    }
-    setHidden(false);
-    window.dispatchEvent(new Event("spl-weather-hide"));
-  };
-
-  return { hidden, hide, show };
-}
-
 function clockParts(now: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
@@ -84,14 +42,11 @@ export function HeaderClock() {
   );
 }
 
-export function SidebarWeather() {
-  const { hidden, hide, show } = useWeatherHidden();
+export function ProfileWeather() {
   const [conditions, setConditions] = useState<LocalConditions | null>(null);
 
   useEffect(() => {
-    if (hidden) return;
     let cancelled = false;
-
     const apply = (next: LocalConditions) => {
       if (!cancelled) setConditions(next);
     };
@@ -117,37 +72,22 @@ export function SidebarWeather() {
     return () => {
       cancelled = true;
     };
-  }, [hidden]);
-
-  if (hidden) {
-    return (
-      <div className="sidebar-weather is-off">
-        <button className="weather-toggle" type="button" onClick={show}>
-          Show weather
-        </button>
-      </div>
-    );
-  }
+  }, []);
 
   return (
-    <div className="sidebar-weather">
-      <div className="sidebar-weather-row">
-        <WeatherGlyph kind={conditions ? weatherKind(conditions.code) : "cloud"} />
-        <div className="sidebar-weather-copy">
-          <strong>{conditions ? conditions.place : "Finding location…"}</strong>
-          {conditions ? (
-            <span>
-              {conditions.temp}° · {conditions.label}
-            </span>
-          ) : (
-            <span>Updating…</span>
-          )}
-        </div>
+    <aside className="profile-weather">
+      <WeatherGlyph kind={conditions ? weatherKind(conditions.code) : "cloud"} />
+      <div>
+        <strong>{conditions ? conditions.place : "Finding location…"}</strong>
+        {conditions ? (
+          <span>
+            {conditions.temp}° · {conditions.label}
+          </span>
+        ) : (
+          <span>Updating weather…</span>
+        )}
       </div>
-      <button className="weather-toggle" type="button" onClick={hide}>
-        Hide
-      </button>
-    </div>
+    </aside>
   );
 }
 

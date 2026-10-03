@@ -36,8 +36,8 @@ SYSTEMS = [
                 "title": "Personal Communication",
                 "intro": "Keep these charged and next to the door.",
                 "items": [
-                    item("grab.communication.phone", "Cell phone (1 per adult), fully charged", "Important contacts saved on the device."),
-                    item("grab.communication.powerbank", "Portable phone charger (1 per adult), fully charged", "Include the correct charging cables."),
+                    item("grab.communication.phone", "Cell phone", "One per adult, fully charged, with important contacts saved on the device."),
+                    item("grab.communication.powerbank", "Phone charger", "One per adult, fully charged, with the correct cables."),
                 ],
             },
             {
@@ -45,7 +45,7 @@ SYSTEMS = [
                 "title": "Financial & Identification",
                 "intro": "One set per adult.",
                 "items": [
-                    item("grab.financial.wallet-id", "Wallet with primary identification", "Driver's license or state ID."),
+                    item("grab.financial.wallet-id", "Wallet with ID", "Driver's license or state ID."),
                     item("grab.financial.cards", "Credit and debit cards"),
                     item("grab.financial.cash", "Cash in small bills", "At least $50–$100 per adult for when electronic systems are down."),
                 ],
@@ -63,9 +63,9 @@ SYSTEMS = [
                 "title": "Immediate Medical & Vision",
                 "intro": "One set per person who needs them.",
                 "items": [
-                    item("grab.medical.prescriptions", "Prescription medications (3-day supply)", "Clearly labeled with dosage. Include inhaler, EpiPen, or other devices."),
-                    item("grab.medical.glasses", "Glasses or contacts plus solution", "A spare pair if you have one."),
-                    item("grab.medical.hearing-aids", "Hearing aids and spare batteries"),
+                    item("grab.medical.prescriptions", "Prescriptions", "3-day supply. Clearly labeled with dosage. Include inhaler, EpiPen, or other devices."),
+                    item("grab.medical.glasses", "Glasses or contacts", "A spare pair if you have one, plus solution for contacts."),
+                    item("grab.medical.hearing-aids", "Hearing aids", "Include spare batteries."),
                 ],
             },
             {
@@ -75,7 +75,7 @@ SYSTEMS = [
                 "items": [
                     item("grab.documents.passport", "Passport", "If needed as secondary ID or for travel."),
                     item("grab.documents.insurance-cards", "Insurance cards", "Health, auto, and home. Digital copies on your phone help."),
-                    item("grab.documents.contact-list", "Family emergency contact list", "Laminated physical list with family, doctors, and an out-of-state contact."),
+                    item("grab.documents.contact-list", "Emergency contacts", "Laminated physical list with family, doctors, and an out-of-state contact."),
                 ],
             },
             {
@@ -83,7 +83,7 @@ SYSTEMS = [
                 "title": "Immediate Survival",
                 "intro": "One set per person.",
                 "items": [
-                    item("grab.survival.water", "Water bottle (16–20 oz per person)"),
+                    item("grab.survival.water", "Water bottle", "16–20 oz per person."),
                     item("grab.survival.flashlight", "Compact flashlight", "Fresh batteries or a hand-crank option."),
                 ],
             },

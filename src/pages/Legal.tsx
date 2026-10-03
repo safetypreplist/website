@@ -3,7 +3,7 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 
 function LegalShell({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div>
+    <div className="marketing-page">
       <PublicHeader />
       <main className="section cream">
         <div className="wrap legal-page">

@@ -1,12 +1,14 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { supabase } from "../lib/supabase";
 import { SAFETY_CATEGORY_LABELS, US_STATES, money } from "../lib/format";
-import { COPY_KEY, DEFAULT_STEPS, loadCopy, type TourCopy } from "../components/OnboardingTour";
+import { COPY_KEY, DEFAULT_STEPS, VIDEO_CACHE_KEY, loadCopy, startOnboardingPreview, type TourCopy } from "../components/OnboardingTour";
 import { AdminAccounts } from "../components/AdminAccounts";
+import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/help";
+import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
 
-type AdminTab = "support" | "accounts" | "discounts" | "content" | "onboarding";
+type AdminTab = "support" | "accounts" | "discounts" | "content" | "onboarding" | "faqs";
 type DiscountKind = "percent" | "fixed";
 type AppliesTo = "all" | "individual" | "family";
 type Discount = {
@@ -53,6 +55,7 @@ export function AdminPage() {
           <p className="admin-rail-label admin-rail-label-spaced">Manage content</p>
           <AdminNavButton active={tab === "content"} label="Checklist & resources" onClick={() => setTab("content")} />
           <AdminNavButton active={tab === "onboarding"} label="Onboarding" onClick={() => setTab("onboarding")} />
+          <AdminNavButton active={tab === "faqs"} label="FAQs" onClick={() => setTab("faqs")} />
           <AdminNavButton active={false} label="Log out" onClick={() => void signOut()} />
         </aside>
         <section className="admin-content">
@@ -67,6 +70,7 @@ export function AdminPage() {
           {tab === "support" && <SupportActivity />}
           {tab === "content" && <ContentTools catalog={catalog} safety={safety} refreshAccount={refreshAccount} onSaved={setMessage} />}
           {tab === "onboarding" && <OnboardingSettings onSaved={setMessage} />}
+          {tab === "faqs" && <FaqSettings onSaved={setMessage} />}
         </section>
       </div>
     </div>
@@ -334,7 +338,12 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
   );
 }
 
-function ContentTools({ catalog, safety, refreshAccount, onSaved }: { catalog: { items: Array<{ id: string; permanent_key: string; text: string }>; }; safety: Array<unknown>; refreshAccount: () => Promise<void>; onSaved: (message: string) => void }) {
+function ContentTools({ catalog, safety, refreshAccount, onSaved }: {
+  catalog: { items: Array<{ id: string; permanent_key: string; text: string; description?: string | null }>; };
+  safety: Array<unknown>;
+  refreshAccount: () => Promise<void>;
+  onSaved: (message: string) => void;
+}) {
   const [subtab, setSubtab] = useState<"items" | "videos" | "safety">("items");
   return (
     <>
@@ -342,7 +351,7 @@ function ContentTools({ catalog, safety, refreshAccount, onSaved }: { catalog: {
         <div>
           <p className="eyebrow">Content</p>
           <h2>Checklist & resources</h2>
-          <p className="muted">Edit live wording. Do not change permanent keys.</p>
+          <p className="muted">Edit live wording and info tips. Leave a tip blank to hide the “i” on that item.</p>
         </div>
       </div>
       <div className="toolbar admin-content-tabs">
@@ -352,18 +361,33 @@ function ContentTools({ catalog, safety, refreshAccount, onSaved }: { catalog: {
       </div>
       {subtab === "items" && (
         <div className="admin-panel admin-content-panel">
-          {catalog.items.slice(0, 80).map((item) => (
-            <label className="field" key={item.id}>
-              <span>{item.permanent_key}</span>
-              <input
-                defaultValue={item.text}
-                onBlur={async (e) => {
-                  await supabase.from("checklist_items").update({ text: e.target.value }).eq("id", item.id);
-                  onSaved("Item wording saved.");
-                  await refreshAccount();
-                }}
-              />
-            </label>
+          {catalog.items.map((item) => (
+            <div className="admin-item-edit" key={item.id}>
+              <label className="field">
+                <span>{item.permanent_key}</span>
+                <input
+                  defaultValue={item.text}
+                  onBlur={async (e) => {
+                    await supabase.from("checklist_items").update({ text: e.target.value }).eq("id", item.id);
+                    onSaved("Item wording saved.");
+                    await refreshAccount();
+                  }}
+                />
+              </label>
+              <label className="field">
+                <span>Info tip</span>
+                <textarea
+                  rows={2}
+                  defaultValue={item.description || ""}
+                  placeholder="Shown on the i icon. Leave empty for no tip."
+                  onBlur={async (e) => {
+                    await supabase.from("checklist_items").update({ description: e.target.value.trim() || null }).eq("id", item.id);
+                    onSaved("Info tip saved.");
+                    await refreshAccount();
+                  }}
+                />
+              </label>
+            </div>
           ))}
         </div>
       )}
@@ -431,29 +455,43 @@ function SafetyForm({ onSaved, existing }: { onSaved: (s: string) => void; exist
 }
 
 function OnboardingSettings({ onSaved }: { onSaved: (message: string) => void }) {
+  const navigate = useNavigate();
+  const { signIn } = useApp();
   const [copy, setCopy] = useState<TourCopy>(() => loadCopy());
+  const [videoUrl, setVideoUrl] = useState(() => localStorage.getItem(VIDEO_CACHE_KEY) || "");
   const [loading, setLoading] = useState(true);
   const update = (index: number, field: "title" | "body", value: string) =>
     setCopy((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
 
   useEffect(() => {
-    void supabase.from("app_config").select("value").eq("key", "onboarding_copy").maybeSingle().then(({ data }) => {
-      const stored = Array.isArray(data?.value) ? data.value as TourCopy : [];
-      if (stored.length) setCopy(stored);
+    void supabase.from("app_config").select("key, value").in("key", ["onboarding_copy", "onboarding_video_url"]).then(({ data }) => {
+      for (const row of data || []) {
+        if (row.key === "onboarding_copy" && Array.isArray(row.value) && row.value.length) {
+          setCopy(row.value as TourCopy);
+        }
+        if (row.key === "onboarding_video_url") {
+          const value = row.value;
+          setVideoUrl(typeof value === "string" ? value : typeof value?.url === "string" ? value.url : "");
+        }
+      }
       setLoading(false);
     });
   }, []);
 
   async function save() {
-    const { error } = await supabase.from("app_config").upsert({ key: "onboarding_copy", value: copy, updated_at: new Date().toISOString() });
+    const now = new Date().toISOString();
+    const { error } = await supabase.from("app_config").upsert([
+      { key: "onboarding_copy", value: copy, updated_at: now },
+      { key: "onboarding_video_url", value: videoUrl.trim(), updated_at: now },
+    ]);
     if (error) { onSaved(error.message); return; }
     localStorage.setItem(COPY_KEY, JSON.stringify(copy));
-    onSaved("Onboarding tour text is saved for every customer.");
+    localStorage.setItem(VIDEO_CACHE_KEY, videoUrl.trim());
+    onSaved("Onboarding tour and welcome video are saved for every customer.");
   }
 
   function reset() {
-    const defaults = DEFAULT_STEPS.map(({ title, body }) => ({ title, body }));
-    setCopy(defaults);
+    setCopy(DEFAULT_STEPS.map(({ title, body }) => ({ title, body })));
   }
 
   if (loading) return <p className="muted">Loading onboarding copy…</p>;
@@ -462,10 +500,39 @@ function OnboardingSettings({ onSaved }: { onSaved: (message: string) => void })
       <div className="admin-section-heading">
         <div>
           <p className="eyebrow">Owner controls</p>
-          <h2>Onboarding tour</h2>
-          <p className="muted">This copy is stored in the app and shown to customers on their first visit.</p>
+          <h2>Onboarding</h2>
+          <p className="muted">Customers with a plan see this once. Preview it here, then edit the welcome video and tour stops.</p>
         </div>
+        <button
+          className="btn btn-forest"
+          type="button"
+          onClick={() => {
+            void (async () => {
+              startOnboardingPreview();
+              const password = demoPreviewPassword();
+              if (password) {
+                try {
+                  await signIn(DEMO_PREVIEW_EMAIL, password);
+                } catch {
+                  /* preview still opens on the current session if demo login is unavailable */
+                }
+              }
+              navigate("/app");
+            })();
+          }}
+        >
+          Preview onboarding
+        </button>
       </div>
+      <label className="account-field admin-onboarding-video-field">
+        <span>Welcome popup video</span>
+        <input
+          value={videoUrl}
+          onChange={(event) => setVideoUrl(event.target.value)}
+          placeholder="YouTube, Vimeo, or direct .mp4 URL"
+        />
+        <small className="muted">Plays on the first-visit popup. Leave blank to hide the video.</small>
+      </label>
       {copy.map((item, index) => (
         <fieldset className="admin-onboarding-step" key={index}>
           <legend>Tour stop {index + 1}</legend>
@@ -474,8 +541,96 @@ function OnboardingSettings({ onSaved }: { onSaved: (message: string) => void })
         </fieldset>
       ))}
       <div className="drawer-actions">
-        <button className="btn btn-ghost" type="button" onClick={reset}>Reset defaults</button>
-        <button className="btn btn-primary" type="button" onClick={() => void save()}>Save tour text</button>
+        <button className="btn btn-ghost" type="button" onClick={reset}>Reset tour defaults</button>
+        <button className="btn btn-primary" type="button" onClick={() => void save()}>Save onboarding</button>
+      </div>
+    </div>
+  );
+}
+
+function FaqSettings({ onSaved }: { onSaved: (message: string) => void }) {
+  const [faqs, setFaqs] = useState<HelpFaq[]>(DEFAULT_FAQS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void supabase.from("app_config").select("value").eq("key", HELP_FAQS_KEY).maybeSingle().then(({ data }) => {
+      const next = parseFaqs(data?.value);
+      if (next.length) setFaqs(next);
+      setLoading(false);
+    });
+  }, []);
+
+  function update(index: number, field: "question" | "answer", value: string) {
+    setFaqs((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)));
+  }
+
+  function addFaq() {
+    setFaqs((current) => [...current, { id: `faq-${Date.now()}`, question: "", answer: "" }]);
+  }
+
+  function removeFaq(index: number) {
+    setFaqs((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function save() {
+    const cleaned = faqs
+      .map((item, index) => ({
+        id: item.id || `faq-${index}`,
+        question: item.question.trim(),
+        answer: item.answer.trim(),
+      }))
+      .filter((item) => item.question && item.answer);
+    const { error } = await supabase.from("app_config").upsert({
+      key: HELP_FAQS_KEY,
+      value: cleaned,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) {
+      onSaved(error.message);
+      return;
+    }
+    setFaqs(cleaned);
+    onSaved("FAQs are saved for the Help page.");
+  }
+
+  if (loading) return <p className="muted">Loading FAQs…</p>;
+
+  return (
+    <div className="admin-form-panel">
+      <div className="admin-section-heading">
+        <div>
+          <p className="eyebrow">Owner controls</p>
+          <h2>FAQs</h2>
+          <p className="muted">These answers show on the in-app Help page. Add, edit, or remove them anytime.</p>
+        </div>
+        <button className="btn btn-forest" type="button" onClick={addFaq}>
+          Add FAQ
+        </button>
+      </div>
+      {faqs.length === 0 ? <p className="muted">No FAQs yet. Add one to get started.</p> : null}
+      {faqs.map((faq, index) => (
+        <fieldset className="admin-onboarding-step" key={faq.id}>
+          <legend>Question {index + 1}</legend>
+          <label className="account-field">
+            <span>Question</span>
+            <input value={faq.question} onChange={(event) => update(index, "question", event.target.value)} />
+          </label>
+          <label className="account-field">
+            <span>Answer</span>
+            <textarea rows={3} value={faq.answer} onChange={(event) => update(index, "answer", event.target.value)} />
+          </label>
+          <button className="btn btn-ghost" type="button" onClick={() => removeFaq(index)}>
+            Remove
+          </button>
+        </fieldset>
+      ))}
+      <div className="drawer-actions">
+        <button className="btn btn-ghost" type="button" onClick={() => setFaqs(DEFAULT_FAQS)}>
+          Reset defaults
+        </button>
+        <button className="btn btn-primary" type="button" onClick={() => void save()}>
+          Save FAQs
+        </button>
       </div>
     </div>
   );

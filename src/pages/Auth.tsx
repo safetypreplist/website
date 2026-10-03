@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BrandMark } from "../components/Brand";
-import { PublicHeader } from "../components/PublicChrome";
+import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { useApp } from "../context/AppContext";
 import { supabase } from "../lib/supabase";
 import { PRODUCT_CODE_RE } from "../lib/format";
@@ -67,6 +67,7 @@ function Card({
         <h1>{title}</h1>
         {children}
       </div>
+      <PublicFooter />
     </div>
   );
 }

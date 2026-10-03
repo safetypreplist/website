@@ -23,6 +23,7 @@ import {
   demoRevokeAccess,
   demoSaveCustomProgress,
   demoSaveProgress,
+  demoSaveProgressBatch,
   demoSession,
   demoSetPermission,
   demoSetPreferredState,
@@ -31,6 +32,7 @@ import {
   demoSignedIn,
   demoSwitchView,
   demoUpdateProfile,
+  DEMO_PREVIEW_EMAIL,
   isDemoMode,
   loadDemoAccount,
 } from "../lib/demo";
@@ -101,6 +103,7 @@ type AppState = {
   planGroup: PlanGroup | null;
   hasSurvivalVault: boolean;
   saveProgress: (itemId: string, checked: boolean, note: string) => Promise<void>;
+  saveProgressMany: (updates: { itemId: string; checked: boolean; note: string }[]) => Promise<void>;
   refreshAccount: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ role: string | null }>;
   changePassword: (password: string) => Promise<void>;
@@ -218,7 +221,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) {
       if (error.message?.includes("DEVICE_LIMIT_REACHED")) {
-        setDeviceLimitReached(true);
+        const { data: auth } = await supabase.auth.getUser();
+        const demoLogin = auth.user?.email?.trim().toLowerCase() === DEMO_PREVIEW_EMAIL;
+        setDeviceLimitReached(!demoLogin);
         setCurrentDevice(null);
         return;
       }
@@ -591,6 +596,113 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [currentDevice?.id, customItems, online, session?.user.id, viewing.canEdit, viewing.ownerUserId],
   );
 
+  const saveProgressMany = useCallback(
+    async (updates: { itemId: string; checked: boolean; note: string }[]) => {
+      if (!viewing.canEdit || updates.length === 0) return;
+      const now = new Date().toISOString();
+      const customIds = new Set(customItems.map((item) => item.id));
+      const optimistic: Record<string, ProgressRow> = {};
+      const clippedUpdates = updates.map((update) => ({
+        ...update,
+        note: update.note.slice(0, 100),
+      }));
+
+      for (const update of clippedUpdates) {
+        const row: ProgressRow = {
+          id: pendingProgress.current[update.itemId]?.id || update.itemId,
+          user_id: viewing.ownerUserId || session?.user.id || "",
+          checklist_item_id: update.itemId,
+          checked: update.checked,
+          note: update.note,
+          updated_by_device_id: currentDevice?.id || null,
+          updated_at: now,
+        };
+        optimistic[update.itemId] = row;
+        pendingProgress.current[update.itemId] = row;
+      }
+
+      setProgress((prev) => ({ ...prev, ...optimistic }));
+      setCustomItems((prev) =>
+        prev.map((item) => {
+          const update = clippedUpdates.find((row) => row.itemId === item.id);
+          return update ? { ...item, checked: update.checked, note: update.note, updated_at: now } : item;
+        }),
+      );
+
+      if (isDemoMode()) {
+        const saved = demoSaveProgressBatch(clippedUpdates);
+        for (const [itemId, row] of Object.entries(saved.progress)) pendingProgress.current[itemId] = row;
+        setProgress((prev) => ({ ...prev, ...saved.progress }));
+        setCustomItems(saved.customItems);
+        setSync("saved");
+        return;
+      }
+
+      setSync("saving");
+      await Promise.all(
+        clippedUpdates.map(async (update) => {
+          if (customIds.has(update.itemId)) {
+            const { data, error } = await supabase.rpc("save_custom_item_progress", {
+              p_item_id: update.itemId,
+              p_checked: update.checked,
+              p_note: update.note,
+            });
+            if (error) {
+              setSync("error");
+              return;
+            }
+            const row = data as CustomChecklistItem;
+            const saved: ProgressRow = {
+              ...optimistic[update.itemId],
+              checked: row.checked,
+              note: row.note,
+              updated_at: row.updated_at,
+            };
+            pendingProgress.current[update.itemId] = saved;
+            setCustomItems((prev) => prev.map((item) => (item.id === update.itemId ? row : item)));
+            setProgress((prev) => ({ ...prev, [update.itemId]: saved }));
+            return;
+          }
+
+          if (!online) {
+            enqueueProgress({
+              itemId: update.itemId,
+              checked: update.checked,
+              note: update.note,
+              deviceId: currentDevice?.id || null,
+            });
+            setSync("waiting");
+            return;
+          }
+
+          const { data, error } = await supabase.rpc("upsert_progress", {
+            p_item_id: update.itemId,
+            p_checked: update.checked,
+            p_note: update.note,
+            p_device_id: currentDevice?.id || null,
+            p_owner_user_id: viewing.ownerUserId || session?.user.id,
+          });
+          if (error) {
+            enqueueProgress({
+              itemId: update.itemId,
+              checked: update.checked,
+              note: update.note,
+              deviceId: currentDevice?.id || null,
+            });
+            setSync("waiting");
+            return;
+          }
+          const saved = data as ProgressRow;
+          pendingProgress.current[update.itemId] = saved;
+          clearQueueItem(update.itemId);
+          setProgress((prev) => ({ ...prev, [update.itemId]: saved }));
+        }),
+      );
+      if (online) setSync("saved");
+    },
+    [currentDevice?.id, customItems, online, session?.user.id, viewing.canEdit, viewing.ownerUserId],
+  );
+
   const signIn = useCallback(async (email: string, password: string) => {
     storeView({ kind: "personal", checklistId: null });
     if (isDemoMode()) {
@@ -893,6 +1005,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       planGroup,
       hasSurvivalVault: vault,
       saveProgress,
+      saveProgressMany,
       refreshAccount,
       signIn,
       changePassword,
@@ -936,6 +1049,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       planGroup,
       vault,
       saveProgress,
+      saveProgressMany,
       refreshAccount,
       signIn,
       changePassword,

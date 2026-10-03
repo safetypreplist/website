@@ -1,11 +1,13 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
+import { isOnboardingPreview } from "./components/OnboardingTour";
 import { useApp } from "./context/AppContext";
 import { LandingPage } from "./pages/Landing";
 import { CreateAccountPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { PrivacyPage, SupportPage, TermsPage } from "./pages/Legal";
 import { AccountPage, VaultPage } from "./pages/Account";
+import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
 import { ContactsPage } from "./pages/Contacts";
 import { DashboardPage, ListsPage } from "./pages/Dashboard";
@@ -30,7 +32,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function DeviceGate({ children }: { children: React.ReactNode }) {
   const { deviceLimitReached } = useApp();
   const location = useLocation();
-  if (deviceLimitReached && !location.pathname.startsWith("/app/devices") && !location.pathname.startsWith("/app/account")) {
+  if (
+    deviceLimitReached &&
+    !isOnboardingPreview() &&
+    !location.pathname.startsWith("/app/devices") &&
+    !location.pathname.startsWith("/app/account") &&
+    !location.pathname.startsWith("/app/help")
+  ) {
     return <Navigate to="/app/devices" replace />;
   }
   return <>{children}</>;
@@ -116,6 +124,16 @@ export default function App() {
           <RequireAuth>
             <AppShell>
               <AccountPage />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/app/help"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <HelpPage />
             </AppShell>
           </RequireAuth>
         }

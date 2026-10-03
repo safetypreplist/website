@@ -21,9 +21,9 @@ export function PublicHeader({ pricingHref = "/#pricing" }: HeaderProps) {
         </Link>
         <nav className={`public-links ${open ? "open" : ""}`}>
           <a href="/#how" onClick={close}>How It Works</a>
-          <a href={pricingHref} onClick={close}>Shop Systems</a>
-          <a href="/#free-checklist" onClick={close}>Free Checklist</a>
           <a href="/#included" onClick={close}>What’s Included</a>
+          <a href={pricingHref} onClick={close}>Choose a Plan</a>
+          <a href="/#free-checklist" onClick={close}>Free Checklist</a>
           <NavLink to="/signin" onClick={close}>Log In</NavLink>
         </nav>
         <button className="menu-toggle" aria-label="Menu" onClick={() => setOpen((v) => !v)}>
@@ -49,9 +49,9 @@ export function PublicFooter() {
         </div>
         <nav className="footer-links">
           <a href="/#how">How It Works</a>
-          <a href="/#pricing">Shop Systems</a>
-          <a href="/#free-checklist">Free Checklist</a>
           <a href="/#included">What’s Included</a>
+          <a href="/#pricing">Choose a Plan</a>
+          <a href="/#free-checklist">Free Checklist</a>
           <NavLink to="/signin">Log In</NavLink>
           <NavLink to="/support">Support</NavLink>
           <NavLink to="/privacy">Privacy</NavLink>

@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { useApp } from "../context/AppContext";
@@ -9,20 +9,27 @@ import {
   itemsForSection,
 } from "../lib/customItems";
 import { formatDateTime } from "../lib/format";
+import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
+import { infoForItem } from "../data/itemTips";
 
 export function SystemPage() {
   const { slug } = useParams();
-  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } = useApp();
+  const { catalog, progress, saveProgress, saveProgressMany, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } = useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   const sections = useMemo(
     () => catalog.sections.filter((s) => s.system_id === system?.id).sort((a, b) => a.sort_order - b.sort_order),
     [catalog.sections, system?.id],
   );
   const [openNote, setOpenNote] = useState<string | null>(null);
+  const [openTip, setOpenTip] = useState<string | null>(null);
+  const [openNoteTip, setOpenNoteTip] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [sectionUndo, setSectionUndo] = useState<Record<string, Record<string, boolean>>>({});
+  const printMenuRef = useRef<HTMLDivElement>(null);
 
   const lastSavedAt = useMemo(() => {
     const stamps = sections
@@ -32,6 +39,33 @@ export function SystemPage() {
       .sort();
     return stamps.at(-1) ?? null;
   }, [catalog.items, customItems, progress, sections]);
+
+  useEffect(() => {
+    if (!openTip) return;
+    const timer = window.setTimeout(() => setOpenTip(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [openTip]);
+
+  useEffect(() => {
+    if (!printOpen) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!printMenuRef.current?.contains(event.target as Node)) setPrintOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [printOpen]);
+
+  useEffect(() => {
+    if (!openTip && !openNoteTip) return;
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".item-tip-wrap, .note-tip-wrap")) return;
+      setOpenTip(null);
+      setOpenNoteTip(null);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [openTip, openNoteTip]);
 
   if (!system) return <p>System not found.</p>;
   if (system.access_tier === "full" && !hasSurvivalVault) {
@@ -47,6 +81,59 @@ export function SystemPage() {
     );
   }
 
+  const bannerKey = SYSTEM_PHOTOS[system.slug];
+  const bannerSrc = bannerKey ? PHOTO_LIBRARY[bannerKey] : "";
+
+  function printList(blank: boolean) {
+    setPrintOpen(false);
+    const root = document.documentElement;
+    if (blank) root.classList.add("print-blank");
+    const cleanup = () => {
+      root.classList.remove("print-blank");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+    window.setTimeout(cleanup, 1500);
+  }
+
+  function snapshotSection(sectionId: string, items: { id: string }[]) {
+    setSectionUndo((prev) => ({
+      ...prev,
+      [sectionId]: Object.fromEntries(items.map((item) => [item.id, Boolean(progress[item.id]?.checked)])),
+    }));
+  }
+
+  function setSectionChecked(sectionId: string, items: { id: string }[], checked: boolean) {
+    snapshotSection(sectionId, items);
+    void saveProgressMany(
+      items.map((item) => ({
+        itemId: item.id,
+        checked,
+        note: progress[item.id]?.note || "",
+      })),
+    );
+  }
+
+  function undoSection(sectionId: string, items: { id: string }[]) {
+    const snap = sectionUndo[sectionId];
+    if (!snap) return;
+    setSectionUndo((prev) => {
+      const next = { ...prev };
+      delete next[sectionId];
+      return next;
+    });
+    void saveProgressMany(
+      items
+        .filter((item) => item.id in snap)
+        .map((item) => ({
+          itemId: item.id,
+          checked: snap[item.id],
+          note: progress[item.id]?.note || "",
+        })),
+    );
+  }
+
   return (
     <div className="list-page">
       <div className="print-header">
@@ -55,11 +142,34 @@ export function SystemPage() {
       </div>
       <div className="print-actions">
         <Link className="btn btn-ghost" to="/app">Back</Link>
-        <button className="btn btn-forest" type="button" onClick={() => window.print()}>
-          Print this list
-        </button>
+        <div className="print-menu" ref={printMenuRef}>
+          <button
+            className="btn btn-forest"
+            type="button"
+            aria-expanded={printOpen}
+            aria-haspopup="menu"
+            onClick={() => setPrintOpen((open) => !open)}
+          >
+            Print
+          </button>
+          {printOpen ? (
+            <div className="print-menu-drop" role="menu">
+              <button type="button" role="menuitem" onClick={() => printList(false)}>
+                With current checkmarks
+              </button>
+              <button type="button" role="menuitem" onClick={() => printList(true)}>
+                Blank checklist
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
-      <header className="list-hero">
+      <header className={`list-hero${bannerSrc ? " has-banner" : ""} list-hero-${system.slug}`}>
+        {bannerSrc ? (
+          <div className="list-hero-banner" aria-hidden="true">
+            <img src={bannerSrc} alt="" />
+          </div>
+        ) : null}
         <div>
           {system.time_label ? <p className="time-label">{system.time_label}</p> : null}
           <h1>{system.title}</h1>
@@ -84,16 +194,51 @@ export function SystemPage() {
                 {section.intro ? <p>{section.intro}</p> : null}
               </div>
               {viewing.canEdit ? (
-                <button
-                  className="add-item-btn"
-                  type="button"
-                  aria-label={`Add item to ${section.title}`}
-                  onClick={() => setAddingTo({ id: section.id, title: section.title })}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-                  </svg>
-                </button>
+                <div className="section-tools">
+                  <button
+                    className="section-tool"
+                    type="button"
+                    title="Select all"
+                    aria-label={`Select all in ${section.title}`}
+                    disabled={items.length === 0 || items.every((item) => progress[item.id]?.checked)}
+                    onClick={() => setSectionChecked(section.id, items, true)}
+                  >
+                    All
+                  </button>
+                  <button
+                    className="section-tool"
+                    type="button"
+                    title="Clear all"
+                    aria-label={`Clear all in ${section.title}`}
+                    disabled={items.length === 0 || items.every((item) => !progress[item.id]?.checked)}
+                    onClick={() => setSectionChecked(section.id, items, false)}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    className="section-tool section-tool-icon"
+                    type="button"
+                    title="Undo"
+                    aria-label={`Undo last change in ${section.title}`}
+                    disabled={!sectionUndo[section.id]}
+                    onClick={() => undoSection(section.id, items)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8.5 7.5 5 11l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6 11h7.2a5.3 5.3 0 1 1 0 10.6H11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                  <button
+                    className="add-item-btn"
+                    type="button"
+                    aria-label={`Add item to ${section.title}`}
+                    onClick={() => setAddingTo({ id: section.id, title: section.title })}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
               ) : null}
             </header>
             <div className="list-group-body">
@@ -102,10 +247,12 @@ export function SystemPage() {
                 const checked = Boolean(row?.checked);
                 const note = row?.note || "";
                 const noteOpen = openNote === item.id;
-                const description = item.description?.trim();
+                const tipOpen = openTip === item.id;
+                const noteTipOpen = openNoteTip === item.id;
+                const description = infoForItem(item.permanent_key, item.description);
                 const isCustom = customIds.has(item.id);
                 return (
-                  <article className={`check-item${checked ? " is-done" : ""}${note || noteOpen ? " has-note" : ""}`} key={item.id}>
+                  <article className={`check-item${checked ? " is-done" : ""}`} key={item.id}>
                     <div className="check-row">
                       <button
                         data-onboarding="check-item"
@@ -127,13 +274,19 @@ export function SystemPage() {
                         >
                           <span className="check-title">{item.text}</span>
                         </button>
-                        {description ? (
-                          <>
-                            <span className="desc-print">{description}</span>
-                            <ItemTip text={description} />
-                          </>
-                        ) : null}
+                        {description ? <span className="desc-print">{description}</span> : null}
                       </div>
+                      {description ? (
+                        <ItemTip
+                          open={tipOpen}
+                          text={description}
+                          onToggle={() => {
+                            setOpenNote(null);
+                            setOpenNoteTip(null);
+                            setOpenTip((current) => (current === item.id ? null : item.id));
+                          }}
+                        />
+                      ) : null}
                       {isCustom && viewing.canEdit ? (
                         <button
                           className="custom-remove"
@@ -144,31 +297,43 @@ export function SystemPage() {
                           ×
                         </button>
                       ) : null}
-                      {viewing.canEdit ? (
-                      <button
-                        data-onboarding="notes"
-                        className={`note-toggle${note ? " has-note" : ""}`}
-                        type="button"
-                        aria-expanded={noteOpen}
-                        onClick={() => {
-                          if (openNote && openNote !== item.id) {
-                            const previous = progress[openNote];
-                            void saveProgress(openNote, Boolean(previous?.checked), draft);
-                          }
-                          if (noteOpen) {
-                            void saveProgress(item.id, checked, draft);
-                            setOpenNote(null);
-                            return;
-                          }
-                          setDraft(note);
-                          setOpenNote(item.id);
-                        }}
-                      >
-                        <span className="note-label-full">Add note</span>
-                        <span className="note-label-short">Note</span>
-                      </button>
-                      ) : note ? (
-                        <p className="muted" style={{ fontSize: 13 }}>{note}</p>
+                      {viewing.canEdit || note ? (
+                      <div className={`note-tip-wrap${noteTipOpen ? " open" : ""}`}>
+                        <button
+                          data-onboarding="notes"
+                          className={`note-toggle${note ? " has-note" : " add-note"}`}
+                          type="button"
+                          aria-expanded={noteOpen || noteTipOpen}
+                          onClick={() => {
+                            setOpenTip(null);
+                            if (note && !noteOpen) {
+                              setOpenNote(null);
+                              setOpenNoteTip((current) => (current === item.id ? null : item.id));
+                              return;
+                            }
+                            if (openNote && openNote !== item.id) {
+                              const previous = progress[openNote];
+                              void saveProgress(openNote, Boolean(previous?.checked), draft);
+                            }
+                            if (noteOpen) {
+                              void saveProgress(item.id, checked, draft);
+                              setOpenNote(null);
+                              return;
+                            }
+                            setOpenNoteTip(null);
+                            setDraft(note);
+                            setOpenNote(item.id);
+                          }}
+                        >
+                          {note ? "View note" : "Add note"}
+                        </button>
+                        {noteTipOpen && note ? (
+                          <div className="item-pop note" role="tooltip">
+                            <span className="item-pop-kicker">Note</span>
+                            {note}
+                          </div>
+                        ) : null}
+                      </div>
                       ) : null}
                     </div>
                     {noteOpen ? (
@@ -180,7 +345,10 @@ export function SystemPage() {
                           autoFocus
                           enterKeyHint="done"
                           onChange={(e) => setDraft(e.target.value)}
-                          onBlur={() => void saveProgress(item.id, checked, draft)}
+                          onBlur={() => {
+                            void saveProgress(item.id, checked, draft);
+                            setOpenNote(null);
+                          }}
                           onKeyDown={(e) => {
                             if (e.key !== "Enter") return;
                             e.preventDefault();
@@ -193,8 +361,6 @@ export function SystemPage() {
                           <span className="note-hint-done">Press Done to save</span>
                         </p>
                       </div>
-                    ) : note ? (
-                      <p className="note-preview">{note}</p>
                     ) : null}
                   </article>
                 );
@@ -308,7 +474,7 @@ function AddItemModal({
                 maxLength={280}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="A short reminder that shows on the info icon"
+                placeholder="Shows as a tooltip on the info icon"
               />
             </label>
             <p className="add-item-slots">
@@ -325,27 +491,41 @@ function AddItemModal({
   );
 }
 
-function ItemTip({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-
+function ItemTip({
+  open,
+  text,
+  onToggle,
+}: {
+  open: boolean;
+  text: string;
+  onToggle: () => void;
+}) {
   return (
-    <span className={`item-tip${open ? " open" : ""}`}>
+    <div className={`item-tip-wrap${open ? " open" : ""}`}>
       <button
-        className="item-tip-btn"
+        className={`item-tip${open ? " open" : ""}`}
         type="button"
-        aria-label="Info"
+        aria-label={open ? "Hide item details" : "Show item details"}
         aria-expanded={open}
         onClick={(event) => {
           event.stopPropagation();
-          setOpen((value) => !value);
+          onToggle();
         }}
-        onBlur={() => setOpen(false)}
       >
-        <span className="item-tip-icon" aria-hidden="true" />
+        <span className="item-tip-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9.25" fill="#fff" stroke="#c3c7bf" strokeWidth="1.5" />
+            <circle cx="12" cy="8.1" r="1.15" fill="#5f6560" />
+            <path d="M12 10.7v6.1" stroke="#5f6560" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+        </span>
       </button>
-      <span className="item-tip-pop" role="tooltip">
-        {text}
-      </span>
-    </span>
+      {open ? (
+        <div className="item-pop info" role="tooltip">
+          <span className="item-pop-kicker">Tip</span>
+          {text}
+        </div>
+      ) : null}
+    </div>
   );
 }

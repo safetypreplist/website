@@ -1,7 +1,7 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "./Brand";
-import { HeaderClock, SidebarWeather } from "./LocationStatus";
+import { HeaderClock } from "./LocationStatus";
 import { useApp } from "../context/AppContext";
 import { OnboardingTour } from "./OnboardingTour";
 import { checklistTitle, initialsFrom } from "../lib/identity";
@@ -77,10 +77,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Owner Console
           </NavLink>
         ) : null}
+        <NavLink to="/app/help" className={({ isActive }) => (isActive ? "active" : "")}>
+          Help
+        </NavLink>
         <button className="btn btn-ghost sidebar-logout" type="button" onClick={() => void signOut()}>
           Log out
         </button>
-        <SidebarWeather />
       </nav>
       <main className="app-main">
         {!viewing.isOwn && viewing.kind !== "household" && !viewing.canEdit ? <ViewingBanner /> : null}
@@ -163,7 +165,7 @@ function ChecklistSwitcher({ className }: { className?: string }) {
   }
 
   return (
-    <div className={`checklist-switcher ${className || ""}`} ref={wrap}>
+    <div className={`checklist-switcher ${className || ""}${open ? " is-open" : ""}`} ref={wrap}>
       <button
         className="checklist-switcher-btn"
         type="button"
@@ -195,7 +197,12 @@ function ChecklistSwitcher({ className }: { className?: string }) {
                 aria-selected={selected}
                 onClick={() => void choose(row.id)}
               >
-                <span>{row.title}</span>
+                <span className="switcher-option">
+                  <span className="switcher-avatar switcher-avatar-sm">
+                    {row.avatarUrl ? <img src={row.avatarUrl} alt="" /> : <span>{initialsFrom(row.title)}</span>}
+                  </span>
+                  <span className="switcher-option-title">{row.title}</span>
+                </span>
                 {selected ? <span className="checklist-switcher-check" aria-hidden="true">✓</span> : null}
               </button>
             );
