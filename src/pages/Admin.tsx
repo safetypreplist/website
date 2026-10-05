@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { supabase } from "../lib/supabase";
 import { SAFETY_CATEGORY_LABELS, US_STATES, money } from "../lib/format";
-import { COPY_KEY, DEFAULT_STEPS, VIDEO_CACHE_KEY, loadCopy, startOnboardingPreview, type TourCopy } from "../components/OnboardingTour";
+import { COPY_KEY, DEFAULT_STEPS, DEFAULT_VIDEO_URL, VIDEO_CACHE_KEY, loadCopy, startOnboardingPreview, type TourCopy } from "../components/OnboardingTour";
 import { AdminAccounts } from "../components/AdminAccounts";
 import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/help";
 import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
@@ -458,7 +458,7 @@ function OnboardingSettings({ onSaved }: { onSaved: (message: string) => void })
   const navigate = useNavigate();
   const { signIn } = useApp();
   const [copy, setCopy] = useState<TourCopy>(() => loadCopy());
-  const [videoUrl, setVideoUrl] = useState(() => localStorage.getItem(VIDEO_CACHE_KEY) || "");
+  const [videoUrl, setVideoUrl] = useState(() => localStorage.getItem(VIDEO_CACHE_KEY) ?? DEFAULT_VIDEO_URL);
   const [loading, setLoading] = useState(true);
   const update = (index: number, field: "title" | "body", value: string) =>
     setCopy((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
@@ -529,9 +529,12 @@ function OnboardingSettings({ onSaved }: { onSaved: (message: string) => void })
         <input
           value={videoUrl}
           onChange={(event) => setVideoUrl(event.target.value)}
-          placeholder="YouTube, Vimeo, or direct .mp4 URL"
+          placeholder="/videos/welcome.mp4 or a direct .mp4 URL"
         />
-        <small className="muted">Plays on the first-visit popup. Leave blank to hide the video.</small>
+        <small className="muted">
+          Plays on the first-visit popup. A direct .mp4 plays with no outside logos or titles; YouTube and Vimeo links
+          still show their own branding. Leave blank to hide the video.
+        </small>
       </label>
       {copy.map((item, index) => (
         <fieldset className="admin-onboarding-step" key={index}>

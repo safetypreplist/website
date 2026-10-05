@@ -16,6 +16,7 @@ const DEFAULT_STEPS: Step[] = [
 
 const COPY_KEY = "spl.onboarding.copy.v1";
 const VIDEO_CACHE_KEY = "spl.onboarding.video.v1";
+export const DEFAULT_VIDEO_URL = "/videos/welcome.mp4";
 const PREVIEW_KEY = "spl.onboarding.preview";
 const PREVIEW_EVENT = "spl:preview-onboarding";
 const REPLAY_KEY = "spl.onboarding.replay";
@@ -30,7 +31,7 @@ function loadCopy(): TourCopy {
 }
 
 function loadCachedVideo(): string {
-  return localStorage.getItem(VIDEO_CACHE_KEY) || "";
+  return localStorage.getItem(VIDEO_CACHE_KEY) ?? DEFAULT_VIDEO_URL;
 }
 
 function configString(value: unknown): string {
@@ -44,6 +45,9 @@ function configString(value: unknown): string {
 export function onboardingVideoSrc(url: string): { type: "iframe" | "video"; src: string } | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
+  if (trimmed.startsWith("/")) {
+    return /\.(mp4|webm|ogg)(\?|$)/i.test(trimmed) ? { type: "video", src: trimmed } : null;
+  }
   try {
     const parsed = new URL(trimmed);
     const host = parsed.hostname.replace(/^www\./, "");
@@ -258,7 +262,14 @@ export function OnboardingTour() {
         <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
           <div className="onboarding-video">
             {video?.type === "video" ? (
-              <video src={video.src} controls playsInline />
+              <video
+                src={video.src}
+                controls
+                playsInline
+                preload="metadata"
+                controlsList="nodownload noplaybackrate"
+                disablePictureInPicture
+              />
             ) : video ? (
               <iframe
                 src={video.src}
