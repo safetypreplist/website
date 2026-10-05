@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { firstNameOf } from "../lib/identity";
 import { supabase } from "../lib/supabase";
 
 type Step = { title: string; body: string; selector: string; path: string };
@@ -215,6 +216,7 @@ export function OnboardingTour() {
   }, [open, mode, navigate, storageKey]);
 
   const progress = useMemo(() => `${stepIndex + 1} of ${DEFAULT_STEPS.length}`, [stepIndex]);
+  const firstName = firstNameOf(profile?.first_name || profile?.display_name || profile?.full_name);
   if (!open || !profile) return null;
 
   function finish() {
@@ -260,6 +262,16 @@ export function OnboardingTour() {
     <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
       {mode === "welcome" ? (
         <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+          <div className="onboarding-welcome-head">
+            <button
+              className="onboarding-close"
+              type="button"
+              aria-label="Close the video and start the guided tour"
+              onClick={startTour}
+            >
+              ×
+            </button>
+          </div>
           <div className="onboarding-video">
             {video?.type === "video" ? (
               <video
@@ -286,8 +298,11 @@ export function OnboardingTour() {
             )}
           </div>
           <p className="eyebrow">Your checklist is ready</p>
-          <h2 id="onboarding-title">Welcome</h2>
-          <p className="onboarding-copy">We can show you where to check items, leave notes, connect family members, and manage your account. You can exit at any time.</p>
+          <h2 id="onboarding-title">{firstName ? `Welcome, ${firstName}` : "Welcome"}</h2>
+          <p className="onboarding-copy">
+            Congratulations on your new Safety Prep List. The intro video above walks you through how it all works, and
+            from here we can show you where to check items, leave notes, and connect your family.
+          </p>
           <div className="onboarding-actions">
             <button className="btn btn-ghost" type="button" onClick={finish}>Start on my own</button>
             <button className="btn btn-primary" type="button" onClick={startTour}>Take the guided tour</button>
