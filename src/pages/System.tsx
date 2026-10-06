@@ -12,10 +12,12 @@ import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { infoForItem } from "../data/itemTips";
+import { OFFICIAL_GUIDANCE_DISCLAIMER, QUICK_START_BANNER, quickStartMinutes } from "../lib/copy";
+import { NOTE_SENSITIVITY_WARNING, printDisclaimer } from "../lib/legal";
 
 export function SystemPage() {
   const { slug } = useParams();
-  const { catalog, progress, saveProgress, saveProgressMany, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } = useApp();
+  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } = useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   const sections = useMemo(
     () => catalog.sections.filter((s) => s.system_id === system?.id).sort((a, b) => a.sort_order - b.sort_order),
@@ -28,7 +30,7 @@ export function SystemPage() {
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
   const [printOpen, setPrintOpen] = useState(false);
-  const [sectionUndo, setSectionUndo] = useState<Record<string, Record<string, boolean>>>({});
+  const [quickStartOnly, setQuickStartOnly] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
 
   const lastSavedAt = useMemo(() => {
@@ -39,6 +41,22 @@ export function SystemPage() {
       .sort();
     return stamps.at(-1) ?? null;
   }, [catalog.items, customItems, progress, sections]);
+
+  const listStats = useMemo(() => {
+    const all = sections.flatMap((section) => itemsForSection(catalog.items, customItems, section.id));
+    const done = all.filter((item) => progress[item.id]?.checked).length;
+    const quick = all.filter((item) => item.quick_start);
+    const quickDone = quick.filter((item) => progress[item.id]?.checked).length;
+    return {
+      done,
+      total: all.length,
+      pct: all.length ? Math.round((done / all.length) * 100) : 0,
+      quickDone,
+      quickTotal: quick.length,
+    };
+  }, [catalog.items, customItems, progress, sections]);
+
+  const qsMinutes = quickStartMinutes(system?.time_label);
 
   useEffect(() => {
     if (!openTip) return;
@@ -97,48 +115,12 @@ export function SystemPage() {
     window.setTimeout(cleanup, 1500);
   }
 
-  function snapshotSection(sectionId: string, items: { id: string }[]) {
-    setSectionUndo((prev) => ({
-      ...prev,
-      [sectionId]: Object.fromEntries(items.map((item) => [item.id, Boolean(progress[item.id]?.checked)])),
-    }));
-  }
-
-  function setSectionChecked(sectionId: string, items: { id: string }[], checked: boolean) {
-    snapshotSection(sectionId, items);
-    void saveProgressMany(
-      items.map((item) => ({
-        itemId: item.id,
-        checked,
-        note: progress[item.id]?.note || "",
-      })),
-    );
-  }
-
-  function undoSection(sectionId: string, items: { id: string }[]) {
-    const snap = sectionUndo[sectionId];
-    if (!snap) return;
-    setSectionUndo((prev) => {
-      const next = { ...prev };
-      delete next[sectionId];
-      return next;
-    });
-    void saveProgressMany(
-      items
-        .filter((item) => item.id in snap)
-        .map((item) => ({
-          itemId: item.id,
-          checked: snap[item.id],
-          note: progress[item.id]?.note || "",
-        })),
-    );
-  }
-
   return (
     <div className="list-page">
       <div className="print-header">
         <h1>Safety Prep List: {system.title}</h1>
         <p>Printed {new Date().toLocaleDateString()}</p>
+        <p className="print-legal-footer">{printDisclaimer()}</p>
       </div>
       <div className="print-actions">
         <Link className="btn btn-ghost" to="/app">Back</Link>
@@ -163,7 +145,16 @@ export function SystemPage() {
             </div>
           ) : null}
         </div>
+        <p className={`list-saved ${sync === "waiting" ? "wait" : ""}`}>
+          <b>
+            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Waiting to sync" : lastSavedAt ? "Saved" : ""}
+          </b>
+          {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
+        </p>
       </div>
+      {qsMinutes != null ? (
+        <p className="quick-start-banner">{QUICK_START_BANNER}</p>
+      ) : null}
       <header className={`list-hero${bannerSrc ? " has-banner" : ""} list-hero-${system.slug}`}>
         {bannerSrc ? (
           <div className="list-hero-banner" aria-hidden="true">
@@ -171,76 +162,62 @@ export function SystemPage() {
           </div>
         ) : null}
         <div>
-          {system.time_label ? <p className="time-label">{system.time_label}</p> : null}
+          {qsMinutes != null ? (
+            <p className="time-label list-quickstart-time">Quick Start: ~{qsMinutes} min once supplies are gathered</p>
+          ) : system.time_label ? (
+            <p className="time-label">{system.time_label}</p>
+          ) : null}
           <h1>{system.title}</h1>
           {system.description ? <p className="list-lead">{system.description}</p> : null}
         </div>
-        <p className={`list-saved ${sync === "waiting" ? "wait" : ""}`}>
-          <b>
-            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Waiting to sync" : lastSavedAt ? "Saved" : ""}
-          </b>
-          {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
-        </p>
+        <div className="list-hero-progress">
+          <b>{listStats.pct}%</b>
+          <span>{listStats.done} of {listStats.total} checked</span>
+        </div>
       </header>
+      {qsMinutes != null ? (
+        <div className="quick-start-bar">
+          <label className="quick-start-toggle">
+            <input
+              type="checkbox"
+              checked={quickStartOnly}
+              onChange={(event) => setQuickStartOnly(event.target.checked)}
+            />
+            Quick Start only
+          </label>
+          <p className="quick-start-progress">
+            Quick Start: {listStats.quickDone} of {listStats.quickTotal} done
+          </p>
+        </div>
+      ) : null}
 
       {sections.map((section) => {
-        const items = itemsForSection(catalog.items, customItems, section.id);
+        const items = itemsForSection(catalog.items, customItems, section.id).filter((item) =>
+          quickStartOnly && qsMinutes != null ? item.quick_start : true,
+        );
+        if (!items.length) return null;
         const customIds = new Set(customItems.filter((item) => item.section_id === section.id).map((item) => item.id));
         return (
           <section className="list-group" key={section.id}>
             <header className="list-group-head">
-              <div>
+              <div className="list-group-title">
                 <h3>{section.title}</h3>
-                {section.intro ? <p>{section.intro}</p> : null}
+                {section.intro ? <SectionTip text={section.intro} sectionTitle={section.title} /> : null}
               </div>
               {viewing.canEdit ? (
-                <div className="section-tools">
-                  <button
-                    className="section-tool"
-                    type="button"
-                    title="Select all"
-                    aria-label={`Select all in ${section.title}`}
-                    disabled={items.length === 0 || items.every((item) => progress[item.id]?.checked)}
-                    onClick={() => setSectionChecked(section.id, items, true)}
-                  >
-                    All
-                  </button>
-                  <button
-                    className="section-tool"
-                    type="button"
-                    title="Clear all"
-                    aria-label={`Clear all in ${section.title}`}
-                    disabled={items.length === 0 || items.every((item) => !progress[item.id]?.checked)}
-                    onClick={() => setSectionChecked(section.id, items, false)}
-                  >
-                    Clear
-                  </button>
-                  <button
-                    className="section-tool section-tool-icon"
-                    type="button"
-                    title="Undo"
-                    aria-label={`Undo last change in ${section.title}`}
-                    disabled={!sectionUndo[section.id]}
-                    onClick={() => undoSection(section.id, items)}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M8.5 7.5 5 11l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M6 11h7.2a5.3 5.3 0 1 1 0 10.6H11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                  <button
-                    className="add-item-btn"
-                    type="button"
-                    aria-label={`Add item to ${section.title}`}
-                    onClick={() => setAddingTo({ id: section.id, title: section.title })}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  className="add-item-btn"
+                  type="button"
+                  aria-label={`Add item to ${section.title}`}
+                  onClick={() => setAddingTo({ id: section.id, title: section.title })}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+                  </svg>
+                </button>
               ) : null}
             </header>
+            {section.intro ? <p className="section-intro-print">{section.intro}</p> : null}
             <div className="list-group-body">
               {items.map((item) => {
                 const row = progress[item.id];
@@ -360,6 +337,7 @@ export function SystemPage() {
                           <span className="note-hint-enter">Press Enter to save</span>
                           <span className="note-hint-done">Press Done to save</span>
                         </p>
+                        <p className="note-sensitivity">{NOTE_SENSITIVITY_WARNING}</p>
                       </div>
                     ) : null}
                   </article>
@@ -369,6 +347,8 @@ export function SystemPage() {
           </section>
         );
       })}
+
+      <p className="list-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
 
       {addingTo ? (
         <AddItemModal
@@ -486,6 +466,52 @@ function AddItemModal({
             </button>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SectionTip({
+  text,
+  sectionTitle,
+}: {
+  text: string;
+  sectionTitle: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} className={`section-tip-wrap${open ? " open" : ""}`}>
+      <button
+        className={`item-tip${open ? " open" : ""}`}
+        type="button"
+        aria-label={open ? `Hide details for ${sectionTitle}` : `About ${sectionTitle}`}
+        aria-expanded={open}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen((current) => !current);
+        }}
+      >
+        <span className="item-tip-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9.25" fill="#fff" stroke="#c3c7bf" strokeWidth="1.5" />
+            <circle cx="12" cy="8.1" r="1.15" fill="#5f6560" />
+            <path d="M12 10.7v6.1" stroke="#5f6560" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+        </span>
+      </button>
+      <div className="item-pop info" role="tooltip">
+        {text}
       </div>
     </div>
   );

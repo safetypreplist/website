@@ -18,6 +18,7 @@ export type Profile = {
   access_interval?: "monthly" | "annual" | null;
   access_status?: "none" | "active" | "grandfathered" | "past_due";
   access_renews_at?: string | null;
+  cancel_requested_at?: string | null;
   checklist_fee_paid?: boolean;
   device_limit: number;
   custom_item_bonus: number;
@@ -125,6 +126,7 @@ export type ChecklistItem = {
   description: string | null;
   sort_order: number;
   active: boolean;
+  quick_start?: boolean;
 };
 
 export type CustomChecklistItem = {

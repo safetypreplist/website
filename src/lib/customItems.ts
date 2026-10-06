@@ -16,6 +16,7 @@ export function asChecklistItem(item: CustomChecklistItem): ChecklistItem {
     description: item.description,
     sort_order: 100000 + item.sort_order,
     active: true,
+    quick_start: false,
   };
 }
 
