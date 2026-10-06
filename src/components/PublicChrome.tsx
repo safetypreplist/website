@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import { BrandMark } from "./Brand";
+import { copyrightLine } from "../lib/legal";
 
 type HeaderProps = {
   pricingHref?: string;
@@ -59,7 +60,7 @@ export function PublicFooter() {
         </nav>
       </div>
       <div className="wrap footer-bottom">
-        <span>© {new Date().getFullYear()} Safety Prep List</span>
+        <span>{copyrightLine()}</span>
       </div>
     </footer>
   );

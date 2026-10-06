@@ -3,7 +3,7 @@
 const PLACEHOLDER = /^\[[A-Za-z0-9 /,_.:'-]+\]$/;
 
 export const LEGAL = {
-  legalName: "[LEGAL BUSINESS NAME]",
+  legalName: "SafetyPrepList.com",
   brandName: "Safety Prep List",
   brandMethod: "The Ready Method",
   supportEmail: "[SUPPORT EMAIL]",
@@ -44,13 +44,11 @@ export function legalMailto(subject?: string) {
 }
 
 export function copyrightLine(year = new Date().getFullYear()) {
-  const name = displayLegal(LEGAL.legalName);
-  return `© ${year} ${name}. Safety Prep List and The Ready Method are trademarks of ${name}.`;
+  return `© ${year} ${LEGAL.legalName}.`;
 }
 
 export function printDisclaimer() {
-  const name = isLegalPlaceholder(LEGAL.legalName) ? LEGAL.brandName : LEGAL.legalName;
-  return `General guidance only. Follow local emergency officials first. © ${name}.`;
+  return `General guidance only. Follow local emergency officials first. © ${LEGAL.legalName}.`;
 }
 
 export const NOTE_SENSITIVITY_WARNING =
