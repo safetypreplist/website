@@ -3302,47 +3302,21 @@ p {
   color: rgba(244, 240, 229, 0.72);
 }
 
-.list-quickstart-time {
-  max-width: 22em;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  font-size: 12px;
-  line-height: 1.35;
+.more-time {
+  margin: 8px 2px 16px;
 }
 
-.quick-start-banner {
-  margin: 0 0 10px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--sand);
-  border: 1px solid var(--line);
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-
-.quick-start-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 0 14px;
-}
-
-.quick-start-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  font-weight: 650;
-  color: var(--forest);
-  cursor: pointer;
-}
-
-.quick-start-progress {
+.more-time h2 {
   margin: 0;
-  font-size: 13px;
-  color: var(--moss);
-  font-weight: 650;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--forest);
+}
+
+.more-time p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
 }
 
 .list-disclaimer {
@@ -5473,7 +5447,6 @@ p {
   .print-actions,
   .print-menu,
   .section-tools,
-  .quick-start-bar,
   .note-toggle,
   .add-item-btn,
   .custom-remove,

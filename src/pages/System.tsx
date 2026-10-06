@@ -12,8 +12,21 @@ import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { infoForItem } from "../data/itemTips";
-import { OFFICIAL_GUIDANCE_DISCLAIMER, QUICK_START_BANNER, quickStartMinutes } from "../lib/copy";
+import seedCatalog from "../data/catalog.json";
+import { OFFICIAL_GUIDANCE_DISCLAIMER, quickStartIntro, quickStartMinutes } from "../lib/copy";
 import { NOTE_SENSITIVITY_WARNING, printDisclaimer } from "../lib/legal";
+import type { ChecklistItem, ProgressRow } from "../types";
+
+const QUICK_START_KEYS = new Set(
+  (seedCatalog.items as { permanent_key: string; quick_start?: boolean; active?: boolean }[])
+    .filter((item) => item.active !== false && item.quick_start)
+    .map((item) => item.permanent_key),
+);
+
+function isQuickStartItem(item: ChecklistItem) {
+  if (item.permanent_key.startsWith("custom.")) return false;
+  return item.quick_start === true || QUICK_START_KEYS.has(item.permanent_key);
+}
 
 export function SystemPage() {
   const { slug } = useParams();
@@ -30,7 +43,6 @@ export function SystemPage() {
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
   const [printOpen, setPrintOpen] = useState(false);
-  const [quickStartOnly, setQuickStartOnly] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
 
   const lastSavedAt = useMemo(() => {
@@ -45,18 +57,23 @@ export function SystemPage() {
   const listStats = useMemo(() => {
     const all = sections.flatMap((section) => itemsForSection(catalog.items, customItems, section.id));
     const done = all.filter((item) => progress[item.id]?.checked).length;
-    const quick = all.filter((item) => item.quick_start);
-    const quickDone = quick.filter((item) => progress[item.id]?.checked).length;
     return {
       done,
       total: all.length,
       pct: all.length ? Math.round((done / all.length) * 100) : 0,
-      quickDone,
-      quickTotal: quick.length,
     };
   }, [catalog.items, customItems, progress, sections]);
 
   const qsMinutes = quickStartMinutes(system?.time_label);
+
+  const quickItems = useMemo(() => {
+    if (qsMinutes == null) return [];
+    return sections.flatMap((section) =>
+      itemsForSection(catalog.items, customItems, section.id).filter(isQuickStartItem),
+    );
+  }, [catalog.items, customItems, qsMinutes, sections]);
+
+  const customIds = useMemo(() => new Set(customItems.map((item) => item.id)), [customItems]);
 
   useEffect(() => {
     if (!openTip) return;
@@ -152,9 +169,6 @@ export function SystemPage() {
           {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
         </p>
       </div>
-      {qsMinutes != null ? (
-        <p className="quick-start-banner">{QUICK_START_BANNER}</p>
-      ) : null}
       <header className={`list-hero${bannerSrc ? " has-banner" : ""} list-hero-${system.slug}`}>
         {bannerSrc ? (
           <div className="list-hero-banner" aria-hidden="true">
@@ -162,11 +176,7 @@ export function SystemPage() {
           </div>
         ) : null}
         <div>
-          {qsMinutes != null ? (
-            <p className="time-label list-quickstart-time">Quick Start: ~{qsMinutes} min once supplies are gathered</p>
-          ) : system.time_label ? (
-            <p className="time-label">{system.time_label}</p>
-          ) : null}
+          {qsMinutes == null && system.time_label ? <p className="time-label">{system.time_label}</p> : null}
           <h1>{system.title}</h1>
           {system.description ? <p className="list-lead">{system.description}</p> : null}
         </div>
@@ -175,180 +185,67 @@ export function SystemPage() {
           <span>{listStats.done} of {listStats.total} checked</span>
         </div>
       </header>
-      {qsMinutes != null ? (
-        <div className="quick-start-bar">
-          <label className="quick-start-toggle">
-            <input
-              type="checkbox"
-              checked={quickStartOnly}
-              onChange={(event) => setQuickStartOnly(event.target.checked)}
-            />
-            Quick Start only
-          </label>
-          <p className="quick-start-progress">
-            Quick Start: {listStats.quickDone} of {listStats.quickTotal} done
-          </p>
+
+      {quickItems.length ? (
+        <ListGroup
+          title="Quick Start"
+          intro={quickStartIntro(qsMinutes ?? 0)}
+          items={quickItems}
+          sectionId={null}
+          customIds={customIds}
+          canEdit={viewing.canEdit}
+          progress={progress}
+          openNote={openNote}
+          openTip={openTip}
+          openNoteTip={openNoteTip}
+          draft={draft}
+          setOpenNote={setOpenNote}
+          setOpenTip={setOpenTip}
+          setOpenNoteTip={setOpenNoteTip}
+          setDraft={setDraft}
+          setAddingTo={setAddingTo}
+          setRemoveItem={setRemoveItem}
+          saveProgress={saveProgress}
+        />
+      ) : null}
+      {quickItems.length ? (
+        <div className="more-time">
+          <h2>Have more time?</h2>
+          <p>Continue with your list.</p>
         </div>
       ) : null}
 
       {sections.map((section) => {
-        const items = itemsForSection(catalog.items, customItems, section.id).filter((item) =>
-          quickStartOnly && qsMinutes != null ? item.quick_start : true,
+        const items = itemsForSection(catalog.items, customItems, section.id).filter(
+          (item) => !quickItems.length || !isQuickStartItem(item),
         );
         if (!items.length) return null;
-        const customIds = new Set(customItems.filter((item) => item.section_id === section.id).map((item) => item.id));
         return (
-          <section className="list-group" key={section.id}>
-            <header className="list-group-head">
-              <div className="list-group-title">
-                <h3>{section.title}</h3>
-                {section.intro ? <SectionTip text={section.intro} sectionTitle={section.title} /> : null}
-              </div>
-              {viewing.canEdit ? (
-                <button
-                  className="add-item-btn"
-                  type="button"
-                  aria-label={`Add item to ${section.title}`}
-                  onClick={() => setAddingTo({ id: section.id, title: section.title })}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-                  </svg>
-                </button>
-              ) : null}
-            </header>
-            {section.intro ? <p className="section-intro-print">{section.intro}</p> : null}
-            <div className="list-group-body">
-              {items.map((item) => {
-                const row = progress[item.id];
-                const checked = Boolean(row?.checked);
-                const note = row?.note || "";
-                const noteOpen = openNote === item.id;
-                const tipOpen = openTip === item.id;
-                const noteTipOpen = openNoteTip === item.id;
-                const description = infoForItem(item.permanent_key, item.description);
-                const isCustom = customIds.has(item.id);
-                return (
-                  <article className={`check-item${checked ? " is-done" : ""}`} key={item.id}>
-                    <div className="check-row">
-                      <button
-                        data-onboarding="check-item"
-                        className={`check ${checked ? "on" : ""}`}
-                        aria-pressed={checked}
-                        aria-label={item.text}
-                        type="button"
-                        onClick={() => viewing.canEdit && void saveProgress(item.id, !checked, note)}
-                        disabled={!viewing.canEdit}
-                      >
-                        {checked ? "✓" : ""}
-                      </button>
-                      <div className="check-main">
-                        <button
-                          className="check-copy"
-                          type="button"
-                          onClick={() => viewing.canEdit && void saveProgress(item.id, !checked, note)}
-                        disabled={!viewing.canEdit}
-                        >
-                          <span className="check-title">{item.text}</span>
-                        </button>
-                        {description ? <span className="desc-print">{description}</span> : null}
-                      </div>
-                      {description ? (
-                        <ItemTip
-                          open={tipOpen}
-                          text={description}
-                          onToggle={() => {
-                            setOpenNote(null);
-                            setOpenNoteTip(null);
-                            setOpenTip((current) => (current === item.id ? null : item.id));
-                          }}
-                        />
-                      ) : null}
-                      {isCustom && viewing.canEdit ? (
-                        <button
-                          className="custom-remove"
-                          type="button"
-                          aria-label={`Remove ${item.text}`}
-                          onClick={() => setRemoveItem({ id: item.id, text: item.text })}
-                        >
-                          ×
-                        </button>
-                      ) : null}
-                      {viewing.canEdit || note ? (
-                      <div className={`note-tip-wrap${noteTipOpen ? " open" : ""}`}>
-                        <button
-                          data-onboarding="notes"
-                          className={`note-toggle${note ? " has-note" : " add-note"}`}
-                          type="button"
-                          aria-expanded={noteOpen || noteTipOpen}
-                          onClick={() => {
-                            setOpenTip(null);
-                            if (note && !noteOpen) {
-                              setOpenNote(null);
-                              setOpenNoteTip((current) => (current === item.id ? null : item.id));
-                              return;
-                            }
-                            if (openNote && openNote !== item.id) {
-                              const previous = progress[openNote];
-                              void saveProgress(openNote, Boolean(previous?.checked), draft);
-                            }
-                            if (noteOpen) {
-                              void saveProgress(item.id, checked, draft);
-                              setOpenNote(null);
-                              return;
-                            }
-                            setOpenNoteTip(null);
-                            setDraft(note);
-                            setOpenNote(item.id);
-                          }}
-                        >
-                          {note ? "View note" : "Add note"}
-                        </button>
-                        {noteTipOpen && note ? (
-                          <div className="item-pop note" role="tooltip">
-                            <span className="item-pop-kicker">Note</span>
-                            {note}
-                          </div>
-                        ) : null}
-                      </div>
-                      ) : null}
-                    </div>
-                    {noteOpen ? (
-                      <div className="note-box">
-                        <input
-                          maxLength={100}
-                          placeholder="Add a short note"
-                          value={draft}
-                          autoFocus
-                          enterKeyHint="done"
-                          onChange={(e) => setDraft(e.target.value)}
-                          onBlur={() => {
-                            void saveProgress(item.id, checked, draft);
-                            setOpenNote(null);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key !== "Enter") return;
-                            e.preventDefault();
-                            void saveProgress(item.id, checked, draft);
-                            setOpenNote(null);
-                          }}
-                        />
-                        <p className="note-hint">
-                          <span className="note-hint-enter">Press Enter to save</span>
-                          <span className="note-hint-done">Press Done to save</span>
-                        </p>
-                        <p className="note-sensitivity">{NOTE_SENSITIVITY_WARNING}</p>
-                      </div>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          </section>
+          <ListGroup
+            key={section.id}
+            title={section.title}
+            intro={section.intro}
+            items={items}
+            sectionId={section.id}
+            customIds={customIds}
+            canEdit={viewing.canEdit}
+            progress={progress}
+            openNote={openNote}
+            openTip={openTip}
+            openNoteTip={openNoteTip}
+            draft={draft}
+            setOpenNote={setOpenNote}
+            setOpenTip={setOpenTip}
+            setOpenNoteTip={setOpenNoteTip}
+            setDraft={setDraft}
+            setAddingTo={setAddingTo}
+            setRemoveItem={setRemoveItem}
+            saveProgress={saveProgress}
+          />
         );
       })}
 
-      <p className="list-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
+      {quickItems.length ? null : <p className="list-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>}
 
       {addingTo ? (
         <AddItemModal
@@ -376,6 +273,196 @@ export function SystemPage() {
         />
       ) : null}
     </div>
+  );
+}
+
+function ListGroup({
+  title,
+  intro,
+  items,
+  sectionId,
+  customIds,
+  canEdit,
+  progress,
+  openNote,
+  openTip,
+  openNoteTip,
+  draft,
+  setOpenNote,
+  setOpenTip,
+  setOpenNoteTip,
+  setDraft,
+  setAddingTo,
+  setRemoveItem,
+  saveProgress,
+}: {
+  title: string;
+  intro: string | null;
+  items: ChecklistItem[];
+  sectionId: string | null;
+  customIds: Set<string>;
+  canEdit: boolean;
+  progress: Record<string, ProgressRow | undefined>;
+  openNote: string | null;
+  openTip: string | null;
+  openNoteTip: string | null;
+  draft: string;
+  setOpenNote: (value: string | null) => void;
+  setOpenTip: (value: string | null | ((current: string | null) => string | null)) => void;
+  setOpenNoteTip: (value: string | null | ((current: string | null) => string | null)) => void;
+  setDraft: (value: string) => void;
+  setAddingTo: (value: { id: string; title: string } | null) => void;
+  setRemoveItem: (value: { id: string; text: string } | null) => void;
+  saveProgress: (itemId: string, checked: boolean, note: string) => void | Promise<void>;
+}) {
+  return (
+    <section className="list-group">
+      <header className="list-group-head">
+        <div className="list-group-title">
+          <h3>{title}</h3>
+          {intro ? <SectionTip text={intro} sectionTitle={title} /> : null}
+        </div>
+        {canEdit && sectionId ? (
+          <button
+            className="add-item-btn"
+            type="button"
+            aria-label={`Add item to ${title}`}
+            onClick={() => setAddingTo({ id: sectionId, title })}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        ) : null}
+      </header>
+      {intro ? <p className="section-intro-print">{intro}</p> : null}
+      <div className="list-group-body">
+        {items.map((item) => {
+          const row = progress[item.id];
+          const checked = Boolean(row?.checked);
+          const note = row?.note || "";
+          const noteOpen = openNote === item.id;
+          const tipOpen = openTip === item.id;
+          const noteTipOpen = openNoteTip === item.id;
+          const description = infoForItem(item.permanent_key, item.description);
+          const isCustom = customIds.has(item.id);
+          return (
+            <article className={`check-item${checked ? " is-done" : ""}`} key={item.id}>
+              <div className="check-row">
+                <button
+                  data-onboarding="check-item"
+                  className={`check ${checked ? "on" : ""}`}
+                  aria-pressed={checked}
+                  aria-label={item.text}
+                  type="button"
+                  onClick={() => canEdit && void saveProgress(item.id, !checked, note)}
+                  disabled={!canEdit}
+                >
+                  {checked ? "✓" : ""}
+                </button>
+                <div className="check-main">
+                  <button
+                    className="check-copy"
+                    type="button"
+                    onClick={() => canEdit && void saveProgress(item.id, !checked, note)}
+                    disabled={!canEdit}
+                  >
+                    <span className="check-title">{item.text}</span>
+                  </button>
+                  {description ? <span className="desc-print">{description}</span> : null}
+                </div>
+                {description ? (
+                  <ItemTip
+                    open={tipOpen}
+                    text={description}
+                    onToggle={() => {
+                      setOpenNote(null);
+                      setOpenNoteTip(null);
+                      setOpenTip((current) => (current === item.id ? null : item.id));
+                    }}
+                  />
+                ) : null}
+                {isCustom && canEdit ? (
+                  <button
+                    className="custom-remove"
+                    type="button"
+                    aria-label={`Remove ${item.text}`}
+                    onClick={() => setRemoveItem({ id: item.id, text: item.text })}
+                  >
+                    ×
+                  </button>
+                ) : null}
+                {canEdit || note ? (
+                  <div className={`note-tip-wrap${noteTipOpen ? " open" : ""}`}>
+                    <button
+                      data-onboarding="notes"
+                      className={`note-toggle${note ? " has-note" : " add-note"}`}
+                      type="button"
+                      aria-expanded={noteOpen || noteTipOpen}
+                      onClick={() => {
+                        setOpenTip(null);
+                        if (note && !noteOpen) {
+                          setOpenNote(null);
+                          setOpenNoteTip((current) => (current === item.id ? null : item.id));
+                          return;
+                        }
+                        if (openNote && openNote !== item.id) {
+                          const previous = progress[openNote];
+                          void saveProgress(openNote, Boolean(previous?.checked), draft);
+                        }
+                        if (noteOpen) {
+                          void saveProgress(item.id, checked, draft);
+                          setOpenNote(null);
+                          return;
+                        }
+                        setOpenNoteTip(null);
+                        setDraft(note);
+                        setOpenNote(item.id);
+                      }}
+                    >
+                      {note ? "View note" : "Add note"}
+                    </button>
+                    {noteTipOpen && note ? (
+                      <div className="item-pop note" role="tooltip">
+                        <span className="item-pop-kicker">Note</span>
+                        {note}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              {noteOpen ? (
+                <div className="note-box">
+                  <input
+                    maxLength={100}
+                    placeholder="Add a short note"
+                    value={draft}
+                    autoFocus
+                    enterKeyHint="done"
+                    onChange={(e) => setDraft(e.target.value)}
+                    onBlur={() => {
+                      void saveProgress(item.id, checked, draft);
+                      setOpenNote(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      void saveProgress(item.id, checked, draft);
+                      setOpenNote(null);
+                    }}
+                  />
+                  <p className="note-hint">
+                    <span className="note-hint-enter">Press Enter to save</span>
+                    <span className="note-hint-done">Press Done to save</span>
+                  </p>
+                  <p className="note-sensitivity">{NOTE_SENSITIVITY_WARNING}</p>
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

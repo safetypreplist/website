@@ -2,7 +2,11 @@ export const OFFICIAL_GUIDANCE_DISCLAIMER =
   "This list is general guidance. Always follow instructions from local emergency officials, evacuation orders, and emergency services first.";
 
 export const QUICK_START_BANNER =
-  "Step 1: Gather what you already own. Step 2: Pack. Anything missing goes on your shopping list.";
+  "Gather what you already own, then pack. Anything missing goes on your shopping list.";
+
+export function quickStartIntro(minutes: number) {
+  return `About ${minutes} minutes once supplies are gathered. ${QUICK_START_BANNER} ${OFFICIAL_GUIDANCE_DISCLAIMER}`;
+}
 
 export function annualSavingsPercent(monthlyCents: number, annualCents: number) {
   const twelveMonths = monthlyCents * 12;
