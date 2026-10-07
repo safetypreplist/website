@@ -447,10 +447,10 @@ export function VaultPage() {
   if (!hasSurvivalVault) {
     return (
       <div className="locked-panel">
-        <p className="eyebrow">Safety Video Collection</p>
+        <p className="eyebrow">How-To Videos</p>
         <h2>Part of Survival Vault</h2>
         <p className="muted">
-          The Safety Video Collection comes with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off-grid, food, communications, and home readiness. These are a collection of external playlists we share.
+          How-To Videos come with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness. How-To Videos are a collection of external playlists we share.
         </p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault
@@ -464,7 +464,7 @@ export function VaultPage() {
       <p className="eyebrow">
         <Link to="/app/survival">Survival Vault</Link>
       </p>
-      <h1 className="page-title">Safety Video Collection</h1>
+      <h1 className="page-title">How-To Videos</h1>
       {published.length === 0 && (
         <div className="status-banner">
           No videos yet. Add them in owner tools when they are ready.

@@ -11,7 +11,7 @@ import {
 import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { infoForItem } from "../data/itemTips";
-import { COMPLETION_STANDARD, OFFICIAL_GUIDANCE_DISCLAIMER, VAULT_APP_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
+import { OFFICIAL_GUIDANCE_DISCLAIMER, VAULT_APP_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
 import {
   isPrimaryItem,
   isTimedSystem,
@@ -328,8 +328,9 @@ export function SystemPage() {
         />
       ))}
 
-      <p className="list-disclaimer">{COMPLETION_STANDARD}</p>
-      <p className="list-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
+      <aside className="list-warning" role="note">
+        <p>{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
+      </aside>
 
       {addingTo ? (
         <AddItemModal

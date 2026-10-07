@@ -5,7 +5,7 @@ import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { SCOPE_LINE, SCOPE_SUPPORT, VAULT_APP_DESCRIPTION } from "../lib/copy";
+import { SCOPE_LINE, SCOPE_SUPPORT } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 
@@ -41,7 +41,7 @@ export function DashboardPage() {
   const systems = (isHousehold ? householdSystems : personalSystems)
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order);
-  const startSystems = systems.filter((system) => isTimedSystem(system));
+  const startSystems = isHousehold ? systems : timedSystems(catalog.systems);
   const lane = readPrepLane();
 
   const visibleItems = startSystems.flatMap((system) =>
@@ -141,7 +141,7 @@ export function DashboardPage() {
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
-      {viewing.isOwn && !isHousehold ? <SurvivalVaultBlock /> : null}
+      {viewing.isOwn && !isHousehold ? <SurvivalVaultButton /> : null}
     </div>
   );
 }
@@ -157,88 +157,49 @@ function NotificationPrompt() {
   return <aside className="notification-prompt" role="status"><span className="notification-prompt-icon">●</span><span><b>Turn notifications on</b><small>Get a browser alert when a support chat is waiting for you.</small></span><button className="btn btn-forest" type="button" onClick={() => void enable()}>Turn on</button></aside>;
 }
 
-const VAULT_SLUGS = ["off-grid", "water-purification", "battery-solar", "cooling-heat", "long-term-food"];
+const TIMED_SLUGS = ["grab-go", "ready-bag", "vehicle-suitcase", "home-resilience"];
 
-function vaultSystems(systems: ChecklistSystem[]) {
+export const VAULT_SLUGS = ["off-grid", "water-purification", "battery-solar", "cooling-heat", "long-term-food"];
+
+export function vaultSystems(systems: ChecklistSystem[]) {
   return VAULT_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
 }
 
-function SurvivalVaultBlock() {
-  const { catalog, hasSurvivalVault, profile, switchChecklist } = useApp();
-  const entitled = profile?.plan === "core" || profile?.plan === "full";
-  if (!hasSurvivalVault && !entitled) return null;
-  const systems = vaultSystems(catalog.systems);
-
-  return (
-    <>
-      <p className="dash-section-title">Survival Vault</p>
-      {hasSurvivalVault ? (
-        <div className="system-list">
-          {systems.map((system) => (
-            <SystemRow key={system.id} slug={system.slug} />
-          ))}
-          <SafetyVideoCard onOpen={() => void switchChecklist("household")} />
-        </div>
-      ) : (
-        <div className="locked-panel" style={{ textAlign: "left", padding: "28px 22px" }}>
-          <h2>Want to go beyond the basics?</h2>
-          <p className="muted" style={{ color: "rgba(244,240,229,.72)", marginTop: 8 }}>
-            {VAULT_APP_DESCRIPTION}
-          </p>
-          <Link className="btn btn-primary" style={{ marginTop: 18 }} to="/app/account#addons">
-            Add Survival Vault
-          </Link>
-        </div>
-      )}
-    </>
-  );
+function timedSystems(systems: ChecklistSystem[]) {
+  return TIMED_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
 }
 
-function SafetyVideoCard({ onOpen }: { onOpen: () => void }) {
+function SurvivalVaultButton() {
+  const { hasSurvivalVault, profile, switchChecklist } = useApp();
+  const entitled = profile?.plan === "core" || profile?.plan === "full";
+  if (!hasSurvivalVault && !entitled) return null;
   return (
-    <article className="system-card">
-      <div className="illu">
-        <Photo alt="Safety Video Collection" subject="video" ratio="square" accent="forest" />
-      </div>
-      <div className="body">
-        <h3>Safety Video Collection</h3>
-        <p>Watch the skills when you need them. Practical visual learning for water, power, off-grid, food, communications, and home readiness.</p>
-        <Link className="btn btn-moss" to="/app/survival/videos" onClick={onOpen}>
-          Open videos
-        </Link>
-      </div>
-    </article>
+    <Link
+      className="btn btn-primary"
+      to="/app/survival"
+      onClick={() => {
+        if (hasSurvivalVault) void switchChecklist("household");
+      }}
+    >
+      Survival Vault
+    </Link>
   );
 }
 
 export function ListsPage() {
-  const { catalog, viewing, hasSurvivalVault } = useApp();
-  const startSystems = catalog.systems
-    .filter((system) => system.access_tier === "core" && isTimedSystem(system))
-    .sort((a, b) => a.sort_order - b.sort_order);
-  const household = viewing.kind === "household";
+  const { catalog, viewing } = useApp();
+  const startSystems = timedSystems(catalog.systems);
 
   return (
     <div>
-      <h1 className="page-title">{household ? "Survival Vault" : viewing.title}</h1>
-      {household ? (
-        <div className="system-list">
-          {vaultSystems(catalog.systems).map((system) => (
-            <SystemRow key={system.id} slug={system.slug} />
-          ))}
-          {hasSurvivalVault ? <SafetyVideoCard onOpen={() => undefined} /> : null}
-        </div>
-      ) : (
-        <>
-          <p className="dash-section-title">Start here</p>
-          <div className="system-list">
-            {startSystems.map((system) => (
-              <SystemRow key={system.id} slug={system.slug} />
-            ))}
-          </div>
-          {viewing.isOwn ? <SurvivalVaultBlock /> : null}
-        </>
-      )}
+      <h1 className="page-title">{viewing.title}</h1>
+      <p className="dash-section-title">Start here</p>
+      <div className="system-list">
+        {startSystems.map((system) => (
+          <SystemRow key={system.id} slug={system.slug} />
+        ))}
+      </div>
+      {viewing.isOwn ? <SurvivalVaultButton /> : null}
     </div>
   );
 }
@@ -265,7 +226,7 @@ function findContinueSystem(
   return best;
 }
 
-export function SystemRow({ slug }: { slug: string }) {
+export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string; line: string; detail: string } }) {
   const { catalog, progress, profile, customItems, hasSurvivalVault, viewing, switchChecklist } = useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   if (!system) return null;
@@ -291,8 +252,15 @@ export function SystemRow({ slug }: { slug: string }) {
         {system.time_label !== "FULL" ? (
           <div className="time">{system.time_label === "MORE" ? "Expanded" : system.time_label}</div>
         ) : null}
-        <h3>{system.title}</h3>
-        <p>{system.description}</p>
+        <h3>{copy?.title || system.title}</h3>
+        {copy ? (
+          <>
+            <p>{copy.line}</p>
+            <p>{copy.detail}</p>
+          </>
+        ) : (
+          <p>{system.description}</p>
+        )}
         <div className="progress-meta">
           <span>
             {done} / {items.length} {isTimedSystem(system) ? "priority" : "complete"}

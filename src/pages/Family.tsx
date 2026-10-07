@@ -5,10 +5,10 @@ import { PayPalCheckout } from "../components/PayPalCheckout";
 import { useApp } from "../context/AppContext";
 import { checklistTitle, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
 import { money } from "../lib/format";
-import { VAULT_APP_DESCRIPTION } from "../lib/copy";
+import { VAULT_APP_DESCRIPTION, VAULT_CHECKLISTS } from "../lib/copy";
 import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
 import { Photo } from "../components/Photo";
-import { SystemRow } from "./Dashboard";
+import { SystemRow, vaultSystems } from "./Dashboard";
 
 export function ConnectedChecklistsPage() {
   return <Navigate to="/app/family" replace />;
@@ -283,9 +283,7 @@ export function ChecklistAccessPage() {
 
 export function HouseholdPage() {
   const { catalog, hasSurvivalVault, viewing, switchChecklist } = useApp();
-  const fullSystems = catalog.systems
-    .filter((s) => s.access_tier === "full")
-    .sort((a, b) => a.sort_order - b.sort_order);
+  const videos = VAULT_CHECKLISTS.find((item) => item.title === "How-To Videos");
 
   useEffect(() => {
     if (viewing.kind !== "household") void switchChecklist("household");
@@ -307,23 +305,35 @@ export function HouseholdPage() {
   return (
     <div>
       <h1 className="page-title">Survival Vault</h1>
-      <p className="muted">These checklists come with Survival Vault. The Safety Video Collection is a set of external playlists we share.</p>
       <div className="system-list" style={{ marginTop: 18 }}>
-        {fullSystems.map((system) => (
-          <SystemRow key={system.id} slug={system.slug} />
+        {vaultSystems(catalog.systems).map((system) => (
+          <SystemRow
+            key={system.id}
+            slug={system.slug}
+            copy={VAULT_CHECKLISTS.find((item) => (
+              (system.slug === "off-grid" && item.title === "Off-Grid Systems") ||
+              (system.slug === "water-purification" && item.title === "Water Purification") ||
+              (system.slug === "battery-solar" && item.title === "Home Battery & Solar") ||
+              (system.slug === "cooling-heat" && item.title === "Emergency Cooling / Heat Resilience") ||
+              (system.slug === "long-term-food" && item.title === "Long-Term Food")
+            ))}
+          />
         ))}
-        <article className="system-card">
-          <div className="illu">
-            <Photo alt="Safety Video Collection" subject="video" ratio="square" accent="forest" />
-          </div>
-          <div className="body">
-            <h3>Safety Video Collection</h3>
-            <p>Watch the skills when you need them. Practical visual learning for water, power, off-grid, food, communications, and home readiness.</p>
-            <Link className="btn btn-moss" to="/app/survival/videos">
-              Open videos
-            </Link>
-          </div>
-        </article>
+        {videos ? (
+          <article className="system-card">
+            <div className="illu">
+              <Photo alt="How-To Videos" subject="video" ratio="square" accent="forest" />
+            </div>
+            <div className="body">
+              <h3>{videos.title}</h3>
+              <p>{videos.line}</p>
+              <p>{videos.detail}</p>
+              <Link className="btn btn-moss" to="/app/survival/videos">
+                Open videos
+              </Link>
+            </div>
+          </article>
+        ) : null}
       </div>
     </div>
   );

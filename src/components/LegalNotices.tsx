@@ -50,6 +50,30 @@ export function LegalNotices() {
     setShowGuidance(Boolean(session && onChecklist && !hasGuidanceAck()));
   }, [session, onChecklist]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("has-guidance-ack", showGuidance);
+    if (!showGuidance) {
+      document.documentElement.style.removeProperty("--guidance-h");
+      return () => document.documentElement.classList.remove("has-guidance-ack");
+    }
+    const bar = document.querySelector(".guidance-ack");
+    const header = document.querySelector(".app-top");
+    const measure = () => {
+      const headerBottom = header ? Math.ceil(header.getBoundingClientRect().bottom) : 74;
+      document.documentElement.style.setProperty("--app-header-h", `${headerBottom}px`);
+      if (!bar) return;
+      document.documentElement.style.setProperty("--guidance-h", `${Math.ceil(bar.getBoundingClientRect().height)}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (bar) observer.observe(bar);
+    return () => {
+      observer.disconnect();
+      document.documentElement.classList.remove("has-guidance-ack");
+      document.documentElement.style.removeProperty("--guidance-h");
+    };
+  }, [showGuidance]);
+
   async function acceptTerms() {
     if (!agreed) return;
     setBusy(true);
