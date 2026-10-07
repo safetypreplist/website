@@ -28,7 +28,7 @@ import {
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
-import { annualSavingsPercent, CORE_MESSAGE, HERO_TAGLINE, PAGE_TITLE, SCOPE_SUPPORT } from "../lib/copy";
+import { annualSavingsPercent, CORE_MESSAGE, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, PAGE_TITLE, SCOPE_SUPPORT } from "../lib/copy";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { useApp } from "../context/AppContext";
 
@@ -158,11 +158,13 @@ export function LandingPage() {
       <section className="hero-studio">
         <div className="hero-copy-col">
           <div className="hero-copy">
-            <h1 className="hero-product">Safety Prep List</h1>
-            <p className="hero-tagline">{HERO_TAGLINE}</p>
+            <h1 className="hero-product">Get Your Safety Prep List</h1>
+            <p className="hero-tagline">
+              <span>{HERO_TAGLINE_LEAD}</span>{" "}
+              <span>{HERO_TAGLINE_REST}</span>
+            </p>
             <p className="hero-sub">
-              <span>Practical preparedness for natural disasters, local emergencies,</span>{" "}
-              <span>outages, evacuations, and temporary disruptions.</span>
+              Practical preparedness for natural disasters, <span className="nowrap">local emergencies</span>, outages, evacuations, and temporary disruptions.
             </p>
             <p className="lead">
               {SCOPE_SUPPORT} {CORE_MESSAGE}

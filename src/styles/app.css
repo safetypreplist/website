@@ -460,7 +460,7 @@ p {
   font-size: clamp(40px, 5.4vw, 68px);
   font-weight: 700;
   letter-spacing: -0.035em;
-  text-transform: uppercase;
+  text-transform: none;
   line-height: 0.92;
   color: var(--ink);
   margin-bottom: 16px;
@@ -2110,6 +2110,29 @@ p {
 
 .legal-page h1 {
   margin-bottom: 20px;
+}
+
+.contact-form select,
+.contact-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line-strong);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.contact-form textarea {
+  resize: vertical;
+}
+
+.contact-honey {
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
 }
 
 .legal-page p {
@@ -6429,12 +6452,14 @@ p {
 .marketing-page .hero-copy {
   max-width: 360px;
   padding: 0;
+  container-type: inline-size;
 }
 
 .marketing-page .hero-copy .hero-product {
   color: var(--paper);
-  font-size: clamp(38px, 4.7vw, 62px);
+  font-size: clamp(30px, 13cqw, 48px);
   line-height: 0.94;
+  max-width: 7.4em;
   margin-bottom: 12px;
 }
 
@@ -6987,6 +7012,7 @@ p {
   .marketing-page .hero-copy .hero-product {
     font-size: clamp(30px, 8.2vw, 38px);
     line-height: 0.95;
+    max-width: none;
     margin-bottom: 8px;
   }
 
@@ -6996,16 +7022,22 @@ p {
     margin-bottom: 8px;
   }
 
-  .marketing-page .hero-sub {
-    width: 100%;
-    max-width: none;
-    font-size: clamp(11.5px, calc((100vw - 40px) / 30.5), 16px);
-    line-height: 1.35;
-    margin-bottom: 16px;
+  .marketing-page .hero-tagline span {
+    display: block;
   }
 
-  .marketing-page .hero-sub span {
-    display: block;
+  .marketing-page .hero-sub {
+    width: auto;
+    max-width: 34ch;
+    margin-inline: auto;
+    font-size: 15px;
+    line-height: 1.45;
+    margin-bottom: 16px;
+    text-wrap: balance;
+  }
+
+  .marketing-page .hero-sub .nowrap {
+    white-space: nowrap;
   }
 
   .marketing-page .hero-copy .lead {
@@ -7015,7 +7047,8 @@ p {
   .marketing-page .hero-copy .btn {
     display: flex;
     width: max-content;
-    max-width: calc(100% - 32px);
+    max-width: 100%;
+    text-transform: none;
     margin-inline: auto;
     min-height: 48px;
     justify-content: center;
@@ -7289,9 +7322,6 @@ p {
     max-width: none;
   }
 
-  .launch-page .footer-links a:last-child {
-    grid-column: 1 / -1;
-  }
 }
 
 @keyframes onboarding-mobile-pulse {

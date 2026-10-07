@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LegalAgreement } from "../components/LegalAgreement";
 import { PayPalCheckout } from "../components/PayPalCheckout";
@@ -8,7 +8,6 @@ import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 import { checklistTitle, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { legalMailto, displayLegal, LEGAL } from "../lib/legal";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { invokeFunction, isSupabaseConfigured, supabase } from "../lib/supabase";
 
@@ -32,6 +31,7 @@ export function AccountPage() {
     demoMode,
   } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [first, setFirst] = useState(profile?.first_name || "");
   const [last, setLast] = useState(profile?.last_name || "");
@@ -177,11 +177,11 @@ export function AccountPage() {
         .update({ cancel_requested_at: new Date().toISOString() })
         .eq("id", user.id);
       if (err) {
-        setError("We saved your request locally. Email support to finish cancellation.");
+        setError("We saved your request locally. Use the contact form to finish cancellation.");
       }
     }
     setCancelRequested(true);
-    window.location.href = legalMailto("Cancel subscription");
+    navigate("/contact?topic=cancel");
   }
 
   async function deleteAccount() {
@@ -367,14 +367,14 @@ export function AccountPage() {
         {accessDescription(profile) ? <p className="muted">{accessDescription(profile)}</p> : null}
         {cancelRequested ? (
           <p>
-            Cancellation requested. You keep access through the end of the paid period. Email{" "}
-            <a href={legalMailto("Cancel subscription")}>{displayLegal(LEGAL.supportEmail)}</a> if you need help.
+            Cancellation requested. You keep access through the end of the paid period.{" "}
+            <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help.
           </p>
         ) : (
           <>
             <p className="muted">
-              Cancel anytime before the next billing date. We record the request and email{" "}
-              {displayLegal(LEGAL.supportEmail)}. You keep access through the period you already paid.
+              Cancel anytime before the next billing date. We record the request.{" "}
+              <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help. You keep access through the period you already paid.
             </p>
             <button className="btn btn-ghost" type="button" onClick={() => void requestCancel()}>
               Cancel subscription

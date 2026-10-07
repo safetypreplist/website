@@ -7,7 +7,8 @@ import { Launch26Page } from "./pages/Launch26";
 import { CreateAccountPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { CookieNotice } from "./components/CookieNotice";
-import { PrivacyPage, RefundsPage, SupportPage, TermsPage } from "./pages/Legal";
+import { PrivacyPage, TermsPage } from "./pages/Legal";
+import { ContactPage } from "./pages/Contact";
 import { AccountPage, VaultPage } from "./pages/Account";
 import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
@@ -59,8 +60,9 @@ export default function App() {
       <Route path="/create-account" element={<CreateAccountPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
-      <Route path="/refunds" element={<RefundsPage />} />
-      <Route path="/support" element={<SupportPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/support" element={<Navigate to="/contact" replace />} />
+      <Route path="/refunds" element={<Navigate to="/terms#refunds" replace />} />
       <Route path="/signin" element={<SignInPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />

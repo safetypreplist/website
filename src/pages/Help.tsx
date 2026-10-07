@@ -17,7 +17,6 @@ export function HelpPage() {
   const [sent, setSent] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
-  const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || "info@safetypreplist.com";
 
   useEffect(() => {
     void supabase.from("app_config").select("value").eq("key", HELP_FAQS_KEY).maybeSingle().then(({ data }) => {
@@ -46,7 +45,7 @@ export function HelpPage() {
     });
     setSending(false);
     if (saveError) {
-      window.location.href = `mailto:${supportEmail}?subject=${encodeURIComponent("Help with my Safety Prep List")}&body=${encodeURIComponent(text)}`;
+      setError("Could not send that message. Please try again.");
       return;
     }
     setMessage("");
@@ -58,7 +57,7 @@ export function HelpPage() {
       window.Tawk_API.maximize();
       return;
     }
-    window.location.href = `mailto:${supportEmail}`;
+    setError("Chat is not available right now. Send a message instead.");
   }
 
   return (

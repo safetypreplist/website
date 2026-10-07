@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import { BrandMark } from "./Brand";
-import { HERO_TAGLINE, OFFICIAL_GUIDANCE_DISCLAIMER } from "../lib/copy";
+import { FOOTER_TAGLINE, OFFICIAL_GUIDANCE_DISCLAIMER } from "../lib/copy";
 import { copyrightLine } from "../lib/legal";
 
 type HeaderProps = {
@@ -54,7 +54,7 @@ export function PublicFooter({
             <BrandMark />
             <div className="brand-text">
               <b>Safety Prep List</b>
-              <span>{HERO_TAGLINE}</span>
+              <span>{FOOTER_TAGLINE}</span>
             </div>
           </Link>
         </div>
@@ -63,11 +63,9 @@ export function PublicFooter({
           <a href={includedHref}>What’s Included</a>
           <a href={pricingHref}>Choose a Plan</a>
           <NavLink to="/signin">Log In</NavLink>
-          <NavLink to="/support">Support</NavLink>
+          <NavLink to="/contact">Contact</NavLink>
           <NavLink to="/privacy">Privacy</NavLink>
-          <NavLink to="/terms">Terms</NavLink>
-          <NavLink to="/refunds">Refunds</NavLink>
-          <NavLink to="/privacy#do-not-sell">Do Not Sell or Share My Personal Information</NavLink>
+          <NavLink to="/terms">Terms and Conditions</NavLink>
         </nav>
       </div>
       <div className="wrap footer-bottom">

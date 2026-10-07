@@ -1,4 +1,7 @@
-export const HERO_TAGLINE = "The Perfect Checklists for Emergency Situations.";
+export const HERO_TAGLINE_LEAD = "The Perfect Checklists for";
+export const HERO_TAGLINE_REST = "Emergency Situations.";
+export const HERO_TAGLINE = `${HERO_TAGLINE_LEAD} ${HERO_TAGLINE_REST}`;
+export const FOOTER_TAGLINE = "Hope for the best, Prepare for the rest.";
 
 export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
 

@@ -22,7 +22,7 @@ export function LegalAgreement({
           Privacy Policy
         </Link>
         , and{" "}
-        <Link to="/refunds" target="_blank" rel="noreferrer">
+        <Link to="/terms#refunds" target="_blank" rel="noreferrer">
           Refund Policy
         </Link>
         , and I understand this is general guidance and not professional advice.

@@ -6,12 +6,12 @@ export const LEGAL = {
   legalName: "SafetyPrepList.com",
   brandName: "Safety Prep List",
   brandMethod: "The Ready Method",
-  supportEmail: "[SUPPORT EMAIL]",
+  supportEmail: "info@safetypreplist.com",
   governingState: "[STATE]",
   governingCountry: "[COUNTRY]",
   effectiveDate: "October 5, 2026",
   refundPolicy:
-    "7-day refund on a first purchase if requested by email. No partial-period refunds on renewals.",
+    "7-day refund on a first purchase if requested through the contact form. No partial-period refunds on renewals.",
   arbitration: "[ARBITRATION / VENUE CLAUSE: leave as TODO for attorney review]",
   gdpr: "[GDPR / EU PRIVACY LANGUAGE: leave as TODO for attorney review]",
 } as const;

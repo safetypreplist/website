@@ -4,12 +4,10 @@ import { type ReactNode, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import {
-  AGREEMENT_LABEL,
   LEGAL,
   LEGAL_VERSIONS,
   copyrightLine,
   displayLegal,
-  legalMailto,
 } from "../lib/legal";
 
 function LegalShell({ title, children }: { title: string; children: ReactNode }) {
@@ -36,17 +34,16 @@ function LegalShell({ title, children }: { title: string; children: ReactNode })
 function LegalNav() {
   return (
     <p className="legal-nav">
-      <Link to="/terms">Terms</Link>
+      <Link to="/terms">Terms and Conditions</Link>
       <Link to="/privacy">Privacy</Link>
-      <Link to="/refunds">Refunds</Link>
-      <Link to="/support">Support</Link>
+      <Link to="/contact">Contact</Link>
     </p>
   );
 }
 
 export function TermsPage() {
   return (
-    <LegalShell title="Terms of Service">
+    <LegalShell title="Terms and Conditions">
       <LegalNav />
       <p>
         These Terms of Service (“Terms”) govern your use of {LEGAL.brandName} and {LEGAL.brandMethod}™
@@ -100,16 +97,26 @@ export function TermsPage() {
         one-time purchase and does not renew. Payments are processed by PayPal. We do not store card numbers.
       </p>
       <p>
-        Cancel anytime in Account Settings before your next billing date, or email{" "}
-        <a href={legalMailto("Cancel subscription")}>{displayLegal(LEGAL.supportEmail)}</a>. After you cancel, you keep
+        Cancel anytime in Account Settings before your next billing date, or{" "}
+        <Link to="/contact?topic=cancel">click here to contact us</Link>. After you cancel, you keep
         access through the end of the paid period. We do not provide partial-period refunds on renewals. Survival Vault
         access already purchased stays with the household unless we are required to remove it.
       </p>
 
-      <h2>5. Refunds</h2>
+      <h2 id="refunds">5. Refunds</h2>
+      <p>{LEGAL.refundPolicy}</p>
+      <h3>How to request a refund</h3>
       <p>
-        {LEGAL.refundPolicy} See the <Link to="/refunds">Refund Policy</Link> for details.
+        <Link to="/contact?topic=refund">Click here</Link> to request your refund within 7 days of your first purchase.
+        Include your purchase reference if you have it.
       </p>
+      <h3>Renewals</h3>
+      <p>
+        We do not give partial-period refunds on monthly or annual renewals. Cancel in Account Settings before the
+        next billing date to avoid the next charge. You keep access through the end of the period you already paid.
+      </p>
+      <h3>Survival Vault</h3>
+      <p>Survival Vault is a one-time add-on. It does not renew. Refund requests follow the same 7-day first-purchase rule.</p>
 
       <h2>6. User content</h2>
       <p>
@@ -155,7 +162,7 @@ export function TermsPage() {
       <h2>12. Dispute resolution</h2>
       <p>
         These Terms are governed by the laws of {displayLegal(LEGAL.governingState)}, {displayLegal(LEGAL.governingCountry)},
-        without regard to conflict-of-law rules. Please email {displayLegal(LEGAL.supportEmail)} first so we can try to
+        without regard to conflict-of-law rules. Please <Link to="/contact">click here to contact us</Link> first so we can try to
         resolve the issue informally.
       </p>
       <p className="legal-todo">{displayLegal(LEGAL.arbitration)}</p>
@@ -167,11 +174,19 @@ export function TermsPage() {
         Terms.
       </p>
 
-      <h2>14. Contact</h2>
+      <h2 id="do-not-sell">14. Do Not Sell or Share My Personal Information</h2>
+      <p>
+        We do not sell personal information and we do not share it for cross-context behavioral advertising. If you
+        are a resident of California or another state with consumer privacy rights, you may request to know, delete,
+        or correct personal information by using the contact form. <Link to="/contact?topic=do-not-sell">Click here to contact us</Link>. We will not discriminate against
+        you for making a request.
+      </p>
+
+      <h2>15. Contact</h2>
       <p>
         {displayLegal(LEGAL.legalName)}
         <br />
-        <a href={legalMailto()}>{displayLegal(LEGAL.supportEmail)}</a>
+        <Link to="/contact">Click here to contact us</Link>
         <br />
         Current document version: {LEGAL_VERSIONS.terms}
       </p>
@@ -253,13 +268,13 @@ export function PrivacyPage() {
       <h2>8. Your rights</h2>
       <p>
         You may request access, correction, or deletion of your personal information, and you may opt out of
-        marketing email at any time. Email <a href={legalMailto("Privacy request")}>{displayLegal(LEGAL.supportEmail)}</a>.
+        marketing email at any time. <Link to="/contact?topic=privacy">Click here to contact us</Link>.
       </p>
       <h3 id="do-not-sell">California and other U.S. state privacy rights</h3>
       <p>
         We do not sell personal information and we do not share it for cross-context behavioral advertising. If you
         are a resident of California or another state with consumer privacy rights, you may request to know, delete,
-        or correct personal information by emailing {displayLegal(LEGAL.supportEmail)}. We will not discriminate against
+        or correct personal information by using the contact form. <Link to="/contact?topic=do-not-sell">Click here to contact us</Link>. We will not discriminate against
         you for making a request.
       </p>
       <p className="legal-todo">{displayLegal(LEGAL.gdpr)}</p>
@@ -276,49 +291,10 @@ export function PrivacyPage() {
 
       <h2>11. Changes and contact</h2>
       <p>
-        We may update this policy and will change the effective date above. For questions, email{" "}
-        <a href={legalMailto("Privacy question")}>{displayLegal(LEGAL.supportEmail)}</a>. Version {LEGAL_VERSIONS.privacy}.
+        We may update this policy and will change the effective date above. For questions,{" "}
+        <Link to="/contact?topic=privacy">click here to contact us</Link>. Version {LEGAL_VERSIONS.privacy}.
       </p>
       <p className="muted">{copyrightLine()}</p>
-    </LegalShell>
-  );
-}
-
-export function RefundsPage() {
-  return (
-    <LegalShell title="Refund and Cancellation Policy">
-      <LegalNav />
-      <p>{LEGAL.refundPolicy}</p>
-      <h2>How to request a refund</h2>
-      <p>
-        Email <a href={legalMailto("Refund request")}>{displayLegal(LEGAL.supportEmail)}</a> from the address on your
-        account within 7 days of your first purchase. Include your purchase reference if you have it.
-      </p>
-      <h2>Renewals</h2>
-      <p>
-        We do not give partial-period refunds on monthly or annual renewals. Cancel in Account Settings before the
-        next billing date to avoid the next charge. You keep access through the end of the period you already paid.
-      </p>
-      <h2>Survival Vault</h2>
-      <p>Survival Vault is a one-time add-on. It does not renew. Refund requests follow the same 7-day first-purchase rule.</p>
-      <p className="muted">Version {LEGAL_VERSIONS.refunds}. {copyrightLine()}</p>
-    </LegalShell>
-  );
-}
-
-export function SupportPage() {
-  return (
-    <LegalShell title="Support">
-      <LegalNav />
-      <p>
-        Need help with a purchase, account, Family Plan, or devices? Email{" "}
-        <a href={legalMailto()}>{displayLegal(LEGAL.supportEmail)}</a> and include the email on your account.
-      </p>
-      <p>
-        For cancellations, refunds, privacy requests, or “Do Not Sell or Share” requests, use the same address and
-        tell us what you need.
-      </p>
-      <p className="muted">{AGREEMENT_LABEL.replace("I agree", "Using the Service means you agree")}</p>
     </LegalShell>
   );
 }

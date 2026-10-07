@@ -79,7 +79,7 @@ export function LegalNotices() {
               Privacy Policy
             </Link>
             , and{" "}
-            <Link to="/refunds" target="_blank" rel="noreferrer">
+            <Link to="/terms#refunds" target="_blank" rel="noreferrer">
               Refund Policy
             </Link>{" "}
             before continuing.
