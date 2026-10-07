@@ -301,8 +301,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("contacts").select("*").eq("user_id", next.user.id).order("created_at"),
       supabase.from("devices").select("*").eq("user_id", next.user.id).order("created_at"),
     ]);
-    const nextProfile = normalizeProfile((prof.data as Profile) || null);
-    const family = await loadLiveFamily(next.user.id, nextProfile);
+    const loadedProfile = normalizeProfile((prof.data as Profile) || null);
+    const loadedFamily = await loadLiveFamily(next.user.id, loadedProfile);
+    const granted = grantDemoPreview(loadedProfile, loadedFamily);
+    const nextProfile = granted.profile;
+    const family = granted.family;
     const stored = readStoredView();
     const resolved = resolveViewing(stored, family, nextProfile);
     const ownerId = resolved.kind === "household" ? family.group?.createdBy || next.user.id : resolved.ownerUserId || next.user.id;
@@ -1121,6 +1124,40 @@ function mergeCustomProgress(progress: Record<string, ProgressRow>, customItems:
     };
   }
   return next;
+}
+
+function grantDemoPreview(profile: Profile | null, family: LiveFamily): { profile: Profile | null; family: LiveFamily } {
+  if (!profile || profile.email?.trim().toLowerCase() !== DEMO_PREVIEW_EMAIL) return { profile, family };
+  const displayName = personName(profile);
+  const source = family.members.find((member) => member.permission === "own") || family.mine;
+  const mine = source
+    ? {
+        ...source,
+        displayName,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        email: profile.email,
+      }
+    : null;
+  return {
+    profile: {
+      ...profile,
+      plan: "core",
+      device_limit: Math.max(profile.device_limit || 0, 2),
+    },
+    family: {
+      ...family,
+      mine,
+      connected: [],
+      members: mine ? [{ ...mine, permission: "own", pending: false }] : [],
+      group: {
+        id: family.group?.id || profile.id,
+        name: family.group?.name ?? null,
+        createdBy: family.group?.createdBy || profile.id,
+        hasSharedHousehold: true,
+      },
+    },
+  };
 }
 
 function normalizeProfile(row: Profile | null): Profile | null {
