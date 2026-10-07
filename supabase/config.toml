@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.preview-discount]
 verify_jwt = false
+
+[functions.record-terms-acceptance]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = true

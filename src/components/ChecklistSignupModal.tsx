@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { recordLegalAcceptance } from "../lib/legalConsent";
 import { CHECKLIST_PDF_PATH, subscribeChecklist } from "../lib/subscribe";
 
 export function ChecklistSignupModal({
@@ -17,6 +19,7 @@ export function ChecklistSignupModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(Boolean(alreadyJoined));
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -37,7 +40,13 @@ export function ChecklistSignupModal({
     setError("");
     setBusy(true);
     try {
+      if (!agreed) {
+        setError("Please agree to receive emails and to the Privacy Policy.");
+        setBusy(false);
+        return;
+      }
       await subscribeChecklist(email, name, honeypot);
+      await recordLegalAcceptance("email_signup", email);
       setDone(true);
       onJoined();
     } catch (err) {
@@ -113,10 +122,19 @@ export function ChecklistSignupModal({
                 />
               </label>
               {error ? <p className="form-error">{error}</p> : null}
-              <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+              <label className="legal-agree" htmlFor="lead-agree">
+                <input id="lead-agree" type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+                <span>
+                  By signing up you agree to receive emails from us and to our{" "}
+                  <Link to="/privacy" target="_blank" rel="noreferrer">
+                    Privacy Policy
+                  </Link>
+                  . Unsubscribe anytime.
+                </span>
+              </label>
+              <button className="btn btn-primary btn-block" type="submit" disabled={busy || !agreed}>
                 {busy ? "Sending…" : <>Get <span className="lead-free-btn">FREE</span> Checklist</>}
               </button>
-              <p className="muted lead-note">We never spam. Unsubscribe anytime.</p>
             </form>
           </>
         )}

@@ -1,6 +1,8 @@
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandMark } from "../components/Brand";
+import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
+import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { PayPalCheckout } from "../components/PayPalCheckout";
 import { PublicHeader } from "../components/PublicChrome";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
@@ -17,6 +19,8 @@ import {
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
+import { SCOPE_LINE } from "../lib/copy";
+import { storeScopeAcknowledgment } from "../lib/legalConsent";
 import { invokeFunction } from "../lib/supabase";
 
 const PROGRESS = ["Choose Plan", "Purchase", "Create Account", "Get Ready"] as const;
@@ -37,8 +41,18 @@ export function CheckoutProgress({ current }: { current: number }) {
         <li
           key={label}
           className={index < current ? "done" : index === current ? "current" : ""}
+          aria-current={index === current ? "step" : undefined}
         >
-          <span>{label}</span>
+          <span className="checkout-progress-dot" aria-hidden="true">
+            {index < current ? (
+              <svg viewBox="0 0 24 24">
+                <path d="m6 12.5 4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              index + 1
+            )}
+          </span>
+          <span className="checkout-progress-label">{label}</span>
         </li>
       ))}
     </ol>
@@ -61,11 +75,14 @@ export function CheckoutPage() {
   const [vault, setVault] = useState(params.get("vault") === "1" || params.get("household") === "1");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
-  const [discountCode, setDiscountCode] = useState("");
+  const incomingCode = (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  const [discountCode, setDiscountCode] = useState(incomingCode);
   const [appliedCode, setAppliedCode] = useState("");
   const [discountMessage, setDiscountMessage] = useState("");
   const [discountApplied, setDiscountApplied] = useState(0);
   const [checkingCode, setCheckingCode] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [scopeAck, setScopeAck] = useState(false);
   const upgrade = products.find((p) => p.slug === "upgrade_full");
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
@@ -85,6 +102,11 @@ export function CheckoutPage() {
 
   const onCaptured = useMemo(
     () => (result: { productCode: string; productType: string }) => {
+      if (!scopeAck) {
+        setError("Acknowledge the Safety Prep List scope and use before completing the purchase.");
+        return;
+      }
+      storeScopeAcknowledgment();
       sessionStorage.setItem("spl.productCode", result.productCode);
       sessionStorage.setItem("spl.productType", result.productType);
       sessionStorage.setItem("spl.familyQty", String(people));
@@ -93,7 +115,7 @@ export function CheckoutPage() {
       sessionStorage.setItem("spl.access", access);
       navigate(`/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}`);
     },
-    [navigate, people, vault, planKind, access],
+    [navigate, people, vault, planKind, access, scopeAck],
   );
 
   return (
@@ -114,6 +136,7 @@ export function CheckoutPage() {
           <p className="muted">
             {people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
           </p>
+          <p className="muted">{SCOPE_LINE}</p>
           {access === "annual" ? (
             <>
               <p className="plan-line">{money(unit)}/person/month</p>
@@ -196,6 +219,11 @@ export function CheckoutPage() {
               {checkingCode ? "Checking…" : "Apply"}
             </button>
           </div>
+          {incomingCode === "LAUNCH26" ? (
+            <p className="muted">
+              LAUNCH26 is entered below. Tap Apply to save 50% on your first month only. Regular monthly pricing applies beginning in month two.
+            </p>
+          ) : null}
           {discountMessage ? <p className={`discount-result ${discountApplied ? "success" : "error"}`}>{discountMessage}</p> : null}
         </section>
 
@@ -223,25 +251,41 @@ export function CheckoutPage() {
           <p className="muted">
             {access === "annual"
               ? `Renews annually at ${money(breakdown.recurringCents)}.`
-              : `Renews monthly at ${money(breakdown.recurringCents)}.`}
+              : incomingCode === "LAUNCH26" || discountApplied > 0
+                ? `Then ${money(breakdown.recurringCents)} per month afterwards.`
+                : `Renews monthly at ${money(breakdown.recurringCents)}.`}
             {vault ? " Survival Vault does not renew." : ""}
           </p>
         </section>
 
         {paypalReady ? (
           <>
-            {error && <p className="form-error">{error}</p>}
-            <PayPalCheckout
-              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}`}
-              productSlug="core"
-              quantity={people}
-              includeHousehold={vault}
-              accessInterval={access}
-              planKind={planKind}
-              discountCode={appliedCode}
-              onCaptured={onCaptured}
-              onError={setError}
+            <LegalAgreement checked={agreed} onChange={setAgreed} />
+            <ScopeAcknowledgment checked={scopeAck} onChange={setScopeAck} />
+            <AutoRenewalNote
+              amount={money(breakdown.recurringCents)}
+              interval={access === "annual" ? "year" : "month"}
             />
+            {error && <p className="form-error">{error}</p>}
+            {agreed && scopeAck ? (
+              <PayPalCheckout
+                key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}`}
+                productSlug="core"
+                quantity={people}
+                includeHousehold={vault}
+                accessInterval={access}
+                planKind={planKind}
+                discountCode={appliedCode}
+                onCaptured={onCaptured}
+                onError={setError}
+              />
+            ) : (
+              <p className="form-error checkout-paypal-locked">
+                {!scopeAck
+                  ? "Acknowledge the Safety Prep List scope and use before completing the purchase."
+                  : "Agree to the policies above to enable PayPal checkout."}
+              </p>
+            )}
           </>
         ) : (
           <p className="form-error">PayPal is not configured yet.</p>

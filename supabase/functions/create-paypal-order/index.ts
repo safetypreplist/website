@@ -8,7 +8,7 @@ import {
   quoteWithDiscount,
 } from "../_shared/discounts.ts";
 import { dollarsFromCents, paypalFetch } from "../_shared/paypal.ts";
-import { productBySlug, requireUser } from "../_shared/supabase.ts";
+import { productBySlug, requireUser, serviceClient } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
@@ -17,6 +17,9 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    if (!body.acceptedTerms) {
+      return json({ error: "Please agree to the Terms of Service, Privacy Policy, and Refund Policy." }, 400);
+    }
     const slug = String(body.productSlug || "");
     const quantity = Math.max(1, Number(body.quantity || 1) || 1);
     const includeHousehold = Boolean(body.includeHousehold);
@@ -116,6 +119,20 @@ Deno.serve(async (req) => {
     }
 
     const order = paypalBody as { id: string };
+    try {
+      await serviceClient().from("terms_acceptances").insert({
+        user_id: userId,
+        email: null,
+        terms_version: String(body.termsVersion || ""),
+        privacy_version: String(body.privacyVersion || ""),
+        refund_version: String(body.refundVersion || ""),
+        ip_address: (req.headers.get("x-forwarded-for") || "").split(",")[0]?.trim() || null,
+        user_agent: req.headers.get("user-agent"),
+        context: "checkout",
+      });
+    } catch (err) {
+      console.error("Could not record checkout agreement", err);
+    }
     return json({
       orderId: order.id,
       productSlug: product.slug,

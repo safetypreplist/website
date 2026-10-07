@@ -3,9 +3,11 @@ import { AppShell } from "./components/AppShell";
 import { isOnboardingPreview } from "./components/OnboardingTour";
 import { useApp } from "./context/AppContext";
 import { LandingPage } from "./pages/Landing";
+import { Launch26Page } from "./pages/Launch26";
 import { CreateAccountPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
-import { PrivacyPage, SupportPage, TermsPage } from "./pages/Legal";
+import { CookieNotice } from "./components/CookieNotice";
+import { PrivacyPage, RefundsPage, SupportPage, TermsPage } from "./pages/Legal";
 import { AccountPage, VaultPage } from "./pages/Account";
 import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
@@ -46,14 +48,18 @@ function DeviceGate({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <>
+    <CookieNotice />
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/launch26" element={<Launch26Page />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/thank-you" element={<ThankYouPage />} />
       <Route path="/create-account" element={<CreateAccountPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/refunds" element={<RefundsPage />} />
       <Route path="/support" element={<SupportPage />} />
       <Route path="/signin" element={<SignInPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -223,5 +229,6 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }

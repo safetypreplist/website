@@ -116,6 +116,8 @@ export type ChecklistSection = {
   title: string;
   intro: string | null;
   sort_order: number;
+  lane?: "vehicle" | "suitcase" | null;
+  more_title?: string | null;
 };
 
 export type ChecklistItem = {

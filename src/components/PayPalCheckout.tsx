@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { LEGAL_VERSIONS } from "../lib/legal";
 import { isPaypalConfigured, loadPaypalSdk } from "../lib/paypal";
 import type { AccessInterval } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
@@ -57,6 +58,10 @@ export function PayPalCheckout({
               accessInterval,
               plan: planKind,
               discountCode: discountCode || undefined,
+              acceptedTerms: true,
+              termsVersion: LEGAL_VERSIONS.terms,
+              privacyVersion: LEGAL_VERSIONS.privacy,
+              refundVersion: LEGAL_VERSIONS.refunds,
             });
             if (!data?.orderId) throw new Error("No PayPal order was created.");
             return data.orderId;

@@ -17,20 +17,22 @@ import {
   IconWater,
   MarkImg,
 } from "../components/Icons";
-import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
+import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
+import { CORE_MESSAGE, HERO_TAGLINE, SCOPE_SUPPORT } from "../lib/copy";
 import { money } from "../lib/format";
-import { PHOTO_LIBRARY, HERO_SLIDES } from "../lib/photos";
-import {
-  ANNUAL_CENTS,
-  FAMILY_MIN_SEATS,
-  MONTHLY_CENTS,
-  checkoutBreakdown,
-  type AccessInterval,
-} from "../lib/pricing";
-import { annualSavingsPercent, CORE_MESSAGE, HERO_TAGLINE, PAGE_TITLE, SCOPE_SUPPORT } from "../lib/copy";
+import { HERO_SLIDES, PHOTO_LIBRARY } from "../lib/photos";
+import { FAMILY_MIN_SEATS, MONTHLY_CENTS } from "../lib/pricing";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
-import { useApp } from "../context/AppContext";
+
+const CODE = "LAUNCH26";
+const INDIVIDUAL_CENTS = MONTHLY_CENTS;
+const FAMILY_CENTS = MONTHLY_CENTS * FAMILY_MIN_SEATS;
+const INDIVIDUAL_FIRST_CENTS = INDIVIDUAL_CENTS - Math.round((INDIVIDUAL_CENTS * 50) / 100);
+const FAMILY_FIRST_CENTS = FAMILY_CENTS - Math.round((FAMILY_CENTS * 50) / 100);
+
+const individualCheckout = `/checkout?plan=individual&access=monthly&code=${CODE}`;
+const familyCheckout = `/checkout?plan=family&qty=${FAMILY_MIN_SEATS}&access=monthly&code=${CODE}`;
 
 const primarySystems = [
   {
@@ -87,7 +89,7 @@ const moreTopics = [
   },
 ];
 
-const coreFeatures = [
+const individualFeatures = [
   { label: "5-Minute Grab-and-Go Bag", Icon: IconBackpack },
   { label: "15-Minute Ready Duffel", Icon: IconDuffel },
   { label: "20-Minute Vehicle OR Suitcase Prep", Icon: IconCar },
@@ -95,50 +97,17 @@ const coreFeatures = [
   { label: `Up to ${INCLUDED_CUSTOM_PER_SECTION} custom items per section`, Icon: IconNotes },
 ];
 
-const planIncludes = [
-  { label: "Check off items on any device", Icon: IconPhone },
-  { label: "Add personal notes", Icon: IconNotes },
-  { label: `Up to ${INCLUDED_CUSTOM_PER_SECTION} custom items per section`, Icon: IconChecklist },
-  { label: "Print any checklist", Icon: IconPrint },
-  { label: "Family sharing on the Family Plan", Icon: IconUser },
-];
-
-export function LandingPage() {
-  const { products } = useApp();
-  const monthly = products.find((p) => p.slug === "access_monthly");
-  const annual = products.find((p) => p.slug === "access_annual");
-  const monthlyCents = monthly?.amount_cents ?? MONTHLY_CENTS;
-  const annualCents = annual?.amount_cents ?? ANNUAL_CENTS;
-  const [billing, setBilling] = useState<AccessInterval>("monthly");
-  const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
-  const [heroSlide, setHeroSlide] = useState(0);
+export function Launch26Page() {
   const [vaultOpen, setVaultOpen] = useState(false);
-  const family = checkoutBreakdown(familyQty, billing, false);
-  const annualSavePct = annualSavingsPercent(monthlyCents, annualCents);
+  const [offerOpen, setOfferOpen] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [heroSlide, setHeroSlide] = useState(0);
 
   useEffect(() => {
     const previous = document.title;
-    document.title = PAGE_TITLE;
+    document.title = `LAUNCH26 — ${HERO_TAGLINE}`;
     return () => {
       document.title = previous;
-    };
-  }, []);
-
-  useEffect(() => {
-    const scrollToHash = () => {
-      const id = window.location.hash.replace("#", "");
-      if (id === "full-system") {
-        setVaultOpen(true);
-        return;
-      }
-      if (!id) return;
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    const timer = window.setTimeout(scrollToHash, 50);
-    window.addEventListener("hashchange", scrollToHash);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("hashchange", scrollToHash);
     };
   }, []);
 
@@ -151,9 +120,63 @@ export function LandingPage() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!offerOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOfferOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [offerOpen]);
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(CODE);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
-    <div className="marketing-page">
-      <PublicHeader pricingHref="#pricing" />
+    <div className="marketing-page launch-page">
+      <PublicHeader howHref="#how" includedHref="#included" pricingHref="#plans" />
+
+      {offerOpen ? (
+        <div className="launch-offer-layer" role="presentation" onClick={() => setOfferOpen(false)}>
+          <div
+            className="launch-offer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="launch-offer-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button className="launch-offer-close" type="button" aria-label="Close" onClick={() => setOfferOpen(false)}>
+              ×
+            </button>
+            <p className="eyebrow">First month only</p>
+            <h2 id="launch-offer-title">Launch prepared. Save 50% on your first month.</h2>
+            <p>
+              Get organized before an emergency with the Safety Prep List. Use code {CODE} at checkout to save 50% on
+              your first month.
+            </p>
+            <p className="launch-offer-hint">Use this code</p>
+            <div className="launch-offer-code">
+              <b>{CODE}</b>
+              <button className="btn btn-primary" type="button" onClick={() => void copyCode()}>
+                {copied ? "Copied" : "Copy code"}
+              </button>
+            </div>
+            {copied ? <p className="launch-offer-copied">{CODE} is copied. Paste it at checkout.</p> : null}
+          </div>
+        </div>
+      ) : null}
 
       <section className="hero-studio">
         <div className="hero-copy-col">
@@ -167,7 +190,7 @@ export function LandingPage() {
             <p className="lead">
               {SCOPE_SUPPORT} {CORE_MESSAGE}
             </p>
-            <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
+            <a className="btn btn-primary" href="#plans">Claim 50% Off Your First Month</a>
           </div>
         </div>
         <div className="hero-visual">
@@ -266,11 +289,7 @@ export function LandingPage() {
       </section>
 
       <section className="how-forest" id="how">
-        <div
-          className="how-forest-bg"
-          style={{ backgroundImage: `url(${PHOTO_LIBRARY.forestfloor})` }}
-          aria-hidden="true"
-        />
+        <div className="how-forest-bg" style={{ backgroundImage: `url(${PHOTO_LIBRARY.forestfloor})` }} aria-hidden="true" />
         <div className="wrap">
           <div className="section-head light">
             <h2>How it works:</h2>
@@ -304,98 +323,64 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="section forest pricing-band" id="pricing">
+      <section className="section forest pricing-band" id="plans">
         <div className="wrap">
           <div className="section-head">
-            <p className="eyebrow">Pricing</p>
-            <h2>Choose a Plan</h2>
-            <div className="billing-toggle" role="group" aria-label="Billing">
-              <button
-                type="button"
-                className={billing === "monthly" ? "selected" : ""}
-                onClick={() => setBilling("monthly")}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                className={billing === "annual" ? "selected" : ""}
-                onClick={() => setBilling("annual")}
-              >
-                Annual
-                {annualSavePct > 0 ? <small className="billing-save">Save {annualSavePct}%</small> : null}
-              </button>
-            </div>
+            <p className="eyebrow">Limited time deal</p>
+            <h2>50% off your first month</h2>
+            <p>First month only. Enter {CODE} at checkout. Regular monthly pricing begins in the second month.</p>
           </div>
           <div className="price-grid">
-            <article className={`price-card ${billing === "annual" ? "has-badge" : ""}`}>
+            <article className="price-card">
               <span className="price-corners" aria-hidden="true" />
-              {billing === "annual" ? <span className="save-badge">Save $2/month</span> : null}
               <h3>Individual Plan</h3>
-              {billing === "monthly" ? (
-                <>
-                  <div className="amount">{money(monthlyCents)} <small>/ month</small></div>
-                  <p className="plan-line">1 Personal Checklist</p>
-                </>
-              ) : (
-                <>
-                  <div className="amount">{money(annualCents)} <small>/ year</small></div>
-                  <p className="plan-line">1 Personal Checklist</p>
-                  {annualSavePct > 0 ? <p className="plan-save">Save {annualSavePct}% with annual billing</p> : null}
-                </>
-              )}
+              <p className="launch-was">
+                <span>Regular price</span>
+                <s>{money(INDIVIDUAL_CENTS)}/month</s>
+              </p>
+              <div className="amount">
+                {money(INDIVIDUAL_FIRST_CENTS)} <small>first month</small>
+              </div>
+              <p className="launch-off">50% off with code {CODE}</p>
+              <p className="plan-line">1 Personal Checklist</p>
               <ul>
-                {coreFeatures.map((item) => (
+                {individualFeatures.map((item) => (
                   <li key={item.label}>
                     <item.Icon />
                     {item.label}
                   </li>
                 ))}
               </ul>
-              <Link className="btn btn-primary btn-block" to={`/checkout?plan=individual&access=${billing}`}>
+              <Link className="btn btn-primary btn-block" to={individualCheckout}>
                 Choose Individual
               </Link>
             </article>
-            <article className={`price-card featured ${billing === "annual" ? "has-badge" : ""}`}>
+            <article className="price-card featured">
               <span className="price-corners" aria-hidden="true" />
-              {billing === "annual" ? <span className="save-badge">Save $2/month</span> : null}
               <h3>Family Plan</h3>
+              <p className="launch-was">
+                <span>Regular price</span>
+                <s>{money(FAMILY_CENTS)}/month</s>
+              </p>
               <div className="amount">
-                {money(family.subscriptionCents)}{" "}
-                <small>{billing === "annual" ? "/ year" : "/ month"}</small>
+                {money(FAMILY_FIRST_CENTS)} <small>first month</small>
               </div>
-              <p className="plan-line">{familyQty} Personal Checklists</p>
-              {billing === "annual" && annualSavePct > 0 ? <p className="plan-save">Save {annualSavePct}% with annual billing</p> : null}
-              <div className="qty-picker landing-qty">
-                <span>Family Members</span>
-                <div>
-                  <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => Math.max(FAMILY_MIN_SEATS, n - 1))}>-</button>
-                  <b>{familyQty}</b>
-                  <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => n + 1)}>+</button>
-                </div>
-              </div>
+              <p className="launch-off">50% off with code {CODE}</p>
+              <p className="plan-line">{FAMILY_MIN_SEATS} Personal Checklists</p>
               <p className="plan-plus">Everything in Individual, plus:</p>
               <ul>
                 <li><IconUser /> Each member gets their own Personal Checklist</li>
                 <li><IconChecklist /> Connected under one Family Plan</li>
                 <li><IconNotes /> View Only or Can Edit permissions per owner</li>
               </ul>
-              <Link className="btn btn-primary btn-block" to={`/checkout?plan=family&qty=${familyQty}&access=${billing}`}>
+              <Link className="btn btn-primary btn-block" to={familyCheckout}>
                 Choose Family
               </Link>
             </article>
           </div>
-          <div className="plan-includes">
-            <p className="eyebrow">What’s included with your plan</p>
-            <ul>
-              {planIncludes.map((item) => (
-                <li key={item.label}>
-                  <item.Icon />
-                  {item.label}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <p className="launch-billing-note">
+            50% off your first month only with code {CODE}. Regular monthly pricing applies beginning in month two.
+          </p>
           <aside className="vault-cta-strip" id="survival-vault">
             <div>
               <p className="eyebrow">Optional add-on</p>
@@ -415,12 +400,12 @@ export function LandingPage() {
 
       {vaultOpen ? (
         <SurvivalVaultModal
-          ctaHref="#pricing"
+          ctaHref={`/checkout?plan=individual&access=monthly&vault=1&code=${CODE}`}
           onClose={() => setVaultOpen(false)}
         />
       ) : null}
 
-      <PublicFooter />
+      <PublicFooter howHref="#how" includedHref="#included" pricingHref="#plans" />
     </div>
   );
 }

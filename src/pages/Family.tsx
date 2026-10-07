@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
 import { PayPalCheckout } from "../components/PayPalCheckout";
 import { useApp } from "../context/AppContext";
 import { checklistTitle, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
@@ -33,6 +34,7 @@ export function ManageFamilyPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [access, setAccess] = useState<AccessInterval>(profile?.access_interval === "annual" ? "annual" : "monthly");
+  const [agreed, setAgreed] = useState(false);
   const monthly = products.find((p) => p.slug === "access_monthly");
   const annual = products.find((p) => p.slug === "access_annual");
   const monthlyCents = monthly?.amount_cents ?? ACCESS_MONTHLY_CENTS;
@@ -60,7 +62,7 @@ export function ManageFamilyPage() {
 
   return (
     <div>
-      <h1 className="page-title">Manage Family Plan</h1>
+      <h1 className="page-title" data-onboarding="family">Manage Family Plan</h1>
       <p className="section-title">{planTypeLabel({ plan: profile?.plan, familySize })}</p>
       <div className="family-card-list">
         {familyMembers.map((member) => (
@@ -169,18 +171,29 @@ export function ManageFamilyPage() {
             </p>
             {error ? <p className="form-error">{error}</p> : null}
             {paying && !demoMode ? (
-              <PayPalCheckout
-                productSlug="core"
-                quantity={1}
-                accessInterval={access}
-                onError={setError}
-                onCaptured={async () => {
-                  await inviteFamilyMember(first.trim(), last.trim(), email.trim());
-                  setPaying(false);
-                  setAdding(false);
-                  await refreshAccount();
-                }}
-              />
+              <>
+                <LegalAgreement id="family-agree" checked={agreed} onChange={setAgreed} />
+                <AutoRenewalNote
+                  amount={money(addOn.recurringCents)}
+                  interval={access === "annual" ? "year" : "month"}
+                />
+                {agreed ? (
+                  <PayPalCheckout
+                    productSlug="core"
+                    quantity={1}
+                    accessInterval={access}
+                    onError={setError}
+                    onCaptured={async () => {
+                      await inviteFamilyMember(first.trim(), last.trim(), email.trim());
+                      setPaying(false);
+                      setAdding(false);
+                      await refreshAccount();
+                    }}
+                  />
+                ) : (
+                  <p className="muted">Agree to the policies above to enable PayPal checkout.</p>
+                )}
+              </>
             ) : (
               <button className="btn btn-primary" type="submit">
                 {demoMode ? "Send invitation" : `Purchase and send invitation, ${money(addOn.dueTodayCents)}`}
@@ -291,6 +304,7 @@ export function HouseholdPage() {
   return (
     <div>
       <h1 className="page-title">Survival Vault</h1>
+      <p className="muted">Expanded checklists are in Have more time on your main lists. This add-on is the how-to videos.</p>
       <div className="system-list" style={{ marginTop: 18 }}>
         {fullSystems.map((system) => (
           <SystemRow key={system.id} slug={system.slug} />

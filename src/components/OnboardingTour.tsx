@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { firstNameOf } from "../lib/identity";
@@ -22,6 +22,7 @@ const PREVIEW_KEY = "spl.onboarding.preview";
 const PREVIEW_EVENT = "spl:preview-onboarding";
 const REPLAY_KEY = "spl.onboarding.replay";
 const REPLAY_EVENT = "spl:replay-onboarding";
+const HOLD_KEY = "spl.onboarding.active";
 
 function loadCopy(): TourCopy {
   try {
@@ -92,6 +93,34 @@ function replayActive() {
   return sessionStorage.getItem(REPLAY_KEY) === "1";
 }
 
+function visibleTarget(selector: string) {
+  return ([...document.querySelectorAll(selector)] as HTMLElement[]).find((node) => {
+    const style = getComputedStyle(node);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    const box = node.getBoundingClientRect();
+    return box.width > 8 && box.height > 8;
+  }) ?? null;
+}
+
+function isPhoneTour() {
+  return window.matchMedia("(max-width: 899px)").matches;
+}
+
+function readHeldStep() {
+  const raw = sessionStorage.getItem(HOLD_KEY);
+  if (raw == null) return null;
+  const index = Number(raw);
+  return Number.isFinite(index) ? index : 0;
+}
+
+function holdStep(index: number) {
+  sessionStorage.setItem(HOLD_KEY, String(index));
+}
+
+function releaseHold() {
+  sessionStorage.removeItem(HOLD_KEY);
+}
+
 export function OnboardingTour() {
   const { profile } = useApp();
   const location = useLocation();
@@ -103,6 +132,7 @@ export function OnboardingTour() {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [copy, setCopy] = useState<TourCopy>(loadCopy);
   const [videoUrl, setVideoUrl] = useState(loadCachedVideo);
+  const holdingTour = useRef(false);
   const step = { ...(DEFAULT_STEPS[stepIndex] ?? DEFAULT_STEPS[0]), ...copy[stepIndex] };
   const video = onboardingVideoSrc(videoUrl);
 
@@ -131,11 +161,21 @@ export function OnboardingTour() {
       if (!profile?.id) return;
       if (replayActive()) {
         sessionStorage.removeItem(REPLAY_KEY);
+        holdingTour.current = true;
+        holdStep(0);
         setMode("tour");
         setStepIndex(0);
         setRect(null);
         setOpen(true);
         navigate(DEFAULT_STEPS[0].path);
+        return;
+      }
+      const held = readHeldStep();
+      if (held != null) {
+        holdingTour.current = true;
+        setMode("tour");
+        setStepIndex(held);
+        setOpen(true);
         return;
       }
       if (previewActive()) {
@@ -145,6 +185,7 @@ export function OnboardingTour() {
         setOpen(true);
         return;
       }
+      if (holdingTour.current) return;
       if (profile.plan === "none") {
         setOpen(false);
         return;
@@ -164,7 +205,7 @@ export function OnboardingTour() {
     if (!open || mode !== "tour") return;
     let cancelled = false;
     let target: HTMLElement | null = null;
-    const pad = 16;
+    const pad = isPhoneTour() ? 8 : 16;
     const expectedPath = DEFAULT_STEPS[stepIndex]?.path;
 
     function measure() {
@@ -173,13 +214,28 @@ export function OnboardingTour() {
       setRect(new DOMRect(box.left - pad, box.top - pad, box.width + pad * 2, box.height + pad * 2));
     }
 
+    function placeOnPhone() {
+      if (!target || !isPhoneTour() || target.closest(".bottom-nav")) return;
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      const box = target.getBoundingClientRect();
+      window.scrollBy(0, box.top - 96);
+      root.style.scrollBehavior = previous;
+    }
+
     async function locate() {
       for (let attempt = 0; attempt < 50 && !cancelled; attempt += 1) {
-        target = document.querySelector(step.selector) as HTMLElement | null;
+        const found = visibleTarget(step.selector);
+        const row = found?.closest(".check-row");
+        target = found && isPhoneTour() && step.selector.includes("check-item") && row instanceof HTMLElement
+          ? row
+          : found;
         if (target) {
           target.classList.add("onboarding-target-highlight");
-          target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
-          await new Promise((resolve) => window.setTimeout(resolve, 80));
+          if (isPhoneTour()) placeOnPhone();
+          else target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+          await new Promise((resolve) => window.setTimeout(resolve, 120));
           if (!cancelled) measure();
           return;
         }
@@ -220,16 +276,22 @@ export function OnboardingTour() {
   if (!open || !profile) return null;
 
   function finish() {
+    holdingTour.current = false;
+    releaseHold();
     const preview = previewActive();
     sessionStorage.removeItem(PREVIEW_KEY);
     if (!preview && storageKey) localStorage.setItem(storageKey, "done");
     setOpen(false);
   }
   function completeTour() {
+    holdingTour.current = false;
+    releaseHold();
     setMode("done");
     setRect(null);
   }
   function startTour() {
+    holdingTour.current = true;
+    holdStep(0);
     setRect(null);
     setMode("tour");
     setStepIndex(0);
@@ -242,6 +304,7 @@ export function OnboardingTour() {
     }
     const nextIndex = stepIndex + 1;
     const next = DEFAULT_STEPS[nextIndex];
+    holdStep(nextIndex);
     setRect(null);
     setStepIndex(nextIndex);
     if (next?.path && next.path !== location.pathname) navigate(next.path);
@@ -331,7 +394,14 @@ export function OnboardingTour() {
           ) : (
             <div className="onboarding-tint onboarding-tint-full" aria-hidden="true" />
           )}
-          <aside className={`onboarding-tour-card ${rect && rect.top > window.innerHeight * 0.55 ? "above" : ""}`} role="dialog" aria-modal="true" aria-labelledby="tour-title">
+          <aside
+            className={`onboarding-tour-card ${
+              rect && rect.top > window.innerHeight * (isPhoneTour() ? 0.46 : 0.55) ? "above" : ""
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tour-title"
+          >
             <div className="onboarding-tour-head"><span>{progress}</span><button type="button" onClick={finish}>×</button></div>
             <p className="eyebrow">Guided tour</p>
             <h2 id="tour-title">{step.title}</h2>

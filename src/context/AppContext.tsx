@@ -67,6 +67,7 @@ import type {
   ViewingKind,
 } from "../types";
 import { ITEM_LIMIT_ERROR } from "../lib/customItems";
+import seedCatalog from "../data/catalog.json";
 
 type SyncState = "idle" | "saving" | "saved" | "waiting" | "error";
 const VIEW_KEY = "spl.viewing.v1";
@@ -76,6 +77,14 @@ type Catalog = {
   sections: ChecklistSection[];
   items: ChecklistItem[];
 };
+
+function bundledChecklist(): Catalog {
+  return {
+    systems: seedCatalog.systems as ChecklistSystem[],
+    sections: seedCatalog.sections as ChecklistSection[],
+    items: (seedCatalog.items as ChecklistItem[]).filter((item) => item.active !== false),
+  };
+}
 
 type AppState = {
   session: Session | null;
@@ -193,19 +202,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSafety(data.safety);
       return;
     }
-    const [systems, sections, items, productRows, videoRows, safetyRows] = await Promise.all([
-      supabase.from("checklist_systems").select("*").order("sort_order"),
-      supabase.from("checklist_sections").select("*").order("sort_order"),
-      supabase.from("checklist_items").select("*").eq("active", true).order("sort_order"),
+    const bundled = bundledChecklist();
+    const [productRows, videoRows, safetyRows] = await Promise.all([
       supabase.from("products").select("*"),
       supabase.from("video_resources").select("*").order("sort_order"),
       supabase.from("safety_contacts").select("*").eq("active", true).order("sort_order"),
     ]);
-    setCatalog({
-      systems: (systems.data as ChecklistSystem[]) || [],
-      sections: (sections.data as ChecklistSection[]) || [],
-      items: (items.data as ChecklistItem[]) || [],
-    });
+    setCatalog(bundled);
     setProducts((productRows.data as Product[]) || []);
     setVideos((videoRows.data as VideoResource[]) || []);
     setSafety((safetyRows.data as SafetyContact[]) || []);

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "./Brand";
 import { HeaderClock } from "./LocationStatus";
 import { useApp } from "../context/AppContext";
+import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
 import { checklistTitle, initialsFrom } from "../lib/identity";
 
@@ -105,11 +106,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ShieldIcon />
           Safety
         </NavLink>
-        <NavLink to="/app/account">
+        <NavLink to="/app/account" data-onboarding="profile">
           <UserIcon />
           Account
         </NavLink>
       </nav>
+      <LegalNotices />
       <OnboardingTour />
     </div>
   );

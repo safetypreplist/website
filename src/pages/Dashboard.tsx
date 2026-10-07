@@ -7,6 +7,8 @@ import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
+import { CORE_MESSAGE, MORE_TIME_LINE, SCOPE_LINE, SCOPE_SUPPORT } from "../lib/copy";
+import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 
 type Accent = "forest" | "moss" | "clay" | "terracotta";
@@ -39,14 +41,16 @@ export function DashboardPage() {
   const personalSystems = catalog.systems.filter((s) => s.access_tier === "core");
   const householdSystems = catalog.systems.filter((s) => s.access_tier === "full");
   const isHousehold = viewing.kind === "household";
-  const systems = isHousehold ? householdSystems : personalSystems;
+  const systems = (isHousehold ? householdSystems : personalSystems)
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const startSystems = systems.filter((system) => isTimedSystem(system));
+  const moreSystems = systems.filter((system) => !isTimedSystem(system));
+  const lane = readPrepLane();
 
-  const visibleSections = catalog.sections.filter((section) => {
-    const system = catalog.systems.find((s) => s.id === section.system_id);
-    if (!system) return false;
-    return systems.some((s) => s.id === system.id);
-  });
-  const visibleItems = itemsForSections(catalog.items, customItems, visibleSections);
+  const visibleItems = startSystems.flatMap((system) =>
+    trackedItems(system, catalog.sections, catalog.items, customItems, lane),
+  );
   const done = visibleItems.filter((item) => progress[item.id]?.checked).length;
   const pct = percent(done, visibleItems.length);
   const continueSystem = entitled ? findContinueSystem(systems, catalog, customItems, progress) : null;
@@ -71,7 +75,12 @@ export function DashboardPage() {
         <div className="readiness-photo" aria-hidden="true">
           <img src={PHOTO_LIBRARY.landscape} alt="" />
         </div>
-        <div className="eyebrow">Checklist Progress</div>
+        <div className="readiness-head">
+          <div className="eyebrow">Checklist Progress</div>
+          <p className={`sync-pill ${sync === "waiting" ? "wait" : ""}`}>
+            {!online ? "Offline" : sync === "waiting" ? "Waiting to sync" : sync === "saved" ? "Synced" : sync === "saving" ? "Saving…" : "Ready"}
+          </p>
+        </div>
         <div className="readiness-meter">
           <svg className="ring" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(230,226,214,.18)" strokeWidth="10" />
@@ -93,9 +102,6 @@ export function DashboardPage() {
           <div>
             <p className="readiness-count">
               <b>{done}</b> of {visibleItems.length} items checked
-            </p>
-            <p className={`sync-pill ${sync === "waiting" ? "wait" : ""}`}>
-              {!online ? "Offline" : sync === "waiting" ? "Waiting to sync" : sync === "saved" ? "Synced" : sync === "saving" ? "Saving…" : "Ready"}
             </p>
           </div>
         </div>
@@ -124,12 +130,30 @@ export function DashboardPage() {
         </Link>
       )}
 
-      <p className="dash-section-title">{isHousehold ? "Survival Vault" : "My Checklist"}</p>
+      <p className="dash-section-title">{isHousehold ? "Survival Vault" : "Start here"}</p>
+      {!isHousehold ? (
+        <p className="dash-scope">
+          {SCOPE_LINE} {SCOPE_SUPPORT}
+        </p>
+      ) : null}
       <div className="system-list">
-        {systems.map((system) => (
+        {(isHousehold ? systems : startSystems).map((system) => (
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
+      {!isHousehold && moreSystems.length ? (
+        <>
+          <p className="dash-section-title">Have more time?</p>
+          <p className="dash-scope">
+            {MORE_TIME_LINE} {CORE_MESSAGE}
+          </p>
+          <div className="system-list">
+            {moreSystems.map((system) => (
+              <SystemRow key={system.id} slug={system.slug} />
+            ))}
+          </div>
+        </>
+      ) : null}
 
       {viewing.isOwn && !isHousehold ? (
         <>
@@ -171,29 +195,52 @@ function NotificationPrompt() {
 
 export function ListsPage() {
   const { catalog, viewing, switchChecklist, hasSurvivalVault } = useApp();
-  const coreSystems = catalog.systems.filter((s) => s.access_tier === "core");
+  const coreSystems = catalog.systems.filter((s) => s.access_tier === "core").sort((a, b) => a.sort_order - b.sort_order);
+  const startSystems = coreSystems.filter((system) => isTimedSystem(system));
+  const moreSystems = coreSystems.filter((system) => !isTimedSystem(system));
+  const household = viewing.kind === "household";
 
   return (
     <div>
-      <h1 className="page-title">{viewing.kind === "household" ? "Survival Vault" : viewing.title}</h1>
-      <div className="system-list">
-        {(viewing.kind === "household" ? catalog.systems.filter((s) => s.access_tier === "full") : coreSystems).map((system) => (
-          <SystemRow key={system.id} slug={system.slug} />
-        ))}
-      </div>
-      {viewing.kind === "household" ? (
+      <h1 className="page-title">{household ? "Survival Vault" : viewing.title}</h1>
+      {household ? (
+        <div className="system-list">
+          {catalog.systems
+            .filter((s) => s.access_tier === "full")
+            .map((system) => (
+              <SystemRow key={system.id} slug={system.slug} />
+            ))}
+        </div>
+      ) : (
+        <>
+          <p className="dash-section-title">Start here</p>
+          <div className="system-list">
+            {startSystems.map((system) => (
+              <SystemRow key={system.id} slug={system.slug} />
+            ))}
+          </div>
+          <p className="dash-section-title">Have more time?</p>
+          <p className="dash-scope">{MORE_TIME_LINE}</p>
+          <div className="system-list">
+            {moreSystems.map((system) => (
+              <SystemRow key={system.id} slug={system.slug} />
+            ))}
+          </div>
+        </>
+      )}
+      {household ? (
         <p className="muted" style={{ marginTop: 18 }}>
           <Link to="/app/survival/videos">How-To Videos</Link>
         </p>
       ) : hasSurvivalVault ? (
         <p className="muted" style={{ marginTop: 18 }}>
-          Looking for water, power, or off-grid systems?{" "}
-          <Link to="/app/survival" onClick={() => void switchChecklist("household")}>Open Survival Vault</Link>
+          How-to videos are in the{" "}
+          <Link to="/app/survival" onClick={() => void switchChecklist("household")}>Survival Vault</Link>
         </p>
       ) : (
         <p className="muted" style={{ marginTop: 18 }}>
-          Looking for water, power, or off-grid systems?{" "}
-          <Link to="/app/account#addons">Unlock Survival Vault</Link>
+          How-to videos are a separate{" "}
+          <Link to="/app/account#addons">Survival Vault</Link> add-on.
         </p>
       )}
     </div>
@@ -219,9 +266,10 @@ function findContinueSystem(
   progress: ReturnType<typeof useApp>["progress"],
 ) {
   let best: { slug: string; title: string; done: number; total: number; pct: number } | null = null;
-  for (const system of systems) {
-    const sections = catalog.sections.filter((s) => s.system_id === system.id);
-    const items = itemsForSections(catalog.items, customItems, sections);
+  const lane = readPrepLane();
+  const ordered = [...systems].sort((a, b) => Number(isTimedSystem(b)) - Number(isTimedSystem(a)) || a.sort_order - b.sort_order);
+  for (const system of ordered) {
+    const items = trackedItems(system, catalog.sections, catalog.items, customItems, lane);
     if (!items.length) continue;
     const done = items.filter((i) => progress[i.id]?.checked).length;
     if (done === 0 || done === items.length) continue;
@@ -237,8 +285,8 @@ export function SystemRow({ slug }: { slug: string }) {
   const { catalog, progress, profile, customItems, hasSurvivalVault, viewing } = useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   if (!system) return null;
-  const sections = catalog.sections.filter((s) => s.system_id === system.id);
-  const items = itemsForSections(catalog.items, customItems, sections);
+  const lane = readPrepLane();
+  const items = trackedItems(system, catalog.sections, catalog.items, customItems, lane);
   const done = items.filter((i) => progress[i.id]?.checked).length;
   const pct = items.length ? Math.round((done / items.length) * 100) : 0;
   const locked =
@@ -256,12 +304,12 @@ export function SystemRow({ slug }: { slug: string }) {
         <Photo alt={system.title} subject={SYSTEM_PHOTOS[system.slug]} ratio="square" accent={SYSTEM_ACCENTS[system.slug] ?? "forest"} />
       </div>
       <div className="body">
-        <div className="time">{system.time_label}</div>
+        <div className="time">{system.time_label === "MORE" ? "Expanded" : system.time_label}</div>
         <h3>{system.title}</h3>
         <p>{system.description}</p>
         <div className="progress-meta">
           <span>
-            {done} / {items.length} complete
+            {done} / {items.length} {isTimedSystem(system) ? "priority" : "complete"}
           </span>
           <span>{pct}%</span>
         </div>

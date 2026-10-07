@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { LegalAgreement } from "../components/LegalAgreement";
 import { PayPalCheckout } from "../components/PayPalCheckout";
 import { ProfileWeather } from "../components/LocationStatus";
 import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 import { checklistTitle, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
+import { legalMailto, displayLegal, LEGAL } from "../lib/legal";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
+import { invokeFunction, isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export function AccountPage() {
   const {
@@ -21,6 +25,11 @@ export function AccountPage() {
     myChecklist,
     familyMembers,
     hasSurvivalVault,
+    catalog,
+    progress,
+    customItems,
+    contacts,
+    demoMode,
   } = useApp();
   const location = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -36,7 +45,11 @@ export function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaved, setPasswordSaved] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [vaultAgreed, setVaultAgreed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [cancelRequested, setCancelRequested] = useState(Boolean(profile?.cancel_requested_at));
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const used = devices.length;
   const familySize = familyMembers.filter((m) => m.status !== "cancelled").length || 1;
   const planName = planTypeLabel({ plan: profile?.plan, familySize });
@@ -114,6 +127,75 @@ export function AccountPage() {
     if (!myChecklist?.publicId) return;
     await navigator.clipboard.writeText(myChecklist.publicId);
     setCopied(true);
+  }
+
+  function downloadData() {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      profile: {
+        email: user?.email || profile?.email,
+        first_name: profile?.first_name,
+        last_name: profile?.last_name,
+        display_name: profile?.display_name,
+        phone: profile?.phone,
+        plan: profile?.plan,
+        access_interval: profile?.access_interval,
+        access_renews_at: profile?.access_renews_at,
+      },
+      checklist: myChecklist,
+      familyMembers: familyMembers.map((member) => ({
+        publicId: member.publicId,
+        displayName: member.displayName,
+        permission: member.permission,
+        status: member.status,
+      })),
+      progress,
+      customItems,
+      contacts,
+      devices: devices.map((device) => ({
+        id: device.id,
+        nickname: device.nickname,
+        device_description: device.device_description,
+      })),
+      catalogTitles: catalog.items.map((item) => ({ id: item.id, text: item.text })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "safety-prep-list-data.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function requestCancel() {
+    setError("");
+    setSaved("");
+    if (isSupabaseConfigured() && user?.id) {
+      const { error: err } = await supabase
+        .from("profiles")
+        .update({ cancel_requested_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (err) {
+        setError("We saved your request locally. Email support to finish cancellation.");
+      }
+    }
+    setCancelRequested(true);
+    window.location.href = legalMailto("Cancel subscription");
+  }
+
+  async function deleteAccount() {
+    setDeleteBusy(true);
+    setError("");
+    try {
+      if (!demoMode) {
+        await invokeFunction("delete-account", { confirm: "DELETE" });
+      }
+      await signOut();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete the account.");
+      setDeleteBusy(false);
+    }
   }
 
   return (
@@ -243,14 +325,19 @@ export function AccountPage() {
             {showUpgrade && (
               <div style={{ marginTop: 16 }}>
                 {error && <p className="form-error">{error}</p>}
-                <PayPalCheckout
-                  productSlug="upgrade_full"
-                  onError={setError}
-                  onCaptured={async () => {
-                    await refreshAccount();
-                    setShowUpgrade(false);
-                  }}
-                />
+                <LegalAgreement id="vault-agree" checked={vaultAgreed} onChange={setVaultAgreed} />
+                {vaultAgreed ? (
+                  <PayPalCheckout
+                    productSlug="upgrade_full"
+                    onError={setError}
+                    onCaptured={async () => {
+                      await refreshAccount();
+                      setShowUpgrade(false);
+                    }}
+                  />
+                ) : (
+                  <p className="muted">Agree to the policies above to enable PayPal checkout.</p>
+                )}
               </div>
             )}
           </div>
@@ -275,11 +362,56 @@ export function AccountPage() {
         </Link>
       </article>
 
+      <article className="account-card">
+        <h2>Subscription</h2>
+        {accessDescription(profile) ? <p className="muted">{accessDescription(profile)}</p> : null}
+        {cancelRequested ? (
+          <p>
+            Cancellation requested. You keep access through the end of the paid period. Email{" "}
+            <a href={legalMailto("Cancel subscription")}>{displayLegal(LEGAL.supportEmail)}</a> if you need help.
+          </p>
+        ) : (
+          <>
+            <p className="muted">
+              Cancel anytime before the next billing date. We record the request and email{" "}
+              {displayLegal(LEGAL.supportEmail)}. You keep access through the period you already paid.
+            </p>
+            <button className="btn btn-ghost" type="button" onClick={() => void requestCancel()}>
+              Cancel subscription
+            </button>
+          </>
+        )}
+      </article>
+
+      <article className="account-card">
+        <h2>Your data</h2>
+        <p className="muted">Download a JSON copy of your account, checklist progress, notes, contacts, and devices.</p>
+        <div className="toolbar">
+          <button className="btn btn-ghost" type="button" onClick={downloadData}>
+            Download my data
+          </button>
+          <button className="btn btn-danger" type="button" onClick={() => setDeleteOpen(true)}>
+            Delete my account and data
+          </button>
+        </div>
+      </article>
+
       {error && !showUpgrade ? <p className="form-error">{error}</p> : null}
 
       <button className="btn btn-forest" type="button" onClick={() => void signOut()}>
         Log out
       </button>
+      {deleteOpen ? (
+        <ConfirmDialog
+          title="Delete your account?"
+          body="This removes your profile, checklist progress, notes, custom items, contacts, and devices. Purchase records and terms acceptances are kept as required. This cannot be undone."
+          confirmLabel="Delete account"
+          danger
+          busy={deleteBusy}
+          onClose={() => setDeleteOpen(false)}
+          onConfirm={() => void deleteAccount()}
+        />
+      ) : null}
       {profile?.role === "owner" && (
         <p style={{ marginTop: 16 }}>
           <Link to="/admin">Owner tools</Link>

@@ -1,7 +1,9 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { BrandMark } from "../components/Brand";
+import { LegalAgreement } from "../components/LegalAgreement";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
+import { recordLegalAcceptance } from "../lib/legalConsent";
 import { useApp } from "../context/AppContext";
 import { supabase } from "../lib/supabase";
 import { PRODUCT_CODE_RE } from "../lib/format";
@@ -189,13 +191,19 @@ export function CreateAccountPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [previewNote, setPreviewNote] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const validCode = useMemo(() => PRODUCT_CODE_RE.test(code), [code]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
     setPreviewNote(false);
+    if (!agreed) {
+      setError("Please agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
     if (demoMode) {
+      await recordLegalAcceptance("signup", email);
       setPreviewNote(true);
       return;
     }
@@ -211,8 +219,10 @@ export function CreateAccountPage() {
       setError(err.message);
       return;
     }
+    await recordLegalAcceptance("signup", email);
     if (data.session) {
       sessionStorage.removeItem("spl.productCode");
+      await recordLegalAcceptance("signup", email);
       navigate("/app");
       return;
     }
@@ -242,6 +252,7 @@ export function CreateAccountPage() {
           autoComplete="new-password"
           hint="At least 8 characters."
         />
+        <LegalAgreement id="signup-agree" checked={agreed} onChange={setAgreed} />
         {error && <p className="form-error">{error}</p>}
         {previewNote && (
           <p className="muted" style={{ marginTop: 12 }}>
@@ -249,7 +260,7 @@ export function CreateAccountPage() {
             <Link to="/signin">Sign in to demo</Link> to look inside the app.
           </p>
         )}
-        <button className="btn btn-primary btn-block" style={{ marginTop: 18 }} type="submit">
+        <button className="btn btn-primary btn-block" style={{ marginTop: 18 }} type="submit" disabled={!agreed}>
           Create My Account
         </button>
       </form>

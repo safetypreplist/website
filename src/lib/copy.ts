@@ -1,11 +1,29 @@
+export const HERO_TAGLINE = "The Perfect Checklists for Emergency Situations.";
+
+export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
+
+export const SCOPE_LINE =
+  "Practical preparedness for natural disasters, local emergencies, outages, evacuations, and temporary disruptions.";
+
+export const SCOPE_SUPPORT =
+  "Start with the essentials. Build your preparedness system as you have more time.";
+
+export const CORE_MESSAGE = "Start small. Prepare practically. Build over time.";
+
+export const MORE_TIME_LINE =
+  "You've handled the essentials. Now build a stronger preparedness system.";
+
+export const COMPLETION_STANDARD =
+  "Checked means available, accessible, compatible, current, known, and practiced. Buying an item is not enough.";
+
 export const OFFICIAL_GUIDANCE_DISCLAIMER =
-  "This list is general guidance. Always follow instructions from local emergency officials, evacuation orders, and emergency services first.";
+  "No checklist replaces local emergency-management instructions, professional medical advice, utility guidance, or emergency services. Follow evacuation orders and official public-health instructions first.";
 
 export const QUICK_START_BANNER =
-  "Gather what you already own, then pack. Anything missing goes on your shopping list.";
+  "This is a priority session. It does not mean every preparedness item can be finished in these minutes.";
 
 export function quickStartIntro(minutes: number) {
-  return `About ${minutes} minutes once supplies are gathered. ${QUICK_START_BANNER} ${OFFICIAL_GUIDANCE_DISCLAIMER}`;
+  return `About ${minutes} minutes for the priority items, once supplies are gathered. ${QUICK_START_BANNER} ${COMPLETION_STANDARD}`;
 }
 
 export function annualSavingsPercent(monthlyCents: number, annualCents: number) {

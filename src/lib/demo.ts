@@ -71,7 +71,7 @@ export function demoCatalog() {
   return {
     systems: catalog.systems as ChecklistSystem[],
     sections: catalog.sections as ChecklistSection[],
-    items: catalog.items as ChecklistItem[],
+    items: (catalog.items as ChecklistItem[]).filter((item) => item.active !== false),
     products: catalog.products as Product[],
     videos: catalog.videos as VideoResource[],
     safety: catalog.safety as SafetyContact[],

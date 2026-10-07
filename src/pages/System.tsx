@@ -12,21 +12,20 @@ import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { infoForItem } from "../data/itemTips";
-import seedCatalog from "../data/catalog.json";
-import { OFFICIAL_GUIDANCE_DISCLAIMER, quickStartIntro, quickStartMinutes } from "../lib/copy";
+import { COMPLETION_STANDARD, MORE_TIME_LINE, OFFICIAL_GUIDANCE_DISCLAIMER, quickStartIntro, quickStartMinutes } from "../lib/copy";
+import {
+  isPrimaryItem,
+  isTimedSystem,
+  itemsOnSections,
+  readPrepLane,
+  sectionsForSystem,
+  sortVehiclePrimary,
+  trackedItems,
+  writePrepLane,
+  type PrepLane,
+} from "../lib/listProgress";
 import { NOTE_SENSITIVITY_WARNING, printDisclaimer } from "../lib/legal";
 import type { ChecklistItem, ProgressRow } from "../types";
-
-const QUICK_START_KEYS = new Set(
-  (seedCatalog.items as { permanent_key: string; quick_start?: boolean; active?: boolean }[])
-    .filter((item) => item.active !== false && item.quick_start)
-    .map((item) => item.permanent_key),
-);
-
-function isQuickStartItem(item: ChecklistItem) {
-  if (item.permanent_key.startsWith("custom.")) return false;
-  return item.quick_start === true || QUICK_START_KEYS.has(item.permanent_key);
-}
 
 export function SystemPage() {
   const { slug } = useParams();
@@ -43,6 +42,7 @@ export function SystemPage() {
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
   const [printOpen, setPrintOpen] = useState(false);
+  const [lane, setLane] = useState<PrepLane>(() => readPrepLane());
   const printMenuRef = useRef<HTMLDivElement>(null);
 
   const lastSavedAt = useMemo(() => {
@@ -54,24 +54,89 @@ export function SystemPage() {
     return stamps.at(-1) ?? null;
   }, [catalog.items, customItems, progress, sections]);
 
+  const orderedSections = useMemo(
+    () => (system ? sectionsForSystem(catalog.sections, system, system.slug === "vehicle-suitcase" ? lane : null) : []),
+    [catalog.sections, lane, system],
+  );
+
   const listStats = useMemo(() => {
-    const all = sections.flatMap((section) => itemsForSection(catalog.items, customItems, section.id));
-    const done = all.filter((item) => progress[item.id]?.checked).length;
+    if (!system) return { done: 0, total: 0, pct: 0 };
+    const tracked = trackedItems(system, catalog.sections, catalog.items, customItems, lane);
+    const done = tracked.filter((item) => progress[item.id]?.checked).length;
     return {
       done,
-      total: all.length,
-      pct: all.length ? Math.round((done / all.length) * 100) : 0,
+      total: tracked.length,
+      pct: tracked.length ? Math.round((done / tracked.length) * 100) : 0,
     };
-  }, [catalog.items, customItems, progress, sections]);
+  }, [catalog.items, catalog.sections, customItems, lane, progress, system]);
 
   const qsMinutes = quickStartMinutes(system?.time_label);
+  const timed = isTimedSystem(system);
 
-  const quickItems = useMemo(() => {
-    if (qsMinutes == null) return [];
-    return sections.flatMap((section) =>
-      itemsForSection(catalog.items, customItems, section.id).filter(isQuickStartItem),
-    );
-  }, [catalog.items, customItems, qsMinutes, sections]);
+  const primaryGroups = useMemo(() => {
+    if (!system || !timed) return [];
+    if (system.slug === "vehicle-suitcase") {
+      const items = sortVehiclePrimary(
+        itemsOnSections(orderedSections, catalog.items, customItems).filter(isPrimaryItem),
+      );
+      if (!items.length) return [];
+      return [
+        {
+          key: "primary",
+          title: lane === "suitcase" ? "Suitcase Prep" : "Vehicle Prep",
+          intro: quickStartIntro(qsMinutes ?? 20),
+          items,
+          sectionId: null as string | null,
+        },
+      ];
+    }
+    return orderedSections
+      .map((section) => ({
+        key: section.id,
+        title: section.title,
+        intro: section.intro || quickStartIntro(qsMinutes ?? 0),
+        items: itemsForSection(catalog.items, customItems, section.id).filter(isPrimaryItem),
+        sectionId: section.id,
+      }))
+      .filter((group) => group.items.length);
+  }, [catalog.items, customItems, lane, orderedSections, qsMinutes, system, timed]);
+
+  const moreGroups = useMemo(() => {
+    if (!system) return [];
+    const groups = orderedSections
+      .map((section) => ({
+        key: section.id,
+        title:
+          system.slug === "grab-go"
+            ? "Additional Grab-and-Go Items"
+            : timed
+              ? section.more_title || section.title
+              : section.title,
+        intro: section.intro,
+        items: itemsForSection(catalog.items, customItems, section.id).filter((item) => !timed || !isPrimaryItem(item)),
+        sectionId: section.id,
+      }))
+      .filter((group) => group.items.length);
+    const merged = new Map<string, (typeof groups)[number]>();
+    for (const group of groups) {
+      const existing = merged.get(group.title);
+      if (!existing) merged.set(group.title, { ...group, items: [...group.items] });
+      else existing.items.push(...group.items);
+    }
+    const combined = [...merged.values()];
+    if (system.slug !== "vehicle-suitcase" || lane !== "vehicle") return combined;
+    const vehicleItems = combined.flatMap((group) => group.items);
+    if (!vehicleItems.length) return [];
+    return [
+      {
+        key: "vehicle-more",
+        title: "Vehicle Safety & Recovery",
+        intro: "The rest of the vehicle kit. These items do not count toward the 20-minute session.",
+        items: vehicleItems,
+        sectionId: orderedSections[0]?.id ?? null,
+      },
+    ];
+  }, [catalog.items, customItems, lane, orderedSections, system, timed]);
 
   const customIds = useMemo(() => new Set(customItems.map((item) => item.id)), [customItems]);
 
@@ -176,22 +241,54 @@ export function SystemPage() {
           </div>
         ) : null}
         <div>
-          {qsMinutes == null && system.time_label ? <p className="time-label">{system.time_label}</p> : null}
+          {qsMinutes == null && system.time_label && system.time_label !== "MORE" ? <p className="time-label">{system.time_label}</p> : null}
           <h1>{system.title}</h1>
           {system.description ? <p className="list-lead">{system.description}</p> : null}
         </div>
         <div className="list-hero-progress">
           <b>{listStats.pct}%</b>
-          <span>{listStats.done} of {listStats.total} checked</span>
+          <span>
+            {listStats.done} of {listStats.total} {timed ? "priority items" : "checked"}
+          </span>
         </div>
       </header>
 
-      {quickItems.length ? (
+      {system.slug === "vehicle-suitcase" ? (
+        <div className="lane-switch" role="tablist" aria-label="Preparation path">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={lane === "vehicle"}
+            className={lane === "vehicle" ? "on" : ""}
+            onClick={() => {
+              setLane("vehicle");
+              writePrepLane("vehicle");
+            }}
+          >
+            Vehicle Prep
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={lane === "suitcase"}
+            className={lane === "suitcase" ? "on" : ""}
+            onClick={() => {
+              setLane("suitcase");
+              writePrepLane("suitcase");
+            }}
+          >
+            Suitcase Prep
+          </button>
+        </div>
+      ) : null}
+
+      {primaryGroups.map((group) => (
         <ListGroup
-          title="Quick Start"
-          intro={quickStartIntro(qsMinutes ?? 0)}
-          items={quickItems}
-          sectionId={null}
+          key={group.key}
+          title={group.title}
+          intro={group.intro}
+          items={group.items}
+          sectionId={group.sectionId}
           customIds={customIds}
           canEdit={viewing.canEdit}
           progress={progress}
@@ -207,45 +304,40 @@ export function SystemPage() {
           setRemoveItem={setRemoveItem}
           saveProgress={saveProgress}
         />
-      ) : null}
-      {quickItems.length ? (
+      ))}
+      {timed && moreGroups.length ? (
         <div className="more-time">
           <h2>Have more time?</h2>
-          <p>Continue with your list.</p>
+          <p>{MORE_TIME_LINE} These items do not count toward this session.</p>
         </div>
       ) : null}
 
-      {sections.map((section) => {
-        const items = itemsForSection(catalog.items, customItems, section.id).filter(
-          (item) => !quickItems.length || !isQuickStartItem(item),
-        );
-        if (!items.length) return null;
-        return (
-          <ListGroup
-            key={section.id}
-            title={section.title}
-            intro={section.intro}
-            items={items}
-            sectionId={section.id}
-            customIds={customIds}
-            canEdit={viewing.canEdit}
-            progress={progress}
-            openNote={openNote}
-            openTip={openTip}
-            openNoteTip={openNoteTip}
-            draft={draft}
-            setOpenNote={setOpenNote}
-            setOpenTip={setOpenTip}
-            setOpenNoteTip={setOpenNoteTip}
-            setDraft={setDraft}
-            setAddingTo={setAddingTo}
-            setRemoveItem={setRemoveItem}
-            saveProgress={saveProgress}
-          />
-        );
-      })}
+      {moreGroups.map((group) => (
+        <ListGroup
+          key={group.key}
+          title={group.title}
+          intro={group.intro}
+          items={group.items}
+          sectionId={group.sectionId}
+          customIds={customIds}
+          canEdit={viewing.canEdit}
+          progress={progress}
+          openNote={openNote}
+          openTip={openTip}
+          openNoteTip={openNoteTip}
+          draft={draft}
+          setOpenNote={setOpenNote}
+          setOpenTip={setOpenTip}
+          setOpenNoteTip={setOpenNoteTip}
+          setDraft={setDraft}
+          setAddingTo={setAddingTo}
+          setRemoveItem={setRemoveItem}
+          saveProgress={saveProgress}
+        />
+      ))}
 
-      {quickItems.length ? null : <p className="list-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>}
+      <p className="list-disclaimer">{COMPLETION_STANDARD}</p>
+      <p className="list-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
 
       {addingTo ? (
         <AddItemModal
