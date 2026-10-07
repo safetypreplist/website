@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { firstNameOf } from "../lib/identity";
@@ -106,6 +106,118 @@ function isPhoneTour() {
   return window.matchMedia("(max-width: 899px)").matches;
 }
 
+function highlightRoot(node: HTMLElement, selector: string) {
+  if (selector.includes("notes")) {
+    const note = node.closest(".note-tip-wrap");
+    if (note instanceof HTMLElement) return note;
+  }
+  if (selector.includes("check-item")) {
+    const row = node.closest(".check-item");
+    if (row instanceof HTMLElement) return row;
+  }
+  return node;
+}
+
+function spotlightPad(target: HTMLElement, box: DOMRect) {
+  const phone = isPhoneTour();
+  if (target.closest(".system-card")) return { x: 8, y: 3 };
+  const inList = Boolean(target.closest(".list-group"));
+  if (inList && box.height < 110) return { x: 16, y: 4 };
+  if (box.height < 80) return { x: phone ? 16 : 20, y: phone ? 12 : 14 };
+  return { x: phone ? 18 : 28, y: phone ? 18 : 28 };
+}
+
+const TOUR_GAP = 22;
+const TOUR_FEATHER = 42;
+const TOUR_FEATHER_REACH = TOUR_FEATHER + 24;
+
+function chromeBottom() {
+  const header = document.querySelector(".app-top")?.getBoundingClientRect().bottom ?? 0;
+  const guidance = document.querySelector(".guidance-ack")?.getBoundingClientRect().bottom ?? 0;
+  return Math.max(header, guidance);
+}
+
+function scrollToNow(top: number) {
+  const scroller = document.scrollingElement || document.documentElement;
+  const root = document.documentElement;
+  const previous = root.style.scrollBehavior;
+  root.style.scrollBehavior = "auto";
+  scroller.scrollTop = top;
+  root.style.scrollBehavior = previous;
+}
+
+function blockTourScroll(event: Event) {
+  const node = event.target;
+  if (node instanceof Node && document.querySelector(".onboarding-tour-card")?.contains(node)) return;
+  event.preventDefault();
+}
+
+function cardWidthFor(hole: DOMRect) {
+  const viewport = window.innerWidth;
+  if (viewport < 900) return Math.min(hole.width > 260 ? viewport - 28 : 320, viewport - 28);
+  return Math.min(360, viewport - 32);
+}
+
+function placeTourCard(hole: DOMRect, cardW: number, cardH: number) {
+  const viewportW = window.innerWidth;
+  const viewportH = window.innerHeight;
+  const phone = viewportW < 900;
+  const margin = 14;
+  const topReserve = Math.max(phone ? 78 : 16, chromeBottom() + 10);
+  const bottomReserve = phone ? 86 : 16;
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
+  const alignedLeft = hole.width > cardW + 24
+    ? clamp(hole.left + 12, margin, viewportW - margin - cardW)
+    : clamp(hole.left + hole.width / 2 - cardW / 2, margin, viewportW - margin - cardW);
+
+  const options = [
+    { placement: "below" as const, top: hole.bottom + TOUR_GAP, left: alignedLeft },
+    { placement: "above" as const, top: hole.top - TOUR_GAP - cardH, left: alignedLeft },
+    {
+      placement: "right" as const,
+      top: clamp(hole.top + hole.height / 2 - cardH / 2, topReserve, viewportH - bottomReserve - cardH),
+      left: hole.right + TOUR_GAP,
+    },
+    {
+      placement: "left" as const,
+      top: clamp(hole.top + hole.height / 2 - cardH / 2, topReserve, viewportH - bottomReserve - cardH),
+      left: hole.left - TOUR_GAP - cardW,
+    },
+  ];
+
+  function coversHole(option: (typeof options)[number]) {
+    const overlapsX = option.left < hole.right - 8 && option.left + cardW > hole.left + 8;
+    const overlapsY = option.top < hole.bottom - 8 && option.top + cardH > hole.top + 8;
+    return overlapsX && overlapsY;
+  }
+
+  function fits(option: (typeof options)[number]) {
+    return (
+      !coversHole(option) &&
+      option.top >= topReserve - 1 &&
+      option.left >= margin - 1 &&
+      option.top + cardH <= viewportH - bottomReserve + 1 &&
+      option.left + cardW <= viewportW - margin + 1
+    );
+  }
+
+  const rail = !phone && hole.width < 280 && hole.left < 280;
+  const order = rail ? ["right", "left", "below", "above"] : ["below", "above", "right", "left"];
+  for (const placement of order) {
+    const option = options.find((item) => item.placement === placement);
+    if (option && fits(option)) return option;
+  }
+
+  const below = options[0];
+  const above = options[1];
+  const aboveFits = above.top >= topReserve - 1;
+  const chosen = aboveFits && hole.top > viewportH * 0.55 ? above : below;
+  return {
+    ...chosen,
+    left: clamp(chosen.left, margin, viewportW - margin - cardW),
+  };
+}
+
 function readHeldStep() {
   const raw = sessionStorage.getItem(HOLD_KEY);
   if (raw == null) return null;
@@ -130,6 +242,10 @@ export function OnboardingTour() {
   const [mode, setMode] = useState<"welcome" | "tour" | "done">("welcome");
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [cardSize, setCardSize] = useState({ w: 340, h: 236 });
+  const [placedStep, setPlacedStep] = useState(-1);
+  const [searching, setSearching] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
   const [copy, setCopy] = useState<TourCopy>(loadCopy);
   const [videoUrl, setVideoUrl] = useState(loadCachedVideo);
   const holdingTour = useRef(false);
@@ -166,6 +282,7 @@ export function OnboardingTour() {
         setMode("tour");
         setStepIndex(0);
         setRect(null);
+        setPlacedStep(-1);
         setOpen(true);
         navigate(DEFAULT_STEPS[0].path);
         return;
@@ -204,39 +321,83 @@ export function OnboardingTour() {
   useEffect(() => {
     if (!open || mode !== "tour") return;
     let cancelled = false;
+    setSearching(true);
     let target: HTMLElement | null = null;
-    const pad = isPhoneTour() ? 8 : 16;
+    let pinnedScroll = document.scrollingElement?.scrollTop ?? 0;
+    let pinning = false;
     const expectedPath = DEFAULT_STEPS[stepIndex]?.path;
+
+    function pinScroll() {
+      if (!pinning) return;
+      const scroller = document.scrollingElement;
+      if (!scroller || Math.abs(scroller.scrollTop - pinnedScroll) <= 1) return;
+      scrollToNow(pinnedScroll);
+    }
 
     function measure() {
       if (!target) return;
       const box = target.getBoundingClientRect();
-      setRect(new DOMRect(box.left - pad, box.top - pad, box.width + pad * 2, box.height + pad * 2));
+      const pad = spotlightPad(target, box);
+      setRect(new DOMRect(box.left - pad.x, box.top - pad.y, box.width + pad.x * 2, box.height + pad.y * 2));
     }
 
-    function placeOnPhone() {
-      if (!target || !isPhoneTour() || target.closest(".bottom-nav")) return;
-      const root = document.documentElement;
-      const previous = root.style.scrollBehavior;
-      root.style.scrollBehavior = "auto";
+    function settleTarget() {
+      if (!target || target.closest(".bottom-nav, .desktop-sidebar")) return;
       const box = target.getBoundingClientRect();
-      window.scrollBy(0, box.top - 96);
-      root.style.scrollBehavior = previous;
+      const pad = spotlightPad(target, box).y;
+      const phone = isPhoneTour();
+      const tab = phone ? 84 : 20;
+      const guidance = document.querySelector(".guidance-ack");
+      const noteRoom = phone ? 240 : 270;
+      const floor = chromeBottom() + (guidance ? TOUR_FEATHER_REACH + pad + 8 : 10);
+      const maxTop = window.innerHeight - tab - noteRoom - TOUR_GAP - box.height - pad;
+      const top = Math.max(chromeBottom() + 6, Math.min(floor, maxTop));
+      const delta = box.top - top;
+      if (Math.abs(delta) <= 2) return;
+      const scroller = document.scrollingElement || document.documentElement;
+      scrollToNow(scroller.scrollTop + delta);
+    }
+
+    function ensureClearance() {
+      if (!target || target.closest(".bottom-nav, .desktop-sidebar")) {
+        measure();
+        return;
+      }
+      const guidance = document.querySelector(".guidance-ack");
+      if (!guidance) {
+        measure();
+        return;
+      }
+      const pad = spotlightPad(target, target.getBoundingClientRect()).y;
+      const floor = guidance.getBoundingClientRect().bottom + TOUR_FEATHER_REACH + pad + 8;
+      if (target.getBoundingClientRect().top < floor - 4) {
+        pinning = false;
+        settleTarget();
+        pinnedScroll = document.scrollingElement?.scrollTop ?? pinnedScroll;
+        pinning = true;
+      }
+      measure();
     }
 
     async function locate() {
       for (let attempt = 0; attempt < 50 && !cancelled; attempt += 1) {
         const found = visibleTarget(step.selector);
-        const row = found?.closest(".check-row");
-        target = found && isPhoneTour() && step.selector.includes("check-item") && row instanceof HTMLElement
-          ? row
-          : found;
+        target = found ? highlightRoot(found, step.selector) : null;
         if (target) {
           target.classList.add("onboarding-target-highlight");
-          if (isPhoneTour()) placeOnPhone();
-          else target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
-          await new Promise((resolve) => window.setTimeout(resolve, 120));
-          if (!cancelled) measure();
+          settleTarget();
+          await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve(undefined))));
+          if (!cancelled) {
+            pinnedScroll = document.scrollingElement?.scrollTop ?? 0;
+            pinning = true;
+            document.documentElement.classList.add("tour-scroll-lock");
+            measure();
+            window.requestAnimationFrame(() => {
+              if (cancelled) return;
+              ensureClearance();
+            });
+            setSearching(false);
+          }
           return;
         }
         if (expectedPath && window.location.pathname !== expectedPath) {
@@ -245,19 +406,47 @@ export function OnboardingTour() {
         }
         await new Promise((resolve) => window.setTimeout(resolve, 80));
       }
-      if (!cancelled) setRect(null);
+      if (!cancelled) {
+        setRect(null);
+        setSearching(false);
+      }
     }
 
-    void locate();
+    const observer = new ResizeObserver(() => ensureClearance());
+    window.addEventListener("wheel", blockTourScroll, { passive: false });
+    window.addEventListener("touchmove", blockTourScroll, { passive: false });
+    window.addEventListener("scroll", pinScroll, true);
+    void locate().then(() => {
+      if (cancelled || !target) return;
+      observer.observe(target);
+      const guidance = document.querySelector(".guidance-ack");
+      const header = document.querySelector(".app-top");
+      if (guidance) observer.observe(guidance);
+      if (header) observer.observe(header);
+    });
     window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
     return () => {
       cancelled = true;
+      observer.disconnect();
+      document.documentElement.classList.remove("tour-scroll-lock");
+      window.removeEventListener("wheel", blockTourScroll);
+      window.removeEventListener("touchmove", blockTourScroll);
+      window.removeEventListener("scroll", pinScroll, true);
       target?.classList.remove("onboarding-target-highlight");
       window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
     };
   }, [open, mode, step.selector, stepIndex, location.pathname]);
+
+  useLayoutEffect(() => {
+    if (mode !== "tour" || searching || !cardRef.current) return;
+    const box = cardRef.current.getBoundingClientRect();
+    setCardSize((current) => (
+      Math.abs(current.w - box.width) < 2 && Math.abs(current.h - box.height) < 2
+        ? current
+        : { w: Math.round(box.width), h: Math.round(box.height) }
+    ));
+    setPlacedStep(stepIndex);
+  }, [mode, stepIndex, rect, searching, step.title, step.body]);
 
   useEffect(() => {
     if (!open || mode !== "done") return;
@@ -295,6 +484,7 @@ export function OnboardingTour() {
     setRect(null);
     setMode("tour");
     setStepIndex(0);
+    setPlacedStep(-1);
     navigate(DEFAULT_STEPS[0].path);
   }
   function nextTour() {
@@ -306,20 +496,27 @@ export function OnboardingTour() {
     const next = DEFAULT_STEPS[nextIndex];
     holdStep(nextIndex);
     setRect(null);
+    setPlacedStep(-1);
     setStepIndex(nextIndex);
     if (next?.path && next.path !== location.pathname) navigate(next.path);
   }
 
+  const tightSpot = step.selector.includes("checklist-card");
+  const spotFeather = tightSpot ? 4 : TOUR_FEATHER;
+  const spotBlur = tightSpot ? 3 : 18;
   const hole = rect
-    ? {
-        top: Math.max(0, rect.top),
-        left: Math.max(0, rect.left),
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-      }
+    ? { top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height }
     : null;
+  const tourWidth = rect ? cardWidthFor(rect) : Math.min(360, typeof window === "undefined" ? 360 : window.innerWidth - 32);
+  const tourPlace = rect ? placeTourCard(rect, tourWidth, cardSize.h) : null;
+  const tourCardStyle = tourPlace
+    ? { top: tourPlace.top, left: tourPlace.left, width: tourWidth }
+    : { top: "50%", left: "50%", width: tourWidth, transform: "translate(-50%, -50%)" };
+  const tourArrowStyle = tourPlace && rect
+    ? tourPlace.placement === "below" || tourPlace.placement === "above"
+      ? { left: Math.min(Math.max(rect.left + rect.width / 2 - tourPlace.left - 8, 22), tourWidth - 40) }
+      : { top: Math.min(Math.max(rect.top + rect.height / 2 - tourPlace.top - 8, 22), Math.max(22, cardSize.h - 40)) }
+    : undefined;
 
   return (
     <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
@@ -382,12 +579,28 @@ export function OnboardingTour() {
         <>
           {hole ? (
             <>
-              <div className="onboarding-tint" style={{ top: 0, left: 0, right: 0, height: hole.top }} />
-              <div className="onboarding-tint" style={{ top: hole.bottom, left: 0, right: 0, bottom: 0 }} />
-              <div className="onboarding-tint" style={{ top: hole.top, left: 0, width: hole.left, height: hole.height }} />
-              <div className="onboarding-tint" style={{ top: hole.top, left: hole.right, right: 0, height: hole.height }} />
+              <svg className="onboarding-veil" aria-hidden="true">
+                <defs>
+                  <filter id="tour-feather" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation={spotBlur} />
+                  </filter>
+                  <mask id="tour-hole" maskUnits="userSpaceOnUse">
+                    <rect width="100%" height="100%" fill="white" />
+                    <rect
+                      x={hole.left - spotFeather}
+                      y={hole.top - spotFeather}
+                      width={hole.width + spotFeather * 2}
+                      height={hole.height + spotFeather * 2}
+                      rx={tightSpot ? 16 : 36}
+                      fill="black"
+                      filter="url(#tour-feather)"
+                    />
+                  </mask>
+                </defs>
+                <rect width="100%" height="100%" fill="rgba(9, 23, 18, 0.62)" mask="url(#tour-hole)" />
+              </svg>
               <div
-                className="onboarding-spotlight"
+                className={`onboarding-spotlight${tightSpot ? " is-tight" : ""}`}
                 style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
               />
             </>
@@ -395,13 +608,20 @@ export function OnboardingTour() {
             <div className="onboarding-tint onboarding-tint-full" aria-hidden="true" />
           )}
           <aside
-            className={`onboarding-tour-card ${
-              rect && rect.top > window.innerHeight * (isPhoneTour() ? 0.46 : 0.55) ? "above" : ""
-            }`}
+            ref={cardRef}
+            className={`onboarding-tour-card place-${tourPlace?.placement ?? "below"}${!searching && placedStep === stepIndex ? "" : " is-placing"}`}
+            style={tourCardStyle}
             role="dialog"
             aria-modal="true"
             aria-labelledby="tour-title"
           >
+            {tourPlace ? (
+              <span
+                className={`onboarding-tour-arrow ${tourPlace.placement}`}
+                style={tourArrowStyle}
+                aria-hidden="true"
+              />
+            ) : null}
             <div className="onboarding-tour-head"><span>{progress}</span><button type="button" onClick={finish}>×</button></div>
             <p className="eyebrow">Guided tour</p>
             <h2 id="tour-title">{step.title}</h2>

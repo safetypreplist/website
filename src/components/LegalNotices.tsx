@@ -59,8 +59,8 @@ export function LegalNotices() {
     const bar = document.querySelector(".guidance-ack");
     const header = document.querySelector(".app-top");
     const measure = () => {
-      const headerBottom = header ? Math.ceil(header.getBoundingClientRect().bottom) : 74;
-      document.documentElement.style.setProperty("--app-header-h", `${headerBottom}px`);
+      const headerHeight = header ? Math.ceil(header.offsetHeight) : 74;
+      document.documentElement.style.setProperty("--app-header-h", `${headerHeight}px`);
       if (!bar) return;
       document.documentElement.style.setProperty("--guidance-h", `${Math.ceil(bar.getBoundingClientRect().height)}px`);
     };
