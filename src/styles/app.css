@@ -7006,7 +7006,7 @@ p {
   .marketing-page .hero-copy {
     max-width: none;
     padding-right: 0;
-    text-align: center;
+    text-align: left;
   }
 
   .marketing-page .hero-copy .hero-product {
@@ -7016,8 +7016,12 @@ p {
     margin-bottom: 8px;
   }
 
+  .marketing-page .hero-copy .hero-product span {
+    display: block;
+  }
+
   .marketing-page .hero-tagline {
-    font-size: 18px;
+    font-size: 21px;
     line-height: 1.2;
     margin-bottom: 8px;
   }
@@ -7029,7 +7033,7 @@ p {
   .marketing-page .hero-sub {
     width: auto;
     max-width: 34ch;
-    margin-inline: auto;
+    margin-inline: 0;
     font-size: 15px;
     line-height: 1.45;
     margin-bottom: 16px;
@@ -7049,7 +7053,7 @@ p {
     width: max-content;
     max-width: 100%;
     text-transform: none;
-    margin-inline: auto;
+    margin-inline: 0;
     min-height: 48px;
     justify-content: center;
     padding-inline: 20px;
@@ -7124,7 +7128,7 @@ p {
   }
 
   .marketing-page .hero-tagline {
-    font-size: 16px;
+    font-size: 18px;
     margin-bottom: 6px;
   }
 

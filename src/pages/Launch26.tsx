@@ -181,7 +181,9 @@ export function Launch26Page() {
       <section className="hero-studio">
         <div className="hero-copy-col">
           <div className="hero-copy">
-            <h1 className="hero-product">Get Your Safety Prep List</h1>
+            <h1 className="hero-product">
+              <span>Get Your Safety</span> <span>Prep List</span>
+            </h1>
             <p className="hero-tagline">
               <span>{HERO_TAGLINE_LEAD}</span>{" "}
               <span>{HERO_TAGLINE_REST}</span>
