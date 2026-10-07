@@ -29,7 +29,7 @@ where slug = 'battery-solar';
 
 update public.checklist_systems
 set
-  title = 'Emergency Cooling / Heat Resilience',
+  title = 'Emergency Cooling / Heat',
   description = 'Stay safe in extreme temperatures. Blackout cooling, shaded rooms, hydration, and safe warmth when HVAC is not an option.',
   time_label = 'FULL',
   access_tier = 'full',

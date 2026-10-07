@@ -5,7 +5,8 @@ import { PayPalCheckout } from "../components/PayPalCheckout";
 import { useApp } from "../context/AppContext";
 import { checklistTitle, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
 import { money } from "../lib/format";
-import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, SURVIVAL_VAULT_DESCRIPTION, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
+import { VAULT_APP_DESCRIPTION } from "../lib/copy";
+import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
 import { Photo } from "../components/Photo";
 import { SystemRow } from "./Dashboard";
 
@@ -282,7 +283,9 @@ export function ChecklistAccessPage() {
 
 export function HouseholdPage() {
   const { catalog, hasSurvivalVault, viewing, switchChecklist } = useApp();
-  const fullSystems = catalog.systems.filter((s) => s.access_tier === "full");
+  const fullSystems = catalog.systems
+    .filter((s) => s.access_tier === "full")
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   useEffect(() => {
     if (viewing.kind !== "household") void switchChecklist("household");
@@ -293,7 +296,7 @@ export function HouseholdPage() {
       <div className="locked-panel">
         <p className="eyebrow">Survival Vault</p>
         <h2>Want to go beyond the basics?</h2>
-        <p className="muted">{SURVIVAL_VAULT_DESCRIPTION}</p>
+        <p className="muted">{VAULT_APP_DESCRIPTION}</p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault
         </Link>
@@ -304,21 +307,20 @@ export function HouseholdPage() {
   return (
     <div>
       <h1 className="page-title">Survival Vault</h1>
-      <p className="muted">These checklists come with Survival Vault. How-To Videos are a collection of external playlists we share.</p>
+      <p className="muted">These checklists come with Survival Vault. The Safety Video Collection is a set of external playlists we share.</p>
       <div className="system-list" style={{ marginTop: 18 }}>
         {fullSystems.map((system) => (
           <SystemRow key={system.id} slug={system.slug} />
         ))}
         <article className="system-card">
           <div className="illu">
-            <Photo alt="How-To Videos" subject="video" ratio="square" accent="forest" />
+            <Photo alt="Safety Video Collection" subject="video" ratio="square" accent="forest" />
           </div>
           <div className="body">
-            <div className="time">Watch</div>
-            <h3>How-To Videos</h3>
-            <p>Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness.</p>
+            <h3>Safety Video Collection</h3>
+            <p>Watch the skills when you need them. Practical visual learning for water, power, off-grid, food, communications, and home readiness.</p>
             <Link className="btn btn-moss" to="/app/survival/videos">
-              Open How-To Videos
+              Open videos
             </Link>
           </div>
         </article>

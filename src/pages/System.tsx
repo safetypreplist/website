@@ -10,9 +10,8 @@ import {
 } from "../lib/customItems";
 import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { infoForItem } from "../data/itemTips";
-import { COMPLETION_STANDARD, MORE_TIME_LINE, OFFICIAL_GUIDANCE_DISCLAIMER, quickStartIntro, quickStartMinutes } from "../lib/copy";
+import { COMPLETION_STANDARD, OFFICIAL_GUIDANCE_DISCLAIMER, VAULT_APP_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
 import {
   isPrimaryItem,
   isTimedSystem,
@@ -173,7 +172,7 @@ export function SystemPage() {
       <div className="locked-panel">
         <p className="eyebrow">Survival Vault</p>
         <h2>Want to go beyond the basics?</h2>
-        <p className="muted">{SURVIVAL_VAULT_DESCRIPTION}</p>
+        <p className="muted">{VAULT_APP_DESCRIPTION}</p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault
         </Link>
@@ -305,13 +304,6 @@ export function SystemPage() {
           saveProgress={saveProgress}
         />
       ))}
-      {timed && moreGroups.length ? (
-        <div className="more-time">
-          <h2>Have more time?</h2>
-          <p>{MORE_TIME_LINE} These items do not count toward this session.</p>
-        </div>
-      ) : null}
-
       {moreGroups.map((group) => (
         <ListGroup
           key={group.key}

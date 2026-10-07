@@ -8,7 +8,7 @@ import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 import { checklistTitle, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
+import { VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { invokeFunction, isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export function AccountPage() {
@@ -318,7 +318,7 @@ export function AccountPage() {
         {!hasSurvivalVault && (profile?.plan === "core" || profile?.plan === "full") ? (
           <div className="account-upgrade">
             <h3>Survival Vault</h3>
-            <p className="muted">{SURVIVAL_VAULT_DESCRIPTION}</p>
+            <p className="muted">{VAULT_APP_DESCRIPTION}</p>
             <button className="btn btn-primary" type="button" onClick={() => setShowUpgrade(true)}>
               Add Survival Vault
             </button>
@@ -447,10 +447,10 @@ export function VaultPage() {
   if (!hasSurvivalVault) {
     return (
       <div className="locked-panel">
-        <p className="eyebrow">How-To Videos</p>
+        <p className="eyebrow">Safety Video Collection</p>
         <h2>Part of Survival Vault</h2>
         <p className="muted">
-          How-To Videos come with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness. How-To Videos are a collection of external playlists we share.
+          The Safety Video Collection comes with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off-grid, food, communications, and home readiness. These are a collection of external playlists we share.
         </p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault
@@ -464,7 +464,7 @@ export function VaultPage() {
       <p className="eyebrow">
         <Link to="/app/survival">Survival Vault</Link>
       </p>
-      <h1 className="page-title">How-To Videos</h1>
+      <h1 className="page-title">Safety Video Collection</h1>
       {published.length === 0 && (
         <div className="status-banner">
           No videos yet. Add them in owner tools when they are ready.

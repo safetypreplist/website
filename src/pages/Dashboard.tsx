@@ -2,12 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Photo } from "../components/Photo";
 import { useApp } from "../context/AppContext";
-import { itemsForSections } from "../lib/customItems";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
-import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { CORE_MESSAGE, MORE_TIME_LINE, SCOPE_LINE, SCOPE_SUPPORT } from "../lib/copy";
+import { SCOPE_LINE, SCOPE_SUPPORT, VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 
@@ -35,7 +33,6 @@ export function DashboardPage() {
     customItems,
     viewing,
     hasSurvivalVault,
-    switchChecklist,
   } = useApp();
   const entitled = profile?.plan === "core" || profile?.plan === "full";
   const personalSystems = catalog.systems.filter((s) => s.access_tier === "core");
@@ -45,7 +42,6 @@ export function DashboardPage() {
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order);
   const startSystems = systems.filter((system) => isTimedSystem(system));
-  const moreSystems = systems.filter((system) => !isTimedSystem(system));
   const lane = readPrepLane();
 
   const visibleItems = startSystems.flatMap((system) =>
@@ -53,8 +49,12 @@ export function DashboardPage() {
   );
   const done = visibleItems.filter((item) => progress[item.id]?.checked).length;
   const pct = percent(done, visibleItems.length);
-  const continueSystem = entitled ? findContinueSystem(systems, catalog, customItems, progress) : null;
-  const householdPct = householdProgress(catalog, customItems, progress);
+  const continueLists = isHousehold
+    ? systems
+    : hasSurvivalVault
+      ? [...startSystems, ...vaultSystems(catalog.systems)]
+      : startSystems;
+  const continueSystem = entitled ? findContinueSystem(continueLists, catalog, customItems, progress) : null;
 
   return (
     <div className="dash-home">
@@ -141,43 +141,7 @@ export function DashboardPage() {
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
-      {!isHousehold && moreSystems.length ? (
-        <>
-          <p className="dash-section-title">Have more time?</p>
-          <p className="dash-scope">
-            {MORE_TIME_LINE} {CORE_MESSAGE}
-          </p>
-          <div className="system-list">
-            {moreSystems.map((system) => (
-              <SystemRow key={system.id} slug={system.slug} />
-            ))}
-          </div>
-        </>
-      ) : null}
-
-      {viewing.isOwn && !isHousehold ? (
-        <>
-          {hasSurvivalVault ? (
-            <article className="account-card" style={{ marginTop: 18 }}>
-              <h3>Survival Vault</h3>
-              <p className="muted">Advanced preparedness: {householdPct}%</p>
-              <Link className="btn btn-primary" to="/app/survival" onClick={() => void switchChecklist("household")}>
-                Open Survival Vault
-              </Link>
-            </article>
-          ) : entitled ? (
-            <div className="locked-panel" style={{ textAlign: "left", padding: "28px 22px" }}>
-              <h2>Want to go beyond the basics?</h2>
-              <p className="muted" style={{ color: "rgba(244,240,229,.72)", marginTop: 8 }}>
-                {SURVIVAL_VAULT_DESCRIPTION}
-              </p>
-              <Link className="btn btn-primary" style={{ marginTop: 18 }} to="/app/account#addons">
-                Add Survival Vault
-              </Link>
-            </div>
-          ) : null}
-        </>
-      ) : null}
+      {viewing.isOwn && !isHousehold ? <SurvivalVaultBlock /> : null}
     </div>
   );
 }
@@ -193,11 +157,65 @@ function NotificationPrompt() {
   return <aside className="notification-prompt" role="status"><span className="notification-prompt-icon">●</span><span><b>Turn notifications on</b><small>Get a browser alert when a support chat is waiting for you.</small></span><button className="btn btn-forest" type="button" onClick={() => void enable()}>Turn on</button></aside>;
 }
 
+const VAULT_SLUGS = ["off-grid", "water-purification", "battery-solar", "cooling-heat", "long-term-food"];
+
+function vaultSystems(systems: ChecklistSystem[]) {
+  return VAULT_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
+}
+
+function SurvivalVaultBlock() {
+  const { catalog, hasSurvivalVault, profile, switchChecklist } = useApp();
+  const entitled = profile?.plan === "core" || profile?.plan === "full";
+  if (!hasSurvivalVault && !entitled) return null;
+  const systems = vaultSystems(catalog.systems);
+
+  return (
+    <>
+      <p className="dash-section-title">Survival Vault</p>
+      {hasSurvivalVault ? (
+        <div className="system-list">
+          {systems.map((system) => (
+            <SystemRow key={system.id} slug={system.slug} />
+          ))}
+          <SafetyVideoCard onOpen={() => void switchChecklist("household")} />
+        </div>
+      ) : (
+        <div className="locked-panel" style={{ textAlign: "left", padding: "28px 22px" }}>
+          <h2>Want to go beyond the basics?</h2>
+          <p className="muted" style={{ color: "rgba(244,240,229,.72)", marginTop: 8 }}>
+            {VAULT_APP_DESCRIPTION}
+          </p>
+          <Link className="btn btn-primary" style={{ marginTop: 18 }} to="/app/account#addons">
+            Add Survival Vault
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
+
+function SafetyVideoCard({ onOpen }: { onOpen: () => void }) {
+  return (
+    <article className="system-card">
+      <div className="illu">
+        <Photo alt="Safety Video Collection" subject="video" ratio="square" accent="forest" />
+      </div>
+      <div className="body">
+        <h3>Safety Video Collection</h3>
+        <p>Watch the skills when you need them. Practical visual learning for water, power, off-grid, food, communications, and home readiness.</p>
+        <Link className="btn btn-moss" to="/app/survival/videos" onClick={onOpen}>
+          Open videos
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export function ListsPage() {
-  const { catalog, viewing, switchChecklist, hasSurvivalVault } = useApp();
-  const coreSystems = catalog.systems.filter((s) => s.access_tier === "core").sort((a, b) => a.sort_order - b.sort_order);
-  const startSystems = coreSystems.filter((system) => isTimedSystem(system));
-  const moreSystems = coreSystems.filter((system) => !isTimedSystem(system));
+  const { catalog, viewing, hasSurvivalVault } = useApp();
+  const startSystems = catalog.systems
+    .filter((system) => system.access_tier === "core" && isTimedSystem(system))
+    .sort((a, b) => a.sort_order - b.sort_order);
   const household = viewing.kind === "household";
 
   return (
@@ -205,11 +223,10 @@ export function ListsPage() {
       <h1 className="page-title">{household ? "Survival Vault" : viewing.title}</h1>
       {household ? (
         <div className="system-list">
-          {catalog.systems
-            .filter((s) => s.access_tier === "full")
-            .map((system) => (
-              <SystemRow key={system.id} slug={system.slug} />
-            ))}
+          {vaultSystems(catalog.systems).map((system) => (
+            <SystemRow key={system.id} slug={system.slug} />
+          ))}
+          {hasSurvivalVault ? <SafetyVideoCard onOpen={() => undefined} /> : null}
         </div>
       ) : (
         <>
@@ -219,44 +236,11 @@ export function ListsPage() {
               <SystemRow key={system.id} slug={system.slug} />
             ))}
           </div>
-          <p className="dash-section-title">Have more time?</p>
-          <p className="dash-scope">{MORE_TIME_LINE}</p>
-          <div className="system-list">
-            {moreSystems.map((system) => (
-              <SystemRow key={system.id} slug={system.slug} />
-            ))}
-          </div>
+          {viewing.isOwn ? <SurvivalVaultBlock /> : null}
         </>
-      )}
-      {household ? (
-        <p className="muted" style={{ marginTop: 18 }}>
-          <Link to="/app/survival/videos">How-To Videos</Link>
-        </p>
-      ) : hasSurvivalVault ? (
-        <p className="muted" style={{ marginTop: 18 }}>
-          How-to videos are in the{" "}
-          <Link to="/app/survival" onClick={() => void switchChecklist("household")}>Survival Vault</Link>
-        </p>
-      ) : (
-        <p className="muted" style={{ marginTop: 18 }}>
-          How-to videos are a separate{" "}
-          <Link to="/app/account#addons">Survival Vault</Link> add-on.
-        </p>
       )}
     </div>
   );
-}
-
-function householdProgress(
-  catalog: ReturnType<typeof useApp>["catalog"],
-  customItems: CustomChecklistItem[],
-  progress: ReturnType<typeof useApp>["progress"],
-) {
-  const systems = catalog.systems.filter((s) => s.access_tier === "full");
-  const sections = catalog.sections.filter((section) => systems.some((s) => s.id === section.system_id));
-  const items = itemsForSections(catalog.items, customItems, sections);
-  const done = items.filter((item) => progress[item.id]?.checked).length;
-  return percent(done, items.length);
 }
 
 function findContinueSystem(
@@ -282,7 +266,7 @@ function findContinueSystem(
 }
 
 export function SystemRow({ slug }: { slug: string }) {
-  const { catalog, progress, profile, customItems, hasSurvivalVault, viewing } = useApp();
+  const { catalog, progress, profile, customItems, hasSurvivalVault, viewing, switchChecklist } = useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   if (!system) return null;
   const lane = readPrepLane();
@@ -304,7 +288,9 @@ export function SystemRow({ slug }: { slug: string }) {
         <Photo alt={system.title} subject={SYSTEM_PHOTOS[system.slug]} ratio="square" accent={SYSTEM_ACCENTS[system.slug] ?? "forest"} />
       </div>
       <div className="body">
-        <div className="time">{system.time_label === "MORE" ? "Expanded" : system.time_label}</div>
+        {system.time_label !== "FULL" ? (
+          <div className="time">{system.time_label === "MORE" ? "Expanded" : system.time_label}</div>
+        ) : null}
         <h3>{system.title}</h3>
         <p>{system.description}</p>
         <div className="progress-meta">
@@ -316,7 +302,13 @@ export function SystemRow({ slug }: { slug: string }) {
         <div className="bar">
           <span style={{ width: `${pct}%` }} />
         </div>
-        <Link className={`btn ${locked ? "btn-forest" : "btn-moss"}`} to={to}>
+        <Link
+          className={`btn ${locked ? "btn-forest" : "btn-moss"}`}
+          to={to}
+          onClick={() => {
+            if (system.access_tier === "full" && hasSurvivalVault) void switchChecklist("household");
+          }}
+        >
           {locked
             ? system.access_tier === "full"
               ? "Available with Survival Vault"

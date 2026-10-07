@@ -16,6 +16,9 @@ export const CORE_MESSAGE = "Start small. Prepare practically. Build over time."
 export const MORE_TIME_LINE =
   "You've handled the essentials. Now build a stronger preparedness system.";
 
+export const VAULT_APP_DESCRIPTION =
+  "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat, Long-Term Food, and the Safety Video Collection. The Safety Video Collection is a set of external playlists we share. $10 one time, not $10 per person. Does not renew.";
+
 export const VAULT_CHECKLISTS = [
   {
     title: "Off-Grid Systems",
