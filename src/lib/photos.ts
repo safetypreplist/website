@@ -24,16 +24,12 @@ export const HERO_SLIDES = [
     alt: "A family packing the car with evacuation bags and supplies",
   },
   {
-    src: "/images/packing-kit.jpg?v=2",
-    alt: "Packing a duffel with clothing, water, and emergency essentials",
-  },
-  {
-    src: "/images/packing-suitcase.jpg",
-    alt: "Packing a suitcase with clothes and emergency essentials",
-  },
-  {
     src: "/images/pantry-food.jpg?v=2",
     alt: "A home pantry stocked with food, water, and preparedness supplies",
+  },
+  {
+    src: "/images/packing-kit.jpg?v=2",
+    alt: "Packing a duffel with clothing, water, and emergency essentials",
   },
 ] as const;
 

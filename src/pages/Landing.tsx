@@ -20,7 +20,8 @@ import {
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
-import { PHOTO_LIBRARY, HERO_SLIDES } from "../lib/photos";
+import { PHOTO_LIBRARY } from "../lib/photos";
+import { HeroSlider } from "../components/HeroSlider";
 import {
   ANNUAL_CENTS,
   FAMILY_MIN_SEATS,
@@ -111,7 +112,6 @@ export function LandingPage() {
   const annualCents = annual?.amount_cents ?? ANNUAL_CENTS;
   const [billing, setBilling] = useState<AccessInterval>("monthly");
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
-  const [heroSlide, setHeroSlide] = useState(0);
   const [vaultOpen, setVaultOpen] = useState(false);
   const family = checkoutBreakdown(familyQty, billing, false);
   const annualSavePct = annualSavingsPercent(monthlyCents, annualCents);
@@ -142,15 +142,6 @@ export function LandingPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-    const timer = window.setInterval(() => {
-      setHeroSlide((index) => (index + 1) % HERO_SLIDES.length);
-    }, 5200);
-    return () => window.clearInterval(timer);
-  }, []);
-
   return (
     <div className="marketing-page">
       <PublicHeader pricingHref="#pricing" />
@@ -174,13 +165,7 @@ export function LandingPage() {
             <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
           </div>
         </div>
-        <div className="hero-visual">
-          <div className="hero-slides" style={{ transform: `translateX(-${heroSlide * 100}%)` }}>
-            {HERO_SLIDES.map((slide) => (
-              <img className="hero-slide" src={slide.src} alt={slide.alt} key={slide.src} />
-            ))}
-          </div>
-        </div>
+        <HeroSlider />
         <div className="hero-slash" aria-hidden="true">
           <span className="slash slash-soft" />
           <span className="slash slash-deep" />

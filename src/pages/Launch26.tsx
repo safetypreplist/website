@@ -21,7 +21,8 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { CORE_MESSAGE, HERO_TAGLINE, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT } from "../lib/copy";
 import { money } from "../lib/format";
-import { HERO_SLIDES, PHOTO_LIBRARY } from "../lib/photos";
+import { PHOTO_LIBRARY } from "../lib/photos";
+import { HeroSlider } from "../components/HeroSlider";
 import { FAMILY_MIN_SEATS, MONTHLY_CENTS } from "../lib/pricing";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 
@@ -101,7 +102,6 @@ export function Launch26Page() {
   const [vaultOpen, setVaultOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [heroSlide, setHeroSlide] = useState(0);
 
   useEffect(() => {
     const previous = document.title;
@@ -109,15 +109,6 @@ export function Launch26Page() {
     return () => {
       document.title = previous;
     };
-  }, []);
-
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-    const timer = window.setInterval(() => {
-      setHeroSlide((index) => (index + 1) % HERO_SLIDES.length);
-    }, 5200);
-    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -197,13 +188,7 @@ export function Launch26Page() {
             <a className="btn btn-primary" href="#plans">Claim 50% Off Your First Month</a>
           </div>
         </div>
-        <div className="hero-visual">
-          <div className="hero-slides" style={{ transform: `translateX(-${heroSlide * 100}%)` }}>
-            {HERO_SLIDES.map((slide) => (
-              <img className="hero-slide" src={slide.src} alt={slide.alt} key={slide.src} />
-            ))}
-          </div>
-        </div>
+        <HeroSlider />
         <div className="hero-slash" aria-hidden="true">
           <span className="slash slash-soft" />
           <span className="slash slash-deep" />

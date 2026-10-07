@@ -6485,6 +6485,11 @@ p {
 
 .marketing-page .hero-visual {
   clip-path: none;
+  background: #10251b url("/images/family-packing-car.jpg") center / cover no-repeat;
+}
+
+.marketing-page .hero-slides-instant {
+  transition: none;
 }
 
 .marketing-page .hero-slide {
@@ -6635,6 +6640,8 @@ p {
 }
 
 .marketing-page .hero-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
   object-fit: cover;
   object-position: center center;
 }
@@ -6959,8 +6966,8 @@ p {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     width: 100%;
-    height: calc(100svh - 64px);
-    max-height: calc(100dvh - 64px);
+    height: calc(100svh - 65px);
+    max-height: calc(100svh - 65px);
     min-height: 0;
     overflow: hidden;
   }
@@ -6991,9 +6998,10 @@ p {
 
   .marketing-page .hero-copy-col {
     z-index: 2;
-    align-items: flex-end;
-    justify-content: flex-start;
-    padding: 0 20px 36px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 16px 20px calc(28px + env(safe-area-inset-bottom, 0px));
     background: linear-gradient(
       to top,
       rgba(8, 16, 12, 0.94) 0%,
@@ -7118,10 +7126,6 @@ p {
 }
 
 @media (max-width: 899px) and (max-height: 740px) {
-  .marketing-page .hero-copy-col {
-    padding-bottom: 22px;
-  }
-
   .marketing-page .hero-copy .hero-product {
     font-size: 28px;
     margin-bottom: 4px;
