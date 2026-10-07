@@ -304,7 +304,7 @@ export function HouseholdPage() {
   return (
     <div>
       <h1 className="page-title">Survival Vault</h1>
-      <p className="muted">Expanded checklists are in Have more time on your main lists. This add-on is the how-to videos.</p>
+      <p className="muted">These checklists come with Survival Vault. How-To Videos are a collection of external playlists we share.</p>
       <div className="system-list" style={{ marginTop: 18 }}>
         {fullSystems.map((system) => (
           <SystemRow key={system.id} slug={system.slug} />
@@ -316,7 +316,7 @@ export function HouseholdPage() {
           <div className="body">
             <div className="time">Watch</div>
             <h3>How-To Videos</h3>
-            <p>Curated visual guides for water, power, off-grid, food, and home readiness skills.</p>
+            <p>Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness.</p>
             <Link className="btn btn-moss" to="/app/survival/videos">
               Open How-To Videos
             </Link>

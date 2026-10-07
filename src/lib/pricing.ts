@@ -4,7 +4,7 @@ export const ANNUAL_CENTS = 11988;
 export const SURVIVAL_VAULT_CENTS = 1000;
 export const SURVIVAL_VAULT_NAME = "Survival Vault";
 export const SURVIVAL_VAULT_DESCRIPTION =
-  "How-to videos for water, power, food, and home systems. The expanded checklists are included with Safety Prep List. $10 one time, not $10 per person. Does not renew.";
+  "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, Long-Term Food, and How-To Videos. How-To Videos are a collection of external playlists we share. $10 one time, not $10 per person. Does not renew.";
 export const FAMILY_MIN_SEATS = 2;
 export const ANNUAL_SAVINGS_PER_PERSON_YEAR_CENTS = 2400;
 

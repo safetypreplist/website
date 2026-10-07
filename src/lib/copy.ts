@@ -16,6 +16,39 @@ export const CORE_MESSAGE = "Start small. Prepare practically. Build over time."
 export const MORE_TIME_LINE =
   "You've handled the essentials. Now build a stronger preparedness system.";
 
+export const VAULT_CHECKLISTS = [
+  {
+    title: "Off-Grid Systems",
+    line: "Stay capable when the grid is down.",
+    detail: "Low tech tools, sanitation, alternative cooking, and manual household systems for days without utilities.",
+  },
+  {
+    title: "Water Purification",
+    line: "Store, filter, and treat what you drink.",
+    detail: "Storage, filtration, purification, rotation, and emergency collection beyond the bottles in the pantry.",
+  },
+  {
+    title: "Home Battery & Solar",
+    line: "Keep essential loads running.",
+    detail: "Plan battery capacity, solar input, safe charging, and which devices actually matter overnight.",
+  },
+  {
+    title: "Emergency Cooling / Heat Resilience",
+    line: "Stay safe in extreme temperatures.",
+    detail: "Blackout cooling, shaded rooms, hydration, and safe warmth when HVAC is not an option.",
+  },
+  {
+    title: "Long-Term Food",
+    line: "A pantry built for weeks, not a weekend.",
+    detail: "Staples, rotation, preservation, and manual food prep for the stretch after the first few days.",
+  },
+  {
+    title: "How-To Videos",
+    line: "Watch the skills when you need them.",
+    detail: "Practical visual learning for water, power, off grid, food, communications, and home readiness.",
+  },
+] as const;
+
 export const COMPLETION_STANDARD =
   "Checked means available, accessible, compatible, current, known, and practiced. Buying an item is not enough.";
 

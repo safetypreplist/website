@@ -1,45 +1,16 @@
 import { useEffect, type MouseEvent } from "react";
-import { PHOTO_LIBRARY } from "../lib/photos";
+import { VAULT_CHECKLISTS } from "../lib/copy";
+import { PHOTO_LIBRARY, type PhotoSubject } from "../lib/photos";
 import { SURVIVAL_VAULT_DESCRIPTION } from "../lib/pricing";
 
-const VAULT_PANELS = [
-  {
-    tag: "Off-Grid Systems",
-    title: "Stay capable when the grid is down.",
-    copy: "Low tech tools, sanitation, alternative cooking, and manual household systems for days without utilities.",
-    subject: "offgrid" as const,
-  },
-  {
-    tag: "Water Purification",
-    title: "Store, filter, and treat what you drink.",
-    copy: "Storage, filtration, purification, rotation, and emergency collection beyond the bottles in the pantry.",
-    subject: "water" as const,
-  },
-  {
-    tag: "Home Battery & Solar",
-    title: "Keep essential loads running.",
-    copy: "Plan battery capacity, solar input, safe charging, and which devices actually matter overnight.",
-    subject: "power" as const,
-  },
-  {
-    tag: "Emergency Cooling / Heat Resilience",
-    title: "Stay safe in extreme temperatures.",
-    copy: "Blackout cooling, shaded rooms, hydration, and safe warmth when HVAC is not an option.",
-    subject: "cooling" as const,
-  },
-  {
-    tag: "Long-Term Food",
-    title: "A pantry built for weeks, not a weekend.",
-    copy: "Staples, rotation, preservation, and manual food prep for the stretch after the first few days.",
-    subject: "food" as const,
-  },
-  {
-    tag: "How-To Videos",
-    title: "Watch the skills when you need them.",
-    copy: "Practical visual learning for water, power, off grid, food, communications, and home readiness.",
-    subject: "video" as const,
-  },
-];
+const VAULT_SUBJECTS: Record<(typeof VAULT_CHECKLISTS)[number]["title"], PhotoSubject> = {
+  "Off-Grid Systems": "offgrid",
+  "Water Purification": "water",
+  "Home Battery & Solar": "power",
+  "Emergency Cooling / Heat Resilience": "cooling",
+  "Long-Term Food": "food",
+  "How-To Videos": "video",
+};
 
 export function SurvivalVaultModal({
   onClose,
@@ -87,13 +58,13 @@ export function SurvivalVaultModal({
           <h2 id="survival-vault-title">Survival Vault</h2>
           <p>{SURVIVAL_VAULT_DESCRIPTION}</p>
         </div>
-        {VAULT_PANELS.map((panel) => (
-          <article className="modal-item" key={panel.tag}>
-            <img className="modal-item-media" src={PHOTO_LIBRARY[panel.subject]} alt="" />
+        {VAULT_CHECKLISTS.map((panel) => (
+          <article className="modal-item" key={panel.title}>
+            <img className="modal-item-media" src={PHOTO_LIBRARY[VAULT_SUBJECTS[panel.title]]} alt="" />
             <div>
-              <p className="eyebrow">{panel.tag}</p>
-              <h3>{panel.title}</h3>
-              <p>{panel.copy}</p>
+              <p className="eyebrow">{panel.title}</p>
+              <h3>{panel.line}</h3>
+              <p>{panel.detail}</p>
             </div>
           </article>
         ))}

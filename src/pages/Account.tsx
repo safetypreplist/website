@@ -450,7 +450,7 @@ export function VaultPage() {
         <p className="eyebrow">How-To Videos</p>
         <h2>Part of Survival Vault</h2>
         <p className="muted">
-          How-To Videos come with Survival Vault: water, power, off-grid, food, and home readiness skills.
+          How-To Videos come with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness. How-To Videos are a collection of external playlists we share.
         </p>
         <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
           Add Survival Vault

@@ -12,9 +12,11 @@ import {
   IconOffgrid,
   IconPhone,
   IconPrint,
+  IconSolar,
   IconTablet,
   IconUser,
   IconWater,
+  IconFood,
   MarkImg,
 } from "../components/Icons";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
@@ -29,7 +31,7 @@ import {
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
-import { annualSavingsPercent, CORE_MESSAGE, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, PAGE_TITLE, SCOPE_SUPPORT } from "../lib/copy";
+import { annualSavingsPercent, CORE_MESSAGE, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, PAGE_TITLE, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { useApp } from "../context/AppContext";
 
@@ -60,33 +62,14 @@ const primarySystems = [
   },
 ];
 
-const moreTopics = [
-  {
-    title: "Water, food, and power",
-    line: "Storage, treatment, cooking, and fuel safety when you have more time.",
-    Icon: IconWater,
-  },
-  {
-    title: "Weather and hazards",
-    line: "Wildfire, flood, earthquake, wind, and severe weather planning.",
-    Icon: IconHeat,
-  },
-  {
-    title: "People, pets, and recovery",
-    line: "Medical continuity, caregivers, documents, and getting back to normal.",
-    Icon: IconNotes,
-  },
-  {
-    title: "Where you live",
-    line: "Rural and off-grid property, or an apartment and shared building.",
-    Icon: IconOffgrid,
-  },
-  {
-    title: "Home systems",
-    line: "Sanitation, cooling, heat, and a stronger household plan.",
-    Icon: IconHouse,
-  },
-];
+const vaultIcons = {
+  "Off-Grid Systems": IconOffgrid,
+  "Water Purification": IconWater,
+  "Home Battery & Solar": IconSolar,
+  "Emergency Cooling / Heat Resilience": IconHeat,
+  "Long-Term Food": IconFood,
+  "How-To Videos": IconChecklist,
+} as const;
 
 const coreFeatures = [
   { label: "5-Minute Grab-and-Go Bag", Icon: IconBackpack },
@@ -240,15 +223,19 @@ export function LandingPage() {
               <b>Survival Vault.</b> Get it for an additional one-time fee of $10, and you also unlock these checklists.
             </p>
             <ul className="vault-included-grid">
-              {moreTopics.map((item) => (
-                <li key={item.title}>
-                  <item.Icon />
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p>{item.line}</p>
-                  </div>
-                </li>
-              ))}
+              {VAULT_CHECKLISTS.map((item) => {
+                const Icon = vaultIcons[item.title];
+                return (
+                  <li key={item.title}>
+                    <Icon />
+                    <div>
+                      <h3>{item.title}</h3>
+                      <p>{item.line}</p>
+                      <p>{item.detail}</p>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
