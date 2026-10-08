@@ -6838,7 +6838,7 @@ html.tour-scroll-lock body {
 }
 
 .marketing-page .hero-copy-col {
-  padding-left: max(18px, calc((100vw - 1180px) / 2 - 10px));
+  padding: 84px 16px 48px max(42px, calc((100vw - 1180px) / 2 + 14px));
 }
 
 .marketing-page .hero-copy {
