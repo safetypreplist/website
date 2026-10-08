@@ -5,7 +5,7 @@ import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { SCOPE_LINE, SCOPE_SUPPORT } from "../lib/copy";
+import { SCOPE_LINE } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 
@@ -132,9 +132,7 @@ export function DashboardPage() {
 
       {isHousehold ? <p className="dash-section-title">Survival Vault</p> : <StartHereTitle />}
       {!isHousehold ? (
-        <p className="dash-scope">
-          {SCOPE_LINE} {SCOPE_SUPPORT}
-        </p>
+        <p className="dash-scope">{SCOPE_LINE}</p>
       ) : null}
       <div className="system-list">
         {(isHousehold ? systems : startSystems).map((system) => (
