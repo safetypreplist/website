@@ -57,7 +57,7 @@ export function LegalNotices() {
       return () => document.documentElement.classList.remove("has-guidance-ack");
     }
     const bar = document.querySelector(".guidance-ack");
-    const header = document.querySelector(".app-top");
+    const header = document.querySelector<HTMLElement>(".app-top");
     const measure = () => {
       const headerHeight = header ? Math.ceil(header.offsetHeight) : 74;
       document.documentElement.style.setProperty("--app-header-h", `${headerHeight}px`);
