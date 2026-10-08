@@ -17,7 +17,7 @@ export const MORE_TIME_LINE =
   "You've handled the essentials. Now build a stronger preparedness system.";
 
 export const VAULT_APP_DESCRIPTION =
-  "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, Long-Term Food, and How-To Videos. How-To Videos are a collection of external playlists we share. $10 one time, not $10 per person. Does not renew.";
+  "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, Long-Term Food, and How-To Videos. How-To Videos is a curated YouTube playlist from independent creators and organizations. $10 one time, not $10 per person. Does not renew.";
 
 export const VAULT_CHECKLISTS = [
   {
@@ -51,6 +51,14 @@ export const VAULT_CHECKLISTS = [
     detail: "Practical visual learning for water, power, off grid, food, communications, and home readiness.",
   },
 ] as const;
+
+export const HOW_TO_PLAYLIST_URL = "https://www.youtube.com/playlist?list=PLU4fSfttZ8NU";
+
+export const HOW_TO_VIDEOS_DESCRIPTION =
+  "We’ve curated a playlist of helpful preparedness videos from independent creators and organizations.";
+
+export const HOW_TO_VIDEOS_DISCLAIMER =
+  "Disclaimer: These creators and organizations are independent and are not affiliated with Safety Prep List. We’re simply sharing resources we believe may be helpful.";
 
 export const COMPLETION_STANDARD =
   "Checked means available, accessible, compatible, current, known, and practiced. Buying an item is not enough.";

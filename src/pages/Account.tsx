@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { LegalAgreement } from "../components/LegalAgreement";
-import { PayPalCheckout } from "../components/PayPalCheckout";
+import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { ProfileWeather } from "../components/LocationStatus";
 import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 import { checklistTitle, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { VAULT_APP_DESCRIPTION } from "../lib/copy";
+import { HOW_TO_PLAYLIST_URL, HOW_TO_VIDEOS_DESCRIPTION, HOW_TO_VIDEOS_DISCLAIMER, VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { invokeFunction, isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export function AccountPage() {
@@ -16,7 +15,6 @@ export function AccountPage() {
     profile,
     signOut,
     changePassword,
-    refreshAccount,
     user,
     devices,
     updateProfile,
@@ -44,8 +42,6 @@ export function AccountPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaved, setPasswordSaved] = useState("");
-  const [showUpgrade, setShowUpgrade] = useState(false);
-  const [vaultAgreed, setVaultAgreed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [cancelRequested, setCancelRequested] = useState(Boolean(profile?.cancel_requested_at));
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -319,27 +315,7 @@ export function AccountPage() {
           <div className="account-upgrade">
             <h3>Survival Vault</h3>
             <p className="muted">{VAULT_APP_DESCRIPTION}</p>
-            <button className="btn btn-primary" type="button" onClick={() => setShowUpgrade(true)}>
-              Add Survival Vault
-            </button>
-            {showUpgrade && (
-              <div style={{ marginTop: 16 }}>
-                {error && <p className="form-error">{error}</p>}
-                <LegalAgreement id="vault-agree" checked={vaultAgreed} onChange={setVaultAgreed} />
-                {vaultAgreed ? (
-                  <PayPalCheckout
-                    productSlug="upgrade_full"
-                    onError={setError}
-                    onCaptured={async () => {
-                      await refreshAccount();
-                      setShowUpgrade(false);
-                    }}
-                  />
-                ) : (
-                  <p className="muted">Agree to the policies above to enable PayPal checkout.</p>
-                )}
-              </div>
-            )}
+            <SurvivalVaultPurchase />
           </div>
         ) : hasSurvivalVault ? (
           <div className="addon-owned">
@@ -396,7 +372,7 @@ export function AccountPage() {
         </div>
       </article>
 
-      {error && !showUpgrade ? <p className="form-error">{error}</p> : null}
+      {error ? <p className="form-error">{error}</p> : null}
 
       <button className="btn btn-forest" type="button" onClick={() => void signOut()}>
         Log out
@@ -440,9 +416,7 @@ function accessDescription(profile: { access_status?: string | null; access_inte
 }
 
 export function VaultPage() {
-  const { hasSurvivalVault, videos } = useApp();
-  const published = videos.filter((v) => v.active && v.video_url);
-  const categories = [...new Set(published.map((v) => v.category))];
+  const { hasSurvivalVault } = useApp();
 
   if (!hasSurvivalVault) {
     return (
@@ -450,11 +424,9 @@ export function VaultPage() {
         <p className="eyebrow">How-To Videos</p>
         <h2>Part of Survival Vault</h2>
         <p className="muted">
-          How-To Videos come with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness. How-To Videos are a collection of external playlists we share.
+          How-To Videos come with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness. How-To Videos is a curated YouTube playlist from independent creators and organizations.
         </p>
-        <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
-          Add Survival Vault
-        </Link>
+        <SurvivalVaultPurchase />
       </div>
     );
   }
@@ -465,31 +437,13 @@ export function VaultPage() {
         <Link to="/app/survival">Survival Vault</Link>
       </p>
       <h1 className="page-title">How-To Videos</h1>
-      {published.length === 0 && (
-        <div className="status-banner">
-          No videos yet. Add them in owner tools when they are ready.
-        </div>
-      )}
-      {categories.map((cat) => (
-        <section key={cat}>
-          <h2 className="section-title">{cat}</h2>
-          {published
-            .filter((v) => v.category === cat)
-            .map((v) => (
-              <article className="video-card" key={v.id}>
-                {v.thumbnail_url && <img src={v.thumbnail_url} alt="" />}
-                <h3 className="card-name">{v.title}</h3>
-                <p className="muted">{v.description}</p>
-                <p className="muted">{v.source_name}</p>
-                {v.video_url && (
-                  <a className="btn btn-forest" href={v.video_url} target="_blank" rel="noreferrer">
-                    Watch
-                  </a>
-                )}
-              </article>
-            ))}
-        </section>
-      ))}
+      <section className="panel how-to-videos">
+        <p>{HOW_TO_VIDEOS_DESCRIPTION}</p>
+        <p className="how-to-videos-disclaimer">{HOW_TO_VIDEOS_DISCLAIMER}</p>
+        <a className="btn btn-primary" href={HOW_TO_PLAYLIST_URL} target="_blank" rel="noopener noreferrer">
+          View How-To Videos
+        </a>
+      </section>
     </div>
   );
 }

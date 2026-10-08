@@ -70,7 +70,6 @@ export default defineConfig({
           {
             urlPattern: ({ url }) =>
               url.pathname.includes("/rest/v1/checklist_") ||
-              url.pathname.includes("/rest/v1/video_resources") ||
               url.pathname.includes("/rest/v1/safety_contacts") ||
               url.pathname.includes("/rest/v1/products"),
             handler: "StaleWhileRevalidate",

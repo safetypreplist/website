@@ -31,7 +31,7 @@ import {
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
-import { annualSavingsPercent, CORE_MESSAGE, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, PAGE_TITLE, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
+import { annualSavingsPercent, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, PAGE_TITLE, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { useApp } from "../context/AppContext";
 
@@ -39,25 +39,25 @@ const primarySystems = [
   {
     minutes: 5,
     mark: "backpack" as const,
-    title: "5-Minute Grab-and-Go Bag",
+    title: "Grab-and-Go Bag",
     line: "A backpack near the exit. The minimum critical layer.",
   },
   {
     minutes: 15,
     mark: "duffel" as const,
-    title: "15-Minute Ready Duffel",
+    title: "Ready Duffel",
     line: "72-Hour Continuity Kit, adjusted for your household.",
   },
   {
     minutes: 20,
     mark: "vehicle" as const,
-    title: "20-Minute Vehicle OR Suitcase Prep",
+    title: "Vehicle OR Suitcase Prep",
     line: "Choose a vehicle kit or an evacuation suitcase.",
   },
   {
     minutes: 60,
     mark: "home" as const,
-    title: "60-Minute Home Resilience",
+    title: "Home Resilience",
     line: "The highest-priority safety and continuity needs at home.",
   },
 ];
@@ -141,9 +141,6 @@ export function LandingPage() {
             </p>
             <p className="hero-sub">
               Practical preparedness for natural disasters, <span className="nowrap">local emergencies</span>, outages, evacuations, and temporary disruptions.
-            </p>
-            <p className="lead">
-              {SCOPE_SUPPORT} {CORE_MESSAGE}
             </p>
             <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
           </div>
@@ -379,7 +376,7 @@ export function LandingPage() {
                 Survival Vault for an additional $10 <small>/ one time</small>
               </h3>
               <p>
-                Expand your checklist to include Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. How-To Videos are a collection of external playlists we share.
+                Expand your checklist to include Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. How-To Videos is a curated YouTube playlist from independent creators and organizations.
               </p>
             </div>
             <button className="btn btn-primary" type="button" onClick={() => setVaultOpen(true)}>

@@ -15,7 +15,7 @@ Then sign in and open `/admin`. The console only shows live tools:
 | Accounts & access | Real customer accounts. Reset passwords through the owner-only edge function. |
 | Discount codes | Live checkout codes. PayPal charges the discounted subscription amount. Survival Vault is never discounted. |
 | Support chats | Tawk.to visitors from the webhook table. |
-| Checklist & resources | Edit item wording (first 80 rows), add How-To Videos, add verified safety resources. |
+| Checklist & resources | Edit item wording and add verified safety resources. |
 | Onboarding | Tour copy stored in `app_config` and shown to every customer. |
 
 Do **not** change `checklist_items.permanent_key` for an existing item.
@@ -33,7 +33,6 @@ Checkout calls `preview-discount`, then `create-paypal-order` / `capture-paypal-
 | `checklist_systems` | Grab & Go Bag, Ready Duffel, Survival Vault lists, `access_tier`, `sort_order`, `active` |
 | `checklist_sections` | Categories inside a system |
 | `checklist_items` | `permanent_key`, wording, `sort_order`, `active` |
-| `video_resources` | How-To Video titles, URLs, thumbnails, `active` |
 | `safety_contacts` | National and state records; include `source_url` and `verified_at` |
 | `products` | Amounts in cents |
 | `discount_codes` | Checkout offers |
@@ -45,7 +44,7 @@ Do not invent phone numbers. Seed data includes Ready.gov, SAMHSA/988, Poison.or
 
 ## How-To Videos
 
-Rows in `video_resources` with `active = false` or a blank `video_url` stay hidden.
+How-To Videos is one YouTube playlist, managed directly on YouTube: https://www.youtube.com/playlist?list=PLU4fSfttZ8NU. The app only links to it (`HOW_TO_PLAYLIST_URL` in `src/lib/copy.ts`). There is no admin video tool, and the app no longer reads the old `video_resources` table.
 
 ## Devices
 

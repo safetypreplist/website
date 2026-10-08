@@ -45,7 +45,7 @@ import {
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
 import { checklistTitle, generatePublicChecklistId, personName } from "../lib/identity";
 import { hasSurvivalVault } from "../lib/plan";
-import { clearQueueItem, enqueueProgress, isOnline, readQueue } from "../lib/offline";
+import { clearQueueItem, enqueueProgress, isOnline, readQueue, remapQueue } from "../lib/offline";
 import type {
   ChecklistItem,
   ChecklistPermission,
@@ -62,7 +62,6 @@ import type {
   Profile,
   ProgressRow,
   SafetyContact,
-  VideoResource,
   ViewingContext,
   ViewingKind,
 } from "../types";
@@ -86,6 +85,55 @@ function bundledChecklist(): Catalog {
   };
 }
 
+/** Progress rows reference database ids, so swap bundled ids for live ones matched by slug and permanent key. */
+async function withLiveIds(bundled: Catalog): Promise<Catalog> {
+  const [systemRows, sectionRows, itemRows] = await Promise.all([
+    supabase.from("checklist_systems").select("id, slug"),
+    supabase.from("checklist_sections").select("id, system_id, slug"),
+    supabase.from("checklist_items").select("id, permanent_key").range(0, 4999),
+  ]);
+  if (systemRows.error || sectionRows.error || itemRows.error) return bundled;
+  const liveSystems = (systemRows.data || []) as { id: string; slug: string }[];
+  const liveSystemSlug = new Map(liveSystems.map((row) => [row.id, row.slug]));
+  const liveSystemId = new Map(liveSystems.map((row) => [row.slug, row.id]));
+  const liveSectionId = new Map(
+    ((sectionRows.data || []) as { id: string; system_id: string; slug: string }[]).map((row) => [
+      `${liveSystemSlug.get(row.system_id)}/${row.slug}`,
+      row.id,
+    ]),
+  );
+  const liveItemId = new Map(
+    ((itemRows.data || []) as { id: string; permanent_key: string }[]).map((row) => [row.permanent_key, row.id]),
+  );
+  remapQueue(
+    new Map(
+      bundled.items
+        .filter((item) => liveItemId.has(item.permanent_key))
+        .map((item) => [item.id, liveItemId.get(item.permanent_key) as string]),
+    ),
+  );
+  const systemSlug = new Map(bundled.systems.map((system) => [system.id, system.slug]));
+  const sectionId = new Map(
+    bundled.sections.map((section) => [
+      section.id,
+      liveSectionId.get(`${systemSlug.get(section.system_id)}/${section.slug}`) || section.id,
+    ]),
+  );
+  return {
+    systems: bundled.systems.map((system) => ({ ...system, id: liveSystemId.get(system.slug) || system.id })),
+    sections: bundled.sections.map((section) => ({
+      ...section,
+      id: sectionId.get(section.id) || section.id,
+      system_id: liveSystemId.get(systemSlug.get(section.system_id) || "") || section.system_id,
+    })),
+    items: bundled.items.map((item) => ({
+      ...item,
+      id: liveItemId.get(item.permanent_key) || item.id,
+      section_id: sectionId.get(item.section_id) || item.section_id,
+    })),
+  };
+}
+
 type AppState = {
   session: Session | null;
   user: User | null;
@@ -96,7 +144,6 @@ type AppState = {
   devices: Device[];
   customItems: CustomChecklistItem[];
   products: Product[];
-  videos: VideoResource[];
   safety: SafetyContact[];
   currentDevice: Device | null;
   deviceLimitReached: boolean;
@@ -164,7 +211,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [devices, setDevices] = useState<Device[]>([]);
   const [customItems, setCustomItems] = useState<CustomChecklistItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [videos, setVideos] = useState<VideoResource[]>([]);
   const [safety, setSafety] = useState<SafetyContact[]>([]);
   const [currentDevice, setCurrentDevice] = useState<Device | null>(null);
   const [deviceLimitReached, setDeviceLimitReached] = useState(false);
@@ -198,19 +244,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const data = demoCatalog();
       setCatalog({ systems: data.systems, sections: data.sections, items: data.items });
       setProducts(data.products);
-      setVideos(data.videos);
       setSafety(data.safety);
       return;
     }
-    const bundled = bundledChecklist();
-    const [productRows, videoRows, safetyRows] = await Promise.all([
+    const [bundled, productRows, safetyRows] = await Promise.all([
+      withLiveIds(bundledChecklist()),
       supabase.from("products").select("*"),
-      supabase.from("video_resources").select("*").order("sort_order"),
       supabase.from("safety_contacts").select("*").eq("active", true).order("sort_order"),
     ]);
     setCatalog(bundled);
     setProducts((productRows.data as Product[]) || []);
-    setVideos((videoRows.data as VideoResource[]) || []);
     setSafety((safetyRows.data as SafetyContact[]) || []);
   }, []);
 
@@ -995,7 +1038,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       devices,
       customItems,
       products,
-      videos,
       safety,
       currentDevice,
       deviceLimitReached,
@@ -1040,7 +1082,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       devices,
       customItems,
       products,
-      videos,
       safety,
       currentDevice,
       deviceLimitReached,

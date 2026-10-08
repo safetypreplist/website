@@ -9,6 +9,7 @@ import { VAULT_APP_DESCRIPTION, VAULT_CHECKLISTS } from "../lib/copy";
 import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
 import { Photo } from "../components/Photo";
 import { SystemRow, vaultSystems } from "./Dashboard";
+import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 
 export function ConnectedChecklistsPage() {
   return <Navigate to="/app/family" replace />;
@@ -295,9 +296,7 @@ export function HouseholdPage() {
         <p className="eyebrow">Survival Vault</p>
         <h2>Want to go beyond the basics?</h2>
         <p className="muted">{VAULT_APP_DESCRIPTION}</p>
-        <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
-          Add Survival Vault
-        </Link>
+        <SurvivalVaultPurchase />
       </div>
     );
   }

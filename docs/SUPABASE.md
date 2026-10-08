@@ -23,7 +23,7 @@ supabase db push
 psql "$DATABASE_URL" -f supabase/seed.sql
 ```
 
-`0001_init.sql` creates tables, RLS, triggers, and RPCs. `seed.sql` loads checklist systems, national safety records, state emergency-management **websites**, and Video Vault placeholders.
+`0001_init.sql` creates tables, RLS, triggers, and RPCs. `seed.sql` loads checklist systems, national safety records, state emergency-management **websites**.
 
 Re-generate seed data after catalog edits:
 
@@ -55,7 +55,7 @@ Customers may only read/write:
 - their progress, notes, contacts, and devices
 - their purchases and entitlements
 
-Public catalog tables are readable: checklist definitions, products, `app_config`, published safety contacts, published videos.
+Public catalog tables are readable: checklist definitions, products, `app_config`, published safety contacts.
 
 Owner writes go through `profiles.role = 'owner'`. Promote yourself after signup:
 

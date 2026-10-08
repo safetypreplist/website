@@ -344,7 +344,7 @@ function ContentTools({ catalog, safety, refreshAccount, onSaved }: {
   refreshAccount: () => Promise<void>;
   onSaved: (message: string) => void;
 }) {
-  const [subtab, setSubtab] = useState<"items" | "videos" | "safety">("items");
+  const [subtab, setSubtab] = useState<"items" | "safety">("items");
   return (
     <>
       <div className="admin-section-heading">
@@ -356,7 +356,6 @@ function ContentTools({ catalog, safety, refreshAccount, onSaved }: {
       </div>
       <div className="toolbar admin-content-tabs">
         <button className={`btn ${subtab === "items" ? "btn-forest" : "btn-ghost"}`} type="button" onClick={() => setSubtab("items")}>Checklist items</button>
-        <button className={`btn ${subtab === "videos" ? "btn-forest" : "btn-ghost"}`} type="button" onClick={() => setSubtab("videos")}>How-To Videos</button>
         <button className={`btn ${subtab === "safety" ? "btn-forest" : "btn-ghost"}`} type="button" onClick={() => setSubtab("safety")}>Safety directory</button>
       </div>
       {subtab === "items" && (
@@ -391,32 +390,8 @@ function ContentTools({ catalog, safety, refreshAccount, onSaved }: {
           ))}
         </div>
       )}
-      {subtab === "videos" && <VideoForm onSaved={onSaved} />}
       {subtab === "safety" && <SafetyForm onSaved={onSaved} existing={safety.length} />}
     </>
-  );
-}
-
-function VideoForm({ onSaved }: { onSaved: (s: string) => void }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [video_url, setUrl] = useState("");
-  const [category, setCategory] = useState("Home Readiness");
-  const [source_name, setSource] = useState("Safety Prep List");
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    const { error } = await supabase.from("video_resources").insert({ title, description, video_url, category, source_name, active: Boolean(video_url), sort_order: 90 });
-    onSaved(error ? error.message : "Video saved.");
-  }
-  return (
-    <form onSubmit={submit} className="panel admin-form-panel">
-      <label className="field"><span>Title</span><input required value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-      <label className="field"><span>Description</span><textarea value={description} onChange={(e) => setDescription(e.target.value)} /></label>
-      <label className="field"><span>Video URL</span><input value={video_url} onChange={(e) => setUrl(e.target.value)} /></label>
-      <label className="field"><span>Category</span><input value={category} onChange={(e) => setCategory(e.target.value)} /></label>
-      <label className="field"><span>Source</span><input value={source_name} onChange={(e) => setSource(e.target.value)} /></label>
-      <button className="btn btn-primary" type="submit">Add video</button>
-    </form>
   );
 }
 

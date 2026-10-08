@@ -129,7 +129,10 @@ export type ChecklistItem = {
   sort_order: number;
   active: boolean;
   quick_start?: boolean;
+  item_type?: ChecklistItemType;
 };
+
+export type ChecklistItemType = "core" | "extended" | "vault";
 
 export type CustomChecklistItem = {
   id: string;
@@ -176,18 +179,6 @@ export type SafetyContact = {
   verified_at: string | null;
   active: boolean;
   sort_order: number;
-};
-
-export type VideoResource = {
-  id: string;
-  title: string;
-  description: string | null;
-  video_url: string | null;
-  thumbnail_url: string | null;
-  category: string;
-  source_name: string | null;
-  sort_order: number;
-  active: boolean;
 };
 
 export type PricingConfig = {

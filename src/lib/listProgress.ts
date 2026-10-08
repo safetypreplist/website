@@ -51,7 +51,12 @@ export function isTimedSystem(system: Pick<ChecklistSystem, "time_label"> | null
 
 export function isPrimaryItem(item: ChecklistItem) {
   if (item.permanent_key.startsWith("custom.")) return false;
-  return item.quick_start === true;
+  return item.quick_start === true && !isExtendedItem(item);
+}
+
+/** Have More Time extras: optional, tracked separately, never part of list completion. */
+export function isExtendedItem(item: Pick<ChecklistItem, "item_type">) {
+  return item.item_type === "extended";
 }
 
 export function sectionsForSystem(
@@ -88,7 +93,7 @@ export function trackedItems(
   lane: PrepLane,
 ) {
   const chosen = sectionsForSystem(sections, system, system.slug === "vehicle-suitcase" ? lane : null);
-  const items = itemsOnSections(chosen, catalogItems, customItems);
+  const items = itemsOnSections(chosen, catalogItems, customItems).filter((item) => !isExtendedItem(item));
   return isTimedSystem(system) ? items.filter(isPrimaryItem) : items;
 }
 

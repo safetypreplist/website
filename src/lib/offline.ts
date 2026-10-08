@@ -27,6 +27,17 @@ export function clearQueueItem(itemId: string) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
+export function remapQueue(ids: Map<string, string>) {
+  const queue = readQueue();
+  if (!queue.some((item) => ids.has(item.itemId))) return;
+  const next = new Map<string, QueuedProgress>();
+  for (const item of queue) {
+    const itemId = ids.get(item.itemId) || item.itemId;
+    next.set(itemId, { ...item, itemId });
+  }
+  localStorage.setItem(QUEUE_KEY, JSON.stringify([...next.values()]));
+}
+
 export function clearQueue() {
   localStorage.removeItem(QUEUE_KEY);
 }

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { useApp } from "../context/AppContext";
 import {
   ITEM_LIMIT_ERROR,
@@ -13,6 +14,7 @@ import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { infoForItem } from "../data/itemTips";
 import { OFFICIAL_GUIDANCE_DISCLAIMER, VAULT_APP_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
 import {
+  isExtendedItem,
   isPrimaryItem,
   isTimedSystem,
   itemsOnSections,
@@ -42,6 +44,7 @@ export function SystemPage() {
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
   const [printOpen, setPrintOpen] = useState(false);
   const [lane, setLane] = useState<PrepLane>(() => readPrepLane());
+  const [moreTimeOpen, setMoreTimeOpen] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
 
   const lastSavedAt = useMemo(() => {
@@ -112,7 +115,9 @@ export function SystemPage() {
               ? section.more_title || section.title
               : section.title,
         intro: section.intro,
-        items: itemsForSection(catalog.items, customItems, section.id).filter((item) => !timed || !isPrimaryItem(item)),
+        items: itemsForSection(catalog.items, customItems, section.id).filter(
+          (item) => !isExtendedItem(item) && (!timed || !isPrimaryItem(item)),
+        ),
         sectionId: section.id,
       }))
       .filter((group) => group.items.length);
@@ -136,6 +141,20 @@ export function SystemPage() {
       },
     ];
   }, [catalog.items, customItems, lane, orderedSections, system, timed]);
+
+  const extendedGroups = useMemo(
+    () =>
+      orderedSections
+        .map((section) => ({
+          key: section.id,
+          title: section.title,
+          items: itemsForSection(catalog.items, customItems, section.id).filter(isExtendedItem),
+        }))
+        .filter((group) => group.items.length),
+    [catalog.items, customItems, orderedSections],
+  );
+  const extendedItems = extendedGroups.flatMap((group) => group.items);
+  const extendedAdded = extendedItems.filter((item) => progress[item.id]?.checked).length;
 
   const customIds = useMemo(() => new Set(customItems.map((item) => item.id)), [customItems]);
 
@@ -173,9 +192,7 @@ export function SystemPage() {
         <p className="eyebrow">Survival Vault</p>
         <h2>Want to go beyond the basics?</h2>
         <p className="muted">{VAULT_APP_DESCRIPTION}</p>
-        <Link className="btn btn-primary" style={{ marginTop: 16 }} to="/app/account#addons">
-          Add Survival Vault
-        </Link>
+        <SurvivalVaultPurchase />
       </div>
     );
   }
@@ -327,6 +344,59 @@ export function SystemPage() {
           saveProgress={saveProgress}
         />
       ))}
+
+      {extendedGroups.length ? (
+        <section className={`more-time${moreTimeOpen ? " open" : ""}`} aria-label="Have more time?">
+          <button
+            className="more-time-toggle"
+            type="button"
+            aria-expanded={moreTimeOpen}
+            aria-controls="more-time-body"
+            onClick={() => setMoreTimeOpen((open) => !open)}
+          >
+            <span className="more-time-copy">
+              <span className="more-time-title">Have more time?</span>
+              <span className="more-time-lead">
+                {system.slug === "grab-go"
+                  ? "Have another 10 minutes? Add these useful extras if you can."
+                  : "Your essentials come first. If you have additional time, consider adding these extras."}
+              </span>
+            </span>
+            <span className="more-time-count">
+              {extendedAdded} / {extendedItems.length} added
+            </span>
+            <span className="more-time-chevron" aria-hidden="true" />
+          </button>
+          {moreTimeOpen ? (
+            <div className="more-time-body" id="more-time-body">
+              <p className="more-time-note">Optional extras that add comfort, flexibility, and resilience. They are tracked separately from your progress.</p>
+              {extendedGroups.map((group) => (
+                <ListGroup
+                  key={group.key}
+                  title={group.title}
+                  intro={null}
+                  items={group.items}
+                  sectionId={null}
+                  customIds={customIds}
+                  canEdit={viewing.canEdit}
+                  progress={progress}
+                  openNote={openNote}
+                  openTip={openTip}
+                  openNoteTip={openNoteTip}
+                  draft={draft}
+                  setOpenNote={setOpenNote}
+                  setOpenTip={setOpenTip}
+                  setOpenNoteTip={setOpenNoteTip}
+                  setDraft={setDraft}
+                  setAddingTo={setAddingTo}
+                  setRemoveItem={setRemoveItem}
+                  saveProgress={saveProgress}
+                />
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <aside className="list-warning" role="note">
         <p>{OFFICIAL_GUIDANCE_DISCLAIMER}</p>

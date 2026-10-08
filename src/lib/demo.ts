@@ -19,7 +19,6 @@ import type {
   Profile,
   ProgressRow,
   SafetyContact,
-  VideoResource,
   ViewingContext,
   ViewingKind,
 } from "../types";
@@ -73,7 +72,6 @@ export function demoCatalog() {
     sections: catalog.sections as ChecklistSection[],
     items: (catalog.items as ChecklistItem[]).filter((item) => item.active !== false),
     products: catalog.products as Product[],
-    videos: catalog.videos as VideoResource[],
     safety: catalog.safety as SafetyContact[],
   };
 }

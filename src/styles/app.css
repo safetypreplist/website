@@ -736,10 +736,11 @@ p {
 }
 
 .system-tab .time-label b {
+  font-family: var(--font-heading);
   font-size: 42px;
-  letter-spacing: 0;
+  letter-spacing: -0.04em;
   line-height: 0.9;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .system-tab h3 {
@@ -3152,6 +3153,52 @@ html.has-guidance-ack .app-main {
   margin-top: 0;
 }
 
+.start-here-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: var(--space-6) 0 var(--space-4);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--forest);
+}
+
+.how-to-videos {
+  max-width: 46rem;
+}
+
+.how-to-videos p {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.how-to-videos .how-to-videos-disclaimer {
+  margin-top: var(--space-3);
+  font-size: var(--text-muted);
+  color: var(--ink-soft);
+}
+
+.how-to-videos .btn {
+  min-height: var(--control-h-lg);
+}
+
+@media (max-width: 560px) {
+  .how-to-videos .btn {
+    width: 100%;
+  }
+}
+
+.start-here-flag {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
 .system-list {
   display: grid;
   gap: 16px;
@@ -3458,6 +3505,116 @@ html.has-guidance-ack .app-main {
   font-size: 14px;
   line-height: 1.5;
   color: #6d3d22;
+}
+
+.more-time {
+  margin: 26px 0 0;
+  border: 1px dashed rgba(85, 107, 47, 0.45);
+  border-radius: 18px;
+  background: #f1f3e8;
+}
+
+.more-time-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 16px 18px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.more-time-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.more-time-title {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+
+.more-time-lead {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.more-time-count {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid rgba(85, 107, 47, 0.25);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--moss);
+  white-space: nowrap;
+}
+
+.more-time-chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--moss);
+  border-bottom: 2px solid var(--moss);
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.2s var(--ease);
+}
+
+.more-time.open .more-time-chevron {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.more-time-body {
+  padding: 0 12px 4px;
+}
+
+.more-time-note {
+  margin: 0 6px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+.more-time .list-group-head {
+  background: #e7ecd9;
+}
+
+@media (max-width: 560px) {
+  .more-time-toggle {
+    grid-template-columns: minmax(0, 1fr) 18px;
+    row-gap: 10px;
+    padding: 16px;
+  }
+
+  .more-time-count {
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .more-time-body {
+    padding: 0 8px 2px;
+  }
+}
+
+@media print {
+  .more-time:not(.open) {
+    display: none;
+  }
+
+  .more-time-chevron {
+    display: none;
+  }
 }
 
 .list-group {
@@ -4165,7 +4322,7 @@ html.has-guidance-ack .app-main {
 .contact-card,
 .safety-card,
 .device-card,
-.video-card {
+.how-to-videos {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -4404,8 +4561,7 @@ html.has-guidance-ack .app-main {
 
 .account-card h2,
 .account-card h3,
-.device-card .card-name,
-.video-card .card-name {
+.device-card .card-name {
   font-size: var(--text-card);
   margin: 0 0 var(--space-3);
 }
@@ -4675,7 +4831,7 @@ html.has-guidance-ack .app-main {
 .app-shell .account-upgrade .btn,
 .app-shell .locked-panel > .btn,
 .app-shell .device-card .toolbar,
-.app-shell .video-card .btn,
+.app-shell .how-to-videos .btn,
 .app-shell .account-page > .btn,
 .app-shell .status-banner .btn,
 .app-shell .empty-panel > .btn {
@@ -7268,6 +7424,30 @@ html.tour-scroll-lock body {
   font-weight: 650;
 }
 
+.launch-offer-form {
+  display: grid;
+  gap: 4px;
+  margin-top: 18px;
+}
+
+.launch-offer-form .account-field {
+  margin-bottom: 8px;
+}
+
+.launch-offer-form .legal-agree {
+  margin: 4px 0 10px;
+  font-size: 13px;
+}
+
+.launch-offer-form .btn {
+  width: 100%;
+}
+
+.launch-offer-next {
+  width: 100%;
+  margin-top: 16px;
+}
+
 .launch-page .pricing-band .section-head .eyebrow,
 .launch-page .pricing-band .section-head p,
 .launch-billing-note {
@@ -7446,4 +7626,169 @@ html.tour-scroll-lock body {
   box-shadow:
     0 0 0 2px rgba(199, 90, 43, 0.4),
     0 0 8px 0 rgba(199, 90, 43, 0.22);
+}
+
+.onboarding-layer.tour-mode .onboarding-spotlight.is-line {
+  border-radius: 12px;
+  animation: none;
+  box-shadow:
+    0 0 0 2px rgba(199, 90, 43, 0.72),
+    0 0 0 7px rgba(199, 90, 43, 0.14);
+}
+
+.check-item.tour-check-demo .check {
+  position: relative;
+  color: transparent !important;
+  animation: tour-demo-box 3.2s ease-in-out infinite;
+}
+
+.check-item.tour-check-demo .check::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-size: inherit;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0;
+  animation: tour-demo-mark 3.2s ease-in-out infinite;
+}
+
+.check-item.tour-check-demo .check-title {
+  animation: tour-demo-title 3.2s ease-in-out infinite;
+}
+
+@keyframes tour-demo-box {
+  0%, 10% { background: #fff; transform: scale(1); }
+  20%, 78% { background: var(--moss); transform: scale(1.08); }
+  90%, 100% { background: #fff; transform: scale(1); }
+}
+
+@keyframes tour-demo-mark {
+  0%, 16% { opacity: 0; transform: scale(0.55); }
+  24%, 76% { opacity: 1; transform: scale(1); }
+  88%, 100% { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes tour-demo-title {
+  0%, 16% { color: var(--ink); font-style: normal; font-weight: 600; }
+  24%, 76% { color: #8a8f86; font-style: italic; font-weight: 500; }
+  88%, 100% { color: var(--ink); font-style: normal; font-weight: 600; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check-item.tour-check-demo .check,
+  .check-item.tour-check-demo .check::after,
+  .check-item.tour-check-demo .check-title {
+    animation: none;
+  }
+
+  .check-item.tour-check-demo .check {
+    background: var(--moss);
+  }
+
+  .check-item.tour-check-demo .check::after {
+    opacity: 1;
+    transform: none;
+  }
+
+  .check-item.tour-check-demo .check-title {
+    color: #8a8f86;
+    font-style: italic;
+    font-weight: 500;
+  }
+}
+
+.onboarding-video {
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  height: auto;
+  border-radius: 12px;
+}
+.onboarding-video iframe,
+.onboarding-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+.onboarding-welcome-card > .eyebrow + h2 {
+  margin-bottom: 16px;
+}
+.onboarding-welcome-card .onboarding-actions-stacked {
+  margin-top: 20px;
+}
+.onboarding-welcome-card .onboarding-actions-stacked .btn {
+  min-width: 200px;
+}
+.onboarding-skip-inline {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.onboarding-choice-card {
+  width: min(480px, calc(100vw - 32px));
+  text-align: center;
+}
+.onboarding-choice-card .onboarding-copy {
+  margin: 0 auto;
+  max-width: 34rem;
+}
+@media (max-width: 620px) {
+  .onboarding-video {
+    min-height: 0;
+  }
+  .onboarding-video iframe,
+  .onboarding-video video {
+    height: 100%;
+  }
+  .onboarding-choice-card .onboarding-actions {
+    flex-direction: column-reverse;
+  }
+  .onboarding-choice-card .onboarding-actions .btn,
+  .onboarding-welcome-card .onboarding-actions-stacked .btn {
+    width: 100%;
+  }
+}
+
+.locked-panel .vault-purchase-open {
+  margin-top: var(--space-5);
+}
+.vault-purchase {
+  max-width: 440px;
+  margin: var(--space-5) auto 0;
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+}
+.vault-purchase-price {
+  margin: 0 0 var(--space-3);
+  font-size: 15px;
+  color: var(--ink);
+}
+.vault-purchase-price b {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  color: var(--terracotta);
+}
+.vault-purchase .muted {
+  color: var(--ink-faint);
+}
+.account-upgrade .vault-purchase {
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  background: none;
+}
+.locked-panel > .muted {
+  max-width: 46rem;
+  margin: 0 auto;
+  color: rgba(244, 240, 229, 0.78);
 }

@@ -112,7 +112,7 @@ function highlightRoot(node: HTMLElement, selector: string) {
     if (note instanceof HTMLElement) return note;
   }
   if (selector.includes("check-item")) {
-    const row = node.closest(".check-item");
+    const row = node.closest(".check-item")?.querySelector(".check-row");
     if (row instanceof HTMLElement) return row;
   }
   return node;
@@ -121,6 +121,7 @@ function highlightRoot(node: HTMLElement, selector: string) {
 function spotlightPad(target: HTMLElement, box: DOMRect) {
   const phone = isPhoneTour();
   if (target.closest(".system-card")) return { x: 8, y: 3 };
+  if (target.classList.contains("check-row")) return { x: 6, y: 3 };
   const inList = Boolean(target.closest(".list-group"));
   if (inList && box.height < 110) return { x: 16, y: 4 };
   if (box.height < 80) return { x: phone ? 16 : 20, y: phone ? 12 : 14 };
@@ -239,7 +240,7 @@ export function OnboardingTour() {
   const navigate = useNavigate();
   const storageKey = profile ? `spl.onboarding.v1.${profile.id}` : "";
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"welcome" | "tour" | "done">("welcome");
+  const [mode, setMode] = useState<"welcome" | "choice" | "tour" | "done">("welcome");
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [cardSize, setCardSize] = useState({ w: 340, h: 236 });
@@ -379,12 +380,19 @@ export function OnboardingTour() {
       measure();
     }
 
+    let demoItem: HTMLElement | null = null;
+
     async function locate() {
       for (let attempt = 0; attempt < 50 && !cancelled; attempt += 1) {
         const found = visibleTarget(step.selector);
         target = found ? highlightRoot(found, step.selector) : null;
         if (target) {
           target.classList.add("onboarding-target-highlight");
+          const item = step.selector.includes("check-item") ? target.closest(".check-item") : null;
+          if (item instanceof HTMLElement) {
+            demoItem = item;
+            item.classList.add("tour-check-demo");
+          }
           settleTarget();
           await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve(undefined))));
           if (!cancelled) {
@@ -433,6 +441,7 @@ export function OnboardingTour() {
       window.removeEventListener("touchmove", blockTourScroll);
       window.removeEventListener("scroll", pinScroll, true);
       target?.classList.remove("onboarding-target-highlight");
+      demoItem?.classList.remove("tour-check-demo");
       window.removeEventListener("resize", measure);
     };
   }, [open, mode, step.selector, stepIndex, location.pathname]);
@@ -502,8 +511,9 @@ export function OnboardingTour() {
   }
 
   const tightSpot = step.selector.includes("checklist-card");
-  const spotFeather = tightSpot ? 4 : TOUR_FEATHER;
-  const spotBlur = tightSpot ? 3 : 18;
+  const lineSpot = step.selector.includes("check-item");
+  const spotFeather = tightSpot ? 4 : lineSpot ? 6 : TOUR_FEATHER;
+  const spotBlur = tightSpot ? 3 : lineSpot ? 2 : 18;
   const hole = rect
     ? { top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height }
     : null;
@@ -522,16 +532,8 @@ export function OnboardingTour() {
     <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
       {mode === "welcome" ? (
         <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-          <div className="onboarding-welcome-head">
-            <button
-              className="onboarding-close"
-              type="button"
-              aria-label="Close the video and start the guided tour"
-              onClick={startTour}
-            >
-              ×
-            </button>
-          </div>
+          <p className="eyebrow">Your checklist is ready</p>
+          <h2 id="onboarding-title">{firstName ? `Welcome, ${firstName}` : "Welcome"}</h2>
           <div className="onboarding-video">
             {video?.type === "video" ? (
               <video
@@ -557,14 +559,20 @@ export function OnboardingTour() {
               </>
             )}
           </div>
-          <p className="eyebrow">Your checklist is ready</p>
-          <h2 id="onboarding-title">{firstName ? `Welcome, ${firstName}` : "Welcome"}</h2>
+          <div className="onboarding-actions onboarding-actions-stacked">
+            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>Continue</button>
+            <button className="onboarding-skip-inline" type="button" onClick={() => setMode("choice")}>Skip</button>
+          </div>
+        </div>
+      ) : mode === "choice" ? (
+        <div className="onboarding-welcome-card onboarding-choice-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-choice-title">
+          <p className="eyebrow">Getting started</p>
+          <h2 id="onboarding-choice-title">Would you like a guided tour?</h2>
           <p className="onboarding-copy">
-            Congratulations on your new Safety Prep List. The intro video above walks you through how it all works, and
-            from here we can show you where to check items, leave notes, and connect your family.
+            We can show you where to check items off, leave notes, and connect your family. It only takes a minute.
           </p>
           <div className="onboarding-actions">
-            <button className="btn btn-ghost" type="button" onClick={finish}>Start on my own</button>
+            <button className="btn btn-ghost" type="button" onClick={finish}>Skip and explore on my own</button>
             <button className="btn btn-primary" type="button" onClick={startTour}>Take the guided tour</button>
           </div>
         </div>
@@ -600,7 +608,7 @@ export function OnboardingTour() {
                 <rect width="100%" height="100%" fill="rgba(9, 23, 18, 0.62)" mask="url(#tour-hole)" />
               </svg>
               <div
-                className={`onboarding-spotlight${tightSpot ? " is-tight" : ""}`}
+                className={`onboarding-spotlight${tightSpot ? " is-tight" : ""}${lineSpot ? " is-line" : ""}`}
                 style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
               />
             </>
