@@ -282,6 +282,8 @@ export function CheckoutPage() {
             <AutoRenewalNote
               amount={money(breakdown.recurringCents)}
               interval={access === "annual" ? "year" : "month"}
+              discountedAmount={discountApplied > 0 ? money(discountedRenewalCents) : undefined}
+              discountedPayments={discountApplied > 0 ? discountPayments : 1}
             />
             {error && <p className="form-error">{error}</p>}
             {agreed && scopeAck ? (
@@ -298,9 +300,11 @@ export function CheckoutPage() {
               />
             ) : (
               <p className="form-error checkout-paypal-locked">
-                {!scopeAck
-                  ? "Acknowledge the Safety Prep List scope and use before completing the purchase."
-                  : "Agree to the policies above to enable PayPal checkout."}
+                {!agreed && !scopeAck
+                  ? "Check both boxes above to continue to PayPal."
+                  : !scopeAck
+                    ? "Agree to the Scope & Use Acknowledgment above to continue to PayPal."
+                    : "Agree to the Terms, Privacy Policy, and Refund Policy above to continue to PayPal."}
               </p>
             )}
           </>

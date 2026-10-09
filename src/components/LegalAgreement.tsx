@@ -34,14 +34,20 @@ export function LegalAgreement({
 export function AutoRenewalNote({
   amount,
   interval,
+  discountedAmount,
+  discountedPayments = 1,
 }: {
   amount: string;
   interval: "month" | "year";
+  discountedAmount?: string;
+  discountedPayments?: number;
 }) {
   return (
     <p className="renewal-note">
-      You will be charged {amount} every {interval} until you cancel. Cancel anytime in Account Settings before your
-      next billing date.
+      {discountedAmount && discountedPayments > 1
+        ? `You will be charged ${discountedAmount} for each of your first ${discountedPayments} ${interval}s, then ${amount} every ${interval} until you cancel.`
+        : `You will be charged ${amount} every ${interval} until you cancel.`}{" "}
+      Cancel anytime in Account Settings before your next billing date.
     </p>
   );
 }
