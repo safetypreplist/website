@@ -165,7 +165,6 @@ export function TermsPage() {
         without regard to conflict-of-law rules. Please <Link to="/contact">click here to contact us</Link> first so we can try to
         resolve the issue informally.
       </p>
-      <p className="legal-todo">{displayLegal(LEGAL.arbitration)}</p>
 
       <h2>13. Changes</h2>
       <p>
@@ -277,7 +276,6 @@ export function PrivacyPage() {
         or correct personal information by using the contact form. <Link to="/contact?topic=do-not-sell">Click here to contact us</Link>. We will not discriminate against
         you for making a request.
       </p>
-      <p className="legal-todo">{displayLegal(LEGAL.gdpr)}</p>
 
       <h2>9. Children</h2>
       <p>The Service is for users 18 and older and is not intended for children under 13. We do not knowingly collect personal information from children.</p>

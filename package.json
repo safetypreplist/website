@@ -6,7 +6,7 @@
   "description": "Safety Prep List — a mobile-first preparedness web application",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && node scripts/check-legal.mjs && vite build",
     "preview": "vite preview",
     "lint": "tsc -b --noEmit"
   },

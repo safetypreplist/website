@@ -7,13 +7,11 @@ export const LEGAL = {
   brandName: "Safety Prep List",
   brandMethod: "The Ready Method",
   supportEmail: "info@safetypreplist.com",
-  governingState: "[STATE]",
-  governingCountry: "[COUNTRY]",
+  governingState: "Nevada",
+  governingCountry: "United States",
   effectiveDate: "October 5, 2026",
   refundPolicy:
     "7-day refund on a first purchase if requested through the contact form. No partial-period refunds on renewals.",
-  arbitration: "[ARBITRATION / VENUE CLAUSE: leave as TODO for attorney review]",
-  gdpr: "[GDPR / EU PRIVACY LANGUAGE: leave as TODO for attorney review]",
 } as const;
 
 export const LEGAL_VERSIONS = {
