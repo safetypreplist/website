@@ -1,7 +1,7 @@
 import { serviceClient } from "./supabase.ts";
 
 export type PlanKind = "individual" | "family";
-export type DiscountKind = "percent" | "fixed";
+export type DiscountKind = "percent" | "fixed" | "price";
 export type AppliesTo = "all" | "individual" | "family";
 
 export type DiscountRow = {
@@ -31,12 +31,16 @@ export function isDiscountUsable(row: DiscountRow | null, now = new Date()) {
   return true;
 }
 
-export function discountCentsForPlan(row: DiscountRow, planKind: PlanKind, subscriptionCents: number) {
+export function discountCentsForPlan(row: DiscountRow, planKind: PlanKind, subscriptionCents: number, quantity = 1) {
   if (row.applies_to !== "all" && row.applies_to !== planKind) return 0;
   if (subscriptionCents <= 0) return 0;
   if (row.kind === "percent") {
     const percent = Math.min(100, Math.max(1, row.value));
     return Math.min(subscriptionCents, Math.round((subscriptionCents * percent) / 100));
+  }
+  if (row.kind === "price") {
+    const setPriceCents = Math.max(0, Math.round(row.value)) * Math.max(1, quantity);
+    return Math.max(0, subscriptionCents - setPriceCents);
   }
   return Math.min(subscriptionCents, Math.max(0, Math.round(row.value)));
 }
@@ -59,8 +63,9 @@ export function quoteWithDiscount(args: {
   planKind: PlanKind;
   subscriptionCents: number;
   vaultCents: number;
+  quantity: number;
 }) {
-  const discountCents = args.row ? discountCentsForPlan(args.row, args.planKind, args.subscriptionCents) : 0;
+  const discountCents = args.row ? discountCentsForPlan(args.row, args.planKind, args.subscriptionCents, args.quantity) : 0;
   const dueTodayCents = Math.max(0, args.subscriptionCents - discountCents) + args.vaultCents;
   return { discountCents, dueTodayCents };
 }

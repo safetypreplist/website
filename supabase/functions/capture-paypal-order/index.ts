@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
           planKind: planKindFromQuantity(quantity),
           subscriptionCents: accessCents,
           vaultCents,
+          quantity,
         });
         if (!isDiscountUsable(row) || !row || !quote.discountCents) {
           return json({ error: "Payment amount did not match the product" }, 402);

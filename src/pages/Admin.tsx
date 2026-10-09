@@ -9,7 +9,7 @@ import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/hel
 import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
 
 type AdminTab = "support" | "accounts" | "discounts" | "content" | "onboarding" | "faqs";
-type DiscountKind = "percent" | "fixed";
+type DiscountKind = "percent" | "fixed" | "price";
 type AppliesTo = "all" | "individual" | "family";
 type Discount = {
   id: string;
@@ -231,8 +231,8 @@ function DiscountManager({ onSaved }: { onSaved: (message: string) => void }) {
                   <tr key={row.id}>
                     <td><code className="discount-code">{row.code}</code></td>
                     <td>
-                      <b>{row.kind === "percent" ? `${row.value}% off` : `${money(row.value)} off`}</b>
-                      <small>Subscription only</small>
+                      <b>{discountOfferLabel(row)}</b>
+                      <small>{row.kind === "price" ? "Per checklist, first payment" : "Subscription only"}</small>
                     </td>
                     <td>{row.applies_to === "all" ? "All plans" : row.applies_to === "family" ? "Family" : "Individual"}</td>
                     <td>{row.redemption_count}{row.max_redemptions ? ` / ${row.max_redemptions}` : ""}</td>
@@ -262,6 +262,12 @@ function DiscountManager({ onSaved }: { onSaved: (message: string) => void }) {
       ) : null}
     </>
   );
+}
+
+function discountOfferLabel(row: Pick<Discount, "kind" | "value">) {
+  if (row.kind === "percent") return `${row.value}% off`;
+  if (row.kind === "price") return `Set price ${money(row.value)}`;
+  return `${money(row.value)} off`;
 }
 
 function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (code: string) => Promise<void> }) {
@@ -312,13 +318,17 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
             <select value={kind} onChange={(e) => setKind(e.target.value as DiscountKind)}>
               <option value="percent">Percent off</option>
               <option value="fixed">Fixed dollars off</option>
+              <option value="price">Set price</option>
             </select>
           </label>
           <label className="field">
-            <span>{kind === "percent" ? "Percent" : "Dollars"}</span>
-            <input required type="number" min="1" step={kind === "percent" ? "1" : "0.01"} value={value} onChange={(e) => setValue(e.target.value)} />
+            <span>{kind === "percent" ? "Percent" : kind === "price" ? "Price per checklist ($)" : "Dollars"}</span>
+            <input required type="number" min={kind === "percent" ? "1" : "0.01"} step={kind === "percent" ? "1" : "0.01"} value={value} onChange={(e) => setValue(e.target.value)} />
           </label>
         </div>
+        {kind === "price" ? (
+          <p className="muted">The first subscription payment becomes this price for each checklist. A 2-person Family plan pays twice this amount. Renewals stay at the regular price.</p>
+        ) : null}
         <label className="field">
           <span>Applies to</span>
           <select value={appliesTo} onChange={(e) => setAppliesTo(e.target.value as AppliesTo)}>
