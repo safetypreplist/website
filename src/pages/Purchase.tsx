@@ -25,6 +25,10 @@ import { invokeFunction } from "../lib/supabase";
 
 const PROGRESS = ["Choose Plan", "Purchase", "Create Account", "Get Ready"] as const;
 
+function plural(count: number, unit: string) {
+  return count === 1 ? `1 ${unit}` : `${count} ${unit}s`;
+}
+
 function CopyIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -80,6 +84,7 @@ export function CheckoutPage() {
   const [appliedCode, setAppliedCode] = useState("");
   const [discountMessage, setDiscountMessage] = useState("");
   const [discountApplied, setDiscountApplied] = useState(0);
+  const [discountPayments, setDiscountPayments] = useState(1);
   const [checkingCode, setCheckingCode] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [scopeAck, setScopeAck] = useState(false);
@@ -87,6 +92,7 @@ export function CheckoutPage() {
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
   const discountedDueToday = Math.max(0, breakdown.dueTodayCents - discountApplied);
+  const discountedRenewalCents = Math.max(0, breakdown.recurringCents - discountApplied);
   const title = planKind === "family" ? "Family Plan" : "Individual Plan";
   const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
   const paypalReady = isPaypalConfigured();
@@ -193,7 +199,7 @@ export function CheckoutPage() {
                   }
                   setCheckingCode(true);
                   try {
-                    const preview = await invokeFunction<{ code: string; discountCents: number; dueTodayCents: number }>(
+                    const preview = await invokeFunction<{ code: string; discountCents: number; dueTodayCents: number; discountPayments?: number }>(
                       "preview-discount",
                       {
                         code: normalized,
@@ -204,11 +210,18 @@ export function CheckoutPage() {
                       },
                     );
                     setAppliedCode(preview.code);
+                    const payments = Math.max(1, preview.discountPayments || 1);
                     setDiscountApplied(preview.discountCents);
-                    setDiscountMessage(`${preview.code} applied — you save ${money(preview.discountCents)}.`);
+                    setDiscountPayments(payments);
+                    setDiscountMessage(
+                      payments > 1
+                        ? `${preview.code} applied — you save ${money(preview.discountCents)} on each of your first ${payments} payments.`
+                        : `${preview.code} applied — you save ${money(preview.discountCents)}.`,
+                    );
                   } catch (err) {
                     setAppliedCode("");
                     setDiscountApplied(0);
+                    setDiscountPayments(1);
                     setDiscountMessage(err instanceof Error ? err.message : "That code is not active or does not apply to this plan.");
                   } finally {
                     setCheckingCode(false);
@@ -249,7 +262,11 @@ export function CheckoutPage() {
             <b>{money(discountedDueToday)}</b>
           </p>
           <p className="muted">
-            {access === "annual"
+            {discountApplied > 0 && discountPayments > 1
+              ? access === "annual"
+                ? `Renews at ${money(discountedRenewalCents)} for the next ${plural(discountPayments - 1, "year")}, then ${money(breakdown.recurringCents)} per year.`
+                : `Then ${money(discountedRenewalCents)} per month for the next ${plural(discountPayments - 1, "month")}, then ${money(breakdown.recurringCents)} per month.`
+              : access === "annual"
               ? `Renews annually at ${money(breakdown.recurringCents)}.`
               : incomingCode === "LAUNCH26" || discountApplied > 0
                 ? `Then ${money(breakdown.recurringCents)} per month afterwards.`

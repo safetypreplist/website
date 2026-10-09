@@ -24,7 +24,11 @@ Do **not** change `checklist_items.permanent_key` for an existing item.
 
 Create codes in the owner console. `READY10` (10% all plans) and `FAMILY25` (25% family) ship as examples. `WELCOME5` is stored but off.
 
-Three code types: percent off, fixed dollars off, or set price. A set price is the first subscription payment per checklist (a 2-person Family plan pays twice the set price). Renewals stay at the regular price. Set price needs migration `0024_discount_set_price.sql`.
+Three code types: percent off, fixed dollars off, or set price. A set price is the subscription payment per checklist (a 2-person Family plan pays twice the set price). Set price needs migration `0024_discount_set_price.sql`.
+
+**Discounted payments** is how many subscription payments get the discount once a customer subscribes (1 = first payment only; 3 on Monthly = first 3 months). It is copied onto the purchase as `purchases.discount_payments` so renewals can honor it. **Code expires** only stops new customers from using the code. Needs migration `0025_discount_duration.sql`.
+
+Automatic renewal charges are not wired yet. Until they are, only the first payment is actually charged.
 
 Checkout calls `preview-discount`, then `create-paypal-order` / `capture-paypal-order` re-check the same code before charging.
 

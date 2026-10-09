@@ -13,6 +13,7 @@ export type DiscountRow = {
   expires_at: string | null;
   max_redemptions: number | null;
   redemption_count: number;
+  discount_payments: number;
 };
 
 export function normalizeCode(raw: unknown) {
@@ -51,7 +52,7 @@ export async function loadDiscount(code: string) {
   const admin = serviceClient();
   const { data, error } = await admin
     .from("discount_codes")
-    .select("code, kind, value, applies_to, active, expires_at, max_redemptions, redemption_count")
+    .select("code, kind, value, applies_to, active, expires_at, max_redemptions, redemption_count, discount_payments")
     .eq("code", normalized)
     .maybeSingle();
   if (error) throw error;

@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
       code: row.code,
       discountCents: quote.discountCents,
       dueTodayCents: quote.dueTodayCents,
+      discountPayments: Math.max(1, row.discount_payments || 1),
     });
   } catch (err) {
     console.error(err);

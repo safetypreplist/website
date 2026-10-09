@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
     let accessCents = 0;
     let vaultCents = 0;
     let discountCents = 0;
+    let discountPayments: number | null = null;
     const discountCode = parsed.discountCode || "";
     let expected = slug === "core" ? 0 : product.amount_cents;
     if (slug === "core") {
@@ -122,6 +123,7 @@ Deno.serve(async (req) => {
           return json({ error: "Payment amount did not match the product" }, 402);
         }
         discountCents = quote.discountCents;
+        discountPayments = Math.max(1, row.discount_payments || 1);
         expected = quote.dueTodayCents;
       }
     }
@@ -170,6 +172,7 @@ Deno.serve(async (req) => {
         vault_cents: vaultCents,
         discount_code: discountCode || null,
         discount_cents: discountCents,
+        discount_payments: discountPayments,
       })
       .select("*")
       .single();

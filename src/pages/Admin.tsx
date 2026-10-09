@@ -21,6 +21,7 @@ type Discount = {
   expires_at: string | null;
   max_redemptions: number | null;
   redemption_count: number;
+  discount_payments?: number | null;
 };
 
 export function AdminPage() {
@@ -232,7 +233,7 @@ function DiscountManager({ onSaved }: { onSaved: (message: string) => void }) {
                     <td><code className="discount-code">{row.code}</code></td>
                     <td>
                       <b>{discountOfferLabel(row)}</b>
-                      <small>{row.kind === "price" ? "Per checklist, first payment" : "Subscription only"}</small>
+                      <small>{discountDurationLabel(row.discount_payments)}{row.kind === "price" ? ", per checklist" : ""}</small>
                     </td>
                     <td>{row.applies_to === "all" ? "All plans" : row.applies_to === "family" ? "Family" : "Individual"}</td>
                     <td>{row.redemption_count}{row.max_redemptions ? ` / ${row.max_redemptions}` : ""}</td>
@@ -270,14 +271,21 @@ function discountOfferLabel(row: Pick<Discount, "kind" | "value">) {
   return `${money(row.value)} off`;
 }
 
+function discountDurationLabel(payments?: number | null) {
+  const count = Math.max(1, payments || 1);
+  return count === 1 ? "First payment only" : `First ${count} payments`;
+}
+
 function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (code: string) => Promise<void> }) {
   const [code, setCode] = useState("");
   const [kind, setKind] = useState<DiscountKind>("percent");
   const [value, setValue] = useState("10");
   const [appliesTo, setAppliesTo] = useState<AppliesTo>("all");
   const [expires, setExpires] = useState("");
+  const [payments, setPayments] = useState("1");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const paymentCount = Math.max(1, Math.round(Number(payments)) || 1);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -298,6 +306,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
       applies_to: appliesTo,
       active: true,
       expires_at: expires ? new Date(expires).toISOString() : null,
+      discount_payments: paymentCount,
     });
     setSaving(false);
     if (saveError) { setError(saveError.message); return; }
@@ -327,7 +336,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
           </label>
         </div>
         {kind === "price" ? (
-          <p className="muted">The first subscription payment becomes this price for each checklist. A 2-person Family plan pays twice this amount. Renewals stay at the regular price.</p>
+          <p className="muted">Each discounted payment becomes this price for each checklist. A 2-person Family plan pays twice this amount.</p>
         ) : null}
         <label className="field">
           <span>Applies to</span>
@@ -337,7 +346,19 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
             <option value="family">Family only</option>
           </select>
         </label>
-        <label className="field"><span>Expires (optional)</span><input type="date" value={expires} onChange={(e) => setExpires(e.target.value)} /></label>
+        <div className="admin-form-grid">
+          <label className="field">
+            <span>Discounted payments</span>
+            <input required type="number" min="1" step="1" value={payments} onChange={(e) => setPayments(e.target.value)} />
+          </label>
+          <label className="field"><span>Code expires (optional)</span><input type="date" value={expires} onChange={(e) => setExpires(e.target.value)} /></label>
+        </div>
+        <p className="muted">
+          {paymentCount === 1
+            ? "Only the first payment is discounted. Renewals are at the regular price."
+            : `The first ${paymentCount} payments are discounted (${paymentCount} months on Monthly, ${paymentCount} years on Annual), then the regular price.`}{" "}
+          The expiration date only stops new customers from using the code.
+        </p>
         {error ? <p className="form-error">{error}</p> : null}
         <div className="drawer-actions">
           <button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button>
