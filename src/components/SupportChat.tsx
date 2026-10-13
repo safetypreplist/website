@@ -143,7 +143,7 @@ export function SupportChat() {
   return (
     <div className={`support-chat ${inApp ? "in-app" : ""} ${open ? "open" : ""}`}>
       {open ? (
-        <div className="support-chat-panel" ref={panelRef} role="dialog" aria-label="Chat with us" id="support-chat-panel">
+        <div className="support-chat-panel" ref={panelRef} role="dialog" aria-label="Need help?" id="support-chat-panel">
           <div className="support-chat-head">
             <span className="support-chat-mark">
               <BrandMark className="support-chat-logo" />
@@ -206,11 +206,11 @@ export function SupportChat() {
         type="button"
         aria-expanded={open}
         aria-controls="support-chat-panel"
-        aria-label={open ? "Close chat menu" : "Chat with us"}
+        aria-label={open ? "Close help menu" : "Need help?"}
         onClick={() => setOpen((value) => !value)}
       >
         {open ? <CloseIcon /> : <ChatIcon />}
-        <span className="support-chat-label">{open ? "Close" : "Chat with us"}</span>
+        <span className="support-chat-label">{open ? "Close" : "Need Help?"}</span>
       </button>
     </div>
   );
