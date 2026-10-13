@@ -10,13 +10,14 @@ export const LEGAL = {
   governingCountry: "United States",
   effectiveDate: "October 5, 2026",
   refundPolicy:
-    "7-day refund on a first purchase if requested through the contact form. No partial-period refunds on renewals.",
+    "3-day refund on a first purchase if requested through the contact form and no checklist has been printed or saved as a PDF. No partial-period refunds on renewals.",
+  refundUpdatedDate: "October 13, 2026",
 } as const;
 
 export const LEGAL_VERSIONS = {
   terms: "2026-10-05",
   privacy: "2026-10-05",
-  refunds: "2026-10-05",
+  refunds: "2026-10-13",
 } as const;
 
 export type LegalAcceptanceContext = "checkout" | "signup" | "email_signup" | "in_app_ack" | "terms_update";

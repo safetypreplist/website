@@ -223,6 +223,7 @@ export type SubscriptionRow = {
   status: string;
   paid_through: string | null;
   access_ends_at: string | null;
+  refunded_at?: string | null;
 };
 
 // Pulls the subscription from PayPal and recomputes paid-through and access end, then updates checklists.
@@ -246,6 +247,10 @@ export async function syncSubscription(admin: Admin, row: SubscriptionRow, remot
   if (paidThrough && status !== "approval_pending") {
     endsAt = new Date(paidThrough);
     if (status === "active" || status === "suspended") endsAt.setUTCDate(endsAt.getUTCDate() + GRACE_DAYS);
+  }
+  if (row.refunded_at) {
+    paidThrough = new Date(row.refunded_at);
+    endsAt = new Date(row.refunded_at);
   }
 
   const patch = {

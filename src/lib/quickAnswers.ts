@@ -18,7 +18,7 @@ const CHECKLISTS =
 const VAULT_LISTS =
   "Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, Long-Term Food, and How-To Videos (a curated YouTube playlist)";
 const REFUND_RULE =
-  "First purchases can be refunded within 7 days, including the Survival Vault. Renewals aren’t partially refunded.";
+  "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded.";
 
 export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: Prices): QuickAnswer[] {
   const savePct = annualSavingsPercent(monthlyCents, annualCents);

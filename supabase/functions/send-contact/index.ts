@@ -2,6 +2,7 @@ import { isValidEmail, normalizeEmail } from "../_shared/brevo.ts";
 import { emailConfigured, escapeHtml, sendEmail } from "../_shared/email.ts";
 import { json, preflight } from "../_shared/http.ts";
 import { createLiveAgentTicket, liveAgentConfigured } from "../_shared/liveagent.ts";
+import { serviceClient } from "../_shared/supabase.ts";
 
 const TOPICS: Record<string, string> = {
   general: "Contact",
@@ -36,6 +37,22 @@ Deno.serve(async (req) => {
   if (message.length < 8) return json({ error: "Please tell us a little more." }, 400);
 
   const label = TOPICS[topic];
+
+  if (topic === "refund") {
+    try {
+      const admin = serviceClient();
+      const { data: profile } = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
+      const { error } = await admin.from("refund_requests").insert({
+        user_id: (profile as { id: string } | null)?.id ?? null,
+        email,
+        name,
+        message,
+      });
+      if (error) console.error("Could not save refund request", error);
+    } catch (err) {
+      console.error("Could not save refund request", err);
+    }
+  }
 
   if (liveAgentConfigured()) {
     const ticket = await createLiveAgentTicket({

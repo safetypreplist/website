@@ -104,10 +104,17 @@ export function TermsPage() {
 
       <h2 id="refunds">5. Refunds</h2>
       <p>{LEGAL.refundPolicy}</p>
+      <p className="muted">Refund Policy updated {LEGAL.refundUpdatedDate}.</p>
       <h3>How to request a refund</h3>
       <p>
-        <Link to="/contact?topic=refund">Click here</Link> to request your refund within 7 days of your first purchase.
+        <Link to="/contact?topic=refund">Click here</Link> to request your refund within 3 days of your first purchase.
         Include your confirmation number if you have it.
+      </p>
+      <h3>Printing</h3>
+      <p>
+        A purchase is no longer refundable once any checklist on the account has been printed or saved as a PDF. We
+        record when the print window is opened from a checklist page. While you are still eligible for a refund, the app
+        asks you to confirm before printing.
       </p>
       <h3>Renewals</h3>
       <p>
@@ -115,7 +122,7 @@ export function TermsPage() {
         next billing date to avoid the next charge. You keep access through the end of the period you already paid.
       </p>
       <h3>Survival Vault</h3>
-      <p>Survival Vault is a one-time add-on. It does not renew. Refund requests follow the same 7-day first-purchase rule.</p>
+      <p>Survival Vault is a one-time add-on. It does not renew. Refund requests follow the same 3-day, not-printed first-purchase rule.</p>
 
       <h2>6. User content</h2>
       <p>

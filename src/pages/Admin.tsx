@@ -5,10 +5,12 @@ import { supabase } from "../lib/supabase";
 import { SAFETY_CATEGORY_LABELS, US_STATES, money } from "../lib/format";
 import { COPY_KEY, DEFAULT_STEPS, DEFAULT_VIDEO_URL, VIDEO_CACHE_KEY, loadCopy, startOnboardingPreview, type TourCopy } from "../components/OnboardingTour";
 import { AdminAccounts } from "../components/AdminAccounts";
+import { AdminRefunds } from "../components/AdminRefunds";
+import { usePendingRefunds } from "../lib/refunds";
 import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/help";
 import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
 
-type AdminTab = "accounts" | "discounts" | "content" | "onboarding" | "faqs";
+type AdminTab = "accounts" | "refunds" | "discounts" | "content" | "onboarding" | "faqs";
 type DiscountKind = "percent" | "fixed" | "price";
 type AppliesTo = "all" | "individual" | "family";
 type Discount = {
@@ -28,6 +30,7 @@ export function AdminPage() {
   const { profile, catalog, safety, refreshAccount, signOut } = useApp();
   const [tab, setTab] = useState<AdminTab>("accounts");
   const [message, setMessage] = useState("");
+  const [pendingRefunds, setPendingRefunds] = usePendingRefunds(profile?.role === "owner");
 
   if (profile && profile.role !== "owner") return <Navigate to="/app" replace />;
   if (!profile) return <p className="wrap" style={{ padding: 40 }}>Loading owner console…</p>;
@@ -45,6 +48,7 @@ export function AdminPage() {
         <aside className="admin-rail" aria-label="Admin sections">
           <p className="admin-rail-label">Workspace</p>
           <AdminNavButton active={tab === "accounts"} label="Accounts & access" onClick={() => setTab("accounts")} />
+          <AdminNavButton active={tab === "refunds"} label="Refund requests" badge={pendingRefunds} onClick={() => setTab("refunds")} />
           <AdminNavButton active={tab === "discounts"} label="Discount codes" onClick={() => setTab("discounts")} />
           <p className="admin-rail-label admin-rail-label-spaced">Manage content</p>
           <AdminNavButton active={tab === "content"} label="Checklist & resources" onClick={() => setTab("content")} />
@@ -59,7 +63,14 @@ export function AdminPage() {
               <button type="button" onClick={() => setMessage("")} aria-label="Dismiss">×</button>
             </div>
           )}
+          {pendingRefunds > 0 && tab !== "refunds" ? (
+            <button className="admin-refund-alert" type="button" onClick={() => setTab("refunds")}>
+              <b>{pendingRefunds}</b>
+              {pendingRefunds === 1 ? "refund request is" : "refund requests are"} waiting for you. Review now →
+            </button>
+          ) : null}
           {tab === "accounts" && <AdminAccounts />}
+          {tab === "refunds" && <AdminRefunds onPendingChange={setPendingRefunds} />}
           {tab === "discounts" && <DiscountManager onSaved={setMessage} />}
           {tab === "content" && <ContentTools catalog={catalog} safety={safety} refreshAccount={refreshAccount} onSaved={setMessage} />}
           {tab === "onboarding" && <OnboardingSettings onSaved={setMessage} />}
@@ -70,10 +81,15 @@ export function AdminPage() {
   );
 }
 
-function AdminNavButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+function AdminNavButton({ active, label, badge = 0, onClick }: { active: boolean; label: string; badge?: number; onClick: () => void }) {
   return (
     <button className={`admin-nav-button ${active ? "active" : ""}`} type="button" onClick={onClick}>
       <span>{label}</span>
+      {badge > 0 ? (
+        <b className="alert" aria-label={`${badge} waiting`}>
+          {badge}
+        </b>
+      ) : null}
     </button>
   );
 }

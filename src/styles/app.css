@@ -2051,16 +2051,39 @@ p {
 .public-footer {
   background: var(--reference-forest-deep);
   color: rgba(244, 240, 229, 0.68);
-  padding: 56px 0 28px;
+  padding: 64px 0 32px;
+  text-align: center;
 }
 
 .footer-row {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-  padding-bottom: 28px;
+  gap: 24px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(230, 226, 214, 0.12);
+}
+
+.footer-brand .brand {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-brand .brand-mark {
+  width: 46px;
+  height: 56px;
+}
+
+.footer-brand .brand-text b {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+}
+
+.footer-brand .brand-text span {
+  margin-top: 6px;
+  font-size: 14px;
+  font-style: italic;
 }
 
 .public-footer .brand-text b {
@@ -2075,7 +2098,9 @@ p {
 .footer-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 22px;
+  justify-content: center;
+  gap: 10px 28px;
+  max-width: 900px;
 }
 
 .public-footer a {
@@ -2093,19 +2118,17 @@ p {
 
 .footer-bottom {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-top: 20px;
-  border-top: 1px solid rgba(230, 226, 214, 0.12);
-  font-size: 13px;
+  justify-content: center;
+  padding-top: 16px;
+  font-size: 12.5px;
+  color: rgba(244, 240, 229, 0.5);
 }
 
 .footer-disclaimer {
-  margin: 12px auto 0;
-  max-width: 920px;
+  margin: 28px auto 0;
+  max-width: 720px;
   font-size: 12.5px;
-  line-height: 1.45;
+  line-height: 1.6;
   color: rgba(244, 240, 229, 0.62);
 }
 
@@ -3508,6 +3531,37 @@ html.has-guidance-ack .app-main {
 }
 
 /* Sits at the right end of the Back/Print row. */
+.print-refund-notice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid rgba(199, 90, 43, 0.25);
+  border-radius: 12px;
+  background: #fff8f3;
+}
+
+.print-refund-notice p {
+  flex: 1;
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.print-refund-notice a {
+  color: var(--terracotta);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .print-refund-notice {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .list-saved {
   flex: none;
   margin-left: auto;
@@ -5889,9 +5943,8 @@ html.has-guidance-ack .app-main {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .footer-row {
-    flex-direction: column;
-    align-items: flex-start;
+  .footer-links {
+    gap: 0 22px;
   }
 }
 
@@ -5930,6 +5983,7 @@ html.has-guidance-ack .app-main {
   .desktop-sidebar,
   .print-actions,
   .print-menu,
+  .print-refund-notice,
   .section-tools,
   .note-toggle,
   .add-item-btn,
@@ -6894,6 +6948,36 @@ html.has-guidance-ack .app-main {
 .admin-toast { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 11px 14px; border: 1px solid rgba(85,107,47,.18); border-radius: 10px; background: #f2f5e9; color: var(--moss); font-size: 13px; }
 .admin-toast span { font-weight: 800; }
 .admin-toast button { margin-left: auto; color: var(--ink-faint); font-size: 18px; }
+.admin-refund-alert { display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 16px; padding: 12px 14px; border: 1px solid rgba(199,90,43,.28); border-radius: 10px; background: #fff3ec; color: var(--terracotta); font-size: 14px; font-weight: 600; text-align: left; }
+.admin-refund-alert b { display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 99px; background: var(--terracotta); color: var(--paper); font-size: 12px; }
+.admin-refund-alert:hover { background: #ffece1; }
+.nav-alert-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: 99px; background: var(--terracotta); color: var(--paper); font-size: 11px; font-weight: 700; line-height: 1; }
+.refund-tabs { display: inline-flex; gap: 4px; margin-bottom: 16px; padding: 4px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--paper); }
+.refund-tabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px; border-radius: 7px; color: var(--ink-soft); font-size: 13px; font-weight: 600; }
+.refund-tabs button.active { background: var(--forest); color: var(--paper); }
+.refund-tabs b { min-width: 20px; padding: 2px 6px; border-radius: 99px; background: var(--terracotta); color: var(--paper); font-size: 11px; }
+.refund-list { display: grid; gap: 14px; }
+.refund-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.refund-card-head h3 { margin: 0; font-size: 17px; }
+.refund-card-head .muted { margin: 4px 0 0; font-size: 13px; }
+.refund-problems { margin: 12px 0 0; padding: 10px 14px 10px 30px; border-radius: 9px; background: #fbefe9; color: #9a402b; font-size: 13px; line-height: 1.5; }
+.refund-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 18px; margin: 14px 0 0; }
+.refund-facts dt { color: var(--ink-faint); font: 600 10px/1.2 var(--font-label); letter-spacing: .09em; text-transform: uppercase; }
+.refund-facts dd { margin: 4px 0 0; color: var(--ink); font-size: 13px; line-height: 1.4; }
+.refund-message { margin: 14px 0 0; padding: 10px 14px; border-left: 3px solid var(--line-strong); background: rgba(230,226,214,.3); color: var(--ink-soft); font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.refund-payments { margin: 16px 0 0; padding: 0; border: 0; }
+.refund-payments legend { margin-bottom: 8px; color: var(--ink-faint); font: 600 10px/1.2 var(--font-label); letter-spacing: .09em; text-transform: uppercase; }
+.refund-payments label { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: 13px; cursor: pointer; }
+.refund-payments label + label { margin-top: 6px; }
+.refund-payments label span { flex: 1; color: var(--ink); }
+.refund-payments label b { color: var(--forest); }
+.refund-payments label.is-done { cursor: default; opacity: .6; }
+.refund-payments input { width: 18px; height: 18px; accent-color: var(--forest); }
+.refund-card .account-field { margin-top: 14px; }
+.refund-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.refund-outcome { margin: 14px 0 0; font-size: 13px; }
+.refund-end-access { display: flex; align-items: flex-start; gap: 10px; margin-top: 4px; font-size: 14px; line-height: 1.45; }
+.refund-end-access input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--forest); }
 .admin-section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 20px; }
 .admin-section-heading h2 { margin: 8px 0 4px; font-size: clamp(25px, 3vw, 34px); }
 .admin-section-heading .muted { margin: 0; max-width: 680px; }
@@ -7377,7 +7461,7 @@ html.tour-scroll-lock body {
 }
 
 .marketing-page .hero-copy-col {
-  padding: 84px 16px 48px max(42px, calc((100vw - 1180px) / 2 + 14px));
+  padding: 84px clamp(24px, 3vw, 64px) 48px max(42px, calc((100vw - 1180px) / 2 - 140px));
 }
 
 .marketing-page .hero-copy {
@@ -8034,38 +8118,6 @@ html.tour-scroll-lock body {
   line-height: 1.5;
 }
 
-.launch-page .public-footer {
-  padding: 40px 0 28px;
-}
-
-.launch-page .footer-row {
-  align-items: flex-start;
-  gap: 28px 40px;
-  padding-bottom: 22px;
-}
-
-.launch-page .footer-links {
-  display: grid;
-  grid-template-columns: repeat(3, max-content);
-  gap: 12px 28px;
-  justify-content: end;
-  max-width: 520px;
-}
-
-.launch-page .footer-links a {
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.launch-page .footer-disclaimer {
-  max-width: 720px;
-  margin-top: 16px;
-  line-height: 1.55;
-}
-
 @media (max-width: 899px) {
   .launch-offer {
     padding: 24px 18px 18px;
@@ -8083,14 +8135,6 @@ html.tour-scroll-lock body {
   .launch-page .launch-was {
     font-size: 22px;
   }
-
-  .launch-page .footer-links {
-    grid-template-columns: 1fr 1fr;
-    justify-content: start;
-    width: 100%;
-    max-width: none;
-  }
-
 }
 
 @keyframes onboarding-glow {

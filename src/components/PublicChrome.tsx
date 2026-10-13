@@ -68,10 +68,10 @@ export function PublicFooter({
           <NavLink to="/terms">Terms of Service</NavLink>
         </nav>
       </div>
+      <p className="wrap footer-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
       <div className="wrap footer-bottom">
         <span>{copyrightLine()}</span>
       </div>
-      <p className="wrap footer-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
     </footer>
   );
 }

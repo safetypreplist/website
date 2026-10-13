@@ -62,7 +62,26 @@ Deno.serve(async (req: Request) => {
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) return json({ error: "Could not load accounts." }, 500);
-      return json({ accounts: data || [] });
+      const accounts = (data || []) as Array<{ id: string }>;
+      const { data: prints } = await admin
+        .from("print_events")
+        .select("user_id,created_at")
+        .in("user_id", accounts.map((account) => account.id))
+        .order("created_at")
+        .limit(10000);
+      const printed = new Map<string, { first_printed_at: string; print_count: number }>();
+      for (const row of (prints || []) as Array<{ user_id: string; created_at: string }>) {
+        const current = printed.get(row.user_id);
+        if (current) current.print_count += 1;
+        else printed.set(row.user_id, { first_printed_at: row.created_at, print_count: 1 });
+      }
+      return json({
+        accounts: accounts.map((account) => ({
+          ...account,
+          first_printed_at: printed.get(account.id)?.first_printed_at ?? null,
+          print_count: printed.get(account.id)?.print_count ?? 0,
+        })),
+      });
     }
 
     if (body.action === "set_password") {

@@ -6,6 +6,7 @@ import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
 import { checklistTitle, familyPageLabel, initialsFrom } from "../lib/identity";
+import { usePendingRefunds } from "../lib/refunds";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { signOut, profile, user, viewing, hasSurvivalVault, switchChecklist, myChecklist, familyMembers } = useApp();
@@ -13,6 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const initial = initialsFrom(profile?.full_name || viewing.ownerName, user?.email);
   const vaultActive = location.pathname.startsWith("/app/survival");
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const [pendingRefunds] = usePendingRefunds(profile?.role === "owner" && !isAdminRoute);
 
   useEffect(() => {
     const onPersonalHome = location.pathname === "/app" || location.pathname === "/app/lists";
@@ -80,6 +82,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {profile?.role === "owner" ? (
           <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
             Owner Console
+            {pendingRefunds > 0 ? (
+              <span className="nav-alert-badge" aria-label={`${pendingRefunds} refund ${pendingRefunds === 1 ? "request" : "requests"} waiting`}>
+                {pendingRefunds}
+              </span>
+            ) : null}
           </NavLink>
         ) : null}
         <NavLink to="/app/help" className={({ isActive }) => (isActive ? "active" : "")}>

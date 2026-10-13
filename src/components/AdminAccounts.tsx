@@ -10,6 +10,8 @@ type Account = {
   plan: string;
   access_status: string;
   created_at: string;
+  first_printed_at?: string | null;
+  print_count?: number;
 };
 
 type AccountListResponse = { accounts?: Account[]; error?: string };
@@ -104,12 +106,13 @@ export function AdminAccounts() {
       </div>
       {loading ? <p className="muted" style={{ padding: 20 }}>Loading accounts…</p> : filtered.length ? (
         <div className="admin-table-wrap"><table className="admin-table">
-          <thead><tr><th>Account</th><th>Role</th><th>Plan</th><th>Access</th><th>Joined</th><th /></tr></thead>
+          <thead><tr><th>Account</th><th>Role</th><th>Plan</th><th>Access</th><th>Printed</th><th>Joined</th><th /></tr></thead>
           <tbody>{filtered.map((account) => <tr key={account.id}>
             <td><div className="customer-cell"><span className="customer-avatar">{(account.full_name || account.email || "SP").slice(0, 2).toUpperCase()}</span><span><b>{account.full_name || account.email || "Unnamed account"}</b><small>{account.email || "No email"}</small></span></div></td>
             <td><span className={`status-pill ${account.role === "owner" ? "active" : "review"}`}>{account.role === "owner" ? "Owner" : "Customer"}</span></td>
             <td>{planLabel(account.plan)}</td>
             <td>{account.access_status || "—"}</td>
+            <td>{account.first_printed_at ? <span title={`${account.print_count} print${account.print_count === 1 ? "" : "s"}`}>Yes · {new Date(account.first_printed_at).toLocaleDateString()}</span> : "No"}</td>
             <td>{account.created_at ? new Date(account.created_at).toLocaleDateString() : "—"}</td>
             <td><button className="table-action-button" type="button" onClick={() => { setSelected(account); setError(""); setNotice(""); }}>Manage password</button></td>
           </tr>)}</tbody>

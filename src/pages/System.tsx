@@ -26,11 +26,20 @@ import {
   type PrepLane,
 } from "../lib/listProgress";
 import { NOTE_SENSITIVITY_WARNING, printDisclaimer } from "../lib/legal";
+import {
+  PRINT_REFUND_WARNING,
+  loadRefundWindow,
+  printEndsRefund,
+  recordPrint,
+  type PrintSource,
+  type RefundWindow,
+} from "../lib/printTracking";
 import type { ChecklistItem, ProgressRow } from "../types";
 
 export function SystemPage() {
   const { slug } = useParams();
-  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } = useApp();
+  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing, session } =
+    useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   const sections = useMemo(
     () => catalog.sections.filter((s) => s.system_id === system?.id).sort((a, b) => a.sort_order - b.sort_order),
@@ -45,7 +54,12 @@ export function SystemPage() {
   const [printOpen, setPrintOpen] = useState(false);
   const [lane, setLane] = useState<PrepLane>(() => readPrepLane());
   const [moreTimeOpen, setMoreTimeOpen] = useState(false);
+  const [refundWindow, setRefundWindow] = useState<RefundWindow | null>(null);
+  const [printConfirm, setPrintConfirm] = useState<{ blank: boolean; source: PrintSource } | null>(null);
+  const [printNotice, setPrintNotice] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
+  const ownPrint = useRef(false);
+  const printable = Boolean(system && !(system.access_tier === "full" && !hasSurvivalVault));
 
   const lastSavedAt = useMemo(() => {
     const stamps = sections
@@ -174,6 +188,40 @@ export function SystemPage() {
   }, [printOpen]);
 
   useEffect(() => {
+    if (!session) return;
+    let live = true;
+    void loadRefundWindow().then((refund) => {
+      if (live) setRefundWindow(refund);
+    });
+    return () => {
+      live = false;
+    };
+  }, [session]);
+
+  useEffect(() => {
+    if (!printable) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        startPrint(false, "shortcut");
+      }
+    }
+    // Printing from the browser's own menu can't be stopped, only recorded.
+    function onBeforePrint() {
+      if (ownPrint.current) return;
+      void recordPrint(slug || "", "browser");
+      if (printEndsRefund(refundWindow)) setPrintNotice(true);
+      markPrinted();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("beforeprint", onBeforePrint);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("beforeprint", onBeforePrint);
+    };
+  });
+
+  useEffect(() => {
     if (!openTip && !openNoteTip) return;
     function onPointerDown(event: PointerEvent) {
       const target = event.target as HTMLElement | null;
@@ -200,12 +248,31 @@ export function SystemPage() {
   const bannerKey = SYSTEM_PHOTOS[system.slug];
   const bannerSrc = bannerKey ? PHOTO_LIBRARY[bannerKey] : "";
 
-  function printList(blank: boolean) {
+  function markPrinted() {
+    setRefundWindow((refund) => (refund && !refund.printedAt ? { ...refund, printedAt: new Date().toISOString() } : refund));
+  }
+
+  function startPrint(blank: boolean, source: PrintSource) {
     setPrintOpen(false);
+    if (printEndsRefund(refundWindow)) setPrintConfirm({ blank, source });
+    else runPrint(blank, source);
+  }
+
+  function runPrint(blank: boolean, source: PrintSource) {
+    setPrintConfirm(null);
+    ownPrint.current = true;
+    void recordPrint(slug || "", source, blank);
+    markPrinted();
+    // Let the confirmation close before the print window snapshots the page.
+    window.setTimeout(() => printList(blank), 60);
+  }
+
+  function printList(blank: boolean) {
     const root = document.documentElement;
     if (blank) root.classList.add("print-blank");
     const cleanup = () => {
       root.classList.remove("print-blank");
+      ownPrint.current = false;
       window.removeEventListener("afterprint", cleanup);
     };
     window.addEventListener("afterprint", cleanup);
@@ -234,10 +301,10 @@ export function SystemPage() {
           </button>
           {printOpen ? (
             <div className="print-menu-drop" role="menu">
-              <button type="button" role="menuitem" onClick={() => printList(false)}>
+              <button type="button" role="menuitem" onClick={() => startPrint(false, "button")}>
                 With current checkmarks
               </button>
-              <button type="button" role="menuitem" onClick={() => printList(true)}>
+              <button type="button" role="menuitem" onClick={() => startPrint(true, "button")}>
                 Blank checklist
               </button>
             </div>
@@ -250,6 +317,17 @@ export function SystemPage() {
           {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
         </p>
       </div>
+      {printNotice ? (
+        <div className="print-refund-notice" role="status">
+          <p>
+            This checklist was printed. Under our <Link to="/refunds">refund policy</Link>, purchases can’t be refunded
+            once a checklist has been printed or saved as a PDF.
+          </p>
+          <button className="btn btn-ghost" type="button" onClick={() => setPrintNotice(false)}>
+            Got it
+          </button>
+        </div>
+      ) : null}
       <header className={`list-hero${bannerSrc ? " has-banner" : ""} list-hero-${system.slug}`}>
         {bannerSrc ? (
           <div className="list-hero-banner" aria-hidden="true">
@@ -427,6 +505,16 @@ export function SystemPage() {
             void removeCustomItem(removeItem.id);
             setRemoveItem(null);
           }}
+        />
+      ) : null}
+      {printConfirm ? (
+        <ConfirmDialog
+          title="Print this checklist?"
+          body={PRINT_REFUND_WARNING}
+          confirmLabel="Print"
+          cancelLabel="Not now"
+          onClose={() => setPrintConfirm(null)}
+          onConfirm={() => runPrint(printConfirm.blank, printConfirm.source)}
         />
       ) : null}
     </div>
