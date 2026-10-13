@@ -13,12 +13,14 @@ import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
 type AdminTab = "accounts" | "refunds" | "discounts" | "content" | "onboarding" | "faqs";
 type DiscountKind = "percent" | "fixed" | "price";
 type AppliesTo = "all" | "individual" | "family";
+type AppliesToInterval = "all" | "monthly" | "annual";
 type Discount = {
   id: string;
   code: string;
   kind: DiscountKind;
   value: number;
   applies_to: AppliesTo;
+  applies_to_interval?: AppliesToInterval | null;
   active: boolean;
   expires_at: string | null;
   max_redemptions: number | null;
@@ -142,7 +144,10 @@ function DiscountManager({ onSaved }: { onSaved: (message: string) => void }) {
                       <b>{discountOfferLabel(row)}</b>
                       <small>{discountDurationLabel(row.discount_payments)}{row.kind === "price" ? ", per checklist" : ""}</small>
                     </td>
-                    <td>{row.applies_to === "all" ? "All plans" : row.applies_to === "family" ? "Family" : "Individual"}</td>
+                    <td>
+                      {row.applies_to === "all" ? "All plans" : row.applies_to === "family" ? "Family" : "Individual"}
+                      <small>{intervalLabel(row.applies_to_interval)}</small>
+                    </td>
                     <td>{row.redemption_count}{row.max_redemptions ? ` / ${row.max_redemptions}` : ""}</td>
                     <td>{row.expires_at ? new Date(row.expires_at).toLocaleDateString() : "No end date"}</td>
                     <td><span className={`status-pill ${row.active ? "active" : "deactivated"}`}>{row.active ? "Active" : "Off"}</span></td>
@@ -178,6 +183,12 @@ function discountOfferLabel(row: Pick<Discount, "kind" | "value">) {
   return `${money(row.value)} off`;
 }
 
+function intervalLabel(interval?: AppliesToInterval | null) {
+  if (interval === "monthly") return "Monthly billing only";
+  if (interval === "annual") return "Annual billing only";
+  return "Monthly or Annual";
+}
+
 function discountDurationLabel(payments?: number | null) {
   const count = Math.max(1, payments || 1);
   return count === 1 ? "First payment only" : `First ${count} payments`;
@@ -188,6 +199,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
   const [kind, setKind] = useState<DiscountKind>("percent");
   const [value, setValue] = useState("10");
   const [appliesTo, setAppliesTo] = useState<AppliesTo>("all");
+  const [billing, setBilling] = useState<AppliesToInterval>("all");
   const [expires, setExpires] = useState("");
   const [payments, setPayments] = useState("1");
   const [error, setError] = useState("");
@@ -211,6 +223,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
       kind,
       value: storedValue,
       applies_to: appliesTo,
+      applies_to_interval: billing,
       active: true,
       expires_at: expires ? new Date(expires).toISOString() : null,
       discount_payments: paymentCount,
@@ -245,14 +258,24 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
         {kind === "price" ? (
           <p className="muted">Each discounted payment becomes this price for each checklist. A 2-person Family plan pays twice this amount.</p>
         ) : null}
-        <label className="field">
-          <span>Applies to</span>
-          <select value={appliesTo} onChange={(e) => setAppliesTo(e.target.value as AppliesTo)}>
-            <option value="all">All plans</option>
-            <option value="individual">Individual only</option>
-            <option value="family">Family only</option>
-          </select>
-        </label>
+        <div className="admin-form-grid">
+          <label className="field">
+            <span>Applies to</span>
+            <select value={appliesTo} onChange={(e) => setAppliesTo(e.target.value as AppliesTo)}>
+              <option value="all">All plans</option>
+              <option value="individual">Individual only</option>
+              <option value="family">Family only</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Billing</span>
+            <select value={billing} onChange={(e) => setBilling(e.target.value as AppliesToInterval)}>
+              <option value="all">Monthly or Annual</option>
+              <option value="monthly">Monthly only</option>
+              <option value="annual">Annual only</option>
+            </select>
+          </label>
+        </div>
         <div className="admin-form-grid">
           <label className="field">
             <span>Discounted payments</span>

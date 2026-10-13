@@ -27,7 +27,7 @@ export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: P
       id: "cost",
       question: "How much does it cost?",
       answer: `${money(monthlyCents)} a month or ${money(annualCents)} a year for each Personal Checklist${
-        savePct ? `. Annual billing saves ${savePct}%` : ""
+        savePct ? `. Annual billing saves ${money(monthlyCents * 12 - annualCents)} a year (about ${savePct}%)` : ""
       }. You check out securely with PayPal, PayPal Credit, or a debit or credit card.`,
       topic: "sales",
       link: { to: "/pricing", label: "See plans" },
@@ -50,6 +50,21 @@ export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: P
       question: "What’s in the Survival Vault?",
       answer: `${VAULT_LISTS}. It’s ${money(vaultCents)} one time, not per person, and it doesn’t renew. Add it at checkout.`,
       topic: "sales",
+    },
+    {
+      id: "offline",
+      question: "Does it work without internet?",
+      answer:
+        "Yes, once you set it up. Install Safety Prep List on your phone, tablet, or computer, sign in, and choose Prepare for offline use while you’re connected. After that you can open your checklists and check items off without Wi-Fi or service, and your changes sync when you reconnect. There’s no App Store or Google Play download; you install it from your browser.",
+      topic: "sales",
+      link: { to: "/install", label: "How to install" },
+    },
+    {
+      id: "sample",
+      question: "Can I see a sample first?",
+      answer: "Yes. Try a short sample from the 5-Minute Grab-and-Go Bag. Nothing you check is saved.",
+      topic: "sales",
+      link: { to: "/demo", label: "Try the sample" },
     },
     {
       id: "cancel",
@@ -104,9 +119,17 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
       id: "devices",
       question: "Why am I asked about devices?",
       answer:
-        "Each login can stay active on a limited number of devices. Remove an old one from My Devices if you need a free slot.",
+        "Each login can be used on 2 devices, like a phone and a computer. To use a new one, remove a device you no longer use in My Devices. Your other devices stay signed in.",
       topic: "support",
       link: { to: "/app/devices", label: "Go to My Devices" },
+    },
+    {
+      id: "offline",
+      question: "How do I use it without internet?",
+      answer:
+        "While you’re connected, choose Prepare for offline use on Home. Then your checklists open and save on this device without Wi-Fi or service, and your changes sync when you reconnect. Videos, purchases, and account changes still need a connection. Print your most important lists as a backup.",
+      topic: "support",
+      link: { to: "/install", label: "Install the app" },
     },
     {
       id: "checking",

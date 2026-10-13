@@ -193,7 +193,7 @@ export function AccountPage() {
       if (!demoMode) {
         await invokeFunction("delete-account", { confirm: "DELETE" });
       }
-      await signOut();
+      await signOut({ discardPending: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete the account.");
       setDeleteBusy(false);

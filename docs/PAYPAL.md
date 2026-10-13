@@ -34,7 +34,7 @@ Sandbox client IDs do not work in live mode. Use a real PayPal account on the li
 2. The function looks up **price in the database**, not the UI. Discount codes are looked up in `discount_codes` and applied to the subscription only.
 3. For a new plan (`core`), the captured amount is:
 
-   `Monthly ($11.99) or Annual ($119.88) × people` + optional Survival Vault (`$10` once, never multiplied by family size) − optional subscription discount
+   `Monthly ($7.99) or Annual ($79.99) × people` + optional Survival Vault (`$10` once, never multiplied by family size) − optional subscription discount
 4. PayPal creates an order for that **due today** amount. Checkout preview uses `preview-discount` so the page matches what PayPal will charge.
 5. The PayPal Buttons SDK collects payment.
 6. The browser sends the `orderId` to `capture-paypal-order`.
@@ -51,9 +51,9 @@ The app does **not** trust query-string “success” flags.
 
 Renewals (when wired) charge the subscription only. Survival Vault never renews.
 
-## Additional device ($5)
+## Additional device (retired)
 
-Logged-in customers pay `extra_device`. Capture runs `apply_purchase_entitlements`, which does `device_limit = device_limit + 1`. No second account is created.
+The `extra_device` product is inactive and the app no longer sells it; each login has 2 devices. Past purchases still count: capture ran `apply_purchase_entitlements`, which raised `device_limit` by 1, and those limits are kept.
 
 ## Upgrade price
 

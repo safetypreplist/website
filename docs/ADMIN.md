@@ -28,7 +28,7 @@ Three code types: percent off, fixed dollars off, or set price. A set price is t
 
 **Discounted payments** is how many subscription payments get the discount once a customer subscribes (1 = first payment only; 3 on Monthly = first 3 months). It is copied onto the purchase as `purchases.discount_payments` so renewals can honor it. **Code expires** only stops new customers from using the code. Needs migration `0025_discount_duration.sql`.
 
-Plans are PayPal Subscriptions, so PayPal charges renewals automatically. A discount becomes a trial period on the subscription (for example LAUNCH26 is one $5.99 month, then $11.99), and the Survival Vault is a one-time setup fee on the first payment. PayPal billing plans are created on demand and their IDs are stored in `paypal_billing_refs`; the `paypal-webhook` function keeps `subscriptions.paid_through` current. Access ends at the paid-through date after a cancellation, or 3 days after it when a payment fails. Accounts that paid before subscriptions launched are grandfathered with no expiry. Needs migration `0028_paypal_subscriptions.sql`.
+Plans are PayPal Subscriptions, so PayPal charges renewals automatically. A discount becomes a trial period on the subscription (for example LAUNCH26 is one $4.99 month per checklist, then $7.99; it is set to Monthly billing only, so it does not apply to Annual). A code's Billing setting (Monthly or Annual, Monthly only, Annual only) is checked on the server at checkout. Price changes only affect new checkouts; existing subscribers keep the price their PayPal plan was created with, and the Survival Vault is a one-time setup fee on the first payment. PayPal billing plans are created on demand and their IDs are stored in `paypal_billing_refs`; the `paypal-webhook` function keeps `subscriptions.paid_through` current. Access ends at the paid-through date after a cancellation, or 3 days after it when a payment fails. Accounts that paid before subscriptions launched are grandfathered with no expiry. Needs migration `0028_paypal_subscriptions.sql`.
 
 Checkout calls `preview-discount`, then `create-paypal-order` / `capture-paypal-order` re-check the same code before charging.
 
@@ -60,4 +60,20 @@ How-To Videos is one YouTube playlist, managed directly on YouTube: https://www.
 
 ## Devices
 
-Customers get 2 slots. They can rename or remove a registration. The raw device token never leaves the device; only a SHA-256 hash is stored.
+Each login gets 2 devices. The limit is per login, not per checklist or per family: a parent and child with separate logins each get 2, and two people sharing one login share its 2. Family pricing does not change the limit. The raw device token never leaves the device; only a SHA-256 hash is stored.
+
+- `register_device` enforces the limit on the server, and every checklist save checks that the device is registered. An unregistered device can still open what it already has saved, but its changes stay queued on the device with an explanation until a slot is free.
+- Removing a device (`remove_device`, migration `0038_device_sessions.sql`) signs out only that device's session. The customer's other devices stay signed in. If the removed device had changes waiting to sync, they stay on it and sync after the customer signs in there again.
+- On Android and computers, the website and the installed app share storage, so they count as one device. On iPhone and iPad, Safari and the Home Screen app keep separate storage, so they count as two. The Devices page explains this.
+- Accounts that already had a higher `device_limit` keep it.
+
+## Offline access
+
+Checklists, notes, custom items, and contacts are saved on the device (IndexedDB) after the customer chooses **Prepare for offline use** on Home, and refreshed each time the app loads online. Edits made offline are queued and sync when the connection returns; the app shows **Available offline**, **Changes waiting to sync**, or **Synced**. Failed syncs are shown with a Try again button, never dropped.
+
+Offline access follows the paid-through date: full use until then, then 3 days read-only, then locked until the customer reconnects and renews. Saved data is never deleted. Signing out asks before removing this device's saved copy if changes are still waiting to sync.
+
+## Public pages
+
+- `/install` explains how to install the app on each platform (there is no App Store or Google Play app), with a QR code for safetypreplist.com/install.
+- `/demo` is a public sample: 10 items from the 5-Minute Grab-and-Go Bag in `src/lib/sampleChecklist.ts`. It runs entirely in the browser, saves nothing, and never touches an account. The build fails if any other paid checklist text ends up in the public bundle (`scripts/check-bundle.mjs`).

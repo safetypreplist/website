@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ItemTip } from "../components/ItemTip";
 import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { useApp } from "../context/AppContext";
 import {
@@ -11,7 +12,6 @@ import {
 } from "../lib/customItems";
 import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { infoForItem } from "../data/itemTips";
 import { OFFICIAL_GUIDANCE_DISCLAIMER, VAULT_APP_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
 import {
   isExtendedItem,
@@ -312,7 +312,7 @@ export function SystemPage() {
         </div>
         <p className={`list-saved ${sync === "waiting" ? "wait" : ""}`}>
           <b>
-            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Waiting to sync" : lastSavedAt ? "Saved" : ""}
+            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Changes waiting to sync" : lastSavedAt ? "Synced" : ""}
           </b>
           {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
         </p>
@@ -589,7 +589,7 @@ function ListGroup({
           const noteOpen = openNote === item.id;
           const tipOpen = openTip === item.id;
           const noteTipOpen = openNoteTip === item.id;
-          const description = infoForItem(item.permanent_key, item.description);
+          const description = item.description?.trim() || "";
           const isCustom = customIds.has(item.id);
           return (
             <article className={`check-item${checked ? " is-done" : ""}`} key={item.id}>
@@ -615,6 +615,7 @@ function ListGroup({
                     <span className="check-title">{item.text}</span>
                   </button>
                   {description ? <span className="desc-print">{description}</span> : null}
+                  {note ? <span className="note-print">Note: {note}</span> : null}
                 </div>
                 {description ? (
                   <ItemTip
@@ -845,45 +846,6 @@ function SectionTip({
       <div className="item-pop info" role="tooltip">
         {text}
       </div>
-    </div>
-  );
-}
-
-function ItemTip({
-  open,
-  text,
-  onToggle,
-}: {
-  open: boolean;
-  text: string;
-  onToggle: () => void;
-}) {
-  return (
-    <div className={`item-tip-wrap${open ? " open" : ""}`}>
-      <button
-        className={`item-tip${open ? " open" : ""}`}
-        type="button"
-        aria-label={open ? "Hide item details" : "Show item details"}
-        aria-expanded={open}
-        onClick={(event) => {
-          event.stopPropagation();
-          onToggle();
-        }}
-      >
-        <span className="item-tip-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9.25" fill="#fff" stroke="#c3c7bf" strokeWidth="1.5" />
-            <circle cx="12" cy="8.1" r="1.15" fill="#5f6560" />
-            <path d="M12 10.7v6.1" stroke="#5f6560" strokeWidth="1.7" strokeLinecap="round" />
-          </svg>
-        </span>
-      </button>
-      {open ? (
-        <div className="item-pop info" role="tooltip">
-          <span className="item-pop-kicker">Tip</span>
-          {text}
-        </div>
-      ) : null}
     </div>
   );
 }

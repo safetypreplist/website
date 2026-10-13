@@ -47,3 +47,6 @@ verify_jwt = true
 
 [functions.admin-refunds]
 verify_jwt = true
+
+[functions.checklist-library]
+verify_jwt = true

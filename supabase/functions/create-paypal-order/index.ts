@@ -69,9 +69,9 @@ Deno.serve(async (req) => {
     }
 
     let discountCode = "";
-    if (requestedCode && slug === "core") {
+    if (requestedCode && slug === "core" && access) {
       const row = await loadDiscount(requestedCode);
-      const quote = quoteWithDiscount({ row, planKind, subscriptionCents, vaultCents, quantity });
+      const quote = quoteWithDiscount({ row, planKind, subscriptionCents, vaultCents, quantity, interval: access });
       if (!isDiscountUsable(row) || !row || !quote.discountCents) {
         return json({ error: "That code is not active or does not apply to this plan." }, 400);
       }

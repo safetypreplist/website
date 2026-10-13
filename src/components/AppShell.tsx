@@ -5,6 +5,7 @@ import { HeaderClock } from "./LocationStatus";
 import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
+import { AppStatusBanners } from "./OfflineStatus";
 import { checklistTitle, familyPageLabel, initialsFrom } from "../lib/identity";
 import { usePendingRefunds } from "../lib/refunds";
 
@@ -97,6 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </button>
       </nav>
       <main className="app-main">
+        {!isAdminRoute ? <AppStatusBanners /> : null}
         {!viewing.isOwn && viewing.kind !== "household" && !viewing.canEdit ? <ViewingBanner /> : null}
         {children}
       </main>

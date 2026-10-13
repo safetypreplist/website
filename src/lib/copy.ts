@@ -75,7 +75,7 @@ export function quickStartIntro(minutes: number) {
 export function annualSavingsPercent(monthlyCents: number, annualCents: number) {
   const twelveMonths = monthlyCents * 12;
   if (twelveMonths <= 0 || annualCents >= twelveMonths) return 0;
-  return Math.round((1 - annualCents / twelveMonths) * 100);
+  return Math.round((1 - annualCents / twelveMonths) * 1000) / 10;
 }
 
 export function quickStartMinutes(timeLabel: string | null | undefined) {

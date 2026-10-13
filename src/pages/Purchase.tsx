@@ -134,24 +134,35 @@ export function CheckoutPage() {
     }
     setCheckingCode(true);
     try {
-      const preview = await invokeFunction<{ code: string; discountCents: number; dueTodayCents: number; discountPayments?: number }>(
+      const preview = await invokeFunction<{
+        code: string;
+        kind?: string;
+        discountCents: number;
+        dueTodayCents: number;
+        regularCents?: number;
+        discountPayments?: number;
+      }>(
         "preview-discount",
         {
           code: normalized,
           plan: planKind,
           quantity: people,
-          subscriptionCents: breakdown.subscriptionCents,
-          vaultCents: vault ? vaultCents : 0,
+          accessInterval: access,
+          includeHousehold: vault,
         },
       );
       setAppliedCode(preview.code);
       const payments = Math.max(1, preview.discountPayments || 1);
       setDiscountApplied(preview.discountCents);
       setDiscountPayments(payments);
+      const regular = preview.regularCents ?? breakdown.subscriptionCents;
+      const period = access === "annual" ? "year" : "month";
       setDiscountMessage(
-        payments > 1
-          ? `${preview.code} applied — you save ${money(preview.discountCents)} on each of your first ${payments} payments.`
-          : `${preview.code} applied — you save ${money(preview.discountCents)}.`,
+        preview.kind === "price" && payments === 1
+          ? `${preview.code} applied — your first ${period} is ${money(regular - preview.discountCents)}, then ${money(regular)} per ${period}.`
+          : payments > 1
+            ? `${preview.code} applied — you save ${money(preview.discountCents)} on each of your first ${payments} payments.`
+            : `${preview.code} applied — you save ${money(preview.discountCents)}.`,
       );
     } catch (err) {
       setAppliedCode("");
@@ -169,6 +180,14 @@ export function CheckoutPage() {
     autoApplied.current = true;
     void applyCode(incomingCode);
   }, [incomingCode]);
+
+  const quotedFor = useRef(`${planKind}-${people}-${access}-${vault}`);
+  useEffect(() => {
+    const key = `${planKind}-${people}-${access}-${vault}`;
+    if (quotedFor.current === key) return;
+    quotedFor.current = key;
+    if (appliedCode) void applyCode(appliedCode);
+  }, [planKind, people, access, vault]);
 
   const onCaptured = useMemo(
     () => (result: { productCode: string; productType: string; linkedToUser?: boolean }) => {

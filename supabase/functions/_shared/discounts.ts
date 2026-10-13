@@ -3,12 +3,14 @@ import { serviceClient } from "./supabase.ts";
 export type PlanKind = "individual" | "family";
 export type DiscountKind = "percent" | "fixed" | "price";
 export type AppliesTo = "all" | "individual" | "family";
+export type AppliesToInterval = "all" | "monthly" | "annual";
 
 export type DiscountRow = {
   code: string;
   kind: DiscountKind;
   value: number;
   applies_to: AppliesTo;
+  applies_to_interval?: AppliesToInterval | null;
   active: boolean;
   expires_at: string | null;
   max_redemptions: number | null;
@@ -32,8 +34,16 @@ export function isDiscountUsable(row: DiscountRow | null, now = new Date()) {
   return true;
 }
 
-export function discountCentsForPlan(row: DiscountRow, planKind: PlanKind, subscriptionCents: number, quantity = 1) {
+export function discountCentsForPlan(
+  row: DiscountRow,
+  planKind: PlanKind,
+  subscriptionCents: number,
+  quantity = 1,
+  interval?: "monthly" | "annual",
+) {
   if (row.applies_to !== "all" && row.applies_to !== planKind) return 0;
+  const billing = row.applies_to_interval || "all";
+  if (billing !== "all" && billing !== interval) return 0;
   if (subscriptionCents <= 0) return 0;
   if (row.kind === "percent") {
     const percent = Math.min(100, Math.max(1, row.value));
@@ -52,7 +62,7 @@ export async function loadDiscount(code: string) {
   const admin = serviceClient();
   const { data, error } = await admin
     .from("discount_codes")
-    .select("code, kind, value, applies_to, active, expires_at, max_redemptions, redemption_count, discount_payments")
+    .select("*")
     .eq("code", normalized)
     .maybeSingle();
   if (error) throw error;
@@ -65,8 +75,11 @@ export function quoteWithDiscount(args: {
   subscriptionCents: number;
   vaultCents: number;
   quantity: number;
+  interval: "monthly" | "annual";
 }) {
-  const discountCents = args.row ? discountCentsForPlan(args.row, args.planKind, args.subscriptionCents, args.quantity) : 0;
+  const discountCents = args.row
+    ? discountCentsForPlan(args.row, args.planKind, args.subscriptionCents, args.quantity, args.interval)
+    : 0;
   const dueTodayCents = Math.max(0, args.subscriptionCents - discountCents) + args.vaultCents;
   return { discountCents, dueTodayCents };
 }

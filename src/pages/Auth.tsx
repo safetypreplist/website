@@ -17,6 +17,7 @@ import { LegalAgreement } from "../components/LegalAgreement";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { recordLegalAcceptance } from "../lib/legalConsent";
 import { useApp } from "../context/AppContext";
+import { countAllOps, takeSignedOutReason } from "../lib/offlineStore";
 import { supabase } from "../lib/supabase";
 import { PRODUCT_CODE_RE } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
@@ -93,6 +94,12 @@ export function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [signedOutReason] = useState(takeSignedOutReason);
+  const [waiting, setWaiting] = useState(0);
+
+  useEffect(() => {
+    void countAllOps().then(setWaiting);
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -113,6 +120,18 @@ export function SignInPage() {
 
   return (
     <Card title="Sign in">
+      {signedOutReason === "device_removed" ? (
+        <p className="form-note">
+          This device was removed from your account, so it was signed out. Sign in again to use it here. Your other
+          devices are still signed in.
+        </p>
+      ) : null}
+      {waiting ? (
+        <p className="form-note">
+          {waiting === 1 ? "1 checklist change is" : `${waiting} checklist changes are`} still saved on this device.
+          {waiting === 1 ? " It syncs" : " They sync"} after you sign in with the same account.
+        </p>
+      ) : null}
       <form onSubmit={onSubmit}>
         <label className="field">
           <span>Email</span>

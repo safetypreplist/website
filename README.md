@@ -10,7 +10,9 @@ This repository is the GitHub-ready production app:
 - Supabase Auth, Postgres, Row Level Security, Realtime
 - PayPal checkout with **server-side capture verification** (Supabase Edge Functions)
 - Device slots (2 included per login; no paid extra devices)
-- PWA (Add to Home Screen)
+- PWA (Add to Home Screen) with install steps at `/install`
+- Offline checklists after **Prepare for offline use**, with a sync queue (IndexedDB) that uploads changes on reconnect
+- Public sample checklist at `/demo` (local only, no account)
 
 ## Quick start (local)
 
@@ -51,8 +53,9 @@ Follow the setup docs in order:
 
 | Product | Price | Entitlement |
 |---|---|---|
-| Monthly | $11.99 per person / month | One personal Safety Prep Checklist per person, notes, contacts, 2 devices, 5 custom items per section |
-| Annual | $9.99/month per person, billed annually ($119.88/year) | Same as Monthly. Save $2/month per person. |
+| Monthly | $7.99 per person / month | One personal Safety Prep Checklist per person, notes, contacts, 2 devices per login, 5 custom items per section |
+| Annual | $79.99 per person / year (about $6.67/month) | Same as Monthly. Saves $15.89 a year per person versus $95.88 paid monthly (about 16.6%). |
+| LAUNCH26 | $4.99 first month per person, then $7.99/month | Monthly billing only. Annual stays $79.99. |
 | Family Plan | Same per-person price | Connected individual checklists — not one shared list |
 | Survival Vault | $10 one-time add-on | Advanced preparedness resources + How-To Videos. Not recurring. One purchase per family. |
 

@@ -55,27 +55,20 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,ico,png,svg,pdf,woff2,webmanifest}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
+        globIgnores: ["**/__*", "**/404.html", "downloads/**"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        navigateFallback: null,
+        cleanupOutdatedCaches: true,
+        // Every route is the same single-page app, so the precached index.html opens any page offline.
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/\/[^/?]+\.[a-z0-9]+$/i],
         runtimeCaching: [
           {
-            // Every route serves the same index.html, so any cached page works as the offline fallback.
-            urlPattern: ({ request }) => request.mode === "navigate",
-            handler: "NetworkFirst",
+            urlPattern: ({ request, url }) => request.destination === "image" && url.origin === self.location.origin,
+            handler: "CacheFirst",
             options: {
-              cacheName: "spl-pages",
-              networkTimeoutSeconds: 4,
-              expiration: { maxEntries: 30 },
-              plugins: [
-                {
-                  handlerDidError: async () => {
-                    const cache = await caches.open("spl-pages");
-                    const keys = await cache.keys();
-                    return keys.length ? cache.match(keys[0]) : undefined;
-                  },
-                },
-              ],
+              cacheName: "spl-images",
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 60 },
             },
           },
           {
@@ -87,13 +80,12 @@ export default defineConfig({
             },
           },
           {
+            // Public rows only. Account data is kept in IndexedDB per login, never in the service worker cache.
             urlPattern: ({ url }) =>
-              url.pathname.includes("/rest/v1/checklist_") ||
-              url.pathname.includes("/rest/v1/safety_contacts") ||
-              url.pathname.includes("/rest/v1/products"),
+              url.pathname.includes("/rest/v1/safety_contacts") || url.pathname.includes("/rest/v1/products"),
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "spl-public-content",
+              cacheName: "spl-public-v2",
               expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 7 },
             },
           },

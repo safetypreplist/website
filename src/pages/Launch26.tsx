@@ -26,16 +26,17 @@ import { money } from "../lib/format";
 import { recordLegalAcceptance } from "../lib/legalConsent";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { HeroSlider } from "../components/HeroSlider";
-import { FAMILY_MIN_SEATS, MONTHLY_CENTS } from "../lib/pricing";
+import { ANNUAL_CENTS, FAMILY_MIN_SEATS, LAUNCH_CODE, LAUNCH_FIRST_MONTH_CENTS, MONTHLY_CENTS } from "../lib/pricing";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { subscribeChecklist } from "../lib/subscribe";
 
-const CODE = "LAUNCH26";
+const CODE = LAUNCH_CODE;
 const UNLOCK_KEY = "spl.launch26.unlocked";
 const INDIVIDUAL_CENTS = MONTHLY_CENTS;
 const FAMILY_CENTS = MONTHLY_CENTS * FAMILY_MIN_SEATS;
-const INDIVIDUAL_FIRST_CENTS = INDIVIDUAL_CENTS - Math.round((INDIVIDUAL_CENTS * 50) / 100);
-const FAMILY_FIRST_CENTS = FAMILY_CENTS - Math.round((FAMILY_CENTS * 50) / 100);
+const INDIVIDUAL_FIRST_CENTS = LAUNCH_FIRST_MONTH_CENTS;
+const FAMILY_FIRST_CENTS = LAUNCH_FIRST_MONTH_CENTS * FAMILY_MIN_SEATS;
+const FIRST_MONTH = money(LAUNCH_FIRST_MONTH_CENTS);
 
 function checkoutHref(query: string, unlocked: boolean) {
   return `/checkout?${query}${unlocked ? `&code=${CODE}` : ""}`;
@@ -111,7 +112,7 @@ export function Launch26Page() {
 
   useEffect(() => {
     const previous = document.title;
-    document.title = `50% Off — ${HERO_TAGLINE}`;
+    document.title = `${FIRST_MONTH} First Month — ${HERO_TAGLINE}`;
     return () => {
       document.title = previous;
     };
@@ -195,10 +196,10 @@ export function Launch26Page() {
             {unlocked ? (
               <>
                 <p className="eyebrow">First month only</p>
-                <h2 id="launch-offer-title">Your 50% off code</h2>
+                <h2 id="launch-offer-title">Your {FIRST_MONTH} first-month code</h2>
                 <p>
-                  Choose a plan below and this code is applied at checkout automatically. It saves 50% on your first month;
-                  regular monthly pricing begins in month two.
+                  Choose a Monthly plan below and this code is applied at checkout automatically. Your first month is{" "}
+                  {FIRST_MONTH} per Personal Checklist; regular monthly pricing of {money(INDIVIDUAL_CENTS)} begins in month two.
                 </p>
                 <p className="launch-offer-hint">Use this code</p>
                 <div className="launch-offer-code">
@@ -215,7 +216,7 @@ export function Launch26Page() {
             ) : (
               <>
                 <p className="eyebrow">First month only</p>
-                <h2 id="launch-offer-title">Get 50% off your first month</h2>
+                <h2 id="launch-offer-title">Get your first month for {FIRST_MONTH}</h2>
                 <p>Enter your email and we’ll show the checkout code.</p>
                 <form className="launch-offer-form" onSubmit={(event) => void submitEmail(event)}>
                   <label className="lead-honeypot" htmlFor="launch-company" aria-hidden="true">
@@ -282,7 +283,7 @@ export function Launch26Page() {
               Practical preparedness for natural disasters, <span className="nowrap">local emergencies</span>, outages, evacuations, and temporary disruptions.
             </p>
             <button className="btn btn-primary" type="button" onClick={() => setOfferOpen(true)}>
-              Claim 50% Off Your First Month
+              Claim Your {FIRST_MONTH} First Month
             </button>
           </div>
         </div>
@@ -418,8 +419,8 @@ export function Launch26Page() {
         <div className="wrap">
           <div className="section-head">
             <p className="eyebrow">Limited time deal</p>
-            <h2>50% off your first month</h2>
-            <p>First month only. Regular monthly pricing begins in the second month.</p>
+            <h2>Your first month for {FIRST_MONTH}</h2>
+            <p>{FIRST_MONTH} per Personal Checklist for the first month on Monthly billing. Regular monthly pricing begins in the second month.</p>
           </div>
           <div className="price-grid">
             <article className="price-card">
@@ -432,7 +433,7 @@ export function Launch26Page() {
               <div className="amount">
                 {money(INDIVIDUAL_FIRST_CENTS)} <small>first month</small>
               </div>
-              <p className="launch-off">50% off your first month</p>
+              <p className="launch-off">Then {money(INDIVIDUAL_CENTS)}/month</p>
               <p className="plan-line">1 Personal Checklist</p>
               <ul>
                 {individualFeatures.map((item) => (
@@ -456,7 +457,7 @@ export function Launch26Page() {
               <div className="amount">
                 {money(FAMILY_FIRST_CENTS)} <small>first month</small>
               </div>
-              <p className="launch-off">50% off your first month</p>
+              <p className="launch-off">{FIRST_MONTH} per checklist, then {money(FAMILY_CENTS)}/month</p>
               <p className="plan-line">{FAMILY_MIN_SEATS} Personal Checklists</p>
               <p className="plan-plus">Everything in Individual, plus:</p>
               <ul>
@@ -473,7 +474,7 @@ export function Launch26Page() {
             </article>
           </div>
           <p className="launch-billing-note">
-            50% off your first month only. Regular monthly pricing applies beginning in month two.
+            Introductory price for the first month on Monthly billing only. Regular monthly pricing applies beginning in month two. Annual billing is {money(ANNUAL_CENTS)}/year.
           </p>
           <aside className="vault-cta-strip" id="survival-vault">
             <div>

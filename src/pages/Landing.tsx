@@ -98,6 +98,8 @@ export function LandingPage() {
   const [vaultOpen, setVaultOpen] = useState(false);
   const family = checkoutBreakdown(familyQty, billing, false);
   const annualSavePct = annualSavingsPercent(monthlyCents, annualCents);
+  const yearOfMonthlyCents = monthlyCents * 12;
+  const annualSavedCents = Math.max(0, yearOfMonthlyCents - annualCents);
 
   useEffect(() => {
     const previous = document.title;
@@ -214,6 +216,9 @@ export function LandingPage() {
               These times are a priority session. They do not mean every preparedness item can be finished in that many
               minutes. Have more time? {SCOPE_SUPPORT}
             </p>
+            <Link className="sample-link" to="/demo">
+              Try a sample checklist
+            </Link>
           </div>
           <div className="vault-included">
             <p className="vault-included-lead">
@@ -303,7 +308,7 @@ export function LandingPage() {
           <div className="price-grid">
             <article className={`price-card ${billing === "annual" ? "has-badge" : ""}`}>
               <span className="price-corners" aria-hidden="true" />
-              {billing === "annual" ? <span className="save-badge">Save $2/month</span> : null}
+              {billing === "annual" && annualSavedCents > 0 ? <span className="save-badge">Save {money(annualSavedCents)}/year</span> : null}
               <h3>Individual Plan</h3>
               {billing === "monthly" ? (
                 <>
@@ -314,7 +319,11 @@ export function LandingPage() {
                 <>
                   <div className="amount">{money(annualCents)} <small>/ year</small></div>
                   <p className="plan-line">1 Personal Checklist</p>
-                  {annualSavePct > 0 ? <p className="plan-save">Save {annualSavePct}% with annual billing</p> : null}
+                  {annualSavePct > 0 ? (
+                    <p className="plan-save">
+                      {money(yearOfMonthlyCents)} a year if paid monthly. Annual saves {money(annualSavedCents)} (about {annualSavePct}%).
+                    </p>
+                  ) : null}
                 </>
               )}
               <ul>
@@ -331,14 +340,20 @@ export function LandingPage() {
             </article>
             <article className={`price-card featured ${billing === "annual" ? "has-badge" : ""}`}>
               <span className="price-corners" aria-hidden="true" />
-              {billing === "annual" ? <span className="save-badge">Save $2/month</span> : null}
+              {billing === "annual" && annualSavedCents > 0 ? (
+                <span className="save-badge">Save {money(annualSavedCents * familyQty)}/year</span>
+              ) : null}
               <h3>Family Plan</h3>
               <div className="amount">
                 {money(family.subscriptionCents)}{" "}
                 <small>{billing === "annual" ? "/ year" : "/ month"}</small>
               </div>
               <p className="plan-line">{familyQty} Personal Checklists</p>
-              {billing === "annual" && annualSavePct > 0 ? <p className="plan-save">Save {annualSavePct}% with annual billing</p> : null}
+              {billing === "annual" && annualSavePct > 0 ? (
+                <p className="plan-save">
+                  Saves {money(annualSavedCents * familyQty)} a year versus monthly (about {annualSavePct}%).
+                </p>
+              ) : null}
               <div className="qty-picker landing-qty">
                 <span>Family Members</span>
                 <div>

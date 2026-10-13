@@ -11,9 +11,11 @@ export function DevicesPage() {
   const [renameValue, setRenameValue] = useState("");
   const [removeId, setRemoveId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [removeError, setRemoveError] = useState("");
 
   const renaming = devices.find((device) => device.id === renameId);
   const removing = devices.find((device) => device.id === removeId);
+  const removingCurrent = Boolean(removing && removing.id === currentDevice?.id);
 
   async function saveRename() {
     if (!renameId) return;
@@ -31,9 +33,12 @@ export function DevicesPage() {
   async function confirmRemove() {
     if (!removeId) return;
     setBusy(true);
+    setRemoveError("");
     try {
       await removeDevice(removeId);
       setRemoveId(null);
+    } catch (err) {
+      setRemoveError(err instanceof Error ? err.message : "Could not remove that device.");
     } finally {
       setBusy(false);
     }
@@ -46,7 +51,10 @@ export function DevicesPage() {
       {deviceLimitReached ? (
         <div className="status-banner">
           <h2>Device limit reached</h2>
-          <p>This login can be active on {limit} devices. Remove one to continue.</p>
+          <p>
+            This login is already in use on {limit} devices, so this device is not registered yet. Remove a device you no
+            longer use and this one is added automatically. Your other devices stay signed in.
+          </p>
         </div>
       ) : null}
 
@@ -72,7 +80,14 @@ export function DevicesPage() {
               >
                 Rename
               </button>
-              <button className="btn btn-danger" type="button" onClick={() => setRemoveId(device.id)}>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => {
+                  setRemoveError("");
+                  setRemoveId(device.id);
+                }}
+              >
                 Remove
               </button>
             </div>
@@ -83,6 +98,21 @@ export function DevicesPage() {
       <p className="muted">
         {used} of {limit} active
       </p>
+
+      <div className="device-help">
+        <h2>How devices work</h2>
+        <p>
+          Each login can be used on up to {limit} devices, such as a phone and a computer. Family members with their own
+          login get their own {limit} devices. People who share one login share its {limit} devices.
+        </p>
+        <p>
+          On a computer or Android device, the website and the installed app count as one device. On iPhone and iPad,
+          Safari and the Home Screen app keep separate storage, so they count as two. Choose one and use it every time.
+        </p>
+        <p>
+          Replacing a device? Remove the old one here, then sign in on the new one. Your other devices stay signed in.
+        </p>
+      </div>
 
       {renaming ? (
         <ConfirmDialog
@@ -106,14 +136,20 @@ export function DevicesPage() {
 
       {removing ? (
         <ConfirmDialog
-          title="Remove this device?"
-          body="This signs that browser or device out of Safety Prep List. You'll need to sign in again on it if a device slot is free."
+          title={removingCurrent ? "Remove this device?" : `Remove ${removing.nickname || "this device"}?`}
+          body={
+            removingCurrent
+              ? "This signs you out on this device. Your other devices stay signed in."
+              : "This signs that device out of Safety Prep List and frees its place for a new device. Your other devices stay signed in. Changes on it that have not synced stay saved on it and sync if you sign in there again while a place is free."
+          }
           confirmLabel="Remove device"
           danger
           busy={busy}
           onClose={() => setRemoveId(null)}
           onConfirm={confirmRemove}
-        />
+        >
+          {removeError ? <p className="form-error">{removeError}</p> : null}
+        </ConfirmDialog>
       ) : null}
     </div>
   );

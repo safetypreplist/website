@@ -2,6 +2,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { firstNameOf } from "../lib/identity";
+import { detectPlatform, isPhoneOrTablet } from "../lib/install";
+import { InstallQr, InstallSteps } from "./InstallSteps";
+import { PrepareOfflineCard } from "./OfflineStatus";
 import { supabase } from "../lib/supabase";
 
 type Step = { title: string; body: string; selector: string; path: string };
@@ -240,7 +243,7 @@ export function OnboardingTour() {
   const navigate = useNavigate();
   const storageKey = profile ? `spl.onboarding.v1.${profile.id}` : "";
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"welcome" | "choice" | "tour" | "done">("welcome");
+  const [mode, setMode] = useState<"welcome" | "offline" | "choice" | "tour" | "done">("welcome");
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [cardSize, setCardSize] = useState({ w: 340, h: 236 });
@@ -562,11 +565,58 @@ export function OnboardingTour() {
           </div>
           <p className="onboarding-copy onboarding-welcome-intro">
             <strong>Congratulations, you’re now the owner of a new Safety Prep Checklist.</strong> We’re glad you’re
-            here. Watch this short welcome video, then take our quick guided tour so you feel at home in your checklist
-            from day one.
+            here. Watch this short welcome video, then set up offline access and take our quick guided tour so you feel
+            at home in your checklist from day one.
           </p>
           <div className="onboarding-actions onboarding-actions-stacked">
-            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>Continue onboarding</button>
+            <button className="btn btn-primary" type="button" onClick={() => setMode("offline")}>Continue onboarding</button>
+          </div>
+        </div>
+      ) : mode === "offline" ? (
+        <div
+          className="onboarding-welcome-card onboarding-offline-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="onboarding-offline-title"
+        >
+          <p className="eyebrow">Offline access</p>
+          <h2 id="onboarding-offline-title">Your Safety Prep List is ready. Set up offline access before you need it.</h2>
+          <p className="onboarding-copy">
+            Safety Prep List is available on your phone, tablet, or computer. For emergency readiness, we recommend
+            installing it on a compatible device and preparing your checklists for offline use before you need them.
+          </p>
+          <p className="onboarding-copy">
+            Once your checklists are downloaded, you can open them and check items off even when Wi-Fi or internet
+            service is unavailable. Your changes are saved on your device and will synchronize with your account when you
+            reconnect.
+          </p>
+          <ol className="onboarding-setup-steps">
+            <li className="is-done">
+              <b>Open Safety Prep List.</b> <span>You’re here.</span>
+            </li>
+            <li className="is-done">
+              <b>Sign in to your new account.</b> <span>You’re signed in.</span>
+            </li>
+            <li>
+              <b>Install it on this device.</b>
+              <InstallSteps compact />
+            </li>
+            <li>
+              <b>Prepare your checklists for offline use.</b>
+              <PrepareOfflineCard compact embedded />
+            </li>
+          </ol>
+          <p className="onboarding-setup-note">
+            Do this while you’re connected to the internet. Videos, purchases, and account changes still need a
+            connection. Open the app while connected now and then so your changes sync and your access stays current.
+          </p>
+          <p className="onboarding-setup-note">
+            For extra peace of mind, print your most important emergency checklists and keep a physical copy with your
+            emergency supplies.
+          </p>
+          {!isPhoneOrTablet(detectPlatform()) ? <InstallQr /> : null}
+          <div className="onboarding-actions">
+            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>Continue</button>
           </div>
         </div>
       ) : mode === "choice" ? (

@@ -11,8 +11,10 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import { SupportChat } from "./components/SupportChat";
 import { PrivacyPage, TermsPage } from "./pages/Legal";
 import { ContactPage } from "./pages/Contact";
+import { DemoPage } from "./pages/Demo";
+import { InstallPage } from "./pages/Install";
 import { NotFoundPage } from "./pages/NotFound";
-import { AccessEndedPage, accessHasEnded } from "./pages/AccessEnded";
+import { AccessEndedPage } from "./pages/AccessEnded";
 import { AccountPage, VaultPage } from "./pages/Account";
 import { BillingPage, ReceiptPage } from "./pages/Billing";
 import { HelpPage } from "./pages/Help";
@@ -38,9 +40,9 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function DeviceGate({ children }: { children: React.ReactNode }) {
-  const { deviceLimitReached, myChecklist } = useApp();
+  const { deviceLimitReached, accessMode } = useApp();
   const location = useLocation();
-  if (accessHasEnded(myChecklist?.accessEndsAt) && !isOnboardingPreview()) {
+  if (accessMode === "locked" && !isOnboardingPreview()) {
     return <Navigate to="/app/renew" replace />;
   }
   if (
@@ -71,6 +73,8 @@ export default function App() {
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/install" element={<InstallPage />} />
+      <Route path="/demo" element={<DemoPage />} />
       <Route path="/support" element={<Navigate to="/contact" replace />} />
       <Route path="/refunds" element={<Navigate to="/terms#refunds" replace />} />
       <Route path="/signin" element={<SignInPage />} />

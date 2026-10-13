@@ -1,5 +1,5 @@
 import type { Session, User } from "@supabase/supabase-js";
-import catalog from "../data/catalog.json";
+import devCatalog from "../data/catalog.json";
 import { guessDeviceDescription } from "./device";
 import { checklistTitle, personName } from "./identity";
 import { isSupabaseConfigured } from "./supabase";
@@ -33,6 +33,10 @@ export const DEMO_BOBBY_ID = "00000000-0000-4000-8000-000000000003";
 export const DEMO_JASMINE_LIST = "00000000-0000-4000-8000-000000000101";
 export const DEMO_JIMMY_LIST = "00000000-0000-4000-8000-000000000102";
 export const DEMO_BOBBY_LIST = "00000000-0000-4000-8000-000000000103";
+// Production builds must not ship the paid checklist library; it is served by the checklist-library function.
+const catalog = (
+  import.meta.env.DEV ? devCatalog : { systems: [], sections: [], items: [], products: [], safety: [] }
+) as typeof devCatalog;
 const SESSION_KEY = "spl.demo.signedIn";
 const STATE_KEY = "spl.demo.state.v4";
 const OWNER_PASSWORD_KEY = "spl.demo.ownerPassword";

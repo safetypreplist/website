@@ -60,7 +60,9 @@ Production already uses this CNAME in `public/CNAME`. For a new environment, rep
 
 After HTTPS is on, iPhone/Android users can use **Add to Home Screen**. The manifest uses forest `#1E2A1F` and cream `#F4F0E5`, display `standalone`.
 
-Offline: the app shell and recently loaded public checklist definitions can appear from cache. Edits made offline show **Waiting to sync**, then **Saved ✓** / **Synced ✓** after the server confirms. The UI does not pretend an unsynced check has reached the cloud.
+Install instructions for each platform are at `/install`. The service worker updates itself (`autoUpdate`), so a deploy reaches installed apps the next time they open online.
+
+Offline: after **Prepare for offline use**, a signed-in customer's checklists are saved on the device and open without a connection. Edits made offline show **Changes waiting to sync**, then **Synced** after the server confirms. The UI does not pretend an unsynced check has reached the cloud. See `docs/ADMIN.md` for the expiry rules.
 
 ## Local preview of production build
 

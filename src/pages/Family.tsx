@@ -212,7 +212,7 @@ export function ManageFamilyPage() {
               >
                 <b>Annual</b>
                 <span>+{money(annualCents)}/year</span>
-                <small>$9.99/month, billed annually</small>
+                <small>{money(Math.round(annualCents / 12))}/month, billed annually</small>
               </button>
             </div>
             <p className="checkout-due">

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Photo } from "../components/Photo";
+import { PrepareOfflineCard, syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
@@ -32,6 +33,8 @@ export function DashboardPage() {
     customItems,
     viewing,
     hasSurvivalVault,
+    offline,
+    demoMode,
   } = useApp();
   const entitled = profile?.plan === "core" || profile?.plan === "full";
   const personalSystems = catalog.systems.filter((s) => s.access_tier === "core");
@@ -74,8 +77,8 @@ export function DashboardPage() {
         </div>
         <div className="readiness-head">
           <div className="eyebrow">Checklist Progress</div>
-          <p className={`sync-pill ${sync === "waiting" ? "wait" : ""}`}>
-            {!online ? "Offline" : sync === "waiting" ? "Waiting to sync" : sync === "saved" ? "Synced" : sync === "saving" ? "Saving…" : "Ready"}
+          <p className={`sync-pill ${offline.pending > 0 ? "wait" : ""}`}>
+            {demoMode ? "Synced" : sync === "saving" && online ? "Saving…" : syncLabel(offline, online)}
           </p>
         </div>
         <div className="readiness-meter">
@@ -112,6 +115,8 @@ export function DashboardPage() {
           </div>
         </div>
       )}
+
+      {entitled && !demoMode && !isHousehold ? <PrepareOfflineCard compact={Boolean(offline.preparedAt)} /> : null}
 
       {continueSystem && (
         <Link className="continue-card" to={`/app/lists/${continueSystem.slug}`}>
