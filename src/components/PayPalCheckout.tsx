@@ -11,8 +11,9 @@ type Props = {
   accessInterval?: AccessInterval;
   planKind?: "individual" | "family";
   discountCode?: string;
+  renew?: boolean;
   onReady?: () => void;
-  onCaptured: (result: { productCode: string; productType: string }) => void;
+  onCaptured: (result: { productCode: string; productType: string; linkedToUser?: boolean }) => void;
   onError: (message: string) => void;
 };
 
@@ -23,6 +24,7 @@ export function PayPalCheckout({
   accessInterval,
   planKind = "individual",
   discountCode = "",
+  renew = false,
   onCaptured,
   onError,
   onReady,
@@ -45,11 +47,54 @@ export function PayPalCheckout({
           errorRef.current("PayPal is not configured yet. Add VITE_PAYPAL_CLIENT_ID and deploy the Edge Functions.");
           return;
         }
-        const paypal = await loadPaypalSdk(clientId);
+        const subscription = productSlug === "core";
+        const paypal = await loadPaypalSdk(clientId, subscription ? "subscription" : "order");
         if (cancelled || !host.current) return;
         host.current.innerHTML = "";
+        const style = { layout: "vertical", color: "gold", shape: "pill", label: subscription ? "subscribe" : "paypal" };
+        if (subscription) {
+          await paypal.Buttons({
+            style,
+            createSubscription: async () => {
+              const data = await invokeFunction<{ subscriptionId: string }>("create-paypal-subscription", {
+                quantity,
+                includeHousehold,
+                accessInterval,
+                plan: planKind,
+                renew,
+                discountCode: discountCode || undefined,
+                acceptedTerms: true,
+                termsVersion: LEGAL_VERSIONS.terms,
+                privacyVersion: LEGAL_VERSIONS.privacy,
+                refundVersion: LEGAL_VERSIONS.refunds,
+              });
+              if (!data?.subscriptionId) throw new Error("No PayPal subscription was created.");
+              return data.subscriptionId;
+            },
+            onApprove: async (data: { subscriptionID: string }) => {
+              try {
+                const activated = await invokeFunction<{ productCode: string; productType: string; linkedToUser?: boolean }>(
+                  "activate-paypal-subscription",
+                  { subscriptionId: data.subscriptionID },
+                );
+                if (!activated?.productCode) {
+                  throw new Error("Your subscription started, but no Product ID came back. Contact us and we’ll link it.");
+                }
+                capturedRef.current(activated);
+              } catch (err) {
+                errorRef.current(err instanceof Error ? err.message : "Could not finish the purchase.");
+              }
+            },
+            onError: (err: unknown) => {
+              console.error(err);
+              errorRef.current("PayPal checkout was interrupted. Try again.");
+            },
+          }).render(host.current);
+          onReady?.();
+          return;
+        }
         await paypal.Buttons({
-          style: { layout: "vertical", color: "gold", shape: "pill", label: "paypal" },
+          style,
           createOrder: async () => {
             const data = await invokeFunction<{ orderId: string }>("create-paypal-order", {
               productSlug,
@@ -98,7 +143,7 @@ export function PayPalCheckout({
     return () => {
       cancelled = true;
     };
-  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, discountCode, onReady]);
+  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, discountCode, renew, onReady]);
 
   return (
     <div>

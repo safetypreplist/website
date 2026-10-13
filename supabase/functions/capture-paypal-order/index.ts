@@ -1,5 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
-import { parseAccessInterval, parseCustomId } from "../_shared/billing.ts";
+import { parseAccessInterval, parseCustomId, renewalLine } from "../_shared/billing.ts";
 import {
   incrementDiscountRedemption,
   isDiscountUsable,
@@ -214,11 +214,9 @@ Deno.serve(async (req) => {
             ? `Individual Plan${billingLabel ? `, ${billingLabel}` : ""} + Survival Vault`
             : `${quantity > 1 ? "Family Plan" : "Individual Plan"}${billingLabel ? `, ${billingLabel}` : ""}`,
         productCode,
-        deviceAllowance: access === "annual"
-          ? "Renews annually at the same subscription amount. Survival Vault, if purchased, does not renew."
-          : access === "monthly"
-            ? "Renews monthly at the same subscription amount. Survival Vault, if purchased, does not renew."
-            : "Your Safety Prep List purchase is complete.",
+        deviceAllowance: access
+          ? renewalLine(access, accessCents, discountCents, discountPayments || 1, includeHousehold)
+          : "Your Safety Prep List purchase is complete.",
       });
     }
 

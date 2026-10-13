@@ -40,25 +40,25 @@ const primarySystems = [
     minutes: 5,
     mark: "backpack" as const,
     title: "Grab-and-Go Bag",
-    line: "A backpack near the exit. The minimum critical layer.",
+    line: "A backpack by the exit with essential items for a quick departure.",
   },
   {
     minutes: 15,
     mark: "duffel" as const,
     title: "Ready Duffel",
-    line: "72-Hour Continuity Kit, adjusted for your household.",
+    line: "A 72-hour preparedness kit tailored to your household’s needs.",
   },
   {
     minutes: 20,
     mark: "vehicle" as const,
     title: "Vehicle OR Suitcase Prep",
-    line: "Choose a vehicle kit or an evacuation suitcase.",
+    line: "Prepare your vehicle for emergencies or pack a suitcase for evacuation.",
   },
   {
     minutes: 60,
     mark: "home" as const,
     title: "Home Resilience",
-    line: "The highest-priority safety and continuity needs at home.",
+    line: "Prioritize essential supplies and systems to keep your household prepared at home.",
   },
 ];
 

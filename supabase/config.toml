@@ -15,9 +15,6 @@ verify_jwt = true
 [functions.subscribe-checklist]
 verify_jwt = false
 
-[functions.tawk-webhook]
-verify_jwt = false
-
 [functions.preview-discount]
 verify_jwt = false
 
@@ -29,3 +26,21 @@ verify_jwt = true
 
 [functions.send-contact]
 verify_jwt = false
+
+[functions.create-paypal-subscription]
+verify_jwt = false
+
+[functions.activate-paypal-subscription]
+verify_jwt = false
+
+[functions.paypal-webhook]
+verify_jwt = false
+
+[functions.cancel-paypal-subscription]
+verify_jwt = true
+
+[functions.family-invite]
+verify_jwt = true
+
+[functions.support-ticket]
+verify_jwt = true

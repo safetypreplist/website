@@ -11,8 +11,8 @@ const DEFAULT_STEPS: Step[] = [
   { title: "Start with your checklist", body: "Your readiness plan is organized into simple systems. Open any list to see what to gather and what is already complete.", selector: '[data-onboarding="checklist-card"]', path: "/app" },
   { title: "Check items off as you go", body: "Tap an item when it is ready. Your progress saves to your account and stays with you across devices.", selector: '[data-onboarding="check-item"]', path: "/app/lists/grab-go" },
   { title: "Leave a note for yourself", body: "Add short notes to remember where something is stored, what size to buy, or what still needs attention.", selector: '[data-onboarding="notes"]', path: "/app/lists/grab-go" },
-  { title: "Connect your family", body: "Invite family members or connect an existing checklist from Manage Family Plan so everyone can prepare together.", selector: '[data-onboarding="family"]', path: "/app/family" },
-  { title: "Keep your account current", body: "Your Profile is where you can update your details, change your password, manage devices, and find your Checklist ID.", selector: '[data-onboarding="profile"]', path: "/app/account" },
+  { title: "Connect your family", body: "Invite family members or connect an existing checklist from the Family menu so everyone can prepare together.", selector: '[data-onboarding="family"]', path: "/app/family" },
+  { title: "Keep your account current", body: "Your Account is where you can update your details, change your password, manage devices, and find your Checklist ID.", selector: '[data-onboarding="profile"]', path: "/app/account" },
 ];
 
 const COPY_KEY = "spl.onboarding.copy.v1";
@@ -464,7 +464,7 @@ export function OnboardingTour() {
       sessionStorage.removeItem(PREVIEW_KEY);
       if (!preview && storageKey) localStorage.setItem(storageKey, "done");
       setOpen(false);
-      navigate("/app/lists");
+      navigate("/app");
     }, 6000);
     return () => window.clearTimeout(timer);
   }, [open, mode, navigate, storageKey]);
@@ -480,6 +480,7 @@ export function OnboardingTour() {
     sessionStorage.removeItem(PREVIEW_KEY);
     if (!preview && storageKey) localStorage.setItem(storageKey, "done");
     setOpen(false);
+    if (location.pathname !== "/app") navigate("/app");
   }
   function completeTour() {
     holdingTour.current = false;
@@ -559,9 +560,13 @@ export function OnboardingTour() {
               </>
             )}
           </div>
+          <p className="onboarding-copy onboarding-welcome-intro">
+            <strong>Congratulations, you’re now the owner of a new Safety Prep Checklist.</strong> We’re glad you’re
+            here. Watch this short welcome video, then take our quick guided tour so you feel at home in your checklist
+            from day one.
+          </p>
           <div className="onboarding-actions onboarding-actions-stacked">
-            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>Continue</button>
-            <button className="onboarding-skip-inline" type="button" onClick={() => setMode("choice")}>Skip</button>
+            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>Continue onboarding</button>
           </div>
         </div>
       ) : mode === "choice" ? (

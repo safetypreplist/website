@@ -1284,7 +1284,7 @@ def build() -> str:
         extra.append(
             "insert into public.safety_contacts (state, category, agency_name, phone, website, source_url, notes, verified_at, active, sort_order) values ("
             f"{esc(rec['state'])}, {esc(rec['category'])}, {esc(rec['agency_name'])}, {esc(rec['phone'])}, {esc(rec['website'])}, {esc(rec['source_url'])}, {esc(rec['notes'])}, {esc(rec['verified_at'])}::date, true, {rec['sort_order']}"
-            ");"
+            ") on conflict do nothing;"
         )
 
     extra.append("")
@@ -1292,27 +1292,27 @@ def build() -> str:
         extra.append(
             "insert into public.safety_contacts (state, category, agency_name, phone, website, source_url, notes, verified_at, active, sort_order) values ("
             f"{esc(code)}, 'state_emergency_management', {esc(name)}, NULL, {esc(url)}, {esc('https://www.usa.gov/state-emergency-management')}, {esc('Official state emergency-management website. Confirm the current public phone number on the agency site before publishing it here.')}, '2026-09-03'::date, true, 100"
-            ");"
+            ") on conflict do nothing;"
         )
         extra.append(
             "insert into public.safety_contacts (state, category, agency_name, phone, website, source_url, notes, verified_at, active, sort_order) values ("
             f"{esc(code)}, 'weather', 'National Weather Service', NULL, {esc('https://www.weather.gov')}, {esc('https://www.weather.gov')}, {esc('Enter a local city on weather.gov for forecasts and alerts.')}, '2026-09-03'::date, true, 110"
-            ");"
+            ") on conflict do nothing;"
         )
         extra.append(
             "insert into public.safety_contacts (state, category, agency_name, phone, website, source_url, notes, verified_at, active, sort_order) values ("
             f"{esc(code)}, 'poison_control', 'Poison Control', {esc('1-800-222-1222')}, {esc('https://www.poison.org')}, {esc('https://www.poison.org')}, {esc('National number; routes to the poison center serving this state.')}, '2026-09-03'::date, true, 120"
-            ");"
+            ") on conflict do nothing;"
         )
         extra.append(
             "insert into public.safety_contacts (state, category, agency_name, phone, website, source_url, notes, verified_at, active, sort_order) values ("
             f"{esc(code)}, 'crisis_support', '988 Suicide & Crisis Lifeline', {esc('988')}, {esc('https://988lifeline.org')}, {esc('https://www.samhsa.gov/find-help/988')}, {esc('National 24/7 lifeline.')}, '2026-09-03'::date, true, 130"
-            ");"
+            ") on conflict do nothing;"
         )
         extra.append(
             "insert into public.safety_contacts (state, category, agency_name, phone, website, source_url, notes, verified_at, active, sort_order) values ("
             f"{esc(code)}, 'disaster_assistance', 'FEMA Disaster Assistance', {esc('1-800-621-3362')}, {esc('https://www.disasterassistance.gov')}, {esc('https://www.fema.gov/about/contact')}, {esc('Apply at DisasterAssistance.gov after a declared disaster.')}, '2026-09-03'::date, true, 140"
-            ");"
+            ") on conflict do nothing;"
         )
 
 

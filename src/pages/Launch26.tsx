@@ -37,8 +37,9 @@ const FAMILY_CENTS = MONTHLY_CENTS * FAMILY_MIN_SEATS;
 const INDIVIDUAL_FIRST_CENTS = INDIVIDUAL_CENTS - Math.round((INDIVIDUAL_CENTS * 50) / 100);
 const FAMILY_FIRST_CENTS = FAMILY_CENTS - Math.round((FAMILY_CENTS * 50) / 100);
 
-const individualCheckout = "/checkout?plan=individual&access=monthly";
-const familyCheckout = `/checkout?plan=family&qty=${FAMILY_MIN_SEATS}&access=monthly`;
+function checkoutHref(query: string, unlocked: boolean) {
+  return `/checkout?${query}${unlocked ? `&code=${CODE}` : ""}`;
+}
 
 function hasUnlock() {
   try {
@@ -57,25 +58,25 @@ const primarySystems = [
     minutes: 5,
     mark: "backpack" as const,
     title: "Grab-and-Go Bag",
-    line: "A backpack near the exit. The minimum critical layer.",
+    line: "A backpack by the exit with essential items for a quick departure.",
   },
   {
     minutes: 15,
     mark: "duffel" as const,
     title: "Ready Duffel",
-    line: "72-Hour Continuity Kit, adjusted for your household.",
+    line: "A 72-hour preparedness kit tailored to your household’s needs.",
   },
   {
     minutes: 20,
     mark: "vehicle" as const,
     title: "Vehicle OR Suitcase Prep",
-    line: "Choose a vehicle kit or an evacuation suitcase.",
+    line: "Prepare your vehicle for emergencies or pack a suitcase for evacuation.",
   },
   {
     minutes: 60,
     mark: "home" as const,
     title: "Home Resilience",
-    line: "The highest-priority safety and continuity needs at home.",
+    line: "Prioritize essential supplies and systems to keep your household prepared at home.",
   },
 ];
 
@@ -195,7 +196,10 @@ export function Launch26Page() {
               <>
                 <p className="eyebrow">First month only</p>
                 <h2 id="launch-offer-title">Your 50% off code</h2>
-                <p>Use this code at checkout to save 50% on your first month. Regular monthly pricing begins in month two.</p>
+                <p>
+                  Choose a plan below and this code is applied at checkout automatically. It saves 50% on your first month;
+                  regular monthly pricing begins in month two.
+                </p>
                 <p className="launch-offer-hint">Use this code</p>
                 <div className="launch-offer-code">
                   <b>{CODE}</b>
@@ -214,7 +218,7 @@ export function Launch26Page() {
                 <h2 id="launch-offer-title">Get 50% off your first month</h2>
                 <p>Enter your email and we’ll show the checkout code.</p>
                 <form className="launch-offer-form" onSubmit={(event) => void submitEmail(event)}>
-                  <label className="lead-honeypot" htmlFor="launch-company">
+                  <label className="lead-honeypot" htmlFor="launch-company" aria-hidden="true">
                     Company
                     <input
                       id="launch-company"
@@ -438,7 +442,7 @@ export function Launch26Page() {
                   </li>
                 ))}
               </ul>
-              <Link className="btn btn-primary btn-block" to={individualCheckout}>
+              <Link className="btn btn-primary btn-block" to={checkoutHref("plan=individual&access=monthly", unlocked)}>
                 Choose Individual
               </Link>
             </article>
@@ -460,7 +464,10 @@ export function Launch26Page() {
                 <li><IconChecklist /> Connected under one Family Plan</li>
                 <li><IconNotes /> View Only or Can Edit permissions per owner</li>
               </ul>
-              <Link className="btn btn-primary btn-block" to={familyCheckout}>
+              <Link
+                className="btn btn-primary btn-block"
+                to={checkoutHref(`plan=family&qty=${FAMILY_MIN_SEATS}&access=monthly`, unlocked)}
+              >
                 Choose Family
               </Link>
             </article>
@@ -487,7 +494,7 @@ export function Launch26Page() {
 
       {vaultOpen ? (
         <SurvivalVaultModal
-          ctaHref="/checkout?plan=individual&access=monthly&vault=1"
+          ctaHref={checkoutHref("plan=individual&access=monthly&vault=1", unlocked)}
           onClose={() => setVaultOpen(false)}
         />
       ) : null}

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { emailConfigured, sendEmail } from "./email.ts";
 
 export function serviceClient() {
   const url = Deno.env.get("SUPABASE_URL");
@@ -51,11 +52,9 @@ export async function sendPurchaseEmail(opts: {
   productCode: string;
   deviceAllowance: string;
 }) {
-  const key = Deno.env.get("RESEND_API_KEY");
-  const from = Deno.env.get("EMAIL_FROM") || "Safety Prep List <info@safetypreplist.com>";
   const appUrl = Deno.env.get("APP_URL") || "https://example.com";
   const support = Deno.env.get("SUPPORT_EMAIL") || "info@safetypreplist.com";
-  if (!key || !opts.to) return { skipped: true };
+  if (!emailConfigured() || !opts.to) return { skipped: true };
 
   const html = `
   <div style="background:#F4F0E5;padding:32px 16px;font-family:Georgia,serif;color:#1E2A1F;">
@@ -63,27 +62,15 @@ export async function sendPurchaseEmail(opts: {
       <h1 style="font-family:Arial,sans-serif;font-size:28px;margin:0 0 16px;">Safety Prep List</h1>
       <p>Thank you for your purchase.</p>
       <p><strong>Plan purchased:</strong> ${opts.planName}</p>
-      <p><strong>Product ID:</strong> ${opts.productCode}</p>
+      <p><strong>Confirmation number:</strong> ${opts.productCode}</p>
       <p><strong>Login:</strong> <a href="${appUrl}/signin">${appUrl}/signin</a></p>
-      <p>Create your account with the same email if you have not already. Your Product ID is already linked to this purchase — you should not need to re-enter it.</p>
-      <p><strong>Device allowance:</strong> ${opts.deviceAllowance}</p>
+      <p>Create your account with the same email if you have not already. Your confirmation number is already linked to this purchase, so you shouldn’t need to re-enter it.</p>
+      <p><strong>Billing:</strong> ${opts.deviceAllowance}</p>
       <p>Open Safety Prep List, check off what you have, and keep short notes as you pack. Your progress syncs across registered household devices.</p>
       <p style="margin-top:28px;font-size:13px;color:#556B2F;">Support: ${support}</p>
     </div>
   </div>`;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [opts.to],
-      subject: "Your Safety Prep List Product ID",
-      html,
-    }),
-  });
-  return { skipped: false, ok: res.ok, status: res.status };
+  const sent = await sendEmail({ to: opts.to, subject: "Your Safety Prep List confirmation number", html });
+  return { skipped: false, ok: sent.ok };
 }

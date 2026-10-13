@@ -22,6 +22,28 @@ export function buildCustomId(args: {
   return `${args.slug}|q=${args.quantity}|h=${args.includeHousehold ? 1 : 0}${access}${discount}`;
 }
 
+function dollars(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+export function renewalLine(
+  access: AccessInterval,
+  subscriptionCents: number,
+  discountCents: number,
+  discountPayments: number,
+  includeVault: boolean,
+) {
+  const unit = access === "annual" ? "year" : "month";
+  const cadence = access === "annual" ? "annual" : "monthly";
+  const remaining = discountPayments - 1;
+  const base = discountCents > 0 && remaining > 0
+    ? remaining === 1
+      ? `Your next ${cadence} payment is ${dollars(subscriptionCents - discountCents)}, then ${dollars(subscriptionCents)} per ${unit}.`
+      : `Your next ${remaining} ${cadence} payments are ${dollars(subscriptionCents - discountCents)} each, then ${dollars(subscriptionCents)} per ${unit}.`
+    : `Renews ${access === "annual" ? "annually" : "monthly"} at ${dollars(subscriptionCents)}.`;
+  return includeVault ? `${base} Survival Vault does not renew.` : base;
+}
+
 export function parseCustomId(customId: string, fallbackSlug: string) {
   const slug = customId.split("|")[0] || fallbackSlug;
   const qtyMatch = customId.match(/q=(\d+)/);

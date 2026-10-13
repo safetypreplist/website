@@ -1,10 +1,11 @@
-const ENV = Deno.env.get("PAYPAL_ENV") === "live" ? "live" : "sandbox";
+export const PAYPAL_ENV = Deno.env.get("PAYPAL_ENV") === "live" ? "live" : "sandbox";
 const BASE =
-  ENV === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  PAYPAL_ENV === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 
 async function accessToken() {
-  const id = Deno.env.get("PAYPAL_CLIENT_ID");
-  const secret = Deno.env.get("PAYPAL_CLIENT_SECRET");
+  const sandbox = PAYPAL_ENV === "sandbox";
+  const id = (sandbox && Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID")) || Deno.env.get("PAYPAL_CLIENT_ID");
+  const secret = (sandbox && Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET")) || Deno.env.get("PAYPAL_CLIENT_SECRET");
   if (!id || !secret) {
     throw new Error("PayPal credentials are not configured on the server.");
   }

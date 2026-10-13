@@ -55,10 +55,29 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,pdf,woff2,webmanifest}"],
+        globPatterns: ["**/*.{js,css,ico,png,svg,pdf,woff2,webmanifest}"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        navigateFallback: "/index.html",
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // Every route serves the same index.html, so any cached page works as the offline fallback.
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "spl-pages",
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 30 },
+              plugins: [
+                {
+                  handlerDidError: async () => {
+                    const cache = await caches.open("spl-pages");
+                    const keys = await cache.keys();
+                    return keys.length ? cache.match(keys[0]) : undefined;
+                  },
+                },
+              ],
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: "CacheFirst",

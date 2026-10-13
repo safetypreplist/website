@@ -87,7 +87,7 @@ export function ChecklistSignupModal({
               <p>Enter your name and email.</p>
             </div>
             <form className="lead-form" onSubmit={(event) => void onSubmit(event)}>
-              <label className="lead-honeypot" htmlFor="lead-company">
+              <label className="lead-honeypot" htmlFor="lead-company" aria-hidden="true">
                 Company
                 <input
                   id="lead-company"

@@ -1,5 +1,7 @@
 import { isValidEmail, normalizeEmail } from "../_shared/brevo.ts";
+import { emailConfigured, escapeHtml, sendEmail } from "../_shared/email.ts";
 import { json, preflight } from "../_shared/http.ts";
+import { createLiveAgentTicket, liveAgentConfigured } from "../_shared/liveagent.ts";
 
 const TOPICS: Record<string, string> = {
   general: "Contact",
@@ -8,15 +10,6 @@ const TOPICS: Record<string, string> = {
   privacy: "Privacy request",
   "do-not-sell": "Do not sell or share",
 };
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"]/g, (char) => {
-    if (char === "&") return "&amp;";
-    if (char === "<") return "&lt;";
-    if (char === ">") return "&gt;";
-    return "&quot;";
-  });
-}
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
@@ -42,25 +35,28 @@ Deno.serve(async (req) => {
   if (!isValidEmail(email)) return json({ error: "Please enter a valid email so we can reply." }, 400);
   if (message.length < 8) return json({ error: "Please tell us a little more." }, 400);
 
-  const key = Deno.env.get("RESEND_API_KEY")?.trim();
-  if (!key) return json({ error: "The contact form is not connected yet." }, 503);
-
-  const to = Deno.env.get("SUPPORT_EMAIL")?.trim() || "info@safetypreplist.com";
-  const from = Deno.env.get("EMAIL_FROM")?.trim() || "Safety Prep List <info@safetypreplist.com>";
   const label = TOPICS[topic];
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      reply_to: email,
+  if (liveAgentConfigured()) {
+    const ticket = await createLiveAgentTicket({
+      email,
+      name,
       subject: `${label} — ${name}`,
-      html: `
+      department: topic === "general" ? "sales" : "support",
+      message: `${message}\n\n---\nSent from the website contact form\nName: ${name}\nEmail: ${email}\nTopic: ${label}`,
+    });
+    if (ticket.ok) return json({ ok: true });
+  }
+
+  if (!emailConfigured()) return json({ error: "The contact form is not connected yet." }, 503);
+
+  const to = Deno.env.get("SUPPORT_EMAIL")?.trim() || "info@safetypreplist.com";
+
+  const sent = await sendEmail({
+    to,
+    replyTo: email,
+    subject: `${label} — ${name}`,
+    html: `
         <div style="font-family:Georgia,serif;color:#1E2A1F;line-height:1.5;">
           <p><strong>${escapeHtml(label)}</strong></p>
           <p><strong>Name:</strong> ${escapeHtml(name)}</p>
@@ -68,11 +64,9 @@ Deno.serve(async (req) => {
           <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
         </div>
       `,
-    }),
   });
 
-  if (!res.ok) {
-    console.error(await res.text());
+  if (!sent.ok) {
     return json({ error: "Could not send that message. Please try again." }, 502);
   }
 

@@ -50,6 +50,10 @@ export function planTypeLabel(args: { plan?: string | null; familySize?: number 
   return "Individual Plan";
 }
 
+export function familyPageLabel(members: { status?: string | null }[]) {
+  return members.filter((m) => m.status !== "cancelled").length >= 2 ? "Manage Family Plan" : "Add Family Members";
+}
+
 export function familyPriceCents(people: number) {
   const seats = Math.max(FAMILY_MIN_SEATS, Math.floor(people) || FAMILY_MIN_SEATS);
   return seats * MONTHLY_CENTS;

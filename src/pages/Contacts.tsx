@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { printDisclaimer } from "../lib/legal";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -9,7 +10,8 @@ function letterFor(name: string) {
 }
 
 export function ContactsPage() {
-  const { contacts, addContact, removeContact } = useApp();
+  const { contacts, safety, addContact, removeContact } = useApp();
+  const nationalNumbers = useMemo(() => safety.filter((row) => !row.state && row.phone), [safety]);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -61,13 +63,22 @@ export function ContactsPage() {
 
   return (
     <div className="contacts-page">
+      <div className="print-header">
+        <h1>Safety Prep List: Emergency Contacts</h1>
+        <p>Printed {new Date().toLocaleDateString()}</p>
+      </div>
       <div className="page-head">
         <div>
           <h1 className="page-title">Emergency Contacts</h1>
         </div>
-        <button className="btn btn-forest" type="button" onClick={() => setOpen(true)}>
-          Add
-        </button>
+        <div className="page-head-actions">
+          <button className="btn btn-ghost" type="button" onClick={() => window.print()}>
+            Print
+          </button>
+          <button className="btn btn-forest" type="button" onClick={() => setOpen(true)}>
+            Add
+          </button>
+        </div>
       </div>
 
       {sorted.length === 0 ? (
@@ -119,6 +130,25 @@ export function ContactsPage() {
           </nav>
         </div>
       )}
+
+      {nationalNumbers.length ? (
+        <section className="list-group print-only">
+          <header className="list-group-head">
+            <h3>National emergency numbers</h3>
+          </header>
+          <div className="list-group-body">
+            {nationalNumbers.map((row) => (
+              <article className="people-row" key={row.id}>
+                <div>
+                  <strong>{row.agency_name}</strong>
+                  <span className="people-phone">{row.phone}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      <p className="print-legal-footer">{printDisclaimer()}</p>
 
       {open ? (
         <div className="modal-backdrop" onClick={() => { if (!saving) setOpen(false); }} role="presentation">

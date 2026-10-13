@@ -91,7 +91,7 @@ export function ContactPage() {
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   required
-                  placeholder={topic === "refund" ? "Include your purchase reference if you have it." : "How can we help?"}
+                  placeholder={topic === "refund" ? "Include your confirmation number if you have it." : "How can we help?"}
                 />
               </label>
               <label className="contact-honey" aria-hidden="true">

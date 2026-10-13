@@ -1,6 +1,8 @@
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandMark } from "../components/Brand";
+import { Confetti } from "../components/Confetti";
+import { FamilySeatSetup, loadOpenFamilySeats } from "../components/FamilySeatSetup";
 import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
 import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { PayPalCheckout } from "../components/PayPalCheckout";
@@ -27,6 +29,16 @@ const PROGRESS = ["Choose Plan", "Purchase", "Create Account", "Get Ready"] as c
 
 function plural(count: number, unit: string) {
   return count === 1 ? `1 ${unit}` : `${count} ${unit}s`;
+}
+
+function readDiscountTerms(): { renewalCents: number; payments: number } | null {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem("spl.discountTerms") || "null");
+    if (!parsed || typeof parsed.renewalCents !== "number" || typeof parsed.payments !== "number") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 function CopyIcon() {
@@ -68,15 +80,16 @@ export function PricingPage() {
 }
 
 export function CheckoutPage() {
-  const { products } = useApp();
+  const { products, session, loading, refreshAccount, signOut } = useApp();
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const renew = params.get("renew") === "1";
   const planKind = params.get("plan") === "family" ? "family" : "individual";
   const people = planKind === "family"
     ? Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS)
     : 1;
   const access: AccessInterval = params.get("access") === "annual" ? "annual" : "monthly";
-  const [vault, setVault] = useState(params.get("vault") === "1" || params.get("household") === "1");
+  const [vault, setVault] = useState(!renew && (params.get("vault") === "1" || params.get("household") === "1"));
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
   const incomingCode = (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -93,7 +106,7 @@ export function CheckoutPage() {
   const breakdown = checkoutBreakdown(people, access, vault);
   const discountedDueToday = Math.max(0, breakdown.dueTodayCents - discountApplied);
   const discountedRenewalCents = Math.max(0, breakdown.recurringCents - discountApplied);
-  const title = planKind === "family" ? "Family Plan" : "Individual Plan";
+  const title = `${renew ? "Renew " : ""}${planKind === "family" ? "Family Plan" : "Individual Plan"}`;
   const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
   const paypalReady = isPaypalConfigured();
 
@@ -106,8 +119,59 @@ export function CheckoutPage() {
     sessionStorage.setItem("spl.discountCode", appliedCode);
   }, [planKind, people, vault, access, appliedCode]);
 
+  useEffect(() => {
+    sessionStorage.setItem(
+      "spl.discountTerms",
+      discountApplied > 0 ? JSON.stringify({ renewalCents: discountedRenewalCents, payments: discountPayments }) : "",
+    );
+  }, [discountApplied, discountedRenewalCents, discountPayments]);
+
+  async function applyCode(raw: string) {
+    const normalized = raw.trim().toUpperCase();
+    if (!normalized) {
+      setDiscountMessage("Enter a discount code.");
+      return;
+    }
+    setCheckingCode(true);
+    try {
+      const preview = await invokeFunction<{ code: string; discountCents: number; dueTodayCents: number; discountPayments?: number }>(
+        "preview-discount",
+        {
+          code: normalized,
+          plan: planKind,
+          quantity: people,
+          subscriptionCents: breakdown.subscriptionCents,
+          vaultCents: vault ? vaultCents : 0,
+        },
+      );
+      setAppliedCode(preview.code);
+      const payments = Math.max(1, preview.discountPayments || 1);
+      setDiscountApplied(preview.discountCents);
+      setDiscountPayments(payments);
+      setDiscountMessage(
+        payments > 1
+          ? `${preview.code} applied — you save ${money(preview.discountCents)} on each of your first ${payments} payments.`
+          : `${preview.code} applied — you save ${money(preview.discountCents)}.`,
+      );
+    } catch (err) {
+      setAppliedCode("");
+      setDiscountApplied(0);
+      setDiscountPayments(1);
+      setDiscountMessage(err instanceof Error ? err.message : "That code is not active or does not apply to this plan.");
+    } finally {
+      setCheckingCode(false);
+    }
+  }
+
+  const autoApplied = useRef(false);
+  useEffect(() => {
+    if (!incomingCode || autoApplied.current) return;
+    autoApplied.current = true;
+    void applyCode(incomingCode);
+  }, [incomingCode]);
+
   const onCaptured = useMemo(
-    () => (result: { productCode: string; productType: string }) => {
+    () => (result: { productCode: string; productType: string; linkedToUser?: boolean }) => {
       if (!scopeAck) {
         setError("Acknowledge the Safety Prep List scope and use before completing the purchase.");
         return;
@@ -119,10 +183,23 @@ export function CheckoutPage() {
       sessionStorage.setItem("spl.vault", vault ? "1" : "0");
       sessionStorage.setItem("spl.household", vault ? "1" : "0");
       sessionStorage.setItem("spl.access", access);
-      navigate(`/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}`);
+      if (renew) {
+        void refreshAccount().then(() => navigate("/app"));
+        return;
+      }
+      const thankYou = `/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}`;
+      if (result.linkedToUser) {
+        void refreshAccount().then(() => navigate(`${thankYou}&linked=1`));
+        return;
+      }
+      navigate(thankYou);
     },
-    [navigate, people, vault, planKind, access, scopeAck],
+    [navigate, people, vault, planKind, access, scopeAck, renew, refreshAccount],
   );
+
+  if (renew && !loading && !session) {
+    return <Navigate to="/signin" replace />;
+  }
 
   return (
     <div className="checkout-stage">
@@ -135,6 +212,18 @@ export function CheckoutPage() {
       <div className="checkout-panel">
         <CheckoutProgress current={1} />
         <BrandMark />
+
+        {session && !renew ? (
+          <div className="checkout-signed-in" role="note">
+            <p>
+              You're signed in as <b>{session.user.email}</b>. This purchase will be added to that account.
+            </p>
+            <p className="muted">Buying for someone new? Sign out first so they can create their own account.</p>
+            <button className="btn btn-ghost" type="button" onClick={() => void signOut()}>
+              Sign out
+            </button>
+          </div>
+        ) : null}
 
         <section className="checkout-step">
           <p className="eyebrow">Your Plan</p>
@@ -156,21 +245,23 @@ export function CheckoutPage() {
           )}
         </section>
 
-        <section className="checkout-step">
-          <p className="eyebrow">Optional</p>
-          <div className={`vault-add ${vault ? "added" : ""}`}>
-            <label>
-              <input type="checkbox" checked={vault} onChange={(e) => setVault(e.target.checked)} />
-              <span>
-                <b>Add Survival Vault, $10 one time</b>
-                <small>{SURVIVAL_VAULT_DESCRIPTION}</small>
-              </span>
-            </label>
-            <button type="button" className="vault-details" onClick={() => setDetailsOpen(true)}>
-              See details
-            </button>
-          </div>
-        </section>
+        {renew ? null : (
+          <section className="checkout-step">
+            <p className="eyebrow">Optional</p>
+            <div className={`vault-add ${vault ? "added" : ""}`}>
+              <label>
+                <input type="checkbox" checked={vault} onChange={(e) => setVault(e.target.checked)} />
+                <span>
+                  <b>Add Survival Vault, $10 one time</b>
+                  <small>{SURVIVAL_VAULT_DESCRIPTION}</small>
+                </span>
+              </label>
+              <button type="button" className="vault-details" onClick={() => setDetailsOpen(true)}>
+                See details
+              </button>
+            </div>
+          </section>
+        )}
 
         <section className="checkout-step discount-checkout">
           <p className="eyebrow">Have a code?</p>
@@ -190,57 +281,27 @@ export function CheckoutPage() {
               type="button"
               className="btn btn-ghost"
               disabled={checkingCode}
-              onClick={() => {
-                void (async () => {
-                  const normalized = discountCode.trim().toUpperCase();
-                  if (!normalized) {
-                    setDiscountMessage("Enter a discount code.");
-                    return;
-                  }
-                  setCheckingCode(true);
-                  try {
-                    const preview = await invokeFunction<{ code: string; discountCents: number; dueTodayCents: number; discountPayments?: number }>(
-                      "preview-discount",
-                      {
-                        code: normalized,
-                        plan: planKind,
-                        quantity: people,
-                        subscriptionCents: breakdown.subscriptionCents,
-                        vaultCents: vault ? vaultCents : 0,
-                      },
-                    );
-                    setAppliedCode(preview.code);
-                    const payments = Math.max(1, preview.discountPayments || 1);
-                    setDiscountApplied(preview.discountCents);
-                    setDiscountPayments(payments);
-                    setDiscountMessage(
-                      payments > 1
-                        ? `${preview.code} applied — you save ${money(preview.discountCents)} on each of your first ${payments} payments.`
-                        : `${preview.code} applied — you save ${money(preview.discountCents)}.`,
-                    );
-                  } catch (err) {
-                    setAppliedCode("");
-                    setDiscountApplied(0);
-                    setDiscountPayments(1);
-                    setDiscountMessage(err instanceof Error ? err.message : "That code is not active or does not apply to this plan.");
-                  } finally {
-                    setCheckingCode(false);
-                  }
-                })();
-              }}
+              onClick={() => void applyCode(discountCode)}
             >
               {checkingCode ? "Checking…" : "Apply"}
             </button>
           </div>
-          {incomingCode === "LAUNCH26" ? (
-            <p className="muted">
-              LAUNCH26 is entered below. Tap Apply to save 50% on your first month only. Regular monthly pricing applies beginning in month two.
-            </p>
-          ) : null}
           {discountMessage ? <p className={`discount-result ${discountApplied ? "success" : "error"}`}>{discountMessage}</p> : null}
         </section>
 
         <section className="checkout-step checkout-summary">
+          <div className="summary-block">
+            <p>
+              <span>
+                {title}
+                {people > 1 ? ` (${people} checklists)` : ""}
+              </span>
+              <b>
+                {money(breakdown.subscriptionCents)}
+                {access === "annual" ? "/year" : "/month"}
+              </b>
+            </p>
+          </div>
           {vault ? (
             <div className="summary-block">
               <p>
@@ -252,7 +313,7 @@ export function CheckoutPage() {
           {discountApplied ? (
             <div className="summary-block discount-summary">
               <p>
-                <span>Discount ({discountCode})</span>
+                <span>Discount ({appliedCode})</span>
                 <b>−{money(discountApplied)}</b>
               </p>
             </div>
@@ -268,7 +329,7 @@ export function CheckoutPage() {
                 : `Then ${money(discountedRenewalCents)} per month for the next ${plural(discountPayments - 1, "month")}, then ${money(breakdown.recurringCents)} per month.`
               : access === "annual"
               ? `Renews annually at ${money(breakdown.recurringCents)}.`
-              : incomingCode === "LAUNCH26" || discountApplied > 0
+              : discountApplied > 0
                 ? `Then ${money(breakdown.recurringCents)} per month afterwards.`
                 : `Renews monthly at ${money(breakdown.recurringCents)}.`}
             {vault ? " Survival Vault does not renew." : ""}
@@ -295,6 +356,7 @@ export function CheckoutPage() {
                 accessInterval={access}
                 planKind={planKind}
                 discountCode={appliedCode}
+                renew={renew}
                 onCaptured={onCaptured}
                 onError={setError}
               />
@@ -312,7 +374,7 @@ export function CheckoutPage() {
           <p className="form-error">PayPal is not configured yet.</p>
         )}
         <p className="muted checkout-back">
-          <Link to="/#pricing">Change plan</Link>
+          {renew ? <Link to="/app/account">Back to account</Link> : <Link to="/#pricing">Change plan</Link>}
         </p>
       </div>
 
@@ -330,7 +392,10 @@ export function CheckoutPage() {
 export function ThankYouPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const paypalToken = params.get("token") || params.get("orderId") || "";
+  const { refreshAccount, user } = useApp();
+  const [linked, setLinked] = useState(params.get("linked") === "1");
+  const paypalSubscription = params.get("subscription_id") || "";
+  const paypalToken = paypalSubscription || params.get("token") || params.get("orderId") || "";
   const initialCode = params.get("code") || sessionStorage.getItem("spl.productCode") || "";
   const [code, setCode] = useState(initialCode);
   const [captureError, setCaptureError] = useState("");
@@ -338,6 +403,7 @@ export function ThankYouPage() {
   const capturing = useRef(false);
   const plan = params.get("plan") || sessionStorage.getItem("spl.plan") || "individual";
   const qty = Number(params.get("qty") || sessionStorage.getItem("spl.familyQty") || "1");
+  const isFamily = plan === "family" && qty > 1;
   const vault =
     params.get("vault") === "1" ||
     params.get("household") === "1" ||
@@ -345,25 +411,56 @@ export function ThankYouPage() {
     sessionStorage.getItem("spl.household") === "1";
   const access = (params.get("access") || sessionStorage.getItem("spl.access") || "monthly") === "annual" ? "annual" : "monthly";
   const [copied, setCopied] = useState(false);
+  const [familySeats, setFamilySeats] = useState<string[]>([]);
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (!linked || !code || !userId || plan !== "family") return;
+    let active = true;
+    void loadOpenFamilySeats(userId).then((seats) => {
+      if (active) setFamilySeats(seats);
+    });
+    return () => {
+      active = false;
+    };
+  }, [linked, code, userId, plan]);
   const breakdown = checkoutBreakdown(plan === "family" ? qty : 1, access, vault);
+  const discountTerms = useMemo(() => readDiscountTerms(), []);
+  const remainingDiscounted = discountTerms ? discountTerms.payments - 1 : 0;
+  const intervalWord = access === "annual" ? "annual" : "monthly";
+  const renewal =
+    discountTerms && remainingDiscounted > 0
+      ? remainingDiscounted === 1
+        ? `Your next ${intervalWord} payment is ${money(discountTerms.renewalCents)}, then ${money(breakdown.recurringCents)} per ${access === "annual" ? "year" : "month"}.`
+        : `Your next ${remainingDiscounted} ${intervalWord} payments are ${money(discountTerms.renewalCents)} each, then ${money(breakdown.recurringCents)} per ${access === "annual" ? "year" : "month"}.`
+      : `Renews ${access === "annual" ? "annually" : "monthly"} at ${money(breakdown.recurringCents)}.`;
 
   useEffect(() => {
     if (code || !paypalToken || capturing.current) return;
     capturing.current = true;
     setFinishing(true);
-    void invokeFunction<{ productCode: string }>("capture-paypal-order", {
-      orderId: paypalToken,
-      productSlug: "core",
-      quantity: qty,
-      includeHousehold: vault,
-      accessInterval: access,
-    })
+    const finish = paypalSubscription
+      ? invokeFunction<{ productCode: string; linkedToUser?: boolean }>("activate-paypal-subscription", {
+          subscriptionId: paypalSubscription,
+        })
+      : invokeFunction<{ productCode: string; linkedToUser?: boolean }>("capture-paypal-order", {
+          orderId: paypalToken,
+          productSlug: "core",
+          quantity: qty,
+          includeHousehold: vault,
+          accessInterval: access,
+        });
+    void finish
       .then((captured) => {
         if (!captured?.productCode) throw new Error("No Product ID was returned.");
         sessionStorage.setItem("spl.productCode", captured.productCode);
+        if (captured.linkedToUser) {
+          setLinked(true);
+          void refreshAccount();
+        }
         setCode(captured.productCode);
         navigate(
-          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}`,
+          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}${captured.linkedToUser ? "&linked=1" : ""}`,
           { replace: true },
         );
       })
@@ -371,11 +468,38 @@ export function ThankYouPage() {
         setCaptureError(err instanceof Error ? err.message : "Could not finish the purchase.");
       })
       .finally(() => setFinishing(false));
-  }, [access, code, navigate, paypalToken, plan, qty, vault]);
+  }, [access, code, navigate, paypalSubscription, paypalToken, plan, qty, vault, refreshAccount]);
 
   async function copy() {
     await navigator.clipboard.writeText(code);
     setCopied(true);
+  }
+
+  if (!code && !paypalToken) {
+    return (
+      <div className="checkout-stage">
+        <div
+          className="checkout-bg"
+          style={{ backgroundImage: `url(${PHOTO_LIBRARY.landscape})` }}
+          aria-hidden="true"
+        />
+        <PublicHeader />
+        <div className="checkout-panel">
+          <BrandMark />
+          <h1>No purchase to show yet.</h1>
+          <p className="muted">
+            This page appears after checkout. If you already paid, check your PayPal receipt email, or contact us and
+            we’ll help.
+          </p>
+          <Link className="btn btn-primary btn-block" style={{ marginTop: 18 }} to="/#pricing">
+            See plans
+          </Link>
+          <p className="muted checkout-back">
+            <Link to="/contact">Contact us</Link>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -386,45 +510,101 @@ export function ThankYouPage() {
         aria-hidden="true"
       />
       <PublicHeader />
-      <div className="checkout-panel">
-        <CheckoutProgress current={2} />
-        <BrandMark />
-        <h1>Thank you for your purchase.</h1>
-        <p className="muted">
-          {plan === "family"
-            ? `Your Family Plan includes ${qty} personal Safety Prep Checklists.`
-            : "Your personal Safety Prep Checklist is ready."}
-          {vault ? " Survival Vault is included as a one-time add-on." : ""}{" "}
-          {access === "annual"
-            ? `Renews annually at ${money(breakdown.recurringCents)}.`
-            : `Renews monthly at ${money(breakdown.recurringCents)}.`}
+      <Confetti fire={Boolean(code)} />
+      <div className="checkout-panel thank-you-panel">
+        <CheckoutProgress current={linked ? 3 : 2} />
+        <h1>Thank you for signing up!</h1>
+        <p className="muted thank-you-lead">
+          {linked
+            ? "Here is your plan. It’s already been added to your account."
+            : isFamily
+              ? "Here is your plan. Next, create your account and add your family members."
+              : "Here is your plan."}
         </p>
-        <p className="muted">PayPal will email your receipt to the address on the PayPal account you paid with.</p>
+
+        <section className="thank-you-plan" aria-label="Your plan">
+          <div className="thank-you-plan-head">
+            <div>
+              <p className="thank-you-plan-label">Your new plan</p>
+              <h2>{plan === "family" ? "Family Plan" : "Individual Plan"}</h2>
+            </div>
+            <p className="thank-you-plan-price">
+              {money(breakdown.recurringCents)}
+              <small>/{access === "annual" ? "year" : "month"}</small>
+            </p>
+          </div>
+          <dl className="thank-you-plan-rows">
+            <div>
+              <dt>Checklists</dt>
+              <dd>{plan === "family" ? plural(qty, "personal checklist") : "1 personal checklist"}</dd>
+            </div>
+            {vault ? (
+              <div>
+                <dt>Survival Vault</dt>
+                <dd>Included, one time</dd>
+              </div>
+            ) : null}
+          </dl>
+          <p className="thank-you-plan-note">{renewal}</p>
+        </section>
+
         {captureError ? <p className="form-error">{captureError}</p> : null}
+
         {code ? (
-          <Link className="btn btn-primary btn-block" style={{ marginTop: 18 }} to={`/create-account?code=${encodeURIComponent(code)}`}>
-            Create My Account
-          </Link>
+          <div className="thank-you-ref">
+            <div className="thank-you-ref-row">
+              <span className="thank-you-ref-label">Confirmation number</span>
+              <code>{code}</code>
+              <button
+                className="purchase-ref-copy"
+                type="button"
+                onClick={() => void copy()}
+                aria-label={copied ? "Copied confirmation number" : "Copy confirmation number"}
+                title={copied ? "Copied" : "Copy"}
+              >
+                {copied ? "✓" : <CopyIcon />}
+              </button>
+            </div>
+          </div>
         ) : (
           <p className="muted" style={{ marginTop: 18 }}>
             {finishing ? "Finishing your purchase…" : "Hang tight while we confirm your purchase."}
           </p>
         )}
-        {code ? (
-          <p className="purchase-ref">
-            <span>Purchase reference</span>
-            <code>{code}</code>
-            <button
-              className="purchase-ref-copy"
-              type="button"
-              onClick={() => void copy()}
-              aria-label={copied ? "Copied purchase reference" : "Copy purchase reference"}
-              title={copied ? "Copied" : "Copy"}
-            >
-              {copied ? "✓" : <CopyIcon />}
-            </button>
-          </p>
+
+        {code && linked && familySeats.length ? (
+          <div className="thank-you-family">
+            <h2>Set up your family</h2>
+            <FamilySeatSetup
+              seatIds={familySeats}
+              onDone={() => {
+                sessionStorage.removeItem("spl.productCode");
+                void refreshAccount().then(() => navigate("/app"));
+              }}
+            />
+          </div>
+        ) : code && linked ? (
+          <button
+            className="btn btn-primary btn-block"
+            style={{ marginTop: 14 }}
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem("spl.productCode");
+              void refreshAccount().then(() => navigate("/app"));
+            }}
+          >
+            Go to My Checklist
+          </button>
+        ) : code ? (
+          <Link
+            className="btn btn-primary btn-block"
+            style={{ marginTop: 14 }}
+            to={`/create-account?code=${encodeURIComponent(code)}${isFamily ? `&qty=${qty}` : ""}`}
+          >
+            {isFamily ? "Create Accounts" : "Create My Account"}
+          </Link>
         ) : null}
+        <p className="muted thank-you-receipt">PayPal will email your receipt to the address on the PayPal account you paid with.</p>
       </div>
     </div>
   );

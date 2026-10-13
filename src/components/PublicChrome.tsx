@@ -65,7 +65,7 @@ export function PublicFooter({
           <NavLink to="/signin">Log In</NavLink>
           <NavLink to="/contact">Contact</NavLink>
           <NavLink to="/privacy">Privacy</NavLink>
-          <NavLink to="/terms">Terms and Conditions</NavLink>
+          <NavLink to="/terms">Terms of Service</NavLink>
         </nav>
       </div>
       <div className="wrap footer-bottom">

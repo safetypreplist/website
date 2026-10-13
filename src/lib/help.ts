@@ -20,7 +20,7 @@ export const DEFAULT_FAQS: HelpFaq[] = [
   {
     id: "family",
     question: "How do I add family members?",
-    answer: "Go to Manage Family Plan to invite someone new or connect an existing checklist so you can prepare together.",
+    answer: "Open the Family section of the menu to invite someone new or connect an existing checklist so you can prepare together.",
   },
   {
     id: "devices",

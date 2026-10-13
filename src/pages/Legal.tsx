@@ -34,7 +34,7 @@ function LegalShell({ title, children }: { title: string; children: ReactNode })
 function LegalNav() {
   return (
     <p className="legal-nav">
-      <Link to="/terms">Terms and Conditions</Link>
+      <Link to="/terms">Terms of Service</Link>
       <Link to="/privacy">Privacy</Link>
       <Link to="/contact">Contact</Link>
     </p>
@@ -43,11 +43,10 @@ function LegalNav() {
 
 export function TermsPage() {
   return (
-    <LegalShell title="Terms and Conditions">
+    <LegalShell title="Terms of Service">
       <LegalNav />
       <p>
-        These Terms of Service (“Terms”) govern your use of {LEGAL.brandName} and {LEGAL.brandMethod}™
-        (the “Service”), operated by {displayLegal(LEGAL.legalName)} (“we,” “us”). By creating an account,
+        These Terms of Service (“Terms”) govern your use of {LEGAL.brandName} (the “Service”), operated by {displayLegal(LEGAL.legalName)} (“we,” “us”). By creating an account,
         checking the agreement box, or using the Service, you agree to these Terms.
       </p>
 
@@ -108,7 +107,7 @@ export function TermsPage() {
       <h3>How to request a refund</h3>
       <p>
         <Link to="/contact?topic=refund">Click here</Link> to request your refund within 7 days of your first purchase.
-        Include your purchase reference if you have it.
+        Include your confirmation number if you have it.
       </p>
       <h3>Renewals</h3>
       <p>
@@ -127,7 +126,7 @@ export function TermsPage() {
 
       <h2>7. Intellectual property</h2>
       <p>
-        Checklists, copy, design, software, and the {LEGAL.brandName} and {LEGAL.brandMethod}™ brands are owned by{" "}
+        Checklists, copy, design, software, and the {LEGAL.brandName} brand are owned by{" "}
         {displayLegal(LEGAL.legalName)}. We grant you a personal, non-commercial license to use the Service and to
         print lists for your household. You may not resell, redistribute, scrape, or copy the Service for others.
       </p>
@@ -210,7 +209,7 @@ export function PrivacyPage() {
         <li>Checklist data: checkmarks, short notes, custom items, emergency contacts you add, and device nicknames.</li>
         <li>Family Plan relationships: who is connected, and whether they have View Only or Can Edit access.</li>
         <li>Email-list signups for the free Emergency Documents Checklist (name and email).</li>
-        <li>Support chat messages if you use the optional Tawk.to widget.</li>
+        <li>Support chat messages and support requests you send us.</li>
         <li>Approximate location and weather if you use the in-app weather display (browser location or IP-based lookup).</li>
         <li>Technical data needed to run the app: sign-in session, device registration, and a service worker for offline use.</li>
       </ul>
@@ -236,7 +235,7 @@ export function PrivacyPage() {
         <li>PayPal — checkout and payment processing.</li>
         <li>Resend — purchase and account email.</li>
         <li>Brevo — free Emergency Documents Checklist email list.</li>
-        <li>Tawk.to — optional support chat, only if you accept optional cookies.</li>
+        <li>LiveAgent — live chat and support requests.</li>
         <li>Google Fonts — display fonts.</li>
         <li>Open-Meteo and BigDataCloud — optional weather and approximate location.</li>
       </ul>
@@ -282,8 +281,8 @@ export function PrivacyPage() {
 
       <h2>10. Cookies</h2>
       <p>
-        Essential cookies and local storage keep you signed in and remember device and legal acknowledgments. Optional
-        Tawk.to chat cookies load only if you accept optional cookies. We do not run a third-party advertising or
+        Essential cookies and local storage keep you signed in and remember device and legal acknowledgments.
+        LiveAgent chat cookies load only when you open the chat. We do not run a third-party advertising or
         analytics pixel.
       </p>
 

@@ -5,10 +5,10 @@ import { HeaderClock } from "./LocationStatus";
 import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
-import { checklistTitle, initialsFrom } from "../lib/identity";
+import { checklistTitle, familyPageLabel, initialsFrom } from "../lib/identity";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { signOut, profile, user, viewing, hasSurvivalVault, switchChecklist, myChecklist } = useApp();
+  const { signOut, profile, user, viewing, hasSurvivalVault, switchChecklist, myChecklist, familyMembers } = useApp();
   const location = useLocation();
   const initial = initialsFrom(profile?.full_name || viewing.ownerName, user?.email);
   const vaultActive = location.pathname.startsWith("/app/survival");
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <ChecklistSwitcher className="mobile-switcher" />
         <div className="app-top-end">
           <HeaderClock />
-          <NavLink className="header-avatar" to="/app/account" aria-label="Profile">
+          <NavLink className="header-avatar" to="/app/account" aria-label="Account">
             {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <span>{initial}</span>}
           </NavLink>
         </div>
@@ -64,11 +64,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
         <p className="sidebar-label">Family</p>
         <NavLink data-onboarding="family" to="/app/family" end className={({ isActive }) => (isActive ? "active" : "")}>
-          Manage Family Plan
+          {familyPageLabel(familyMembers)}
         </NavLink>
         <p className="sidebar-label">Account</p>
-        <NavLink data-onboarding="profile" to="/app/account" className={({ isActive }) => (isActive ? "active" : "")}>
-          Profile
+        <NavLink
+          data-onboarding="profile"
+          to="/app/account"
+          className={({ isActive }) => (isActive || location.pathname.startsWith("/app/billing") ? "active" : "")}
+        >
+          Account
         </NavLink>
         <NavLink to="/app/devices" className={({ isActive }) => (isActive ? "active" : "")}>
           My Devices

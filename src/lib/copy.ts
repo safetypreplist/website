@@ -8,8 +8,7 @@ export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
 export const SCOPE_LINE =
   "Practical preparedness for natural disasters, local emergencies, outages, evacuations, and temporary disruptions.";
 
-export const SCOPE_SUPPORT =
-  "Start with the essentials. Build your preparedness system as you have more time.";
+export const SCOPE_SUPPORT = "Each list includes optional extras for building on the essentials.";
 
 export const CORE_MESSAGE = "Start small. Prepare practically. Build over time.";
 
@@ -47,8 +46,8 @@ export const VAULT_CHECKLISTS = [
   },
   {
     title: "How-To Videos",
-    line: "Watch the skills when you need them.",
-    detail: "Practical visual learning for water, power, off grid, food, communications, and home readiness.",
+    line: "A curated YouTube playlist.",
+    detail: "Preparedness videos from independent creators and organizations, gathered in one place.",
   },
 ] as const;
 

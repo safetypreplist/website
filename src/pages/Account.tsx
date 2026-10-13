@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { ProfileWeather } from "../components/LocationStatus";
 import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
-import { checklistTitle, initialsFrom, personName, planTypeLabel } from "../lib/identity";
+import { checklistTitle, familyPageLabel, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { HOW_TO_PLAYLIST_URL, HOW_TO_VIDEOS_DESCRIPTION, HOW_TO_VIDEOS_DISCLAIMER, VAULT_APP_DESCRIPTION } from "../lib/copy";
-import { invokeFunction, isSupabaseConfigured, supabase } from "../lib/supabase";
+import { invokeFunction } from "../lib/supabase";
 
 export function AccountPage() {
   const {
@@ -27,9 +27,9 @@ export function AccountPage() {
     customItems,
     contacts,
     demoMode,
+    refreshAccount,
   } = useApp();
   const location = useLocation();
-  const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [first, setFirst] = useState(profile?.first_name || "");
   const [last, setLast] = useState(profile?.last_name || "");
@@ -43,7 +43,9 @@ export function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaved, setPasswordSaved] = useState("");
   const [copied, setCopied] = useState(false);
-  const [cancelRequested, setCancelRequested] = useState(Boolean(profile?.cancel_requested_at));
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const cancellable = !demoMode && (profile?.access_status === "active" || profile?.access_status === "past_due") && Boolean(profile?.access_ends_at);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const used = devices.length;
@@ -164,20 +166,24 @@ export function AccountPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function requestCancel() {
+  async function cancelSubscription() {
+    setCancelBusy(true);
     setError("");
     setSaved("");
-    if (isSupabaseConfigured() && user?.id) {
-      const { error: err } = await supabase
-        .from("profiles")
-        .update({ cancel_requested_at: new Date().toISOString() })
-        .eq("id", user.id);
-      if (err) {
-        setError("We saved your request locally. Use the contact form to finish cancellation.");
-      }
+    try {
+      const result = await invokeFunction<{ accessEndsAt: string | null }>("cancel-paypal-subscription", {});
+      await refreshAccount();
+      setCancelOpen(false);
+      setSaved(
+        result?.accessEndsAt
+          ? `Subscription cancelled. You keep access until ${formatDate(result.accessEndsAt)}.`
+          : "Subscription cancelled.",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not cancel the subscription.");
+    } finally {
+      setCancelBusy(false);
     }
-    setCancelRequested(true);
-    navigate("/contact?topic=cancel");
   }
 
   async function deleteAccount() {
@@ -224,7 +230,7 @@ export function AccountPage() {
               )}
             </button>
             <div>
-              <p className="profile-kicker">Your profile</p>
+              <p className="profile-kicker">Your account</p>
               <h1 className="page-title">{welcome}</h1>
               <p className="profile-hero-meta">{planName}</p>
               <button className="profile-photo-link" type="button" disabled={photoBusy} onClick={() => fileRef.current?.click()}>
@@ -301,7 +307,7 @@ export function AccountPage() {
         {accessDescription(profile) ? <p className="muted">{accessDescription(profile)}</p> : null}
         <div className="toolbar">
           <Link className="btn btn-ghost" to="/app/family">
-            Manage Family Plan
+            {familyPageLabel(familyMembers)}
           </Link>
           <Link className="btn btn-ghost" to="/app/access">
             Checklist Access
@@ -341,22 +347,37 @@ export function AccountPage() {
       <article className="account-card">
         <h2>Subscription</h2>
         {accessDescription(profile) ? <p className="muted">{accessDescription(profile)}</p> : null}
-        {cancelRequested ? (
-          <p>
-            Cancellation requested. You keep access through the end of the paid period.{" "}
-            <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help.
-          </p>
-        ) : (
+        {cancellable ? (
           <>
             <p className="muted">
-              Cancel anytime before the next billing date. We record the request.{" "}
-              <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help. You keep access through the period you already paid.
+              Cancel anytime. PayPal stops future charges and you keep access through the period you already paid.{" "}
+              <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help.
             </p>
-            <button className="btn btn-ghost" type="button" onClick={() => void requestCancel()}>
+            <button className="btn btn-ghost" type="button" onClick={() => setCancelOpen(true)}>
               Cancel subscription
             </button>
           </>
+        ) : profile?.access_status === "cancelled" ? (
+          <p className="muted">
+            Your subscription is cancelled and will not renew.{" "}
+            <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help.
+          </p>
+        ) : profile?.access_status === "expired" ? (
+          <Link className="btn btn-primary" to="/app/renew">
+            Renew my plan
+          </Link>
+        ) : (
+          <p className="muted">
+            There are no renewal charges on this account.{" "}
+            <Link to="/contact?topic=cancel">Click here to contact us</Link> with billing questions.
+          </p>
         )}
+        <div className="account-billing">
+          <Link className="btn btn-forest" to="/app/billing">
+            Billing &amp; payments
+          </Link>
+          <p className="muted">See your payment history, download receipts, and change your payment method.</p>
+        </div>
       </article>
 
       <article className="account-card">
@@ -377,6 +398,21 @@ export function AccountPage() {
       <button className="btn btn-forest" type="button" onClick={() => void signOut()}>
         Log out
       </button>
+      {cancelOpen ? (
+        <ConfirmDialog
+          title="Cancel your subscription?"
+          body={
+            profile?.access_renews_at
+              ? `PayPal will stop future charges. You keep access until ${formatDate(profile.access_renews_at)}, and your checklists stay saved.`
+              : "PayPal will stop future charges. You keep access through the period you already paid, and your checklists stay saved."
+          }
+          confirmLabel="Cancel subscription"
+          danger
+          busy={cancelBusy}
+          onClose={() => setCancelOpen(false)}
+          onConfirm={() => void cancelSubscription()}
+        />
+      ) : null}
       {deleteOpen ? (
         <ConfirmDialog
           title="Delete your account?"
@@ -397,10 +433,19 @@ export function AccountPage() {
   );
 }
 
-function accessDescription(profile: { access_status?: string | null; access_interval?: string | null; access_renews_at?: string | null; plan?: string | null } | null) {
+function accessDescription(profile: { access_status?: string | null; access_interval?: string | null; access_renews_at?: string | null; access_ends_at?: string | null; plan?: string | null } | null) {
   if (!profile?.plan || profile.plan === "none") return "";
   if (profile.access_status === "grandfathered" || !profile.access_interval) {
     return "Existing Safety Prep List access is included with your account.";
+  }
+  if (profile.access_status === "cancelled") {
+    return profile.access_ends_at ? `Cancelled. Access ends ${formatDate(profile.access_ends_at)}.` : "Cancelled.";
+  }
+  if (profile.access_status === "expired") {
+    return "Access ended. Renew to keep using your checklists.";
+  }
+  if (profile.access_status === "past_due") {
+    return "Your last payment did not go through. Update your payment method in PayPal to keep access.";
   }
   if (profile.access_interval === "annual") {
     return profile.access_renews_at

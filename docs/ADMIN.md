@@ -14,7 +14,6 @@ Then sign in and open `/admin`. The console only shows live tools:
 |---|---|
 | Accounts & access | Real customer accounts. Reset passwords through the owner-only edge function. |
 | Discount codes | Live checkout codes. PayPal charges the discounted subscription amount. Survival Vault is never discounted. |
-| Support chats | Tawk.to visitors from the webhook table. |
 | Checklist & resources | Edit item wording and add verified safety resources. |
 | Onboarding | Tour copy stored in `app_config` and shown to every customer. |
 
@@ -28,7 +27,7 @@ Three code types: percent off, fixed dollars off, or set price. A set price is t
 
 **Discounted payments** is how many subscription payments get the discount once a customer subscribes (1 = first payment only; 3 on Monthly = first 3 months). It is copied onto the purchase as `purchases.discount_payments` so renewals can honor it. **Code expires** only stops new customers from using the code. Needs migration `0025_discount_duration.sql`.
 
-Automatic renewal charges are not wired yet. Until they are, only the first payment is actually charged.
+Plans are PayPal Subscriptions, so PayPal charges renewals automatically. A discount becomes a trial period on the subscription (for example LAUNCH26 is one $5.99 month, then $11.99), and the Survival Vault is a one-time setup fee on the first payment. PayPal billing plans are created on demand and their IDs are stored in `paypal_billing_refs`; the `paypal-webhook` function keeps `subscriptions.paid_through` current. Access ends at the paid-through date after a cancellation, or 3 days after it when a payment fails. Accounts that paid before subscriptions launched are grandfathered with no expiry. Needs migration `0028_paypal_subscriptions.sql`.
 
 Checkout calls `preview-discount`, then `create-paypal-order` / `capture-paypal-order` re-check the same code before charging.
 

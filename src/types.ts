@@ -16,8 +16,9 @@ export type Profile = {
   avatar_url: string | null;
   plan: PlanTier;
   access_interval?: "monthly" | "annual" | null;
-  access_status?: "none" | "active" | "grandfathered" | "past_due";
+  access_status?: "none" | "active" | "grandfathered" | "past_due" | "cancelled" | "expired";
   access_renews_at?: string | null;
+  access_ends_at?: string | null;
   cancel_requested_at?: string | null;
   checklist_fee_paid?: boolean;
   device_limit: number;
@@ -39,11 +40,14 @@ export type PersonalChecklist = {
   email: string | null;
   displayName: string;
   avatarUrl: string | null;
+  accessEndsAt?: string | null;
 };
 
 export type ConnectedChecklist = PersonalChecklist & {
   permission: ChecklistPermission | "own";
   pending?: boolean;
+  sharedWithMe?: boolean;
+  accessToMine?: ChecklistPermission | null;
 };
 
 export type ViewingContext = {
@@ -57,6 +61,15 @@ export type ViewingContext = {
   permission: "own" | ChecklistPermission;
   isOwn: boolean;
   canEdit: boolean;
+};
+
+export type FamilyInviteResult = {
+  checklistId: string;
+  email: string;
+  firstName: string;
+  emailSent: boolean;
+  emailError?: string;
+  inviteUrl: string;
 };
 
 export type FamilyInvitation = {

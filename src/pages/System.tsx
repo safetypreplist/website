@@ -257,7 +257,9 @@ export function SystemPage() {
           </div>
         ) : null}
         <div>
-          {qsMinutes == null && system.time_label && system.time_label !== "MORE" ? <p className="time-label">{system.time_label}</p> : null}
+          {qsMinutes == null && system.time_label && system.time_label !== "MORE" ? (
+            <p className="time-label">{system.time_label === "FULL" ? "Survival Vault" : system.time_label}</p>
+          ) : null}
           <h1>{system.title}</h1>
           {system.description ? <p className="list-lead">{system.description}</p> : null}
         </div>

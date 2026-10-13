@@ -8,10 +8,12 @@ type Pane = "state" | "national";
 export function SafetyPage() {
   const { safety, profile, setPreferredState } = useApp();
   const [state, setState] = useState(profile?.preferred_state || "");
-  const [pane, setPane] = useState<Pane>("national");
+  const [pane, setPane] = useState<Pane>(profile?.preferred_state ? "state" : "national");
 
   useEffect(() => {
-    if (profile?.preferred_state) setState(profile.preferred_state);
+    if (!profile?.preferred_state) return;
+    setState(profile.preferred_state);
+    setPane("state");
   }, [profile?.preferred_state]);
 
   const national = useMemo(() => safety.filter((s) => !s.state), [safety]);

@@ -4,12 +4,17 @@ import { isOnboardingPreview } from "./components/OnboardingTour";
 import { useApp } from "./context/AppContext";
 import { LandingPage } from "./pages/Landing";
 import { Launch26Page } from "./pages/Launch26";
-import { CreateAccountPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
+import { CreateAccountPage, JoinFamilyPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { CookieNotice } from "./components/CookieNotice";
+import { ScrollToTop } from "./components/ScrollToTop";
+import { SupportChat } from "./components/SupportChat";
 import { PrivacyPage, TermsPage } from "./pages/Legal";
 import { ContactPage } from "./pages/Contact";
+import { NotFoundPage } from "./pages/NotFound";
+import { AccessEndedPage, accessHasEnded } from "./pages/AccessEnded";
 import { AccountPage, VaultPage } from "./pages/Account";
+import { BillingPage, ReceiptPage } from "./pages/Billing";
 import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
 import { ContactsPage } from "./pages/Contacts";
@@ -33,8 +38,11 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function DeviceGate({ children }: { children: React.ReactNode }) {
-  const { deviceLimitReached } = useApp();
+  const { deviceLimitReached, myChecklist } = useApp();
   const location = useLocation();
+  if (accessHasEnded(myChecklist?.accessEndsAt) && !isOnboardingPreview()) {
+    return <Navigate to="/app/renew" replace />;
+  }
   if (
     deviceLimitReached &&
     !isOnboardingPreview() &&
@@ -50,6 +58,7 @@ function DeviceGate({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <>
+    <ScrollToTop />
     <CookieNotice />
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -58,6 +67,7 @@ export default function App() {
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/thank-you" element={<ThankYouPage />} />
       <Route path="/create-account" element={<CreateAccountPage />} />
+      <Route path="/join" element={<JoinFamilyPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/contact" element={<ContactPage />} />
@@ -132,6 +142,36 @@ export default function App() {
           <RequireAuth>
             <AppShell>
               <AccountPage />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/app/billing"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <BillingPage />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/app/billing/receipt/:id"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <ReceiptPage />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/app/renew"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <AccessEndedPage />
             </AppShell>
           </RequireAuth>
         }
@@ -229,8 +269,9 @@ export default function App() {
           </RequireAuth>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    <SupportChat />
     </>
   );
 }

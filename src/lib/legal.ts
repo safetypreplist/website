@@ -5,7 +5,6 @@ const PLACEHOLDER = /^\[[A-Za-z0-9 /,_.:'-]+\]$/;
 export const LEGAL = {
   legalName: "SafetyPrepList.com",
   brandName: "Safety Prep List",
-  brandMethod: "The Ready Method",
   supportEmail: "info@safetypreplist.com",
   governingState: "Nevada",
   governingCountry: "United States",

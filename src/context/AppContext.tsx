@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase";
+import { invokeFunction, supabase } from "../lib/supabase";
 import {
   demoAddContact,
   demoAddCustomItem,
@@ -43,7 +43,7 @@ import {
   suggestedNickname,
 } from "../lib/device";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
-import { checklistTitle, generatePublicChecklistId, personName } from "../lib/identity";
+import { checklistTitle, personName } from "../lib/identity";
 import { hasSurvivalVault } from "../lib/plan";
 import { clearQueueItem, enqueueProgress, isOnline, readQueue, remapQueue } from "../lib/offline";
 import type {
@@ -56,6 +56,7 @@ import type {
   CustomChecklistItem,
   Device,
   FamilyInvitation,
+  FamilyInviteResult,
   PersonalChecklist,
   PlanGroup,
   Product,
@@ -183,7 +184,15 @@ type AppState = {
   switchChecklist: (kind: ViewingKind, checklistId?: string | null) => Promise<void>;
   setChecklistPermission: (checklistId: string, granteeUserId: string, permission: ChecklistPermission) => Promise<void>;
   revokeChecklistAccess: (checklistId: string, granteeUserId?: string) => Promise<void>;
-  inviteFamilyMember: (firstName: string, lastName: string, email: string) => Promise<void>;
+  inviteFamilyMember: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    checklistId?: string,
+    permission?: ChecklistPermission,
+  ) => Promise<FamilyInviteResult>;
+  setFamilyAccess: (checklistId: string, permission: ChecklistPermission) => Promise<void>;
+  resendInvite: (checklistId: string) => Promise<FamilyInviteResult>;
   cancelInvitation: (checklistId: string) => Promise<void>;
 };
 
@@ -621,6 +630,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           p_device_id: currentDevice?.id || null,
           p_owner_user_id: viewing.ownerUserId || session?.user.id,
         });
+        if (error?.message.includes("ACCESS_ENDED")) {
+          setSync("error");
+          void refreshAccount();
+          return;
+        }
         if (error) {
           enqueueProgress({
             itemId,
@@ -642,7 +656,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       progressSaveChain.current[itemId] = next;
       return next;
     },
-    [currentDevice?.id, customItems, online, session?.user.id, viewing.canEdit, viewing.ownerUserId],
+    [currentDevice?.id, customItems, online, refreshAccount, session?.user.id, viewing.canEdit, viewing.ownerUserId],
   );
 
   const saveProgressMany = useCallback(
@@ -974,46 +988,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await refreshAccount();
   }, [refreshAccount]);
 
-  const inviteFamilyMember = useCallback(async (firstName: string, lastName: string, email: string) => {
+  const inviteFamilyMember = useCallback(async (
+    firstName: string,
+    lastName: string,
+    email: string,
+    checklistId?: string,
+    permission?: ChecklistPermission,
+  ): Promise<FamilyInviteResult> => {
     if (isDemoMode()) {
       demoInviteMember(firstName, lastName, email);
       await refreshAccount();
-      return;
+      return { checklistId: checklistId || "", email, firstName, emailSent: true, inviteUrl: "" };
     }
     if (!session?.user.id) throw new Error("Sign in required.");
-    const { data: seats } = await supabase
-      .from("personal_checklists")
-      .select("id")
-      .eq("purchased_by_user_id", session.user.id)
-      .eq("status", "pending_claim")
-      .is("invited_email", null)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    const seatId = seats?.[0]?.id;
-    if (seatId) {
-      const { error } = await supabase
-        .from("personal_checklists")
-        .update({
-          invited_first_name: firstName,
-          invited_last_name: lastName,
-          invited_email: email,
-        })
-        .eq("id", seatId);
-      if (error) throw error;
-      await refreshAccount();
-      return;
-    }
-    const { error } = await supabase.from("personal_checklists").insert({
-      public_id: generatePublicChecklistId(),
-      purchased_by_user_id: session.user.id,
-      status: "pending_claim",
-      invited_first_name: firstName,
-      invited_last_name: lastName,
-      invited_email: email,
+    const result = await invokeFunction<FamilyInviteResult>("family-invite", {
+      action: "send",
+      checklistId,
+      firstName,
+      lastName,
+      email,
+      permission,
+    });
+    await refreshAccount();
+    return result;
+  }, [refreshAccount, session?.user.id]);
+
+  const setFamilyAccess = useCallback(async (checklistId: string, permission: ChecklistPermission) => {
+    if (isDemoMode()) return;
+    const { error } = await supabase.rpc("set_family_permissions", {
+      p_grants: [{ checklistId, permission }],
     });
     if (error) throw error;
     await refreshAccount();
-  }, [refreshAccount, session?.user.id]);
+  }, [refreshAccount]);
+
+  const resendInvite = useCallback(async (checklistId: string): Promise<FamilyInviteResult> => {
+    if (isDemoMode()) {
+      return { checklistId, email: "", firstName: "", emailSent: true, inviteUrl: "" };
+    }
+    return invokeFunction<FamilyInviteResult>("family-invite", { action: "resend", checklistId });
+  }, []);
 
   const cancelInvitation = useCallback(async (checklistId: string) => {
     if (isDemoMode()) {
@@ -1021,7 +1035,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await refreshAccount();
       return;
     }
-    await supabase.from("personal_checklists").update({ status: "cancelled" }).eq("id", checklistId);
+    await invokeFunction("family-invite", { action: "cancel", checklistId });
     await refreshAccount();
   }, [refreshAccount]);
 
@@ -1071,6 +1085,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setChecklistPermission,
       revokeChecklistAccess,
       inviteFamilyMember,
+      setFamilyAccess,
+      resendInvite,
       cancelInvitation,
     }),
     [
@@ -1114,6 +1130,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setChecklistPermission,
       revokeChecklistAccess,
       inviteFamilyMember,
+      setFamilyAccess,
+      resendInvite,
       cancelInvitation,
     ],
   );
@@ -1246,7 +1264,8 @@ async function loadLiveFamily(userId: string, profile: Profile | null): Promise<
   const rows = (lists.data || []) as Array<Record<string, string | null>>;
   const mapped = rows
     .map(mapChecklistRow)
-    .filter((row) => Boolean(row.ownerUserId || row.purchasedByUserId));
+    .filter((row) => Boolean(row.ownerUserId || row.purchasedByUserId))
+    .map((row) => (row.ownerUserId === userId ? withOwnName(row, profile) : row));
   const mine = mapped.find((row) => row.ownerUserId === userId && row.status === "active") || null;
   const perms = await supabase.from("checklist_permissions").select("*").is("revoked_at", null);
   const permRows = (perms.data || []) as Array<{ checklist_id: string; grantee_user_id: string; permission: ChecklistPermission }>;
@@ -1255,12 +1274,21 @@ async function loadLiveFamily(userId: string, profile: Profile | null): Promise<
     .filter((row) => row.ownerUserId && row.ownerUserId !== userId && row.status !== "cancelled")
     .map((row) => {
       const grant = myGrants.find((p) => p.checklist_id === row.id);
+      const theirAccess = mine
+        ? permRows.find((p) => p.checklist_id === mine.id && p.grantee_user_id === row.ownerUserId)
+        : undefined;
       return {
         ...row,
         permission: grant?.permission || "view",
         pending: row.status === "pending_claim",
+        sharedWithMe: Boolean(grant),
+        accessToMine: theirAccess?.permission ?? null,
       };
     });
+  const seatGrantRows = mine
+    ? (((await supabase.from("checklist_seat_grants").select("grantee_checklist_id, permission").eq("checklist_id", mine.id))
+        .data || []) as Array<{ grantee_checklist_id: string; permission: ChecklistPermission }>)
+    : [];
   const membership = await supabase
     .from("plan_group_members")
     .select("group_id")
@@ -1286,9 +1314,20 @@ async function loadLiveFamily(userId: string, profile: Profile | null): Promise<
     status: "pending",
     createdAt: row.created_at,
   }));
+  const seats: ConnectedChecklist[] = mapped
+    .filter((row) => !row.ownerUserId && row.purchasedByUserId === userId && row.status === "pending_claim")
+    .map((row) => ({
+      ...row,
+      displayName: [row.firstName, row.lastName].filter(Boolean).join(" ") || "Open seat",
+      permission: "view" as const,
+      pending: true,
+      accessToMine: seatGrantRows.find((g) => g.grantee_checklist_id === row.id)?.permission ?? null,
+    }))
+    .sort((a, b) => Number(Boolean(b.email)) - Number(Boolean(a.email)));
   const members: ConnectedChecklist[] = [
     ...(mine ? [{ ...mine, permission: "own" as const, pending: false }] : []),
     ...connected,
+    ...seats,
   ];
   return { mine, connected, members, invitations, group };
 }
@@ -1307,7 +1346,16 @@ function mapChecklistRow(row: Record<string, string | null>): PersonalChecklist 
     email: row.invited_email,
     displayName: [first, last].filter(Boolean).join(" ") || "Family member",
     avatarUrl: null,
+    accessEndsAt: row.access_ends_at ?? null,
   };
+}
+
+function withOwnName(row: PersonalChecklist, profile: Profile | null): PersonalChecklist {
+  if (!profile || row.firstName || row.lastName) return row;
+  const first = profile.first_name || null;
+  const last = profile.last_name || null;
+  const displayName = [first, last].filter(Boolean).join(" ") || profile.display_name || profile.full_name || row.displayName;
+  return { ...row, firstName: first, lastName: last, displayName };
 }
 
 function synthesizeFamily(userId: string, profile: Profile | null): LiveFamily {

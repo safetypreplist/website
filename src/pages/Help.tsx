@@ -2,13 +2,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { startOnboardingReplay } from "../components/OnboardingTour";
 import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/help";
-import { supabase } from "../lib/supabase";
-
-declare global {
-  interface Window {
-    Tawk_API?: { maximize?: () => void };
-  }
-}
+import { openLiveAgentChat } from "../lib/liveAgent";
+import { invokeFunction, supabase } from "../lib/supabase";
 
 export function HelpPage() {
   const { profile, user } = useApp();
@@ -17,6 +12,7 @@ export function HelpPage() {
   const [sent, setSent] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [chatting, setChatting] = useState(false);
 
   useEffect(() => {
     void supabase.from("app_config").select("value").eq("key", HELP_FAQS_KEY).maybeSingle().then(({ data }) => {
@@ -35,29 +31,32 @@ export function HelpPage() {
     setSending(true);
     setError("");
     setSent("");
-    const email = user?.email || profile?.email || "";
-    const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.display_name || "";
-    const { error: saveError } = await supabase.from("help_requests").insert({
-      user_id: user?.id ?? null,
-      email: email || null,
-      name: name || null,
-      message: text,
-    });
-    setSending(false);
-    if (saveError) {
-      setError("Could not send that message. Please try again.");
-      return;
+    try {
+      await invokeFunction("support-ticket", { message: text });
+      setMessage("");
+      setSent(`Message sent. We’ll reply to ${user?.email || profile?.email || "your account email"} as soon as we can.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send that message. Please try again.");
+    } finally {
+      setSending(false);
     }
-    setMessage("");
-    setSent("Message sent. We’ll get back to you as soon as we can.");
   }
 
-  function openChat() {
-    if (window.Tawk_API?.maximize) {
-      window.Tawk_API.maximize();
-      return;
+  async function startChat() {
+    setError("");
+    setChatting(true);
+    try {
+      await openLiveAgentChat("support", {
+        email: profile?.email || user?.email,
+        firstName: profile?.first_name,
+        lastName: profile?.last_name,
+        phone: profile?.phone,
+      });
+    } catch {
+      setError("Chat isn’t available right now. Send a message instead.");
+    } finally {
+      setChatting(false);
     }
-    setError("Chat is not available right now. Send a message instead.");
   }
 
   return (
@@ -105,8 +104,8 @@ export function HelpPage() {
             <button className="btn btn-forest" type="submit" disabled={sending}>
               {sending ? "Sending…" : "Send a message"}
             </button>
-            <button className="btn btn-ghost" type="button" onClick={openChat}>
-              Chat with us
+            <button className="btn btn-ghost" type="button" disabled={chatting} onClick={() => void startChat()}>
+              {chatting ? "Connecting…" : "Chat with us"}
             </button>
           </div>
         </form>
