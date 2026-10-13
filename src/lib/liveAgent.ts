@@ -36,6 +36,7 @@ export type ChatVisitor = {
 
 const SCRIPT_ID = "la_x2s6df8d";
 const READY_TIMEOUT_MS = 12000;
+const WINDOW_WAIT_MS = 30000;
 
 let loader: Promise<LiveAgentApi> | null = null;
 let host: HTMLDivElement | null = null;
@@ -82,7 +83,10 @@ function buttonFor(api: LiveAgentApi, id: string) {
   const originalClose = button.onCloseFunction_?.bind(button);
   button.onCloseFunction_ = () => {
     originalClose?.();
-    chatListeners.forEach((listener) => listener(false));
+    // LiveAgent also fires this for the other department's button when a window opens.
+    window.setTimeout(() => {
+      if (!chatWindowVisible()) chatListeners.forEach((listener) => listener(false));
+    }, 300);
   };
   buttons.set(id, button);
   return button;
@@ -99,19 +103,23 @@ function chatWindowVisible() {
   });
 }
 
+async function waitForChatWindow() {
+  const started = Date.now();
+  while (Date.now() - started < WINDOW_WAIT_MS) {
+    if (chatWindowVisible()) return true;
+    await wait(250);
+  }
+  return false;
+}
+
 // Backup for onCloseFunction_: LiveAgent hides its chat iframe when the visitor closes the chat.
 function watchChatWindow() {
   if (watcher !== null) window.clearInterval(watcher);
-  let seen = false;
-  const started = Date.now();
   watcher = window.setInterval(() => {
-    const visible = chatWindowVisible();
-    if (visible) seen = true;
-    if ((seen && !visible) || (!seen && Date.now() - started > READY_TIMEOUT_MS)) {
-      if (watcher !== null) window.clearInterval(watcher);
-      watcher = null;
-      chatListeners.forEach((listener) => listener(false));
-    }
+    if (chatWindowVisible()) return;
+    if (watcher !== null) window.clearInterval(watcher);
+    watcher = null;
+    chatListeners.forEach((listener) => listener(false));
   }, 1000);
 }
 
@@ -129,18 +137,20 @@ export async function openLiveAgentChat(topic: ChatTopic, visitor?: ChatVisitor)
   }
   const button = buttonFor(api, LIVEAGENT_CHAT_BUTTONS[topic]);
   const started = Date.now();
+  let clicked = false;
   // LiveAgent sets up the button asynchronously; onClick throws until it is ready.
-  while (Date.now() - started < READY_TIMEOUT_MS) {
+  while (!clicked && Date.now() - started < READY_TIMEOUT_MS) {
     try {
       button.onClick();
-      chatListeners.forEach((listener) => listener(true));
-      watchChatWindow();
-      return;
+      clicked = true;
     } catch {
       await wait(250);
     }
   }
-  throw new Error("Chat is taking too long to open.");
+  // LiveAgent's window can take several seconds to load after the click.
+  if (!clicked || !(await waitForChatWindow())) throw new Error("Chat is taking too long to open.");
+  chatListeners.forEach((listener) => listener(true));
+  watchChatWindow();
 }
 
 export function onLiveAgentChatChange(listener: (open: boolean) => void) {
