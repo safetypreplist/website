@@ -2118,10 +2118,33 @@ p {
 
 .footer-bottom {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: baseline;
+  gap: 4px 10px;
   padding-top: 16px;
   font-size: 12.5px;
   color: rgba(244, 240, 229, 0.5);
+}
+
+.footer-credit::before {
+  content: "·";
+  margin-right: 10px;
+}
+
+.public-footer .footer-credit a {
+  font-size: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 600;
+  color: rgba(244, 240, 229, 0.72);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(244, 240, 229, 0.3);
+}
+
+.public-footer .footer-credit a:hover {
+  color: var(--paper);
 }
 
 .footer-disclaimer {

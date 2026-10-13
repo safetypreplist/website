@@ -71,6 +71,12 @@ export function PublicFooter({
       <p className="wrap footer-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
       <div className="wrap footer-bottom">
         <span>{copyrightLine()}</span>
+        <span className="footer-credit">
+          Powered by{" "}
+          <a href="https://www.iflipbrands.com" target="_blank" rel="noopener noreferrer">
+            iFlipBrands
+          </a>
+        </span>
       </div>
     </footer>
   );

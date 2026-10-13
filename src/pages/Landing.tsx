@@ -263,7 +263,7 @@ export function LandingPage() {
               </span>
               <span className="step-num">Step 2</span>
               <h3>Complete your purchase</h3>
-              <p>Check out securely. Choose monthly or annual billing, and optionally add Survival Vault.</p>
+              <p>Check out securely. Choose flexible payments: monthly or annual billing.</p>
             </li>
             <li>
               <span className="how-icon">
