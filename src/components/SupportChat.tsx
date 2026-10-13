@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { useApp } from "../context/AppContext";
 import { onLiveAgentChatChange, openLiveAgentChat, prepareLiveAgent, type ChatTopic } from "../lib/liveAgent";
+import { ANNUAL_CENTS, MONTHLY_CENTS, SURVIVAL_VAULT_CENTS } from "../lib/pricing";
+import { memberQuickAnswers, visitorQuickAnswers } from "../lib/quickAnswers";
 
 const OPTIONS: Record<ChatTopic, { title: string; detail: string }> = {
   sales: {
@@ -40,16 +42,28 @@ function CloseIcon() {
 
 export function SupportChat() {
   const { pathname } = useLocation();
-  const { session, profile, user } = useApp();
+  const { session, profile, user, products, hasSurvivalVault } = useApp();
   const [open, setOpen] = useState(false);
   const [chatting, setChatting] = useState(false);
   const [connecting, setConnecting] = useState<ChatTopic | null>(null);
   const [error, setError] = useState("");
+  const [answerId, setAnswerId] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
 
   const inApp = pathname.startsWith("/app");
   const order: ChatTopic[] = session ? ["support", "sales"] : ["sales", "support"];
+
+  const answers = useMemo(() => {
+    const cents = (slug: string, fallback: number) => products.find((p) => p.slug === slug)?.amount_cents ?? fallback;
+    const prices = {
+      monthlyCents: cents("access_monthly", MONTHLY_CENTS),
+      annualCents: cents("access_annual", ANNUAL_CENTS),
+      vaultCents: cents("upgrade_full", SURVIVAL_VAULT_CENTS),
+    };
+    return session ? memberQuickAnswers(prices, hasSurvivalVault) : visitorQuickAnswers(prices);
+  }, [products, session, hasSurvivalVault]);
+  const activeAnswer = answers.find((answer) => answer.id === answerId) ?? null;
 
   useEffect(
     () =>
@@ -61,9 +75,16 @@ export function SupportChat() {
   );
 
   useEffect(() => {
+    if (!open) {
+      setAnswerId(null);
+      return;
+    }
+    panelRef.current?.querySelector<HTMLButtonElement>(".support-chat-body button")?.focus();
+  }, [open, answerId]);
+
+  useEffect(() => {
     if (!open) return;
     void prepareLiveAgent().catch(() => undefined);
-    panelRef.current?.querySelector<HTMLButtonElement>(".support-chat-option")?.focus();
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setOpen(false);
@@ -103,6 +124,22 @@ export function SupportChat() {
 
   if (chatting) return null;
 
+  const chatOption = (topic: ChatTopic) => (
+    <button
+      key={topic}
+      className="support-chat-option"
+      type="button"
+      disabled={connecting !== null}
+      onClick={() => void choose(topic)}
+    >
+      <span>
+        <b>{OPTIONS[topic].title}</b>
+        <small>{connecting === topic ? "Connecting you…" : OPTIONS[topic].detail}</small>
+      </span>
+      <i aria-hidden="true">›</i>
+    </button>
+  );
+
   return (
     <div className={`support-chat ${inApp ? "in-app" : ""} ${open ? "open" : ""}`}>
       {open ? (
@@ -117,24 +154,41 @@ export function SupportChat() {
             </div>
           </div>
           <div className="support-chat-body">
-            <p className="support-chat-greeting">Hello! How can we help you?</p>
-            <div className="support-chat-options">
-              {order.map((topic) => (
-                <button
-                  key={topic}
-                  className="support-chat-option"
-                  type="button"
-                  disabled={connecting !== null}
-                  onClick={() => void choose(topic)}
-                >
-                  <span>
-                    <b>{OPTIONS[topic].title}</b>
-                    <small>{connecting === topic ? "Connecting you…" : OPTIONS[topic].detail}</small>
-                  </span>
-                  <i aria-hidden="true">›</i>
+            {activeAnswer ? (
+              <div className="support-chat-answer">
+                <button className="support-chat-back" type="button" onClick={() => setAnswerId(null)}>
+                  <span aria-hidden="true">‹</span> All questions
                 </button>
-              ))}
-            </div>
+                <h2>{activeAnswer.question}</h2>
+                <p>{activeAnswer.answer}</p>
+                {activeAnswer.link ? (
+                  <Link className="support-chat-answer-link" to={activeAnswer.link.to} onClick={() => setOpen(false)}>
+                    {activeAnswer.link.label} <span aria-hidden="true">→</span>
+                  </Link>
+                ) : null}
+                <p className="support-chat-section">Still have a question?</p>
+                <div className="support-chat-options">{chatOption(activeAnswer.topic)}</div>
+              </div>
+            ) : (
+              <>
+                <p className="support-chat-greeting">Hello! How can we help you?</p>
+                <p className="support-chat-section" id="support-chat-quick-label">
+                  Quick answers
+                </p>
+                <ul className="support-chat-quick" aria-labelledby="support-chat-quick-label">
+                  {answers.map((answer) => (
+                    <li key={answer.id}>
+                      <button type="button" onClick={() => setAnswerId(answer.id)}>
+                        <span>{answer.question}</span>
+                        <i aria-hidden="true">›</i>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="support-chat-section">Talk to us</p>
+                <div className="support-chat-options">{order.map(chatOption)}</div>
+              </>
+            )}
             {error ? (
               <p className="support-chat-error" role="alert">
                 {error}
