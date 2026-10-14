@@ -7,23 +7,28 @@ export function CookieNotice() {
 
   if (choice) return null;
 
-  function acknowledge() {
-    storeCookieChoice("essential");
-    setChoice("essential");
+  function choose(next: CookieChoice) {
+    storeCookieChoice(next);
+    setChoice(next);
   }
 
   return (
-    <div className="cookie-notice" role="dialog" aria-label="Cookie notice">
+    <div className="cookie-notice" role="dialog" aria-labelledby="cookie-notice-title">
       <div className="cookie-notice-inner">
         <div className="cookie-notice-copy">
-          <p className="eyebrow">Cookies</p>
+          <p className="eyebrow" id="cookie-notice-title">Cookie Policy</p>
           <p>
             We use essential cookies to keep you signed in. See the <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>
-        <button className="btn btn-primary" type="button" onClick={acknowledge}>
-          Got it
-        </button>
+        <div className="cookie-notice-actions">
+          <button className="cookie-btn cookie-btn-decline" type="button" onClick={() => choose("essential")}>
+            Decline
+          </button>
+          <button className="cookie-btn cookie-btn-accept" type="button" onClick={() => choose("all")}>
+            Accept
+          </button>
+        </div>
       </div>
     </div>
   );
