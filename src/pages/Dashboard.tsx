@@ -7,7 +7,11 @@ import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SCOPE_LINE } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
-import type { ChecklistSystem, CustomChecklistItem } from "../types";
+import type { ChecklistSystem, CustomChecklistItem, Profile } from "../types";
+
+function hasPlanAccess(profile: Profile | null | undefined) {
+  return profile?.role === "owner" || profile?.plan === "core" || profile?.plan === "full";
+}
 
 type Accent = "forest" | "moss" | "clay" | "terracotta";
 
@@ -36,7 +40,7 @@ export function DashboardPage() {
     offline,
     demoMode,
   } = useApp();
-  const entitled = profile?.plan === "core" || profile?.plan === "full";
+  const entitled = hasPlanAccess(profile);
   const personalSystems = catalog.systems.filter((s) => s.access_tier === "core");
   const householdSystems = catalog.systems.filter((s) => s.access_tier === "full");
   const isHousehold = viewing.kind === "household";
@@ -160,7 +164,7 @@ function timedSystems(systems: ChecklistSystem[]) {
 
 function SurvivalVaultButton() {
   const { hasSurvivalVault, profile, switchChecklist } = useApp();
-  const entitled = profile?.plan === "core" || profile?.plan === "full";
+  const entitled = hasPlanAccess(profile);
   if (!hasSurvivalVault && !entitled) return null;
   return (
     <Link
@@ -222,10 +226,10 @@ export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string
   const items = trackedItems(system, catalog.sections, catalog.items, customItems, lane);
   const done = items.filter((i) => progress[i.id]?.checked).length;
   const pct = items.length ? Math.round((done / items.length) * 100) : 0;
-  const locked =
-    profile?.plan === "none" || (system.access_tier === "full" && !hasSurvivalVault);
+  const noPlan = profile?.plan === "none" && profile.role !== "owner";
+  const locked = noPlan || (system.access_tier === "full" && !hasSurvivalVault);
   const to =
-    profile?.plan === "none"
+    noPlan
       ? "/pricing"
       : system.access_tier === "full" && !hasSurvivalVault
         ? "/app/account#addons"

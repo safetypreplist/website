@@ -462,9 +462,8 @@ export function OnboardingTour() {
   useEffect(() => {
     if (!open || mode !== "done") return;
     const timer = window.setTimeout(() => {
-      const preview = previewActive();
       sessionStorage.removeItem(PREVIEW_KEY);
-      if (!preview && storageKey) localStorage.setItem(storageKey, "done");
+      if (storageKey) localStorage.setItem(storageKey, "done");
       setOpen(false);
       navigate("/app");
     }, 6000);
@@ -478,9 +477,8 @@ export function OnboardingTour() {
   function finish() {
     holdingTour.current = false;
     releaseHold();
-    const preview = previewActive();
     sessionStorage.removeItem(PREVIEW_KEY);
-    if (!preview && storageKey) localStorage.setItem(storageKey, "done");
+    if (storageKey) localStorage.setItem(storageKey, "done");
     setOpen(false);
     if (location.pathname !== "/app") navigate("/app");
   }
