@@ -9480,6 +9480,8 @@ body:has(.cookie-notice) .support-chat {
 .offline-switch-text span { color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .offline-switch.just-on .offline-switch-text span[role="status"] { color: var(--moss); font-weight: 600; }
 .offline-switch-text .offline-switch-warn { color: var(--terracotta); }
+.offline-switch-text .app-icon-url { margin-top: 4px; font-size: 13px; }
+.app-icon-url a { color: var(--forest); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .switch { position: relative; flex: 0 0 auto; width: 52px; height: 30px; padding: 0; border: 0; border-radius: 999px; background: #cdc6b5; cursor: pointer; transition: background 0.2s ease; }
 .switch[aria-checked="true"] { background: var(--moss); }
 .switch:disabled { cursor: default; opacity: 0.55; }
@@ -9534,8 +9536,8 @@ body:has(.cookie-notice) .support-chat {
 .install-qr figcaption strong { color: var(--ink); font-size: 15px; }
 
 .onboarding-offline-card { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
-.onboarding-offline-head { display: flex; align-items: center; gap: 18px; text-align: left; }
-.onboarding-phone { flex: 0 0 auto; width: auto; height: 200px; filter: drop-shadow(0 10px 18px rgba(30, 42, 31, 0.22)); }
+.onboarding-offline-head { text-align: left; }
+.onboarding-phone { display: block; width: 100%; height: 210px; margin: 0 0 18px; border-radius: 12px; object-fit: cover; object-position: 30% 40%; background: #d9d9d9; }
 .onboarding-offline-head h2 { margin: 2px 0 8px; font-size: 23px; line-height: 1.2; }
 .onboarding-offline-head .eyebrow { margin: 0; }
 .onboarding-offline-head .onboarding-copy { margin: 0; text-align: left; }
@@ -9545,8 +9547,7 @@ body:has(.cookie-notice) .support-chat {
 .onboarding-offline-card .onboarding-actions { margin-top: 18px; }
 @media (max-width: 620px) {
   .onboarding-offline-card { max-height: calc(100dvh - 24px); }
-  .onboarding-offline-head { gap: 14px; }
-  .onboarding-phone { height: 140px; }
+  .onboarding-phone { height: 150px; margin-bottom: 14px; }
   .onboarding-offline-head h2 { font-size: 19px; }
   .onboarding-offline-head .onboarding-copy { font-size: 14px; }
   .onboarding-options > * { padding: 12px 14px; }

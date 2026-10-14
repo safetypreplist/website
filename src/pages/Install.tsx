@@ -3,7 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import { InstallQr, InstallSteps } from "../components/InstallSteps";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { useApp } from "../context/AppContext";
-import { detectPlatform, isInstalledApp, isPhoneOrTablet } from "../lib/install";
+import { detectPlatform, deviceName, isInstalledApp, isPhoneOrTablet } from "../lib/install";
 
 export function InstallPage() {
   const { session, profile } = useApp();
@@ -19,10 +19,10 @@ export function InstallPage() {
       <main className="section cream">
         <div className="wrap legal-page install-page">
           <div className="install-hero">
-            <img src="/icons/icon-192.png" width={72} height={72} alt="" />
+            <img src="/icons/icon-192.png?v=3" width={72} height={72} alt="" />
             <div>
               <p className="eyebrow">Safety Prep List</p>
-              <h1>Add the app icon to your {onPhone ? "phone" : "computer"}</h1>
+              <h1>Add the app icon to your {deviceName(platform)}</h1>
             </div>
           </div>
           <p>It opens straight to your checklist, and it works offline. Nothing to download from an app store.</p>

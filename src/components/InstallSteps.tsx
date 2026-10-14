@@ -3,6 +3,8 @@ import {
   INSTALL_URL,
   INSTALL_URL_LABEL,
   detectPlatform,
+  deviceName,
+  isApple,
   isInstalledApp,
   isPhoneOrTablet,
   promptInstall,
@@ -44,11 +46,11 @@ type Guide = { id: InstallPlatform; label: string; steps: ReactNode[]; note?: st
 const GUIDES: Guide[] = [
   {
     id: "ios-safari",
-    label: "iPhone or iPad (Safari)",
+    label: "iPhone (Safari)",
     steps: [
       <>
-        Tap <ShareIcon /> <b>Share</b> at the bottom of Safari (top right on iPad). On newer iPhones, tap <MoreIcon />{" "}
-        first, then <b>Share</b>.
+        Tap <ShareIcon /> <b>Share</b> at the bottom of the screen. On newer iPhones, tap <MoreIcon /> first, then{" "}
+        <b>Share</b>.
       </>,
       <>
         Scroll down and tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, tap <b>View More</b>.
@@ -60,11 +62,46 @@ const GUIDES: Guide[] = [
     note: "From then on, open Safety Prep List from the icon instead of Safari.",
   },
   {
-    id: "ios-other",
-    label: "iPhone or iPad (Chrome or another browser)",
+    id: "ipad-safari",
+    label: "iPad (Safari)",
     steps: [
       <>
-        Tap <ShareIcon /> <b>Share</b>. In Chrome it’s in the address bar; in Firefox or Edge, open the menu first.
+        Tap <ShareIcon /> <b>Share</b> in the top-right corner, next to the address bar. If you don’t see it, tap{" "}
+        <MoreIcon /> first.
+      </>,
+      <>
+        Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, scroll down or tap <b>View More</b>.
+      </>,
+      <>
+        Tap <b>Add</b>. Then open <b>Safety Prep List</b> from your Home Screen and sign in.
+      </>,
+    ],
+    note: "From then on, open Safety Prep List from the icon instead of Safari.",
+  },
+  {
+    id: "ios-other",
+    label: "iPhone (Chrome or another browser)",
+    steps: [
+      <>
+        Tap <ShareIcon /> <b>Share</b>. In Chrome it’s at the right end of the address bar; in Firefox or Edge, open the
+        menu first.
+      </>,
+      <>
+        Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, open {INSTALL_URL_LABEL} in Safari instead.
+      </>,
+      <>
+        Open <b>Safety Prep List</b> from your Home Screen and sign in.
+      </>,
+    ],
+    note: "From then on, open Safety Prep List from the icon instead of the browser.",
+  },
+  {
+    id: "ipad-other",
+    label: "iPad (Chrome or another browser)",
+    steps: [
+      <>
+        Tap <ShareIcon /> <b>Share</b> in the top-right corner of the address bar. In Firefox or Edge, open the menu
+        first.
       </>,
       <>
         Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, open {INSTALL_URL_LABEL} in Safari instead.
@@ -99,7 +136,7 @@ const GUIDES: Guide[] = [
         This page opened inside another app, which can’t install apps. Tap <MoreIcon /> or <ShareIcon /> in this app.
       </>,
       <>
-        Choose <b>Open in Safari</b> (iPhone) or <b>Open in Chrome</b> (Android). Or copy the link below and paste it
+        Choose <b>Open in Safari</b> (iPhone or iPad) or <b>Open in Chrome</b> (Android). Or copy the link below and paste it
         there.
       </>,
       <>Follow the install steps on that page.</>,
@@ -230,6 +267,9 @@ export function AppIconRow() {
         <div className="offline-switch-text">
           <b>Put it on your phone</b>
           <span>Scan this with your phone’s camera to add the Safety Prep List icon to your Home Screen.</span>
+          <span className="app-icon-url">
+            Or go to <a href={INSTALL_URL}>www.safetypreplist.com/install</a> to add the icon to your device.
+          </span>
         </div>
       </div>
     );
@@ -239,7 +279,7 @@ export function AppIconRow() {
     ? "Added. Look for the Safety Prep List icon on your Home Screen."
     : canPrompt
       ? "One tap puts the icon on your Home Screen."
-      : platform === "ios-safari" || platform === "ios-other"
+      : isApple(platform)
         ? <>Tap <ShareIcon /> <b>Share</b>, then <AddIcon /> <b>Add to Home Screen</b>.</>
         : platform === "android"
           ? <>In Chrome, tap <MoreIcon vertical />, then <b>Install app</b>.</>
@@ -247,9 +287,9 @@ export function AppIconRow() {
 
   return (
     <div className="app-icon-row">
-      <img className="app-icon-img" src="/icons/icon-192.png" width={48} height={48} alt="" />
+      <img className="app-icon-img" src="/icons/icon-192.png?v=3" width={48} height={48} alt="" />
       <div className="offline-switch-text">
-        <b>App icon on your phone</b>
+        <b>App icon on your {deviceName(platform)}</b>
         <span>{hint}</span>
         {canPrompt && !done ? (
           <button className="btn btn-primary app-icon-add" type="button" onClick={async () => setOutcome(await promptInstall())}>

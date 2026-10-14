@@ -6,6 +6,8 @@ export const INSTALL_URL_LABEL = "safetypreplist.com/install";
 export type InstallPlatform =
   | "ios-safari"
   | "ios-other"
+  | "ipad-safari"
+  | "ipad-other"
   | "android"
   | "desktop-chromium"
   | "mac-safari"
@@ -71,10 +73,11 @@ export function detectPlatform(): InstallPlatform {
   const ua = navigator.userAgent;
   // Browsers built into other apps (Google app, Instagram, Facebook, LinkedIn, Snapchat, Android WebViews) can't install web apps.
   if (/GSA\/|FBAN|FBAV|Instagram|LinkedInApp|Snapchat|Line\/|; wv\)/i.test(ua)) return "in-app";
-  const iPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-  if (/iPhone|iPad|iPod/i.test(ua) || iPadOS) {
-    return /CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua) ? "ios-other" : "ios-safari";
+  const otherBrowser = /CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  if (/iPad/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
+    return otherBrowser ? "ipad-other" : "ipad-safari";
   }
+  if (/iPhone|iPod/i.test(ua)) return otherBrowser ? "ios-other" : "ios-safari";
   if (/Android/i.test(ua)) return "android";
   if (/Firefox\//i.test(ua)) return "desktop-firefox";
   if (/Edg\/|Chrome\/|Chromium\//i.test(ua)) return "desktop-chromium";
@@ -82,6 +85,15 @@ export function detectPlatform(): InstallPlatform {
   return "other";
 }
 
+export function isApple(platform: InstallPlatform) {
+  return platform === "ios-safari" || platform === "ios-other" || platform === "ipad-safari" || platform === "ipad-other";
+}
+
 export function isPhoneOrTablet(platform: InstallPlatform) {
-  return platform === "ios-safari" || platform === "ios-other" || platform === "android" || platform === "in-app";
+  return isApple(platform) || platform === "android" || platform === "in-app";
+}
+
+export function deviceName(platform: InstallPlatform) {
+  if (platform === "ipad-safari" || platform === "ipad-other") return "iPad";
+  return isPhoneOrTablet(platform) ? "phone" : "computer";
 }

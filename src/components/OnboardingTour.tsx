@@ -576,14 +576,14 @@ export function OnboardingTour() {
           aria-modal="true"
           aria-labelledby="onboarding-offline-title"
         >
+          <img
+            className="onboarding-phone"
+            src="/images/iphone-home.jpg"
+            width={1024}
+            height={682}
+            alt="The Safety Prep List app icon on an iPhone Home Screen"
+          />
           <div className="onboarding-offline-head">
-            <img
-              className="onboarding-phone"
-              src="/images/safety-prep-phone.png?v=2"
-              width={395}
-              height={943}
-              alt="Safety Prep List checklist on a phone"
-            />
             <div>
               <p className="eyebrow">Use it anywhere</p>
               <h2 id="onboarding-offline-title">Your checklist, even without internet</h2>
