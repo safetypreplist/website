@@ -55,9 +55,9 @@ export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: P
       id: "offline",
       question: "Does it work without internet?",
       answer:
-        "Yes, once you set it up. Install Safety Prep List on your phone, tablet, or computer, sign in, and choose Prepare for offline use while you’re connected. After that you can open your checklists and check items off without Wi-Fi or service, and your changes sync when you reconnect. There’s no App Store or Google Play download; you install it from your browser.",
+        "Yes. Turn on Offline access when you sign in, and your checklist keeps working when Wi-Fi or service is down. Your changes sync when you reconnect. You can also add the Safety Prep List icon to your phone’s Home Screen; there’s nothing to download from an app store.",
       topic: "sales",
-      link: { to: "/install", label: "How to install" },
+      link: { to: "/install", label: "Add the app icon" },
     },
     {
       id: "sample",
@@ -127,9 +127,9 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
       id: "offline",
       question: "How do I use it without internet?",
       answer:
-        "While you’re connected, choose Prepare for offline use on Home. Then your checklists open and save on this device without Wi-Fi or service, and your changes sync when you reconnect. Videos, purchases, and account changes still need a connection. Print your most important lists as a backup.",
+        "Turn on Offline access on your Home page while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service, and your changes sync when you reconnect. Videos, purchases, and account changes still need a connection.",
       topic: "support",
-      link: { to: "/install", label: "Install the app" },
+      link: { to: "/install", label: "Add the app icon" },
     },
     {
       id: "checking",

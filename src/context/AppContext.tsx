@@ -179,6 +179,7 @@ type AppState = {
   accessMode: AccessMode;
   offline: OfflineStatus;
   prepareOffline: () => Promise<PrepareResult>;
+  turnOffOffline: () => Promise<void>;
   retrySync: () => Promise<void>;
   discardChange: (key: string) => Promise<void>;
   saveProgress: (itemId: string, checked: boolean, note: string) => Promise<void>;
@@ -1016,6 +1017,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { checklists: owners.size, items: snapshot.catalog.items.length, storage };
   }, [refreshAccount]);
 
+  const turnOffOffline = useCallback(async () => {
+    const userId = sessionRef.current?.user.id;
+    if (!userId) return;
+    const snapshot = await readSnapshot(userId);
+    if (snapshot) {
+      snapshot.preparedAt = null;
+      await writeSnapshot(snapshot);
+    }
+    setOffline((prev) => ({ ...prev, preparedAt: null }));
+  }, []);
+
   const signIn = useCallback(async (email: string, password: string) => {
     storeView({ kind: "personal", checklistId: null });
     if (isDemoMode()) {
@@ -1410,6 +1422,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       accessMode: mode,
       offline,
       prepareOffline,
+      turnOffOffline,
       retrySync,
       discardChange,
       saveProgress,
@@ -1461,6 +1474,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       mode,
       offline,
       prepareOffline,
+      turnOffOffline,
       retrySync,
       discardChange,
       saveProgress,

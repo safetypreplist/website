@@ -57,7 +57,7 @@ const GUIDES: Guide[] = [
         Tap <b>Add</b>. Then open <b>Safety Prep List</b> from your Home Screen and sign in.
       </>,
     ],
-    note: "On iPhone and iPad, the Home Screen app keeps its own storage, separate from Safari. Sign in and prepare offline use inside the Home Screen app, and use it instead of Safari, because each one counts as a device.",
+    note: "From then on, open Safety Prep List from the icon instead of Safari.",
   },
   {
     id: "ios-other",
@@ -73,7 +73,7 @@ const GUIDES: Guide[] = [
         Open <b>Safety Prep List</b> from your Home Screen and sign in.
       </>,
     ],
-    note: "The Home Screen app keeps its own storage. Sign in and prepare offline use inside it, and use it instead of the browser, because each one counts as a device.",
+    note: "From then on, open Safety Prep List from the icon instead of the browser.",
   },
   {
     id: "android",
@@ -89,7 +89,7 @@ const GUIDES: Guide[] = [
         Open <b>Safety Prep List</b> from your Home screen and sign in.
       </>,
     ],
-    note: "Opened this from a QR scanner or another app? Tap Open in Chrome first, then follow these steps.",
+    note: "Opened this from a QR scanner? Tap Open in Chrome first.",
   },
   {
     id: "in-app",
@@ -170,9 +170,7 @@ export function InstallSteps({ compact = false }: { compact?: boolean }) {
   const [installed] = useState(isInstalledApp);
   const { canPrompt, justInstalled } = useInstallPrompt();
   const [outcome, setOutcome] = useState<"accepted" | "dismissed" | "unavailable" | null>(null);
-  const [showAll, setShowAll] = useState(false);
   const guide = GUIDES.find((item) => item.id === platform);
-  const others = GUIDES.filter((item) => item.id !== guide?.id && item.id !== "in-app");
   const done = justInstalled || outcome === "accepted";
   const onPhone = isPhoneOrTablet(platform);
 
@@ -190,8 +188,7 @@ export function InstallSteps({ compact = false }: { compact?: boolean }) {
     <div className={`install-steps${compact ? " compact" : ""}`}>
       {done ? (
         <p className="install-done" role="status">
-          Installed. Open Safety Prep List from your {onPhone ? "Home Screen" : "apps"}, sign in, and prepare it for
-          offline use there.
+          Added. Open Safety Prep List from your {onPhone ? "Home Screen" : "apps"} and sign in.
         </p>
       ) : canPrompt ? (
         <div className="install-prompt">
@@ -210,17 +207,55 @@ export function InstallSteps({ compact = false }: { compact?: boolean }) {
         </div>
       ) : null}
 
-      {guide && !done ? <GuideCard guide={guide} /> : null}
+      {guide && !done && !canPrompt ? <GuideCard guide={guide} /> : null}
+    </div>
+  );
+}
 
-      <button className="install-more" type="button" aria-expanded={showAll} onClick={() => setShowAll((value) => !value)}>
-        {showAll ? "Hide other devices" : guide ? "Using a different device?" : "Show install steps for each device"}
-      </button>
-      {showAll ? (
-        <div className="install-guide-list">
-          {others.map((item) => (
-            <GuideCard key={item.id} guide={item} />
-          ))}
+/** A single row for onboarding: how to put the app icon on this phone, or a QR code when on a computer. */
+export function AppIconRow() {
+  const [platform] = useState(detectPlatform);
+  const [installed] = useState(isInstalledApp);
+  const { canPrompt, justInstalled } = useInstallPrompt();
+  const [outcome, setOutcome] = useState<"accepted" | "dismissed" | "unavailable" | null>(null);
+  if (installed) return null;
+
+  const onPhone = isPhoneOrTablet(platform);
+  const done = justInstalled || outcome === "accepted";
+
+  if (!onPhone) {
+    return (
+      <div className="app-icon-row is-qr">
+        <img className="app-icon-qr" src="/images/install-qr.svg" width={92} height={92} alt={`QR code that opens ${INSTALL_URL_LABEL}`} />
+        <div className="offline-switch-text">
+          <b>Put it on your phone</b>
+          <span>Scan this with your phone’s camera to add the Safety Prep List icon to your Home Screen.</span>
         </div>
+      </div>
+    );
+  }
+
+  const hint: ReactNode = done
+    ? "Added. Look for the Safety Prep List icon on your Home Screen."
+    : canPrompt
+      ? "One tap puts the icon on your Home Screen."
+      : platform === "ios-safari" || platform === "ios-other"
+        ? <>Tap <ShareIcon /> <b>Share</b>, then <AddIcon /> <b>Add to Home Screen</b>.</>
+        : platform === "android"
+          ? <>In Chrome, tap <MoreIcon vertical />, then <b>Install app</b>.</>
+          : "Open this page in Safari or Chrome to add the icon.";
+
+  return (
+    <div className="app-icon-row">
+      <img className="app-icon-img" src="/icons/icon-192.png" width={44} height={44} alt="" />
+      <div className="offline-switch-text">
+        <b>App icon on your phone</b>
+        <span>{hint}</span>
+      </div>
+      {canPrompt && !done ? (
+        <button className="btn btn-primary app-icon-add" type="button" onClick={async () => setOutcome(await promptInstall())}>
+          Add
+        </button>
       ) : null}
     </div>
   );

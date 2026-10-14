@@ -81,6 +81,7 @@ const coreFeatures = [
 
 const planIncludes = [
   { label: "Check off items on any device", Icon: IconPhone },
+  { label: "Works offline too", Icon: IconOffgrid },
   { label: "Add personal notes", Icon: IconNotes },
   { label: `Up to ${INCLUDED_CUSTOM_PER_SECTION} custom items per section`, Icon: IconChecklist },
   { label: "Print any checklist", Icon: IconPrint },

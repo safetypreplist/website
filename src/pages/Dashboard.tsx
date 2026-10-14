@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Photo } from "../components/Photo";
-import { PrepareOfflineCard, syncLabel } from "../components/OfflineStatus";
+import { OfflineSwitch, syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
@@ -116,7 +116,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      {entitled && !demoMode && !isHousehold ? <PrepareOfflineCard compact={Boolean(offline.preparedAt)} /> : null}
+      {entitled && !demoMode && !isHousehold ? <OfflineSwitch card /> : null}
 
       {continueSystem && (
         <Link className="continue-card" to={`/app/lists/${continueSystem.slug}`}>
