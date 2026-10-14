@@ -27,7 +27,7 @@ export default defineConfig({
         description:
           "Hope for the best. Prepare for the rest. A living preparedness system from Safety Prep List.",
         theme_color: "#1E2A1F",
-        background_color: "#F4F0E5",
+        background_color: "#0B1B15",
         display: "standalone",
         orientation: "portrait-primary",
         start_url: "/app",

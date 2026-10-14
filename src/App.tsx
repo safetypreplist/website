@@ -6,6 +6,7 @@ import { LandingPage } from "./pages/Landing";
 import { Launch26Page } from "./pages/Launch26";
 import { CreateAccountPage, JoinFamilyPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
+import { AppSplash } from "./components/AppSplash";
 import { CookieNotice } from "./components/CookieNotice";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { SupportChat } from "./components/SupportChat";
@@ -34,7 +35,7 @@ import { SystemPage } from "./pages/System";
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useApp();
   const location = useLocation();
-  if (loading) return <p className="wrap" style={{ padding: 40 }}>Loading…</p>;
+  if (loading) return <AppSplash />;
   if (!session) return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
   return <>{children}</>;
 }
