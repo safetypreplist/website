@@ -23,7 +23,7 @@ export default defineConfig({
       includeAssets: ["favicon.ico", "favicon.png", "favicon-32.png", "apple-touch-icon.png", "brand/logo.png"],
       manifest: {
         name: "Safety Prep List",
-        short_name: "Prep List",
+        short_name: "Safety Prep List",
         description:
           "Hope for the best. Prepare for the rest. A living preparedness system from Safety Prep List.",
         theme_color: "#1E2A1F",
@@ -45,12 +45,6 @@ export default defineConfig({
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
-          },
-          {
-            src: "/icons/icon-maskable-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
           },
         ],
       },

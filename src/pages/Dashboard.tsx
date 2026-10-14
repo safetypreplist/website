@@ -132,7 +132,7 @@ export function DashboardPage() {
         </Link>
       )}
 
-      {isHousehold ? <p className="dash-section-title">Survival Vault</p> : <StartHereTitle />}
+      {isHousehold ? <p className="dash-section-title">Survival Vault</p> : null}
       {!isHousehold ? (
         <p className="dash-scope">{SCOPE_LINE}</p>
       ) : null}
@@ -156,22 +156,6 @@ export function vaultSystems(systems: ChecklistSystem[]) {
 
 function timedSystems(systems: ChecklistSystem[]) {
   return TIMED_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
-}
-
-function StartHereTitle() {
-  return (
-    <p className="start-here-title">
-      Start here
-      <svg className="start-here-flag" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M5 21V3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <rect x="6" y="4" width="14" height="10" rx="1" fill="#fff" stroke="currentColor" strokeWidth="1" />
-        <path
-          d="M6 4h3.5v3.33H6zM13 4h3.5v3.33H13zM9.5 7.33H13v3.34H9.5zM16.5 7.33H20v3.34h-3.5zM6 10.67h3.5V14H6zM13 10.67h3.5V14H13z"
-          fill="currentColor"
-        />
-      </svg>
-    </p>
-  );
 }
 
 function SurvivalVaultButton() {
@@ -198,7 +182,6 @@ export function ListsPage() {
   return (
     <div>
       <h1 className="page-title">{viewing.title}</h1>
-      <StartHereTitle />
       <div className="system-list">
         {startSystems.map((system) => (
           <SystemRow key={system.id} slug={system.slug} />

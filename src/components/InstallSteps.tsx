@@ -64,7 +64,7 @@ const GUIDES: Guide[] = [
     label: "iPhone or iPad (Chrome or another browser)",
     steps: [
       <>
-        Tap <ShareIcon /> <b>Share</b> in your browser.
+        Tap <ShareIcon /> <b>Share</b>. In Chrome it’s in the address bar; in Firefox or Edge, open the menu first.
       </>,
       <>
         Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, open {INSTALL_URL_LABEL} in Safari instead.
@@ -197,7 +197,7 @@ export function InstallSteps({ compact = false }: { compact?: boolean }) {
             type="button"
             onClick={async () => setOutcome(await promptInstall())}
           >
-            Install the app
+            {onPhone ? "Add to Home Screen" : "Install Safety Prep List"}
           </button>
           <small className="muted">
             {outcome === "dismissed"
@@ -247,16 +247,16 @@ export function AppIconRow() {
 
   return (
     <div className="app-icon-row">
-      <img className="app-icon-img" src="/icons/icon-192.png" width={44} height={44} alt="" />
+      <img className="app-icon-img" src="/icons/icon-192.png" width={48} height={48} alt="" />
       <div className="offline-switch-text">
         <b>App icon on your phone</b>
         <span>{hint}</span>
+        {canPrompt && !done ? (
+          <button className="btn btn-primary app-icon-add" type="button" onClick={async () => setOutcome(await promptInstall())}>
+            Add to Home Screen
+          </button>
+        ) : null}
       </div>
-      {canPrompt && !done ? (
-        <button className="btn btn-primary app-icon-add" type="button" onClick={async () => setOutcome(await promptInstall())}>
-          Add
-        </button>
-      ) : null}
     </div>
   );
 }

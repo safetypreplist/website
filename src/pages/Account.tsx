@@ -217,25 +217,37 @@ export function AccountPage() {
           />
           <div className="profile-hero-identity">
             <button
-              className="profile-avatar"
+              className={`profile-avatar${photoBusy ? " is-busy" : ""}`}
               type="button"
               disabled={photoBusy}
               onClick={() => fileRef.current?.click()}
-              aria-label={profile?.avatar_url ? "Change photo" : "Upload photo"}
+              aria-label={photoBusy ? "Saving photo" : profile?.avatar_url ? "Change photo" : "Add a photo"}
+              title={profile?.avatar_url ? "Change photo" : "Add a photo"}
             >
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" />
-              ) : (
-                <span>{initialsFrom(display || first, user?.email)}</span>
-              )}
+              <span className="profile-avatar-face">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" />
+                ) : (
+                  <span>{initialsFrom(display || first, user?.email)}</span>
+                )}
+              </span>
+              <span className="profile-avatar-badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.5-2h5.6l1.5 2h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="12" cy="13" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+              </span>
             </button>
             <div>
               <p className="profile-kicker">Your account</p>
               <h1 className="page-title">{welcome}</h1>
-              <p className="profile-hero-meta">{planName}</p>
-              <button className="profile-photo-link" type="button" disabled={photoBusy} onClick={() => fileRef.current?.click()}>
-                {photoBusy ? "Saving photo…" : profile?.avatar_url ? "Change photo" : "Upload photo"}
-              </button>
+              <p className="profile-hero-meta">{photoBusy ? "Saving photo…" : planName}</p>
             </div>
           </div>
         </div>
