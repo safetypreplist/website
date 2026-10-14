@@ -1,10 +1,10 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   INSTALL_URL,
   INSTALL_URL_LABEL,
   detectPlatform,
   deviceName,
-  isApple,
   isInstalledApp,
   isPhoneOrTablet,
   promptInstall,
@@ -255,6 +255,17 @@ export function AppIconRow() {
   const [installed] = useState(isInstalledApp);
   const { canPrompt, justInstalled } = useInstallPrompt();
   const [outcome, setOutcome] = useState<"accepted" | "dismissed" | "unavailable" | null>(null);
+  const [showSteps, setShowSteps] = useState(false);
+
+  useEffect(() => {
+    if (!showSteps) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowSteps(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showSteps]);
+
   if (installed) return null;
 
   const onPhone = isPhoneOrTablet(platform);
@@ -275,28 +286,57 @@ export function AppIconRow() {
     );
   }
 
-  const hint: ReactNode = done
-    ? "Added. Look for the Safety Prep List icon on your Home Screen."
-    : canPrompt
-      ? "One tap puts the icon on your Home Screen."
-      : isApple(platform)
-        ? <>Tap <ShareIcon /> <b>Share</b>, then <AddIcon /> <b>Add to Home Screen</b>.</>
-        : platform === "android"
-          ? <>In Chrome, tap <MoreIcon vertical />, then <b>Install app</b>.</>
-          : "Open this page in Safari or Chrome to add the icon.";
+  const guide = GUIDES.find((item) => item.id === platform);
+  const device = deviceName(platform);
+
+  async function addIcon() {
+    if (canPrompt) {
+      setOutcome(await promptInstall());
+      return;
+    }
+    setShowSteps(true);
+  }
 
   return (
     <div className="app-icon-row">
       <img className="app-icon-img" src="/icons/icon-192.png?v=3" width={48} height={48} alt="" />
       <div className="offline-switch-text">
-        <b>App icon on your {deviceName(platform)}</b>
-        <span>{hint}</span>
-        {canPrompt && !done ? (
-          <button className="btn btn-primary app-icon-add" type="button" onClick={async () => setOutcome(await promptInstall())}>
-            Add to Home Screen
+        <b>App icon on your {device}</b>
+        <span>
+          {done ? "Added. Look for the Safety Prep List icon on your Home Screen." : "Open your checklist in one tap, right from your Home Screen."}
+        </span>
+        {!done ? (
+          <button className="btn btn-ghost app-icon-add" type="button" onClick={() => void addIcon()}>
+            Add icon to {device === "iPad" ? "iPad" : "mobile"}
           </button>
         ) : null}
       </div>
+      {showSteps
+        ? createPortal(
+            <div className="app-icon-pop-backdrop" role="presentation" onClick={() => setShowSteps(false)}>
+              <div
+                className="app-icon-pop"
+                role="dialog"
+                aria-modal="true"
+                aria-label="How to add the app icon"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {guide ? (
+                  <GuideCard guide={guide} />
+                ) : (
+                  <div className="install-guide">
+                    <h3>Add the app icon</h3>
+                    <p className="install-note">Open {INSTALL_URL_LABEL} in Safari or Chrome to add the icon.</p>
+                  </div>
+                )}
+                <button className="btn btn-primary app-icon-pop-done" type="button" onClick={() => setShowSteps(false)}>
+                  Got it
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
