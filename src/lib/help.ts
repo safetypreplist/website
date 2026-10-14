@@ -23,6 +23,12 @@ export const DEFAULT_FAQS: HelpFaq[] = [
     answer: "Open the Family section of the menu to invite someone new or connect an existing checklist so you can prepare together.",
   },
   {
+    id: "offline",
+    question: "How do I use my checklist offline?",
+    answer:
+      "Open your Account page (tap your profile photo at the top, or Account in the menu). Scroll down to Your data and turn on Offline access. Your checklist will then open on this device even without Wi-Fi or cell service. Turn it on for each phone, tablet, or computer you use.",
+  },
+  {
     id: "devices",
     question: "Why am I asked about devices?",
     answer: "Each login can stay active on a limited number of devices. Remove an old one from My Devices if you need a free slot.",
@@ -50,4 +56,19 @@ export function parseFaqs(value: unknown): HelpFaq[] {
       };
     })
     .filter((row): row is HelpFaq => Boolean(row));
+}
+
+/** Saved FAQs plus any built-in question added after the list was last saved. */
+export function withNewDefaults(saved: HelpFaq[]): HelpFaq[] {
+  if (!saved.length) return DEFAULT_FAQS;
+  const ids = new Set(saved.map((item) => item.id));
+  const merged = [...saved];
+  DEFAULT_FAQS.forEach((item, index) => {
+    if (ids.has(item.id)) return;
+    const before = DEFAULT_FAQS.slice(0, index).reverse().find((prev) => ids.has(prev.id));
+    const at = before ? merged.findIndex((row) => row.id === before.id) + 1 : 0;
+    merged.splice(at, 0, item);
+    ids.add(item.id);
+  });
+  return merged;
 }

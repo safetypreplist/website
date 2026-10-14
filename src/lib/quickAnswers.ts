@@ -127,7 +127,7 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
       id: "offline",
       question: "How do I use it without internet?",
       answer:
-        "Turn on Offline access on your Home page while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service, and your changes sync when you reconnect. Videos, purchases, and account changes still need a connection.",
+        "Turn on Offline access on your Home page, or under Your data on your Account page, while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service, and your changes sync when you reconnect. Videos, purchases, and account changes still need a connection.",
       topic: "support",
       link: { to: "/install", label: "Add the app icon" },
     },

@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { startOnboardingReplay } from "../components/OnboardingTour";
-import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/help";
+import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, withNewDefaults, type HelpFaq } from "../lib/help";
 import { openLiveAgentChat } from "../lib/liveAgent";
 import { invokeFunction, supabase } from "../lib/supabase";
 
@@ -16,8 +16,7 @@ export function HelpPage() {
 
   useEffect(() => {
     void supabase.from("app_config").select("value").eq("key", HELP_FAQS_KEY).maybeSingle().then(({ data }) => {
-      const next = parseFaqs(data?.value);
-      if (next.length) setFaqs(next);
+      setFaqs(withNewDefaults(parseFaqs(data?.value)));
     });
   }, []);
 

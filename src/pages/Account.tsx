@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { OfflineSwitch } from "../components/OfflineStatus";
 import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { ProfileWeather } from "../components/LocationStatus";
 import { useApp } from "../context/AppContext";
@@ -337,7 +338,7 @@ export function AccountPage() {
           </div>
         ) : hasSurvivalVault ? (
           <div className="addon-owned">
-            <Link className="btn btn-ghost" to="/app/survival">
+            <Link className="btn btn-primary" to="/app/survival">
               Open Survival Vault
             </Link>
           </div>
@@ -394,6 +395,11 @@ export function AccountPage() {
 
       <article className="account-card">
         <h2>Your data</h2>
+        {!demoMode ? (
+          <div className="account-offline">
+            <OfflineSwitch />
+          </div>
+        ) : null}
         <p className="muted">Download a JSON copy of your account, checklist progress, notes, contacts, and devices.</p>
         <div className="toolbar">
           <button className="btn btn-ghost" type="button" onClick={downloadData}>

@@ -7,7 +7,7 @@ import { COPY_KEY, DEFAULT_STEPS, DEFAULT_VIDEO_URL, VIDEO_CACHE_KEY, loadCopy, 
 import { AdminAccounts } from "../components/AdminAccounts";
 import { AdminRefunds } from "../components/AdminRefunds";
 import { usePendingRefunds } from "../lib/refunds";
-import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, type HelpFaq } from "../lib/help";
+import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, withNewDefaults, type HelpFaq } from "../lib/help";
 import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
 
 type AdminTab = "accounts" | "refunds" | "discounts" | "content" | "onboarding" | "faqs";
@@ -493,8 +493,7 @@ function FaqSettings({ onSaved }: { onSaved: (message: string) => void }) {
 
   useEffect(() => {
     void supabase.from("app_config").select("value").eq("key", HELP_FAQS_KEY).maybeSingle().then(({ data }) => {
-      const next = parseFaqs(data?.value);
-      if (next.length) setFaqs(next);
+      setFaqs(withNewDefaults(parseFaqs(data?.value)));
       setLoading(false);
     });
   }, []);

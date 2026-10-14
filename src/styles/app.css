@@ -9491,6 +9491,7 @@ body:has(.cookie-notice) .support-chat {
 .switch[aria-checked="true"] .switch-knob { transform: translateX(22px); }
 .switch.is-busy .switch-knob::after { content: ""; position: absolute; inset: 5px; border: 2px solid var(--moss); border-right-color: transparent; border-radius: 50%; animation: switch-spin 0.8s linear infinite; }
 @keyframes switch-spin { to { transform: rotate(360deg); } }
+.account-offline { margin: 4px 0 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
 .app-icon-row { display: flex; align-items: center; gap: 14px; }
 .app-icon-img { flex: 0 0 auto; align-self: flex-start; width: 48px; height: 48px; }
 .app-icon-qr { flex: 0 0 auto; width: 92px; height: 92px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
