@@ -2269,27 +2269,86 @@ p {
 
 .cookie-notice {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 80;
-  width: min(420px, calc(100vw - 24px));
-  padding: 16px;
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: var(--paper);
-  box-shadow: var(--shadow-lg);
+  padding: 18px clamp(16px, 4vw, 40px) calc(18px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(circle at 82% 0%, rgba(126, 168, 112, 0.3), transparent 40%),
+    radial-gradient(circle at 12% 100%, rgba(80, 132, 83, 0.24), transparent 36%),
+    linear-gradient(110deg, #0b1b15 0%, #10251b 52%, #0b1a14 100%);
+  border-top: 1px solid rgba(244, 240, 229, 0.14);
+  box-shadow: 0 -10px 48px rgba(126, 168, 112, 0.16);
+  color: var(--sand);
+  animation: cookie-notice-in 0.35s ease-out;
 }
 
-.cookie-notice p {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-
-.cookie-notice-actions {
+.cookie-notice-inner {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.cookie-notice .eyebrow {
+  margin: 0 0 4px;
+  color: var(--clay-light);
+}
+
+.cookie-notice .eyebrow::before {
+  background: var(--terracotta-light);
+}
+
+.cookie-notice-copy p:not(.eyebrow) {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(244, 240, 229, 0.78);
+}
+
+.cookie-notice a {
+  color: var(--paper);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 240, 229, 0.45);
+  text-underline-offset: 3px;
+}
+
+.cookie-notice a:hover {
+  text-decoration-color: var(--paper);
+}
+
+.cookie-notice .btn {
+  flex: none;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: 5px;
+}
+
+@keyframes cookie-notice-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (max-width: 620px) {
+  .cookie-notice-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .cookie-notice-copy p:not(.eyebrow) {
+    font-size: 13px;
+  }
+}
+
+@media print {
+  .cookie-notice {
+    display: none;
+  }
 }
 
 .guidance-ack {
