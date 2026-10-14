@@ -10,6 +10,7 @@ export type InstallPlatform =
   | "desktop-chromium"
   | "mac-safari"
   | "desktop-firefox"
+  | "in-app"
   | "other";
 
 type InstallPromptEvent = Event & {
@@ -68,9 +69,11 @@ export function isInstalledApp() {
 export function detectPlatform(): InstallPlatform {
   if (typeof navigator === "undefined") return "other";
   const ua = navigator.userAgent;
+  // Browsers built into other apps (Google app, Instagram, Facebook, LinkedIn, Snapchat, Android WebViews) can't install web apps.
+  if (/GSA\/|FBAN|FBAV|Instagram|LinkedInApp|Snapchat|Line\/|; wv\)/i.test(ua)) return "in-app";
   const iPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
   if (/iPhone|iPad|iPod/i.test(ua) || iPadOS) {
-    return /CriOS|FxiOS|EdgiOS|OPiOS|GSA\//i.test(ua) ? "ios-other" : "ios-safari";
+    return /CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua) ? "ios-other" : "ios-safari";
   }
   if (/Android/i.test(ua)) return "android";
   if (/Firefox\//i.test(ua)) return "desktop-firefox";
@@ -80,5 +83,5 @@ export function detectPlatform(): InstallPlatform {
 }
 
 export function isPhoneOrTablet(platform: InstallPlatform) {
-  return platform === "ios-safari" || platform === "ios-other" || platform === "android";
+  return platform === "ios-safari" || platform === "ios-other" || platform === "android" || platform === "in-app";
 }

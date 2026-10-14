@@ -1,27 +1,35 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { InstallQr, InstallSteps } from "../components/InstallSteps";
 import { PrepareOfflineCard } from "../components/OfflineStatus";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { useApp } from "../context/AppContext";
-import { detectPlatform, isPhoneOrTablet } from "../lib/install";
+import { detectPlatform, isInstalledApp, isPhoneOrTablet } from "../lib/install";
 
 export function InstallPage() {
   const { session, profile } = useApp();
   const [platform] = useState(detectPlatform);
   const signedIn = Boolean(session && profile);
   const entitled = Boolean(profile && profile.plan !== "none");
+  const onPhone = isPhoneOrTablet(platform);
+
+  if (isInstalledApp()) return <Navigate to="/app" replace />;
 
   return (
     <div className="marketing-page">
       <PublicHeader />
       <main className="section cream">
         <div className="wrap legal-page install-page">
-          <p className="eyebrow">Install</p>
-          <h1>Install Safety Prep List</h1>
+          <div className="install-hero">
+            <img src="/icons/icon-192.png" width={72} height={72} alt="" />
+            <div>
+              <p className="eyebrow">Install</p>
+              <h1>Get the Safety Prep List app</h1>
+            </div>
+          </div>
           <p>
-            Safety Prep List works in your browser on your phone, tablet, or computer. Installing it adds an icon to your
-            home screen and opens it like an app. There is no separate App Store or Google Play download.
+            Install it right from this page in a few taps. It adds an icon to your {onPhone ? "Home Screen" : "computer"}{" "}
+            and opens like an app. No App Store or Google Play download is needed.
           </p>
 
           <InstallSteps />
@@ -60,7 +68,7 @@ export function InstallPage() {
             invitations, and other account changes need an internet connection.
           </p>
 
-          {!isPhoneOrTablet(platform) ? <InstallQr caption="Setting up your phone or tablet?" /> : null}
+          {!onPhone ? <InstallQr caption="Setting up your phone or tablet?" /> : null}
         </div>
       </main>
       <PublicFooter />

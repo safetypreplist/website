@@ -9371,6 +9371,21 @@ body:has(.cookie-notice) .support-chat {
 .install-steps.compact .install-note { font-size: 13.5px; }
 .install-more { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--terracotta); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .install-guide-list { margin-top: 10px; }
+.install-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+.install-hero img { flex: 0 0 auto; width: 72px; height: 72px; border-radius: 18px; box-shadow: 0 6px 18px rgba(30, 42, 31, 0.18); }
+.install-hero .eyebrow { margin: 0 0 4px; }
+.legal-page .install-hero h1 { margin: 0; }
+.install-now { min-height: 52px; padding: 0 28px; font-size: 17px; }
+.install-prompt small { flex-basis: 100%; }
+.install-guide li { line-height: 1.55; }
+.install-guide b { color: var(--ink); }
+.install-icon { display: inline-block; width: 1.25em; height: 1.25em; margin: 0 1px; padding: 1px; vertical-align: -0.3em; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #0a7aff; }
+.install-copy { margin-top: 10px; }
+@media (max-width: 620px) {
+  .install-hero img { width: 60px; height: 60px; border-radius: 15px; }
+  .install-guide-steps li { margin-bottom: 10px; font-size: 15.5px; }
+  .install-now { width: 100%; }
+}
 .install-checklist { margin: 0 0 18px 20px; }
 .install-checklist li { margin-bottom: 10px; color: var(--ink-soft); }
 .install-checklist b { color: var(--ink); }
