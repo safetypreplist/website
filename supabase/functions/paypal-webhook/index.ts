@@ -1,4 +1,5 @@
 import { json } from "../_shared/http.ts";
+import { activateSubscription } from "../_shared/activation.ts";
 import { paypalFetch } from "../_shared/paypal.ts";
 import { refKey, syncSubscription, type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { serviceClient } from "../_shared/supabase.ts";
@@ -96,7 +97,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    await syncSubscription(admin, row);
+    let current = row;
+    const setsUpPurchase =
+      event.event_type === "BILLING.SUBSCRIPTION.ACTIVATED" || event.event_type === "PAYMENT.SALE.COMPLETED";
+    if (setsUpPurchase && !row.purchase_id) {
+      // The buyer may have closed the tab before the site finished setting them up; do it here instead.
+      const result = await activateSubscription(admin, row, { waitForActive: false });
+      // 402 means PayPal hasn't marked it active yet; a later event will try again.
+      if (!result.ok && result.status !== 402) {
+        console.error("Webhook activation failed", paypalSubscriptionId, result.error);
+        return json({ error: "Could not set up subscription" }, 500);
+      }
+      const reloaded = await admin.from("subscriptions").select("*").eq("id", row.id).maybeSingle();
+      if (reloaded.data) current = reloaded.data as SubscriptionRow;
+    }
+
+    await syncSubscription(admin, current);
     return json({ ok: true });
   } catch (err) {
     console.error("PayPal webhook error", err);

@@ -1,4 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
+import { comingSoonBlock } from "../_shared/comingSoon.ts";
 import { buildCustomId, parseAccessInterval } from "../_shared/billing.ts";
 import {
   isDiscountUsable,
@@ -17,6 +18,8 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
+    const blocked = await comingSoonBlock(req);
+    if (blocked) return blocked;
     const body = await req.json().catch(() => ({}));
     if (!body.acceptedTerms) {
       return json({ error: "Please agree to the Terms of Service, Privacy Policy, and Refund Policy." }, 400);

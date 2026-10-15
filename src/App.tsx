@@ -7,6 +7,8 @@ import { Launch26Page } from "./pages/Launch26";
 import { CreateAccountPage, JoinFamilyPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { AppSplash } from "./components/AppSplash";
+import { ComingSoonOwnerPill, ComingSoonPage } from "./components/ComingSoon";
+import { isOpenDuringComingSoon, useComingSoon } from "./lib/comingSoon";
 import { CookieNotice } from "./components/CookieNotice";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { SupportChat } from "./components/SupportChat";
@@ -59,8 +61,35 @@ function DeviceGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const { session, profile, loading } = useApp();
+  const location = useLocation();
+  const comingSoon = useComingSoon();
+  const isOwner = profile?.role === "owner";
+
+  // Wait for the setting so a visitor never sees the real site flash before the Coming Soon page.
+  if (!comingSoon.ready) return <AppSplash />;
+
+  if (location.pathname === "/coming-soon") {
+    if (loading) return <AppSplash />;
+    return isOwner ? <ComingSoonPage message={comingSoon.message} preview /> : <Navigate to="/" replace />;
+  }
+
+  if (comingSoon.enabled) {
+    if (loading) return <AppSplash />;
+    // Signed-in accounts keep working, so existing members are never locked out. The owner sees everything.
+    if (!isOwner && !session && !isOpenDuringComingSoon(location.pathname)) {
+      return <ComingSoonPage message={comingSoon.message} />;
+    }
+  }
+  const showOwnerPill =
+    comingSoon.enabled &&
+    isOwner &&
+    !location.pathname.startsWith("/app") &&
+    !location.pathname.startsWith("/admin");
+
   return (
     <>
+    {showOwnerPill ? <ComingSoonOwnerPill /> : null}
     <ScrollToTop />
     <CookieNotice />
     <Routes>
