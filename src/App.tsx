@@ -66,19 +66,23 @@ export default function App() {
   const comingSoon = useComingSoon();
   const isOwner = profile?.role === "owner";
 
-  // Wait for the setting so a visitor never sees the real site flash before the Coming Soon page.
+  // Wait for the setting so a visitor never sees the real site flash before the maintenance page.
   if (!comingSoon.ready) return <AppSplash />;
 
-  if (location.pathname === "/coming-soon") {
+  if (location.pathname === "/maintenance") {
     if (loading) return <AppSplash />;
-    return isOwner ? <ComingSoonPage message={comingSoon.message} preview /> : <Navigate to="/" replace />;
+    return isOwner ? (
+      <ComingSoonPage eyebrow={comingSoon.eyebrow} title={comingSoon.title} message={comingSoon.message} preview />
+    ) : (
+      <Navigate to="/" replace />
+    );
   }
 
   if (comingSoon.enabled) {
     if (loading) return <AppSplash />;
     // Signed-in accounts keep working, so existing members are never locked out. The owner sees everything.
     if (!isOwner && !session && !isOpenDuringComingSoon(location.pathname)) {
-      return <ComingSoonPage message={comingSoon.message} />;
+      return <ComingSoonPage eyebrow={comingSoon.eyebrow} title={comingSoon.title} message={comingSoon.message} />;
     }
   }
   const showOwnerPill =

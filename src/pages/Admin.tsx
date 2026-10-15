@@ -12,8 +12,12 @@ import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import {
   COMING_SOON_KEY,
+  COMING_SOON_MAX_EYEBROW,
   COMING_SOON_MAX_MESSAGE,
+  COMING_SOON_MAX_TITLE,
+  DEFAULT_COMING_SOON_EYEBROW,
   DEFAULT_COMING_SOON_MESSAGE,
+  DEFAULT_COMING_SOON_TITLE,
   announceComingSoonChange,
   parseComingSoon,
 } from "../lib/comingSoon";
@@ -65,7 +69,7 @@ export function AdminPage() {
           <AdminNavButton active={tab === "onboarding"} label="Onboarding" onClick={() => setTab("onboarding")} />
           <AdminNavButton active={tab === "faqs"} label="FAQs" onClick={() => setTab("faqs")} />
           <p className="admin-rail-label admin-rail-label-spaced">Site</p>
-          <AdminNavButton active={tab === "comingSoon"} label="Coming Soon Mode" onClick={() => setTab("comingSoon")} />
+          <AdminNavButton active={tab === "comingSoon"} label="Maintenance Mode" onClick={() => setTab("comingSoon")} />
           <AdminNavButton active={false} label="Log out" onClick={() => void signOut()} />
         </aside>
         <section className="admin-content">
@@ -502,17 +506,25 @@ function ComingSoonSettings({ onSaved }: { onSaved: (message: string) => void })
   const [loading, setLoading] = useState(true);
   const [savedEnabled, setSavedEnabled] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const [eyebrow, setEyebrow] = useState(DEFAULT_COMING_SOON_EYEBROW);
+  const [title, setTitle] = useState(DEFAULT_COMING_SOON_TITLE);
   const [message, setMessage] = useState(DEFAULT_COMING_SOON_MESSAGE);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function show(setting: ReturnType<typeof parseComingSoon>) {
+    setEyebrow(setting.eyebrow);
+    setTitle(setting.title);
+    setMessage(setting.message);
+  }
 
   useEffect(() => {
     void supabase.from("app_config").select("value").eq("key", COMING_SOON_KEY).maybeSingle().then(({ data }) => {
       const setting = parseComingSoon(data?.value);
       setSavedEnabled(setting.enabled);
       setEnabled(setting.enabled);
-      setMessage(setting.message);
+      show(setting);
       setLoading(false);
     });
   }, []);
@@ -521,7 +533,7 @@ function ComingSoonSettings({ onSaved }: { onSaved: (message: string) => void })
     setConfirmOpen(false);
     setSaving(true);
     setError("");
-    const setting = parseComingSoon({ enabled, message });
+    const setting = parseComingSoon({ enabled, eyebrow, title, message });
     const { error: saveError } = await supabase.from("app_config").upsert({
       key: COMING_SOON_KEY,
       value: setting,
@@ -533,22 +545,29 @@ function ComingSoonSettings({ onSaved }: { onSaved: (message: string) => void })
       return;
     }
     setSavedEnabled(setting.enabled);
-    setMessage(setting.message);
+    show(setting);
     announceComingSoonChange();
-    onSaved(setting.enabled ? "Coming Soon Mode is on. Public visitors now see the Coming Soon page." : "Coming Soon Mode is off. The site is open to everyone.");
+    onSaved(
+      setting.enabled
+        ? "Maintenance Mode is on. Public visitors now see the maintenance page."
+        : "Maintenance Mode is off. The site is open to everyone.",
+    );
   }
 
-  if (loading) return <p className="muted">Loading Coming Soon settings…</p>;
+  if (loading) return <p className="muted">Loading Maintenance Mode settings…</p>;
+
+  const previewTitle = title.trim() || DEFAULT_COMING_SOON_TITLE;
+  const previewMessage = message.trim() || DEFAULT_COMING_SOON_MESSAGE;
 
   return (
     <div className="admin-form-panel">
       <div className="admin-section-heading">
         <div>
           <p className="eyebrow">Owner controls</p>
-          <h2>Coming Soon Mode</h2>
+          <h2>Maintenance Mode</h2>
           <p className="muted">
-            Hides the public site behind a branded Coming Soon page. You and anyone already signed in can still use
-            the app, and the sign-in page stays open.
+            Hides the public site behind a branded page. You and anyone already signed in can still use the app, and
+            the sign-in page stays open.
           </p>
         </div>
         <span className={`coming-soon-status ${savedEnabled ? "on" : "off"}`} role="status">
@@ -561,22 +580,42 @@ function ComingSoonSettings({ onSaved }: { onSaved: (message: string) => void })
           type="button"
           role="switch"
           aria-checked={enabled}
-          aria-label="Coming Soon Mode"
+          aria-label="Maintenance Mode"
           onClick={() => setEnabled((value) => !value)}
         >
           <span className="switch-knob" />
         </button>
         <div>
-          <b>{enabled ? "Coming Soon Mode on" : "Coming Soon Mode off"}</b>
+          <b>{enabled ? "Maintenance Mode on" : "Maintenance Mode off"}</b>
           <span>
             {enabled
-              ? "Public visitors see the Coming Soon page. New purchases are blocked for people who aren't customers yet."
+              ? "Public visitors see the maintenance page. New purchases are blocked for people who aren't customers yet."
               : "The website is open to everyone."}
           </span>
         </div>
       </div>
       <label className="account-field">
-        <span>Message visitors see</span>
+        <span>Small label above the title</span>
+        <input
+          value={eyebrow}
+          maxLength={COMING_SOON_MAX_EYEBROW}
+          onChange={(event) => setEyebrow(event.target.value)}
+          placeholder={DEFAULT_COMING_SOON_EYEBROW}
+        />
+        <small className="muted">Leave it empty to show no label.</small>
+      </label>
+      <label className="account-field">
+        <span>Title</span>
+        <input
+          value={title}
+          maxLength={COMING_SOON_MAX_TITLE}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder={DEFAULT_COMING_SOON_TITLE}
+        />
+        <small className="muted">Leave it empty to use “{DEFAULT_COMING_SOON_TITLE}”.</small>
+      </label>
+      <label className="account-field">
+        <span>Message</span>
         <textarea
           rows={4}
           maxLength={COMING_SOON_MAX_MESSAGE}
@@ -587,13 +626,27 @@ function ComingSoonSettings({ onSaved }: { onSaved: (message: string) => void })
           {message.length}/{COMING_SOON_MAX_MESSAGE}. Leave it empty to use the default message.
         </small>
       </label>
+      <p className="eyebrow maintenance-preview-label">Preview</p>
+      <div className="maintenance-preview" aria-label="Preview of the maintenance page">
+        {eyebrow.trim() ? <p className="eyebrow">{eyebrow.trim()}</p> : null}
+        <h3>{previewTitle}</h3>
+        <p>{previewMessage}</p>
+      </div>
       {error ? <p className="form-error" role="alert">{error}</p> : null}
       <div className="drawer-actions">
-        <a className="btn btn-ghost" href="/coming-soon" target="_blank" rel="noopener noreferrer">
-          Preview page
+        <a className="btn btn-ghost" href="/maintenance" target="_blank" rel="noopener noreferrer">
+          Open full page
         </a>
-        <button className="btn btn-ghost" type="button" onClick={() => setMessage(DEFAULT_COMING_SOON_MESSAGE)}>
-          Use default message
+        <button
+          className="btn btn-ghost"
+          type="button"
+          onClick={() => {
+            setEyebrow(DEFAULT_COMING_SOON_EYEBROW);
+            setTitle(DEFAULT_COMING_SOON_TITLE);
+            setMessage(DEFAULT_COMING_SOON_MESSAGE);
+          }}
+        >
+          Reset text to default
         </button>
         <button
           className="btn btn-primary"
@@ -606,7 +659,7 @@ function ComingSoonSettings({ onSaved }: { onSaved: (message: string) => void })
       </div>
       {confirmOpen ? (
         <ConfirmDialog
-          title="Turn on Coming Soon Mode?"
+          title="Turn on Maintenance Mode?"
           body="Public visitors will no longer see the website, and new purchases will be blocked for people who aren't customers yet. You and anyone already signed in can keep using the app."
           confirmLabel="Turn on"
           onClose={() => setConfirmOpen(false)}

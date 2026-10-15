@@ -2,9 +2,9 @@ import { json } from "./http.ts";
 import { requireUser, serviceClient } from "./supabase.ts";
 
 export const COMING_SOON_BLOCK_MESSAGE =
-  "Safety Prep List isn't open for new purchases yet. Please check back soon!";
+  "Safety Prep List isn't taking new purchases right now. Please check back soon!";
 
-// While Coming Soon Mode is on, only the owner and existing paying customers may start a purchase.
+// While Maintenance Mode is on, only the owner and existing paying customers may start a purchase.
 // Existing customers still need to renew, add checklists, or add the Survival Vault.
 export function comingSoonAllows(input: { enabled: boolean; isOwner: boolean; isCustomer: boolean }) {
   if (!input.enabled) return true;
@@ -21,7 +21,7 @@ export async function comingSoonBlock(req: Request): Promise<Response | null> {
     const admin = serviceClient();
     const { data, error } = await admin.from("app_config").select("value").eq("key", "coming_soon").maybeSingle();
     if (error) {
-      console.error("Coming Soon setting unreadable", error);
+      console.error("Maintenance Mode setting unreadable", error);
       return null;
     }
     const enabled = (data?.value as { enabled?: unknown } | null)?.enabled === true;
@@ -45,7 +45,7 @@ export async function comingSoonBlock(req: Request): Promise<Response | null> {
     }
     return comingSoonAllows({ enabled, isOwner, isCustomer }) ? null : json({ error: COMING_SOON_BLOCK_MESSAGE }, 403);
   } catch (err) {
-    console.error("Coming Soon check failed", err);
+    console.error("Maintenance Mode check failed", err);
     return null;
   }
 }
