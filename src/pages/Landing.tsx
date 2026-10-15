@@ -27,11 +27,12 @@ import { HeroSlider } from "../components/HeroSlider";
 import {
   ANNUAL_CENTS,
   FAMILY_MIN_SEATS,
+  MAX_CHECKLIST_QUANTITY,
   MONTHLY_CENTS,
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
-import { annualSavingsPercent, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, PAGE_TITLE, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
+import { annualSavingsPercent, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { useApp } from "../context/AppContext";
 
@@ -39,25 +40,25 @@ const primarySystems = [
   {
     minutes: 5,
     mark: "backpack" as const,
-    title: "Grab-and-Go Bag",
+    title: "5-Minute Grab-and-Go Bag",
     line: "A backpack by the exit with essential items for a quick departure.",
   },
   {
     minutes: 15,
     mark: "duffel" as const,
-    title: "Ready Duffel",
+    title: "15-Minute Ready Duffel (72-Hour Continuity Kit)",
     line: "A 72-hour preparedness kit tailored to your household’s needs.",
   },
   {
     minutes: 20,
     mark: "vehicle" as const,
-    title: "Vehicle OR Suitcase Prep",
+    title: "20-Minute Vehicle OR Suitcase Prep",
     line: "Prepare your vehicle for emergencies or pack a suitcase for evacuation.",
   },
   {
     minutes: 60,
     mark: "home" as const,
-    title: "Home Resilience",
+    title: "60-Minute Home Resilience",
     line: "Prioritize essential supplies and systems to keep your household prepared at home.",
   },
 ];
@@ -73,7 +74,7 @@ const vaultIcons = {
 
 const coreFeatures = [
   { label: "5-Minute Grab-and-Go Bag", Icon: IconBackpack },
-  { label: "15-Minute Ready Duffel", Icon: IconDuffel },
+  { label: "15-Minute Ready Duffel (72-Hour Continuity Kit)", Icon: IconDuffel },
   { label: "20-Minute Vehicle OR Suitcase Prep", Icon: IconCar },
   { label: "60-Minute Home Resilience", Icon: IconHouse },
   { label: `Up to ${INCLUDED_CUSTOM_PER_SECTION} custom items per section`, Icon: IconNotes },
@@ -105,14 +106,6 @@ export function LandingPage() {
   const annualSavePct = annualSavingsPercent(monthlyCents, annualCents);
   const yearOfMonthlyCents = monthlyCents * 12;
   const annualSavedCents = Math.max(0, yearOfMonthlyCents - annualCents);
-
-  useEffect(() => {
-    const previous = document.title;
-    document.title = PAGE_TITLE;
-    return () => {
-      document.title = previous;
-    };
-  }, []);
 
   useEffect(() => {
     const scrollToHash = () => {
@@ -368,7 +361,7 @@ export function LandingPage() {
                 <div>
                   <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => Math.max(minFamilyQty, n - 1))}>-</button>
                   <b>{familyQty}</b>
-                  <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => n + 1)}>+</button>
+                  <button type="button" className="btn btn-ghost" disabled={familyQty >= MAX_CHECKLIST_QUANTITY} onClick={() => setFamilyQty((n) => Math.min(MAX_CHECKLIST_QUANTITY, n + 1))}>+</button>
                 </div>
               </div>
               <p className="plan-plus">Everything in Individual, plus:</p>

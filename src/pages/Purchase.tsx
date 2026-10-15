@@ -6,7 +6,7 @@ import { FamilySeatSetup, loadOpenFamilySeats } from "../components/FamilySeatSe
 import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
 import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { PayPalCheckout } from "../components/PayPalCheckout";
-import { PublicHeader } from "../components/PublicChrome";
+import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { useApp } from "../context/AppContext";
 import { money } from "../lib/format";
@@ -15,6 +15,7 @@ import { isPaypalConfigured } from "../lib/paypal";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   ANNUAL_MONTHLY_EQUIVALENT_CENTS,
+  MAX_CHECKLIST_QUANTITY,
   MONTHLY_CENTS,
   SURVIVAL_VAULT_CENTS,
   SURVIVAL_VAULT_DESCRIPTION,
@@ -89,11 +90,16 @@ export function CheckoutPage() {
   const addingChecklists = Boolean(
     session && !renew && myChecklist?.status === "active" && myChecklist.ownerUserId === session.user.id,
   );
-  const [additional, setAdditional] = useState(() => Math.max(1, Number(params.get("qty") || 1) || 1));
+  const [additional, setAdditional] = useState(() =>
+    Math.min(MAX_CHECKLIST_QUANTITY, Math.max(1, Number(params.get("qty") || 1) || 1)),
+  );
   const people = addingChecklists
     ? additional
     : requestedPlan === "family"
-      ? Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS)
+      ? Math.min(
+          MAX_CHECKLIST_QUANTITY,
+          Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS),
+        )
       : 1;
   const planKind = addingChecklists ? (people > 1 ? "family" : "individual") : requestedPlan;
   const access: AccessInterval = params.get("access") === "annual" ? "annual" : "monthly";
@@ -243,7 +249,7 @@ export function CheckoutPage() {
         aria-hidden="true"
       />
       <PublicHeader />
-      <div className="checkout-panel">
+      <main className="checkout-panel">
         <CheckoutProgress current={1} />
         <BrandMark />
 
@@ -281,7 +287,8 @@ export function CheckoutPage() {
                     type="button"
                     className="btn btn-ghost"
                     aria-label="One more checklist"
-                    onClick={() => setAdditional((n) => n + 1)}
+                    disabled={additional >= MAX_CHECKLIST_QUANTITY}
+                    onClick={() => setAdditional((n) => Math.min(MAX_CHECKLIST_QUANTITY, n + 1))}
                   >
                     +
                   </button>
@@ -442,7 +449,8 @@ export function CheckoutPage() {
         <p className="muted checkout-back">
           {renew ? <Link to="/app/account">Back to account</Link> : <Link to="/#pricing">Change plan</Link>}
         </p>
-      </div>
+      </main>
+      <PublicFooter />
 
       {detailsOpen ? (
         <SurvivalVaultModal
@@ -551,7 +559,7 @@ export function ThankYouPage() {
           aria-hidden="true"
         />
         <PublicHeader />
-        <div className="checkout-panel">
+        <main className="checkout-panel">
           <BrandMark />
           <h1>No purchase to show yet.</h1>
           <p className="muted">
@@ -564,7 +572,8 @@ export function ThankYouPage() {
           <p className="muted checkout-back">
             <Link to="/contact">Contact us</Link>
           </p>
-        </div>
+        </main>
+        <PublicFooter />
       </div>
     );
   }
@@ -577,8 +586,9 @@ export function ThankYouPage() {
         aria-hidden="true"
       />
       <PublicHeader />
-      <Confetti fire={Boolean(code)} />
-      <div className="checkout-panel thank-you-panel">
+      {/* New customers get their celebration on the Welcome popup; only add-on buyers (no popup) celebrate here. */}
+      <Confetti fire={Boolean(code) && addOn} />
+      <main className="checkout-panel thank-you-panel">
         <CheckoutProgress current={linked ? 3 : 2} />
         <h1>{addOn ? "Thank you for your purchase!" : "Thank you for signing up!"}</h1>
         <p className="muted thank-you-lead">
@@ -680,7 +690,8 @@ export function ThankYouPage() {
           </Link>
         ) : null}
         <p className="muted thank-you-receipt">PayPal will email your receipt to the address on the PayPal account you paid with.</p>
-      </div>
+      </main>
+      <PublicFooter />
     </div>
   );
 }

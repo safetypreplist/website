@@ -2,6 +2,8 @@ import { json, preflight } from "../_shared/http.ts";
 import { comingSoonBlock } from "../_shared/comingSoon.ts";
 import { buildCustomId } from "../_shared/billing.ts";
 import { dollarsFromCents, paypalFetch } from "../_shared/paypal.ts";
+import { parseQuantity } from "../_shared/quantity.ts";
+import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { productBySlug, requireUser, serviceClient } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
@@ -12,12 +14,15 @@ Deno.serve(async (req) => {
   try {
     const blocked = await comingSoonBlock(req);
     if (blocked) return blocked;
+    const limited = await rateLimitBlock(`checkout:${clientIp(req)}`, 12, 600);
+    if (limited) return limited;
     const body = await req.json().catch(() => ({}));
     if (!body.acceptedTerms) {
       return json({ error: "Please agree to the Terms of Service, Privacy Policy, and Refund Policy." }, 400);
     }
     const slug = String(body.productSlug || "");
-    const quantity = Math.max(1, Number(body.quantity || 1) || 1);
+    const quantity = parseQuantity(body.quantity ?? 1);
+    if (quantity == null) return json({ error: "Choose between 1 and 20 checklists." }, 400);
     const includeHousehold = Boolean(body.includeHousehold);
     // Plans go through create-paypal-subscription; a one-time order for one would never expire.
     if (slug !== "upgrade_full") {
@@ -36,7 +41,7 @@ Deno.serve(async (req) => {
 
     const value = dollarsFromCents(amountCents);
     const appUrl = Deno.env.get("APP_URL") || "http://localhost:5173";
-    const customId = buildCustomId({ slug, quantity, includeHousehold, access: null, discountCode: "" });
+    const customId = buildCustomId({ slug, quantity, includeHousehold, access: null, discountCode: "", userId });
     const plan = quantity > 1 ? "family" : String(body.plan || "individual");
     const thankYou = new URL("/thank-you", appUrl);
     thankYou.searchParams.set("plan", plan === "family" ? "family" : "individual");
@@ -62,7 +67,7 @@ Deno.serve(async (req) => {
           brand_name: "Safety Prep List",
           user_action: "PAY_NOW",
           return_url: thankYou.toString(),
-          cancel_url: `${appUrl}/pricing`,
+          cancel_url: `${appUrl}/#pricing`,
         },
       }),
     });

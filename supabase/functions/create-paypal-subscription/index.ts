@@ -2,6 +2,7 @@ import { json, preflight } from "../_shared/http.ts";
 import { comingSoonBlock } from "../_shared/comingSoon.ts";
 import { buildCustomId, parseAccessInterval } from "../_shared/billing.ts";
 import {
+  discountAlreadyUsedBy,
   isDiscountUsable,
   loadDiscount,
   normalizeCode,
@@ -9,6 +10,8 @@ import {
   quoteWithDiscount,
 } from "../_shared/discounts.ts";
 import { paypalFetch } from "../_shared/paypal.ts";
+import { parseQuantity } from "../_shared/quantity.ts";
+import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { ensurePlan, ensureWebhook } from "../_shared/subscriptions.ts";
 import { productBySlug, requireUser, serviceClient } from "../_shared/supabase.ts";
 
@@ -20,6 +23,8 @@ Deno.serve(async (req) => {
   try {
     const blocked = await comingSoonBlock(req);
     if (blocked) return blocked;
+    const limited = await rateLimitBlock(`checkout:${clientIp(req)}`, 12, 600);
+    if (limited) return limited;
     const body = await req.json().catch(() => ({}));
     if (!body.acceptedTerms) {
       return json({ error: "Please agree to the Terms of Service, Privacy Policy, and Refund Policy." }, 400);
@@ -33,7 +38,9 @@ Deno.serve(async (req) => {
     if (renew && !user) return json({ error: "Sign in to renew your plan." }, 401);
 
     let purpose: "new" | "add_member" | "renew" = "new";
-    let quantity = Math.max(1, Number(body.quantity || 1) || 1);
+    const parsedQty = parseQuantity(body.quantity ?? 1);
+    if (parsedQty == null) return json({ error: "Choose between 1 and 20 checklists." }, 400);
+    let quantity = parsedQty;
     let includeVault = Boolean(body.includeHousehold);
 
     if (renew && user) {
@@ -51,7 +58,7 @@ Deno.serve(async (req) => {
         .select("id", { count: "exact", head: true })
         .neq("status", "cancelled")
         .in("subscription_id", lapsedIds);
-      quantity = Math.max(1, count || 1);
+      quantity = Math.min(20, Math.max(1, count || 1));
     } else if (user) {
       const { data: own } = await admin
         .from("personal_checklists")
@@ -80,9 +87,13 @@ Deno.serve(async (req) => {
     let discountCents = 0;
     let discountPayments = 0;
     if (requestedCode) {
+      if (purpose !== "new") {
+        return json({ error: "That code is not active or does not apply to this plan." }, 400);
+      }
       const row = await loadDiscount(requestedCode);
       const quote = quoteWithDiscount({ row, planKind, subscriptionCents, vaultCents, quantity, interval: access });
-      if (!isDiscountUsable(row) || !row || !quote.discountCents) {
+      const reused = await discountAlreadyUsedBy(requestedCode, user?.id, user?.email);
+      if (!isDiscountUsable(row) || !row || !quote.discountCents || reused) {
         return json({ error: "That code is not active or does not apply to this plan." }, 400);
       }
       discountCode = row.code;
@@ -113,7 +124,7 @@ Deno.serve(async (req) => {
       method: "POST",
       body: JSON.stringify({
         plan_id: planId,
-        custom_id: buildCustomId({ slug: "core", quantity, includeHousehold: includeVault, access, discountCode }),
+        custom_id: buildCustomId({ slug: "core", quantity, includeHousehold: includeVault, access, discountCode, userId: user?.id }),
         application_context: {
           brand_name: "Safety Prep List",
           shipping_preference: "NO_SHIPPING",

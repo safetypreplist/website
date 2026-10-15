@@ -54,7 +54,18 @@ Deno.serve(async (req) => {
   }
 
   await admin.from("checklist_permissions").delete().eq("grantee_user_id", user.id);
-  await admin.storage.from("avatars").remove([user.id]).catch(() => undefined);
+
+  const folder = user.id;
+  const listed = await admin.storage.from("avatars").list(folder).catch(() => ({ data: [] as Array<{ name: string }> }));
+  const avatarPaths = [
+    `${folder}/avatar.jpg`,
+    ...((listed.data || []).map((file: { name: string }) => `${folder}/${file.name}`)),
+  ];
+  await admin.storage.from("avatars").remove(avatarPaths).catch(() => undefined);
+
+  await admin.from("purchases").update({ retired_at: new Date().toISOString() }).eq("user_id", user.id);
+  await admin.from("help_requests").update({ email: null, name: "Deleted account" }).eq("user_id", user.id);
+  await admin.from("refund_requests").update({ email: "deleted", name: "Deleted account" }).eq("user_id", user.id);
 
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) {

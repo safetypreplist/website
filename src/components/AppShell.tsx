@@ -186,7 +186,7 @@ function ChecklistSwitcher({ className }: { className?: string }) {
         type="button"
         aria-expanded={open}
         aria-haspopup="listbox"
-        aria-label="Switch checklist"
+        aria-label={`Switch checklist, ${label}`}
         onClick={() => setOpen((v) => !v)}
       >
         <span className="switcher-avatar">

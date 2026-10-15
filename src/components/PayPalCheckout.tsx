@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LEGAL_VERSIONS } from "../lib/legal";
 import { isPaypalConfigured, loadPaypalSdk } from "../lib/paypal";
-import type { AccessInterval } from "../lib/pricing";
+import { MAX_CHECKLIST_QUANTITY, type AccessInterval } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
 type Props = {
@@ -29,6 +29,7 @@ export function PayPalCheckout({
   onError,
   onReady,
 }: Props) {
+  const qty = Math.min(MAX_CHECKLIST_QUANTITY, Math.max(1, Math.floor(quantity) || 1));
   const host = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const capturedRef = useRef(onCaptured);
@@ -57,7 +58,7 @@ export function PayPalCheckout({
             style,
             createSubscription: async () => {
               const data = await invokeFunction<{ subscriptionId: string }>("create-paypal-subscription", {
-                quantity,
+                quantity: qty,
                 includeHousehold,
                 accessInterval,
                 plan: planKind,
@@ -98,7 +99,7 @@ export function PayPalCheckout({
           createOrder: async () => {
             const data = await invokeFunction<{ orderId: string }>("create-paypal-order", {
               productSlug,
-              quantity,
+              quantity: qty,
               includeHousehold,
               accessInterval,
               plan: planKind,
@@ -115,7 +116,7 @@ export function PayPalCheckout({
             try {
               const captured = await invokeFunction<{ productCode: string; productType: string }>(
                 "capture-paypal-order",
-                { orderId: data.orderID, productSlug, quantity, includeHousehold, accessInterval, discountCode: discountCode || undefined },
+                { orderId: data.orderID, productSlug, quantity: qty, includeHousehold, accessInterval, discountCode: discountCode || undefined },
               );
               if (!captured?.productCode) {
                 throw new Error("Payment went through, but no Product ID came back. Stay on the thank-you page if it opens.");
@@ -143,7 +144,7 @@ export function PayPalCheckout({
     return () => {
       cancelled = true;
     };
-  }, [productSlug, quantity, includeHousehold, accessInterval, planKind, discountCode, renew, onReady]);
+  }, [productSlug, qty, includeHousehold, accessInterval, planKind, discountCode, renew, onReady]);
 
   return (
     <div>

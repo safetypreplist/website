@@ -213,6 +213,7 @@ export function AccountPage() {
             ref={fileRef}
             className="sr-only"
             type="file"
+            aria-label="Upload a profile photo"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => void onPhoto(e.target.files?.[0])}
           />

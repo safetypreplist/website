@@ -16,10 +16,12 @@ export function buildCustomId(args: {
   includeHousehold: boolean;
   access: AccessInterval | null;
   discountCode?: string;
+  userId?: string | null;
 }) {
   const access = args.access ? `|a=${accessToken(args.access)}` : "";
   const discount = args.discountCode ? `|d=${args.discountCode}` : "";
-  return `${args.slug}|q=${args.quantity}|h=${args.includeHousehold ? 1 : 0}${access}${discount}`;
+  const user = args.userId ? `|u=${args.userId}` : "";
+  return `${args.slug}|q=${args.quantity}|h=${args.includeHousehold ? 1 : 0}${access}${discount}${user}`;
 }
 
 function dollars(cents: number) {
@@ -49,11 +51,13 @@ export function parseCustomId(customId: string, fallbackSlug: string) {
   const qtyMatch = customId.match(/q=(\d+)/);
   const accessMatch = customId.match(/a=([my])/);
   const discountMatch = customId.match(/d=([A-Z0-9]+)/);
+  const userMatch = customId.match(/u=([0-9a-f-]{36})/i);
   return {
     slug,
-    quantity: Math.max(1, Number(qtyMatch?.[1] || 1) || 1),
+    quantity: Math.min(20, Math.max(1, Number(qtyMatch?.[1] || 1) || 1)),
     includeHousehold: /h=1/.test(customId),
     access: parseAccessInterval(accessMatch?.[1] || null),
     discountCode: discountMatch?.[1] || "",
+    userId: userMatch?.[1] || "",
   };
 }

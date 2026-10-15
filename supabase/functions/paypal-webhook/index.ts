@@ -1,6 +1,7 @@
 import { json } from "../_shared/http.ts";
 import { activateSubscription } from "../_shared/activation.ts";
 import { paypalFetch } from "../_shared/paypal.ts";
+import { endAccessForCapture, endAccessForSale } from "../_shared/refundAccess.ts";
 import { refKey, syncSubscription, type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 
@@ -14,9 +15,12 @@ type WebhookEvent = {
     sale_id?: string;
     amount?: { total?: string };
     create_time?: string;
+    custom_id?: string;
+    supplementary_data?: { related_ids?: { capture_id?: string; order_id?: string } };
     billing_info?: {
       last_failed_payment?: { amount?: { value?: string }; time?: string; reason_code?: string };
     };
+    disputed_transactions?: Array<{ seller_transaction_id?: string }>;
   };
 };
 
@@ -54,6 +58,26 @@ Deno.serve(async (req) => {
       const saleId = event.resource?.sale_id || event.resource?.id;
       if (saleId) {
         await admin.from("subscription_payments").update({ status: "refunded" }).eq("paypal_sale_id", saleId);
+        await endAccessForSale(admin, saleId);
+      }
+      return json({ ok: true });
+    }
+
+    if (event.event_type === "PAYMENT.CAPTURE.REFUNDED" || event.event_type === "PAYMENT.CAPTURE.REVERSED") {
+      const captureId =
+        event.resource?.supplementary_data?.related_ids?.capture_id ||
+        event.resource?.supplementary_data?.related_ids?.order_id ||
+        event.resource?.id;
+      if (captureId) await endAccessForCapture(admin, captureId);
+      return json({ ok: true });
+    }
+
+    if (event.event_type === "CUSTOMER.DISPUTE.CREATED" || event.event_type === "CUSTOMER.DISPUTE.RESOLVED") {
+      const saleId = event.resource?.disputed_transactions?.[0]?.seller_transaction_id || event.resource?.sale_id;
+      if (saleId) {
+        await admin.from("subscription_payments").update({ status: "refunded" }).eq("paypal_sale_id", saleId);
+        await endAccessForSale(admin, saleId);
+        await endAccessForCapture(admin, saleId);
       }
       return json({ ok: true });
     }

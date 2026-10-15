@@ -1,10 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { firstNameOf } from "../lib/identity";
+import { firstNameOf, personName } from "../lib/identity";
+import { Confetti } from "./Confetti";
 import { AppIconRow } from "./InstallSteps";
 import { OfflineSwitch } from "./OfflineStatus";
 import { supabase } from "../lib/supabase";
+import { markCelebrated, shouldCelebrate } from "../lib/welcomeBurst";
 
 type Step = { title: string; body: string; selector: string; path: string };
 export type TourCopy = Pick<Step, "title" | "body">[];
@@ -237,9 +239,11 @@ function releaseHold() {
 }
 
 export function OnboardingTour() {
-  const { profile } = useApp();
+  const { profile, user, myChecklist } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
+  const [idCopied, setIdCopied] = useState(false);
+  const [burst, setBurst] = useState(false);
   const storageKey = profile ? `spl.onboarding.v1.${profile.id}` : "";
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"welcome" | "offline" | "choice" | "tour" | "done">("welcome");
@@ -470,9 +474,36 @@ export function OnboardingTour() {
     return () => window.clearTimeout(timer);
   }, [open, mode, navigate, storageKey]);
 
+  // Celebrate a brand-new account once, the moment the welcome screen appears.
+  const welcomeUserId = profile?.id;
+  const welcomeCreatedAt = user?.created_at;
+  const welcomeShowing = open && mode === "welcome";
+  useEffect(() => {
+    if (!welcomeShowing || !welcomeUserId || !shouldCelebrate(welcomeUserId, welcomeCreatedAt)) return;
+    markCelebrated(welcomeUserId);
+    setBurst(true);
+    return () => setBurst(false);
+  }, [welcomeShowing, welcomeUserId, welcomeCreatedAt]);
+
   const progress = useMemo(() => `${stepIndex + 1} of ${DEFAULT_STEPS.length}`, [stepIndex]);
   const firstName = firstNameOf(profile?.first_name || profile?.display_name || profile?.full_name);
   if (!open || !profile) return null;
+
+  // Only show details we actually have: the signed-in account's own email and the checklist assigned to it.
+  const hasName = Boolean(profile.display_name?.trim() || profile.first_name?.trim() || profile.last_name?.trim() || profile.full_name?.trim());
+  const accountName = hasName ? personName(profile) : "";
+  const accountEmail = user?.email || "";
+  const checklistId = myChecklist && myChecklist.ownerUserId === profile.id ? myChecklist.publicId || "" : "";
+  async function copyChecklistId() {
+    if (!checklistId) return;
+    try {
+      await navigator.clipboard.writeText(checklistId);
+      setIdCopied(true);
+      window.setTimeout(() => setIdCopied(false), 2000);
+    } catch {
+      /* Clipboard can be blocked; the ID is still on screen. */
+    }
+  }
 
   function finish() {
     holdingTour.current = false;
@@ -531,6 +562,7 @@ export function OnboardingTour() {
 
   return (
     <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
+      <Confetti fire={burst} />
       {mode === "welcome" ? (
         <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
           <p className="eyebrow">Your checklist is ready</p>
@@ -560,10 +592,36 @@ export function OnboardingTour() {
               </>
             )}
           </div>
+          {accountName || accountEmail || checklistId ? (
+            <dl className="onboarding-credentials" aria-label="Your account details">
+              {accountName ? (
+                <div>
+                  <dt>Name</dt>
+                  <dd>{accountName}</dd>
+                </div>
+              ) : null}
+              {accountEmail ? (
+                <div>
+                  <dt>Email</dt>
+                  <dd>{accountEmail}</dd>
+                </div>
+              ) : null}
+              {checklistId ? (
+                <div>
+                  <dt>Checklist ID</dt>
+                  <dd>
+                    <code>{checklistId}</code>
+                    <button type="button" className="onboarding-credentials-copy" onClick={() => void copyChecklistId()}>
+                      {idCopied ? "Copied" : "Copy"}
+                    </button>
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
           <p className="onboarding-copy onboarding-welcome-intro">
-            <strong>Congratulations, you’re now the owner of a new Safety Prep Checklist.</strong> We’re glad you’re
-            here. Watch this short welcome video, then take a quick tour so you feel at home in your checklist from day
-            one.
+            <strong>{firstName ? `Congratulations, ${firstName}!` : "Congratulations!"}</strong> You’re officially the
+            owner of your Safety Prep List account. Your preparation journey starts here. We’re glad to have you with us!
           </p>
           <div className="onboarding-actions onboarding-actions-stacked">
             <button className="btn btn-primary" type="button" onClick={() => setMode("offline")}>Continue onboarding</button>

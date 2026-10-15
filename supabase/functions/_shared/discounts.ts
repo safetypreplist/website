@@ -84,6 +84,41 @@ export function quoteWithDiscount(args: {
   return { discountCents, dueTodayCents };
 }
 
+export async function discountAlreadyUsedBy(code: string, userId?: string | null, email?: string | null) {
+  const normalized = normalizeCode(code);
+  if (!normalized) return false;
+  const admin = serviceClient();
+  if (userId) {
+    const byUser = await admin
+      .from("subscriptions")
+      .select("id")
+      .eq("discount_code", normalized)
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (byUser.data) return true;
+    const purchase = await admin
+      .from("purchases")
+      .select("id")
+      .eq("discount_code", normalized)
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (purchase.data) return true;
+  }
+  if (email) {
+    const purchase = await admin
+      .from("purchases")
+      .select("id")
+      .eq("discount_code", normalized)
+      .ilike("payer_email", email)
+      .limit(1)
+      .maybeSingle();
+    if (purchase.data) return true;
+  }
+  return false;
+}
+
 export async function incrementDiscountRedemption(code: string) {
   const normalized = normalizeCode(code);
   if (!normalized) return;

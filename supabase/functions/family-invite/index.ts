@@ -1,6 +1,7 @@
 import { isValidEmail, normalizeEmail } from "../_shared/brevo.ts";
 import { escapeHtml, sendEmail } from "../_shared/email.ts";
 import { json, preflight } from "../_shared/http.ts";
+import { rateLimitBlock } from "../_shared/rateLimit.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
 const INVITE_DAYS = 30;
@@ -76,6 +77,8 @@ Deno.serve(async (req) => {
   try {
     const { user } = await requireUser(req);
     if (!user) return json({ error: "Sign in to manage your family plan." }, 401);
+    const limited = await rateLimitBlock(`invite:${user.id}`, 8, 600);
+    if (limited) return limited;
 
     const body = (await req.json().catch(() => ({}))) as {
       action?: string;

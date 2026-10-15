@@ -1,4 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
+import { comingSoonBlock } from "../_shared/comingSoon.ts";
 import { dollarsFromCents, paypalFetch } from "../_shared/paypal.ts";
 import { productBySlug, requireUser, serviceClient } from "../_shared/supabase.ts";
 
@@ -6,6 +7,9 @@ Deno.serve(async (req) => {
   const opt = preflight(req);
   if (opt) return opt;
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const blocked = await comingSoonBlock(req);
+  if (blocked) return blocked;
 
   const { user } = await requireUser(req);
   if (!user) return json({ error: "Sign in required" }, 401);

@@ -1,4 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
+import { rateLimitBlock } from "../_shared/rateLimit.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
 const CONTEXTS = new Set(["checkout", "signup", "email_signup", "in_app_ack", "terms_update"]);
@@ -13,6 +14,9 @@ Deno.serve(async (req) => {
   const opt = preflight(req);
   if (opt) return opt;
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const limited = await rateLimitBlock(`terms:${clientIp(req) || "unknown"}`, 20, 600);
+  if (limited) return limited;
 
   const body = await req.json().catch(() => ({}));
   const context = String(body.context || "");

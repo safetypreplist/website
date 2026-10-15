@@ -1,3 +1,4 @@
+import { markNewAccount } from "../lib/welcomeBurst";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AccessChoice, type AccessLevel } from "../components/AccessChoice";
@@ -146,7 +147,7 @@ export function SignInPage() {
       <p className="muted" style={{ marginTop: 16 }}>
         <Link to="/reset-password">Forgot password?</Link>
         <br />
-        New here? <Link to="/pricing">Get Safety Prep List</Link>
+        New here? <Link to="/#pricing">Get Safety Prep List</Link>
       </p>
     </Card>
   );
@@ -295,6 +296,7 @@ export function CreateAccountPage() {
       return;
     }
     await recordLegalAcceptance("signup", email);
+    markNewAccount(data.user?.id);
     if (data.session) {
       sessionStorage.removeItem("spl.productCode");
       const seats = await loadOpenFamilySeats(data.session.user.id);
@@ -527,6 +529,7 @@ export function JoinFamilyPage() {
       return;
     }
     await recordLegalAcceptance("signup", email);
+    markNewAccount(data.user?.id);
     if (data.session) {
       await finish();
       return;

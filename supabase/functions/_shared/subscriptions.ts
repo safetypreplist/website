@@ -15,10 +15,14 @@ export const WEBHOOK_EVENTS = [
   "PAYMENT.SALE.COMPLETED",
   "PAYMENT.SALE.REFUNDED",
   "PAYMENT.SALE.REVERSED",
+  "PAYMENT.CAPTURE.REFUNDED",
+  "PAYMENT.CAPTURE.REVERSED",
+  "CUSTOMER.DISPUTE.CREATED",
+  "CUSTOMER.DISPUTE.RESOLVED",
 ];
 
 // Bump when WEBHOOK_EVENTS changes so already-registered webhooks get the new event list.
-const WEBHOOK_EVENTS_VERSION = "v2";
+const WEBHOOK_EVENTS_VERSION = "v3";
 
 type Admin = ReturnType<typeof serviceClient>;
 

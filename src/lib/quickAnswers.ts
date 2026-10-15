@@ -30,14 +30,14 @@ export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: P
         savePct ? `. Annual billing saves ${money(monthlyCents * 12 - annualCents)} a year (about ${savePct}%)` : ""
       }. You check out securely with PayPal, PayPal Credit, or a debit or credit card.`,
       topic: "sales",
-      link: { to: "/pricing", label: "See plans" },
+      link: { to: "/#pricing", label: "See plans" },
     },
     {
       id: "family",
       question: "How does the Family Plan work?",
       answer: `${FAMILY_MIN_SEATS} or more people, each with their own Personal Checklist, connected under one plan. The owner chooses View Only or Can Edit for each checklist. It’s ${money(monthlyCents)} a month or ${money(annualCents)} a year per member, so ${FAMILY_MIN_SEATS} members is ${money(monthlyCents * FAMILY_MIN_SEATS)} a month.`,
       topic: "sales",
-      link: { to: "/pricing", label: "See the Family Plan" },
+      link: { to: "/#pricing", label: "See the Family Plan" },
     },
     {
       id: "included",

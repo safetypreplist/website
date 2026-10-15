@@ -6,6 +6,7 @@ export const SURVIVAL_VAULT_NAME = "Survival Vault";
 export const SURVIVAL_VAULT_DESCRIPTION =
   "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, Long-Term Food, and How-To Videos. How-To Videos is a curated YouTube playlist from independent creators and organizations. $10 one time, not $10 per person. Does not renew.";
 export const FAMILY_MIN_SEATS = 2;
+export const MAX_CHECKLIST_QUANTITY = 20;
 export const LAUNCH_CODE = "LAUNCH26";
 export const LAUNCH_FIRST_MONTH_CENTS = 499;
 
@@ -35,7 +36,7 @@ export function accessProductSlug(interval: AccessInterval) {
 }
 
 export function checkoutBreakdown(people: number, access: AccessInterval, includeVault: boolean) {
-  const seats = Math.max(1, Math.floor(people) || 1);
+  const seats = Math.min(MAX_CHECKLIST_QUANTITY, Math.max(1, Math.floor(people) || 1));
   const subscriptionCents = seats * subscriptionUnitCents(access);
   const vaultCents = includeVault ? SURVIVAL_VAULT_CENTS : 0;
   return {

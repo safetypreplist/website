@@ -56,6 +56,9 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing.data && existing.data.payment_status === "completed") {
+      if (existing.data.user_id && user?.id && existing.data.user_id !== user.id) {
+        return json({ error: "This payment belongs to a different account. Sign in with the account that started checkout." }, 403);
+      }
       return json({
         alreadyProcessed: true,
         productCode: existing.data.product_code,
@@ -98,6 +101,9 @@ Deno.serve(async (req) => {
 
     const custom = details.customId || "";
     const parsed = parseCustomId(custom, String(body.productSlug || ""));
+    if (parsed.userId && user?.id && parsed.userId.toLowerCase() !== user.id.toLowerCase()) {
+      return json({ error: "This payment belongs to a different account. Sign in with the account that started checkout." }, 403);
+    }
     const slug = parsed.slug;
     const quantity = parsed.quantity;
     const includeHousehold = parsed.includeHousehold;
@@ -165,7 +171,7 @@ Deno.serve(async (req) => {
     const insert = await admin
       .from("purchases")
       .insert({
-        user_id: user?.id ?? null,
+        user_id: parsed.userId || user?.id || null,
         provider: "paypal",
         paypal_order_id: orderId,
         paypal_capture_id: details.captureId,

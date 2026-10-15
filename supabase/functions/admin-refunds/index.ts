@@ -1,6 +1,7 @@
 import { json, preflight } from "../_shared/http.ts";
 import { paypalFetch } from "../_shared/paypal.ts";
-import { syncSubscription, type SubscriptionRow } from "../_shared/subscriptions.ts";
+import { endSubscriptionAccess } from "../_shared/refundAccess.ts";
+import { type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
 const REFUND_WINDOW_DAYS = 3;
@@ -220,26 +221,6 @@ async function refundPayment(payment: Payment) {
     return { ok: false as const, error: paypalError(res.body) };
   }
   return { ok: true as const, refundId: String((res.body as { id?: string })?.id || "") };
-}
-
-// Cancels the subscription in PayPal and ends access now, so later PayPal syncs can't restore it.
-async function endSubscriptionAccess(admin: Admin, sub: SubscriptionRow) {
-  if (sub.status === "active" || sub.status === "suspended") {
-    const res = await paypalFetch(`/v1/billing/subscriptions/${encodeURIComponent(sub.paypal_subscription_id)}/cancel`, {
-      method: "POST",
-      body: JSON.stringify({ reason: "Refunded" }),
-    });
-    if (!res.ok && res.status !== 422) console.error("PayPal cancel after refund failed", res.status, res.body);
-  }
-  const now = new Date().toISOString();
-  const { data } = await admin
-    .from("subscriptions")
-    .update({ refunded_at: now, paid_through: now, access_ends_at: now, updated_at: now })
-    .eq("id", sub.id)
-    .select("*")
-    .single();
-  await syncSubscription(admin, (data as SubscriptionRow) ?? { ...sub, refunded_at: now });
-  if (sub.purchase_id) await admin.rpc("revoke_refunded_purchase", { p_purchase_id: sub.purchase_id, p_mark_refunded: true });
 }
 
 async function applyAccessChanges(admin: Admin, account: Account, refunded: Payment[]) {

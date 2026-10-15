@@ -1,6 +1,7 @@
 import { isValidEmail, normalizeEmail } from "../_shared/brevo.ts";
 import { emailConfigured, escapeHtml, sendEmail } from "../_shared/email.ts";
 import { json, preflight } from "../_shared/http.ts";
+import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { createLiveAgentTicket, liveAgentConfigured } from "../_shared/liveagent.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 
@@ -16,6 +17,9 @@ Deno.serve(async (req) => {
   const opt = preflight(req);
   if (opt) return opt;
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const limited = await rateLimitBlock(`contact:${clientIp(req)}`, 5, 600);
+  if (limited) return limited;
 
   const body = (await req.json().catch(() => ({}))) as {
     name?: string;

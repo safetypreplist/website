@@ -1,10 +1,14 @@
 import { json, preflight } from "../_shared/http.ts";
+import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { addBrevoContact, isValidEmail, normalizeEmail } from "../_shared/brevo.ts";
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
   if (opt) return opt;
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const limited = await rateLimitBlock(`subscribe:${clientIp(req)}`, 8, 600);
+  if (limited) return limited;
 
   const apiKey = Deno.env.get("BREVO_API_KEY")?.trim();
   if (!apiKey) return json({ error: "Email signup is not connected yet." }, 503);

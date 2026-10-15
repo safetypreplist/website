@@ -10,6 +10,7 @@ import { AppSplash } from "./components/AppSplash";
 import { ComingSoonOwnerPill, ComingSoonPage } from "./components/ComingSoon";
 import { isOpenDuringComingSoon, useComingSoon } from "./lib/comingSoon";
 import { CookieNotice } from "./components/CookieNotice";
+import { PageMeta } from "./components/PageMeta";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { SupportChat } from "./components/SupportChat";
 import { PrivacyPage, TermsPage } from "./pages/Legal";
@@ -94,6 +95,7 @@ export default function App() {
   return (
     <>
     {showOwnerPill ? <ComingSoonOwnerPill /> : null}
+    <PageMeta />
     <ScrollToTop />
     <CookieNotice />
     <Routes>

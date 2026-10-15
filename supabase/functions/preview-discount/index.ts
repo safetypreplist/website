@@ -1,13 +1,16 @@
 import { json, preflight } from "../_shared/http.ts";
 import { parseAccessInterval } from "../_shared/billing.ts";
 import {
+  discountAlreadyUsedBy,
   isDiscountUsable,
   loadDiscount,
   normalizeCode,
   planKindFromQuantity,
   quoteWithDiscount,
 } from "../_shared/discounts.ts";
-import { productBySlug } from "../_shared/supabase.ts";
+import { parseQuantity } from "../_shared/quantity.ts";
+import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
+import { productBySlug, requireUser } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
@@ -15,9 +18,12 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
+    const limited = await rateLimitBlock(`discount:${clientIp(req)}`, 20, 600);
+    if (limited) return limited;
     const body = await req.json().catch(() => ({}));
     const code = normalizeCode(body.code || body.discountCode);
-    const quantity = Math.max(1, Number(body.quantity || 1) || 1);
+    const quantity = parseQuantity(body.quantity ?? 1);
+    if (quantity == null) return json({ error: "That code is not active or does not apply to this plan." }, 400);
     const planKind = planKindFromQuantity(quantity, body.plan);
     if (!code) return json({ error: "Enter a discount code." }, 400);
 
@@ -41,11 +47,9 @@ Deno.serve(async (req) => {
       return json({ error: "That code is not active or does not apply to this plan." }, 400);
     }
     const quote = quoteWithDiscount({ row, planKind, subscriptionCents, vaultCents, quantity, interval: access });
-    if (!quote.discountCents) {
-      const billing = row.applies_to_interval;
-      if (billing === "monthly" || billing === "annual") {
-        return json({ error: `That code only works with ${billing === "monthly" ? "Monthly" : "Annual"} billing.` }, 400);
-      }
+    const { user } = await requireUser(req);
+    const reused = await discountAlreadyUsedBy(code, user?.id, user?.email);
+    if (!quote.discountCents || reused) {
       return json({ error: "That code is not active or does not apply to this plan." }, 400);
     }
     return json({

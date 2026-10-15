@@ -230,7 +230,7 @@ export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string
   const locked = noPlan || (system.access_tier === "full" && !hasSurvivalVault);
   const to =
     noPlan
-      ? "/pricing"
+      ? "/#pricing"
       : system.access_tier === "full" && !hasSurvivalVault
         ? "/app/account#addons"
         : `/app/lists/${system.slug}`;

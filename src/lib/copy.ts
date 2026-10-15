@@ -4,6 +4,9 @@ export const HERO_TAGLINE = `${HERO_TAGLINE_LEAD} ${HERO_TAGLINE_REST}`;
 export const FOOTER_TAGLINE = "Hope for the best, Prepare for the rest.";
 
 export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
+export const SITE_ORIGIN = "https://safetypreplist.com";
+export const SITE_DESCRIPTION =
+  "The Perfect Checklists for Emergency Situations. Safety Prep List is a practical resource for emergencies and disruptions — checklists, notes, and print-ready lists for your household.";
 
 export const SCOPE_LINE =
   "Practical preparedness for natural disasters, local emergencies, outages, evacuations, and temporary disruptions.";
