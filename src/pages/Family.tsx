@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
 import { PayPalCheckout } from "../components/PayPalCheckout";
 import { useApp } from "../context/AppContext";
@@ -171,6 +172,11 @@ export function ManageFamilyPage() {
           Adds one Personal Checklist. Existing members are not billed again. After payment, we email them a link to
           create their own account.
         </p>
+        {!demoMode ? (
+          <p className="muted">
+            Adding several people? <Link to={`/checkout?plan=family&qty=2&access=${access}`}>Buy additional checklists at once</Link>.
+          </p>
+        ) : null}
         {openSeats > 0 ? (
           <p className="family-open-seat-hint">
             You already have {openSeats === 1 ? "an open seat" : `${openSeats} open seats`} paid for. Add their email
@@ -321,6 +327,7 @@ function PendingSeatCard({
   const { inviteFamilyMember, resendInvite } = useApp();
   const [permission, setPermission] = useState<AccessLevel>("view");
   const [busy, setBusy] = useState<"" | "send" | "resend" | "cancel">("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string; url?: string } | null>(null);
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -361,6 +368,7 @@ function PendingSeatCard({
   }
 
   async function cancel() {
+    setConfirmCancel(false);
     setBusy("cancel");
     setMessage(null);
     try {
@@ -389,10 +397,21 @@ function PendingSeatCard({
           <button className="btn btn-moss" type="button" disabled={Boolean(busy)} onClick={() => void resend()}>
             {busy === "resend" ? "Sending..." : "Resend invite"}
           </button>
-          <button className="btn btn-ghost" type="button" disabled={Boolean(busy)} onClick={() => void cancel()}>
+          <button className="btn btn-ghost" type="button" disabled={Boolean(busy)} onClick={() => setConfirmCancel(true)}>
             {busy === "cancel" ? "Canceling..." : "Cancel invite"}
           </button>
         </div>
+      ) : null}
+      {confirmCancel ? (
+        <ConfirmDialog
+          title="Cancel this invite?"
+          body={`The invite link sent to ${member.email} will stop working. The seat stays paid for, so you can invite someone else.`}
+          confirmLabel="Cancel invite"
+          cancelLabel="Keep invite"
+          danger
+          onClose={() => setConfirmCancel(false)}
+          onConfirm={() => void cancel()}
+        />
       ) : null}
       {!invited ? (
         <form className="seat-invite-form" onSubmit={(e) => void send(e)}>
@@ -498,6 +517,7 @@ export function ChecklistAccessPage() {
   const { myChecklist, familyMembers, setChecklistPermission, revokeChecklistAccess, profile } =
     useApp();
   const people = familyMembers.filter((m) => m.permission !== "own" && !m.pending);
+  const [removeTarget, setRemoveTarget] = useState<{ userId?: string; name: string } | null>(null);
 
   return (
     <div>
@@ -525,13 +545,30 @@ export function ChecklistAccessPage() {
               <button className="btn btn-ghost" type="button" onClick={() => void setChecklistPermission(myChecklist?.id || "", person.ownerUserId || "", "edit")}>
                 Can Edit
               </button>
-              <button className="btn btn-danger" type="button" onClick={() => void revokeChecklistAccess(myChecklist?.id || "", person.ownerUserId || undefined)}>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => setRemoveTarget({ userId: person.ownerUserId || undefined, name: person.displayName })}
+              >
                 Remove Access
               </button>
             </div>
           </article>
         ))
       )}
+      {removeTarget ? (
+        <ConfirmDialog
+          title="Remove access?"
+          body={`${removeTarget.name} will no longer be able to see your checklist.`}
+          confirmLabel="Remove access"
+          danger
+          onClose={() => setRemoveTarget(null)}
+          onConfirm={() => {
+            void revokeChecklistAccess(myChecklist?.id || "", removeTarget.userId);
+            setRemoveTarget(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

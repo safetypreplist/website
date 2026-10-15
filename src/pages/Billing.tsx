@@ -60,13 +60,21 @@ function useBilling() {
       return;
     }
     let active = true;
-    void supabase.rpc("my_billing").then(({ data, error: rpcError }) => {
+    async function load() {
+      const first = await supabase.rpc("my_billing");
+      if (!first.error || !active) return first;
+      // The first request can race a sign-in refresh after the app has been idle; one retry covers it.
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      return supabase.rpc("my_billing");
+    }
+    void load().then(({ data, error: rpcError }) => {
       if (!active) return;
       if (rpcError) {
         setError("We couldn't load your billing history. Refresh the page to try again.");
         setBilling(EMPTY);
         return;
       }
+      setError("");
       const row = (data || {}) as Partial<Billing>;
       setBilling({
         payments: row.payments || [],

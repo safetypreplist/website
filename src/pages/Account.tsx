@@ -434,7 +434,7 @@ export function AccountPage() {
       {deleteOpen ? (
         <ConfirmDialog
           title="Delete your account?"
-          body="This removes your profile, checklist progress, notes, custom items, contacts, and devices. Purchase records and terms acceptances are kept as required. This cannot be undone."
+          body="This cancels any active subscription in PayPal and removes your profile, checklist progress, notes, custom items, contacts, and devices. Purchase records and terms acceptances are kept as required. This cannot be undone."
           confirmLabel="Delete account"
           danger
           busy={deleteBusy}

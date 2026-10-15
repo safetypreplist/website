@@ -114,9 +114,20 @@ export function DemoPage() {
                               {note ? "View note" : "Add note"}
                             </button>
                             {noteTipOpen && note ? (
-                              <div className="item-pop note" role="tooltip">
+                              <div className="item-pop note" role="group" aria-label="Note">
                                 <span className="item-pop-kicker">Note</span>
                                 {note}
+                                <button
+                                  className="note-edit"
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenNoteTip(null);
+                                    setDraft(note);
+                                    setOpenNote(item.id);
+                                  }}
+                                >
+                                  Edit note
+                                </button>
                               </div>
                             ) : null}
                           </div>

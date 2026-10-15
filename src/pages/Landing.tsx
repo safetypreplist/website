@@ -89,7 +89,11 @@ const planIncludes = [
 ];
 
 export function LandingPage() {
-  const { products } = useApp();
+  const { products, session, myChecklist } = useApp();
+  const addingChecklists = Boolean(
+    session && myChecklist?.status === "active" && myChecklist.ownerUserId === session.user.id,
+  );
+  const minFamilyQty = addingChecklists ? 1 : FAMILY_MIN_SEATS;
   const monthly = products.find((p) => p.slug === "access_monthly");
   const annual = products.find((p) => p.slug === "access_annual");
   const monthlyCents = monthly?.amount_cents ?? MONTHLY_CENTS;
@@ -344,21 +348,25 @@ export function LandingPage() {
               {billing === "annual" && annualSavedCents > 0 ? (
                 <span className="save-badge">Save {money(annualSavedCents * familyQty)}/year</span>
               ) : null}
-              <h3>Family Plan</h3>
+              <h3>{addingChecklists ? "Add Checklists" : "Family Plan"}</h3>
               <div className="amount">
                 {money(family.subscriptionCents)}{" "}
                 <small>{billing === "annual" ? "/ year" : "/ month"}</small>
               </div>
-              <p className="plan-line">{familyQty} Personal Checklists</p>
+              <p className="plan-line">
+                {addingChecklists
+                  ? `${familyQty} Additional Checklist${familyQty === 1 ? "" : "s"}. Your own checklist is already included.`
+                  : `${familyQty} Personal Checklists`}
+              </p>
               {billing === "annual" && annualSavePct > 0 ? (
                 <p className="plan-save">
                   Saves {money(annualSavedCents * familyQty)} a year versus monthly (about {annualSavePct}%).
                 </p>
               ) : null}
               <div className="qty-picker landing-qty">
-                <span>Family Members</span>
+                <span>{addingChecklists ? "Additional Checklists" : "Family Members"}</span>
                 <div>
-                  <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => Math.max(FAMILY_MIN_SEATS, n - 1))}>-</button>
+                  <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => Math.max(minFamilyQty, n - 1))}>-</button>
                   <b>{familyQty}</b>
                   <button type="button" className="btn btn-ghost" onClick={() => setFamilyQty((n) => n + 1)}>+</button>
                 </div>
@@ -370,7 +378,7 @@ export function LandingPage() {
                 <li><IconNotes /> View Only or Can Edit permissions per owner</li>
               </ul>
               <Link className="btn btn-primary btn-block" to={`/checkout?plan=family&qty=${familyQty}&access=${billing}`}>
-                Choose Family
+                {addingChecklists ? "Add Checklists" : "Choose Family"}
               </Link>
             </article>
           </div>

@@ -121,9 +121,11 @@ Deno.serve(async (req) => {
       const vault = row.vault_cents > 0 ? " + Survival Vault" : "";
       await sendPurchaseEmail({
         to: emailTo,
-        planName: row.quantity > 1
-          ? `Family Plan (${row.quantity} personal checklists), ${billingLabel}${vault}`
-          : `Individual Plan, ${billingLabel}${vault}`,
+        planName: row.purpose === "add_member"
+          ? `${row.quantity} additional checklist${row.quantity === 1 ? "" : "s"}, ${billingLabel}${vault}`
+          : row.quantity > 1
+            ? `Family Plan (${row.quantity} personal checklists), ${billingLabel}${vault}`
+            : `Individual Plan, ${billingLabel}${vault}`,
         productCode,
         deviceAllowance: renewalLine(
           row.access_interval,

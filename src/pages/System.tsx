@@ -669,9 +669,22 @@ function ListGroup({
                       {note ? "View note" : "Add note"}
                     </button>
                     {noteTipOpen && note ? (
-                      <div className="item-pop note" role="tooltip">
+                      <div className="item-pop note" role={canEdit ? "group" : "tooltip"} aria-label="Note">
                         <span className="item-pop-kicker">Note</span>
                         {note}
+                        {canEdit ? (
+                          <button
+                            className="note-edit"
+                            type="button"
+                            onClick={() => {
+                              setOpenNoteTip(null);
+                              setDraft(note);
+                              setOpenNote(item.id);
+                            }}
+                          >
+                            Edit note
+                          </button>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

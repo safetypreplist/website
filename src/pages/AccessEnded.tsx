@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 
@@ -7,7 +7,8 @@ export function accessHasEnded(endsAt?: string | null) {
 }
 
 export function AccessEndedPage() {
-  const { user, profile, myChecklist, connectedChecklists } = useApp();
+  const { user, profile, myChecklist, connectedChecklists, accessMode, loading } = useApp();
+  if (!loading && accessMode === "full" && profile?.access_status !== "expired") return <Navigate to="/app" replace />;
   const payer = !myChecklist?.purchasedByUserId || myChecklist.purchasedByUserId === user?.id;
   const seats = 1 + connectedChecklists.filter((c) => c.purchasedByUserId === user?.id).length;
   const access = profile?.access_interval === "annual" ? "annual" : "monthly";

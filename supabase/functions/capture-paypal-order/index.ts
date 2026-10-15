@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const orderId = String(body.orderId || "");
     if (!orderId) return json({ error: "Missing orderId" }, 400);
+    if (!/^[A-Z0-9]{10,36}$/.test(orderId)) return json({ error: "Invalid orderId" }, 400);
 
     const { user } = await requireUser(req);
     const admin = serviceClient();
@@ -63,13 +64,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const captured = await paypalFetch(`/v2/checkout/orders/${orderId}/capture`, {
+    const orderPath = `/v2/checkout/orders/${encodeURIComponent(orderId)}`;
+    const pending = await paypalFetch(orderPath);
+    if (!pending.ok) return json({ error: "Payment could not be verified" }, 402);
+    const pendingUnits = ((pending.body as Record<string, unknown>)?.purchase_units as Array<Record<string, unknown>>) || [];
+    const pendingSlug = parseCustomId(String(pendingUnits[0]?.custom_id || ""), String(body.productSlug || "")).slug;
+    // Plans are billed as PayPal subscriptions; a one-time order for one would never expire.
+    if (pendingSlug !== "upgrade_full") {
+      return json({ error: "This order can't be completed. Start again from the pricing page." }, 400);
+    }
+    if (!user) return json({ error: "Sign in required for this product" }, 401);
+
+    const captured = await paypalFetch(`${orderPath}/capture`, {
       method: "POST",
       body: "{}",
     });
 
     if (!captured.ok) {
-      const order = await paypalFetch(`/v2/checkout/orders/${orderId}`);
+      const order = await paypalFetch(orderPath);
       const orderBody = order.body as Record<string, unknown>;
       if (orderBody?.status !== "COMPLETED") {
         console.error("PayPal capture failed", captured.status, captured.body);
@@ -80,7 +92,7 @@ Deno.serve(async (req) => {
     }
 
     const details = captureAmount(captured.body as Record<string, unknown>);
-    if (details.status && details.status !== "COMPLETED") {
+    if (details.status !== "COMPLETED") {
       return json({ error: "Payment not completed" }, 402);
     }
 

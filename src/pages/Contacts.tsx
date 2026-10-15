@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { useApp } from "../context/AppContext";
 import { printDisclaimer } from "../lib/legal";
 
@@ -18,6 +19,7 @@ export function ContactsPage() {
   const [label, setLabel] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
 
   const sorted = useMemo(
     () => [...contacts].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })),
@@ -106,7 +108,11 @@ export function ContactsPage() {
                           {contact.phone}
                         </a>
                       </div>
-                      <button className="row-remove" type="button" onClick={() => void removeContact(contact.id)}>
+                      <button
+                        className="row-remove"
+                        type="button"
+                        onClick={() => setRemoveTarget({ id: contact.id, name: contact.name })}
+                      >
                         Remove
                       </button>
                     </article>
@@ -183,6 +189,19 @@ export function ContactsPage() {
             </form>
           </div>
         </div>
+      ) : null}
+      {removeTarget ? (
+        <ConfirmDialog
+          title="Remove this contact?"
+          body={`Remove “${removeTarget.name}” from your emergency contacts?`}
+          confirmLabel="Remove contact"
+          danger
+          onClose={() => setRemoveTarget(null)}
+          onConfirm={() => {
+            void removeContact(removeTarget.id);
+            setRemoveTarget(null);
+          }}
+        />
       ) : null}
     </div>
   );

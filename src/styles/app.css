@@ -4297,6 +4297,27 @@ html.has-guidance-ack .app-main {
   color: var(--terracotta);
 }
 
+.note-edit {
+  display: block;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--terracotta);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media print {
+  .note-edit {
+    display: none;
+  }
+}
+
 .item-pop.note::after {
   content: "";
   position: absolute;

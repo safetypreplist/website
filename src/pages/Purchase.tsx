@@ -80,16 +80,28 @@ export function PricingPage() {
 }
 
 export function CheckoutPage() {
-  const { products, session, loading, refreshAccount, signOut } = useApp();
+  const { products, session, loading, refreshAccount, signOut, myChecklist, hasSurvivalVault } = useApp();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const renew = params.get("renew") === "1";
-  const planKind = params.get("plan") === "family" ? "family" : "individual";
-  const people = planKind === "family"
-    ? Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS)
-    : 1;
+  const requestedPlan = params.get("plan") === "family" ? "family" : "individual";
+  // Customers who already own a checklist buy additional checklists; their own is never counted again.
+  const addingChecklists = Boolean(
+    session && !renew && myChecklist?.status === "active" && myChecklist.ownerUserId === session.user.id,
+  );
+  const [additional, setAdditional] = useState(() => Math.max(1, Number(params.get("qty") || 1) || 1));
+  const people = addingChecklists
+    ? additional
+    : requestedPlan === "family"
+      ? Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS)
+      : 1;
+  const planKind = addingChecklists ? (people > 1 ? "family" : "individual") : requestedPlan;
   const access: AccessInterval = params.get("access") === "annual" ? "annual" : "monthly";
   const [vault, setVault] = useState(!renew && (params.get("vault") === "1" || params.get("household") === "1"));
+  const vaultOffered = !renew && !(addingChecklists && hasSurvivalVault);
+  useEffect(() => {
+    if (!vaultOffered) setVault(false);
+  }, [vaultOffered]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
   const incomingCode = (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -106,7 +118,9 @@ export function CheckoutPage() {
   const breakdown = checkoutBreakdown(people, access, vault);
   const discountedDueToday = Math.max(0, breakdown.dueTodayCents - discountApplied);
   const discountedRenewalCents = Math.max(0, breakdown.recurringCents - discountApplied);
-  const title = `${renew ? "Renew " : ""}${planKind === "family" ? "Family Plan" : "Individual Plan"}`;
+  const title = addingChecklists
+    ? "Additional Checklists"
+    : `${renew ? "Renew " : ""}${planKind === "family" ? "Family Plan" : "Individual Plan"}`;
   const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
   const paypalReady = isPaypalConfigured();
 
@@ -117,7 +131,8 @@ export function CheckoutPage() {
     sessionStorage.setItem("spl.household", vault ? "1" : "0");
     sessionStorage.setItem("spl.access", access);
     sessionStorage.setItem("spl.discountCode", appliedCode);
-  }, [planKind, people, vault, access, appliedCode]);
+    sessionStorage.setItem("spl.addOn", addingChecklists ? "1" : "0");
+  }, [planKind, people, vault, access, appliedCode, addingChecklists]);
 
   useEffect(() => {
     sessionStorage.setItem(
@@ -206,14 +221,14 @@ export function CheckoutPage() {
         void refreshAccount().then(() => navigate("/app"));
         return;
       }
-      const thankYou = `/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}`;
+      const thankYou = `/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}${addingChecklists ? "&add=1" : ""}`;
       if (result.linkedToUser) {
         void refreshAccount().then(() => navigate(`${thankYou}&linked=1`));
         return;
       }
       navigate(thankYou);
     },
-    [navigate, people, vault, planKind, access, scopeAck, renew, refreshAccount],
+    [navigate, people, vault, planKind, access, scopeAck, renew, refreshAccount, addingChecklists],
   );
 
   if (renew && !loading && !session) {
@@ -245,11 +260,43 @@ export function CheckoutPage() {
         ) : null}
 
         <section className="checkout-step">
-          <p className="eyebrow">Your Plan</p>
+          <p className="eyebrow">{addingChecklists ? "Add to Your Plan" : "Your Plan"}</p>
           <h1>{title}</h1>
-          <p className="muted">
-            {people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
-          </p>
+          {addingChecklists ? (
+            <>
+              <div className="qty-picker">
+                <span>How many additional checklists would you like to purchase?</span>
+                <div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    aria-label="One fewer checklist"
+                    disabled={additional <= 1}
+                    onClick={() => setAdditional((n) => Math.max(1, n - 1))}
+                  >
+                    -
+                  </button>
+                  <b>{additional}</b>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    aria-label="One more checklist"
+                    onClick={() => setAdditional((n) => n + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <p className="muted">
+                {plural(people, "additional checklist")} to share with family members or guests. Your own checklist is
+                already on your account and isn't charged again.
+              </p>
+            </>
+          ) : (
+            <p className="muted">
+              {people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
+            </p>
+          )}
           <p className="muted">{SCOPE_LINE}</p>
           {access === "annual" ? (
             <>
@@ -264,7 +311,7 @@ export function CheckoutPage() {
           )}
         </section>
 
-        {renew ? null : (
+        {!vaultOffered ? null : (
           <section className="checkout-step">
             <p className="eyebrow">Optional</p>
             <div className={`vault-add ${vault ? "added" : ""}`}>
@@ -312,8 +359,8 @@ export function CheckoutPage() {
           <div className="summary-block">
             <p>
               <span>
-                {title}
-                {people > 1 ? ` (${people} checklists)` : ""}
+                {addingChecklists ? plural(people, "additional checklist") : title}
+                {!addingChecklists && people > 1 ? ` (${people} checklists)` : ""}
               </span>
               <b>
                 {money(breakdown.subscriptionCents)}
@@ -368,7 +415,7 @@ export function CheckoutPage() {
             {error && <p className="form-error">{error}</p>}
             {agreed && scopeAck ? (
               <PayPalCheckout
-                key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}`}
+                key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}-${addingChecklists ? "add" : "new"}`}
                 productSlug="core"
                 quantity={people}
                 includeHousehold={vault}
@@ -412,7 +459,8 @@ export function ThankYouPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { refreshAccount, user } = useApp();
-  const [linked, setLinked] = useState(params.get("linked") === "1");
+  const addOn = params.get("add") === "1" || (!params.get("plan") && sessionStorage.getItem("spl.addOn") === "1");
+  const [linked, setLinked] = useState(params.get("linked") === "1" || addOn);
   const paypalSubscription = params.get("subscription_id") || "";
   const paypalToken = paypalSubscription || params.get("token") || params.get("orderId") || "";
   const initialCode = params.get("code") || sessionStorage.getItem("spl.productCode") || "";
@@ -434,7 +482,7 @@ export function ThankYouPage() {
   const userId = user?.id;
 
   useEffect(() => {
-    if (!linked || !code || !userId || plan !== "family") return;
+    if (!linked || !code || !userId || (plan !== "family" && !addOn)) return;
     let active = true;
     void loadOpenFamilySeats(userId).then((seats) => {
       if (active) setFamilySeats(seats);
@@ -442,8 +490,8 @@ export function ThankYouPage() {
     return () => {
       active = false;
     };
-  }, [linked, code, userId, plan]);
-  const breakdown = checkoutBreakdown(plan === "family" ? qty : 1, access, vault);
+  }, [linked, code, userId, plan, addOn]);
+  const breakdown = checkoutBreakdown(plan === "family" || addOn ? qty : 1, access, vault);
   const discountTerms = useMemo(() => readDiscountTerms(), []);
   const remainingDiscounted = discountTerms ? discountTerms.payments - 1 : 0;
   const intervalWord = access === "annual" ? "annual" : "monthly";
@@ -479,7 +527,7 @@ export function ThankYouPage() {
         }
         setCode(captured.productCode);
         navigate(
-          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}${captured.linkedToUser ? "&linked=1" : ""}`,
+          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}${addOn ? "&add=1" : ""}${captured.linkedToUser ? "&linked=1" : ""}`,
           { replace: true },
         );
       })
@@ -487,7 +535,7 @@ export function ThankYouPage() {
         setCaptureError(err instanceof Error ? err.message : "Could not finish the purchase.");
       })
       .finally(() => setFinishing(false));
-  }, [access, code, navigate, paypalSubscription, paypalToken, plan, qty, vault, refreshAccount]);
+  }, [access, addOn, code, navigate, paypalSubscription, paypalToken, plan, qty, vault, refreshAccount]);
 
   async function copy() {
     await navigator.clipboard.writeText(code);
@@ -532,20 +580,22 @@ export function ThankYouPage() {
       <Confetti fire={Boolean(code)} />
       <div className="checkout-panel thank-you-panel">
         <CheckoutProgress current={linked ? 3 : 2} />
-        <h1>Thank you for signing up!</h1>
+        <h1>{addOn ? "Thank you for your purchase!" : "Thank you for signing up!"}</h1>
         <p className="muted thank-you-lead">
-          {linked
-            ? "Here is your plan. It’s already been added to your account."
-            : isFamily
-              ? "Here is your plan. Next, create your account and add your family members."
-              : "Here is your plan."}
+          {addOn
+            ? "Your additional checklists have been added to your account. Invite the people you'd like to share them with."
+            : linked
+              ? "Here is your plan. It’s already been added to your account."
+              : isFamily
+                ? "Here is your plan. Next, create your account and add your family members."
+                : "Here is your plan."}
         </p>
 
         <section className="thank-you-plan" aria-label="Your plan">
           <div className="thank-you-plan-head">
             <div>
-              <p className="thank-you-plan-label">Your new plan</p>
-              <h2>{plan === "family" ? "Family Plan" : "Individual Plan"}</h2>
+              <p className="thank-you-plan-label">{addOn ? "Added to your plan" : "Your new plan"}</p>
+              <h2>{addOn ? "Additional Checklists" : plan === "family" ? "Family Plan" : "Individual Plan"}</h2>
             </div>
             <p className="thank-you-plan-price">
               {money(breakdown.recurringCents)}
@@ -555,7 +605,13 @@ export function ThankYouPage() {
           <dl className="thank-you-plan-rows">
             <div>
               <dt>Checklists</dt>
-              <dd>{plan === "family" ? plural(qty, "personal checklist") : "1 personal checklist"}</dd>
+              <dd>
+                {addOn
+                  ? plural(qty, "additional checklist")
+                  : plan === "family"
+                    ? plural(qty, "personal checklist")
+                    : "1 personal checklist"}
+              </dd>
             </div>
             {vault ? (
               <div>

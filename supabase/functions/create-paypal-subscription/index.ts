@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
     thankYou.searchParams.set("qty", String(quantity));
     thankYou.searchParams.set("vault", includeVault ? "1" : "0");
     thankYou.searchParams.set("access", access);
+    if (purpose === "add_member") thankYou.searchParams.set("add", "1");
 
     const created = await paypalFetch("/v1/billing/subscriptions", {
       method: "POST",
