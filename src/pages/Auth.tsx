@@ -1,4 +1,3 @@
-import { markNewAccount } from "../lib/welcomeBurst";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AccessChoice, type AccessLevel } from "../components/AccessChoice";
@@ -19,7 +18,7 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { recordLegalAcceptance } from "../lib/legalConsent";
 import { useApp } from "../context/AppContext";
 import { countAllOps, takeSignedOutReason } from "../lib/offlineStore";
-import { supabase } from "../lib/supabase";
+import { invokeFunction, supabase } from "../lib/supabase";
 import { PRODUCT_CODE_RE } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { CheckoutProgress } from "./Purchase";
@@ -296,7 +295,7 @@ export function CreateAccountPage() {
       return;
     }
     await recordLegalAcceptance("signup", email);
-    markNewAccount(data.user?.id);
+    void invokeFunction("send-account-email", { name }).catch((err) => console.error("Account email failed", err));
     if (data.session) {
       sessionStorage.removeItem("spl.productCode");
       const seats = await loadOpenFamilySeats(data.session.user.id);
@@ -529,7 +528,7 @@ export function JoinFamilyPage() {
       return;
     }
     await recordLegalAcceptance("signup", email);
-    markNewAccount(data.user?.id);
+    void invokeFunction("send-account-email", { name }).catch((err) => console.error("Account email failed", err));
     if (data.session) {
       await finish();
       return;

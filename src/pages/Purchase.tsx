@@ -487,7 +487,14 @@ export function ThankYouPage() {
   const access = (params.get("access") || sessionStorage.getItem("spl.access") || "monthly") === "annual" ? "annual" : "monthly";
   const [copied, setCopied] = useState(false);
   const [familySeats, setFamilySeats] = useState<string[]>([]);
+  const [burst, setBurst] = useState(false);
   const userId = user?.id;
+
+  useEffect(() => {
+    if (!code || finishing) return;
+    const timer = window.setTimeout(() => setBurst(true), 1500);
+    return () => window.clearTimeout(timer);
+  }, [code, finishing]);
 
   useEffect(() => {
     if (!linked || !code || !userId || (plan !== "family" && !addOn)) return;
@@ -586,8 +593,7 @@ export function ThankYouPage() {
         aria-hidden="true"
       />
       <PublicHeader />
-      {/* New customers get their celebration on the Welcome popup; only add-on buyers (no popup) celebrate here. */}
-      <Confetti fire={Boolean(code) && addOn} />
+      <Confetti fire={burst} />
       <main className="checkout-panel thank-you-panel">
         <CheckoutProgress current={linked ? 3 : 2} />
         <h1>{addOn ? "Thank you for your purchase!" : "Thank you for signing up!"}</h1>
