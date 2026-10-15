@@ -104,9 +104,9 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
       id: "family",
       question: "How do I add family members?",
       answer:
-        "Open Family in the menu to invite someone new or connect an existing checklist. Each person gets their own Personal Checklist, and you choose View Only or Can Edit.",
+        "Open Connected Checklists in the menu to invite someone new or connect an existing checklist. Each person gets their own Personal Checklist, and you choose View Only or Can Edit.",
       topic: "support",
-      link: { to: "/app/family", label: "Go to Family" },
+      link: { to: "/app/family", label: "Go to Connected Checklists" },
     },
     {
       id: "vault",

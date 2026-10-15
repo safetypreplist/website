@@ -51,7 +51,7 @@ export function planTypeLabel(args: { plan?: string | null; familySize?: number 
 }
 
 export function familyPageLabel(members: { status?: string | null }[]) {
-  return members.filter((m) => m.status !== "cancelled").length >= 2 ? "Manage Family Plan" : "Add Family Members";
+  return members.filter((m) => m.status !== "cancelled").length >= 2 ? "Manage Family Plan" : "Connected Checklists";
 }
 
 export function familyPriceCents(people: number) {

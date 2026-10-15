@@ -9094,7 +9094,11 @@ html.tour-scroll-lock body {
 }
 
 body:has(.cookie-notice) .support-chat {
-  display: none;
+  bottom: calc(var(--cookie-notice-h, 0px) + 12px);
+}
+
+body:has(.cookie-notice) .support-chat-panel {
+  max-height: calc(100dvh - var(--cookie-notice-h, 0px) - 110px);
 }
 
 /* LiveAgent's own launcher bubbles; the chat and contact-form iframes are separate elements. */
@@ -9389,6 +9393,72 @@ body:has(.cookie-notice) .support-chat {
   margin: 12px 0 0;
   color: #8a2e1a;
   font-size: 13px;
+}
+
+.support-chat-offline {
+  margin: -4px 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(126, 168, 112, 0.14);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.support-chat-checking {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 26px 0 18px;
+  text-align: center;
+}
+
+.support-chat-checking p {
+  margin: 0;
+  color: var(--forest);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.support-chat-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.support-chat-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  animation: support-chat-dot 1s ease-in-out infinite;
+}
+
+.support-chat-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.support-chat-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes support-chat-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-chat-dots i {
+    animation: none;
+    opacity: 0.7;
+  }
 }
 
 .support-chat-alt {
