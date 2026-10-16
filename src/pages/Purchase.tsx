@@ -492,7 +492,7 @@ export function ThankYouPage() {
 
   useEffect(() => {
     if (!code || finishing) return;
-    const timer = window.setTimeout(() => setBurst(true), 1500);
+    const timer = window.setTimeout(() => setBurst(true), 1000);
     return () => window.clearTimeout(timer);
   }, [code, finishing]);
 

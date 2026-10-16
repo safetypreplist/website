@@ -138,14 +138,21 @@
     </style>
   </head>
   <body>
-    <div id="root">
-      <div class="app-splash" role="status" aria-label="Loading Safety Prep List">
-        <img class="app-splash-icon" src="/icons/icon-192.png?v=3" width="96" height="96" alt="" />
-        <p class="app-splash-name">Safety Prep List</p>
-        <p class="app-splash-tagline">Hope for the best, Prepare for the rest.</p>
-        <div class="app-splash-bar" aria-hidden="true"></div>
-      </div>
-    </div>
+    <div id="root"></div>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var inside = path === "/app" || path.indexOf("/app/") === 0 || path === "/admin" || path.indexOf("/admin/") === 0;
+        if (!inside) return;
+        document.getElementById("root").innerHTML =
+          '<div class="app-splash" role="status" aria-label="Loading Safety Prep List">' +
+          '<img class="app-splash-icon" src="/icons/icon-192.png?v=3" width="96" height="96" alt="" />' +
+          '<p class="app-splash-name">Safety Prep List</p>' +
+          '<p class="app-splash-tagline">Hope for the best, Prepare for the rest.</p>' +
+          '<div class="app-splash-bar" aria-hidden="true"></div>' +
+          "</div>";
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

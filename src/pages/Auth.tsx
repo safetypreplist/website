@@ -29,17 +29,19 @@ function PasswordField({
   autoComplete,
   hint,
   minLength = 8,
+  label = "Password",
 }: {
   value: string;
   onChange: (value: string) => void;
   autoComplete: string;
   hint?: string;
   minLength?: number;
+  label?: string;
 }) {
   const [visible, setVisible] = useState(false);
   return (
     <label className="field">
-      <span>Password</span>
+      <span>{label}</span>
       <div className="password-field">
         <input
           type={visible ? "text" : "password"}
@@ -230,6 +232,7 @@ export function CreateAccountPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [members, setMembers] = useState<FamilyRow[]>(() => emptyFamilyRows(extraSeats));
   const [inviteResults, setInviteResults] = useState<Record<number, FamilyRowResult> | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -239,6 +242,11 @@ export function CreateAccountPage() {
   const validCode = useMemo(() => PRODUCT_CODE_RE.test(code), [code]);
 
   async function onSubmit(e: FormEvent) {
+    if (password !== confirmPassword) {
+      e.preventDefault();
+      setError("Passwords do not match.");
+      return;
+    }
     setSubmitting(true);
     try {
       await createAccounts(e);
@@ -253,6 +261,10 @@ export function CreateAccountPage() {
     setPreviewNote(false);
     if (!agreed) {
       setError("Please agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
     const memberProblem = familyRowsError(members, email);
@@ -387,6 +399,12 @@ export function CreateAccountPage() {
           autoComplete="new-password"
           hint="At least 8 characters."
         />
+        <PasswordField
+          label="Confirm password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          autoComplete="new-password"
+        />
         {extraSeats ? (
           <div className="signup-family">
             <h2 className="signup-section-title">Add your family {extraSeats === 1 ? "member" : "members"}</h2>
@@ -440,6 +458,7 @@ export function JoinFamilyPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -507,6 +526,10 @@ export function JoinFamilyPage() {
     setError("");
     if (!agreed) {
       setError("Please agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
     setBusy(true);
@@ -635,6 +658,12 @@ export function JoinFamilyPage() {
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           </label>
           <PasswordField value={password} onChange={setPassword} autoComplete="new-password" hint="At least 8 characters." />
+          <PasswordField
+            label="Confirm password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            autoComplete="new-password"
+          />
           {familyAccess}
           <LegalAgreement id="join-agree" checked={agreed} onChange={setAgreed} />
           {error && <p className="form-error">{error}</p>}

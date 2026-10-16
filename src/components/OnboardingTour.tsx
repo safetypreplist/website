@@ -563,6 +563,8 @@ export function OnboardingTour() {
           <p className="onboarding-copy onboarding-welcome-intro">
             <strong>{firstName ? `Congratulations, ${firstName}!` : "Congratulations!"}</strong> You’re officially the
             owner of your Safety Prep List account. Your preparation journey starts here. We’re glad to have you with us!
+            Feel free to watch the introduction video and take the guided tour so you can get familiar with your new
+            checklist.
           </p>
           <div className="onboarding-actions onboarding-actions-stacked">
             <button className="btn btn-primary" type="button" onClick={() => setMode("offline")}>Continue onboarding</button>

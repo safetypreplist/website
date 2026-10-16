@@ -35,6 +35,10 @@ import {
 import { SafetyPage } from "./pages/Safety";
 import { SystemPage } from "./pages/System";
 
+function isInsideSystem(pathname: string) {
+  return pathname === "/app" || pathname.startsWith("/app/") || pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useApp();
   const location = useLocation();
@@ -67,11 +71,14 @@ export default function App() {
   const comingSoon = useComingSoon();
   const isOwner = profile?.role === "owner";
 
-  // Wait for the setting so a visitor never sees the real site flash before the maintenance page.
-  if (!comingSoon.ready) return <AppSplash />;
+  const insideSystem = isInsideSystem(location.pathname);
+
+  // Inside the app, wait behind the branded splash. On the public site, paint the page
+  // immediately so the homepage is not covered by the loader.
+  if (!comingSoon.ready && insideSystem) return <AppSplash />;
 
   if (location.pathname === "/maintenance") {
-    if (loading) return <AppSplash />;
+    if (loading && insideSystem) return <AppSplash />;
     return isOwner ? (
       <ComingSoonPage eyebrow={comingSoon.eyebrow} title={comingSoon.title} message={comingSoon.message} preview />
     ) : (
@@ -80,7 +87,7 @@ export default function App() {
   }
 
   if (comingSoon.enabled) {
-    if (loading) return <AppSplash />;
+    if (loading && insideSystem) return <AppSplash />;
     // Signed-in accounts keep working, so existing members are never locked out. The owner sees everything.
     if (!isOwner && !session && !isOpenDuringComingSoon(location.pathname)) {
       return <ComingSoonPage eyebrow={comingSoon.eyebrow} title={comingSoon.title} message={comingSoon.message} />;

@@ -9420,6 +9420,10 @@ body:has(.cookie-notice) .support-chat-panel {
   font-size: 13px;
 }
 
+.support-chat-cta {
+  margin: 0 0 4px;
+}
+
 .support-chat-offline {
   margin: -4px 0 16px;
   padding: 10px 12px;
@@ -9430,12 +9434,22 @@ body:has(.cookie-notice) .support-chat-panel {
   line-height: 1.45;
 }
 
+.support-chat-answer .support-chat-offline,
+.support-chat-answer .support-chat-cta {
+  margin-top: 16px;
+}
+
 .support-chat-checking {
   display: grid;
   justify-items: center;
   gap: 14px;
   padding: 26px 0 18px;
   text-align: center;
+}
+
+.support-chat-checking.is-inline {
+  gap: 10px;
+  padding: 4px 0 14px;
 }
 
 .support-chat-checking p {

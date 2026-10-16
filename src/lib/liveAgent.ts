@@ -17,6 +17,8 @@ type LiveAgentButton = {
   destroy: () => void;
   onClick: () => void;
   onCloseFunction_?: () => void;
+  onOnline?: () => void;
+  onOffline?: () => void;
 };
 
 type LiveAgentApi = {
@@ -50,6 +52,7 @@ const STATUS_MAX_AGE_MS = 60000;
 let loader: Promise<LiveAgentApi> | null = null;
 let host: HTMLDivElement | null = null;
 const buttons = new Map<string, LiveAgentButton>();
+const online = new Map<string, boolean>();
 const chatListeners = new Set<(open: boolean) => void>();
 let buttonsCreatedAt = 0;
 
@@ -92,6 +95,10 @@ export function loadLiveAgent(): Promise<LiveAgentApi> {
   return loader;
 }
 
+function markOnline(id: string, available: boolean) {
+  online.set(id, available);
+}
+
 function buttonFor(api: LiveAgentApi, id: string) {
   const existing = buttons.get(id);
   if (existing) return existing;
@@ -99,7 +106,17 @@ function buttonFor(api: LiveAgentApi, id: string) {
   const button = api.createButton(id, anchor);
   if (!button) throw new Error("Chat did not load.");
   if (buttons.size === 0) buttonsCreatedAt = Date.now();
+  const originalOnline = button.onOnline?.bind(button);
+  const originalOffline = button.onOffline?.bind(button);
   const originalClose = button.onCloseFunction_?.bind(button);
+  button.onOnline = () => {
+    originalOnline?.();
+    markOnline(id, true);
+  };
+  button.onOffline = () => {
+    originalOffline?.();
+    markOnline(id, false);
+  };
   button.onCloseFunction_ = () => {
     originalClose?.();
     // LiveAgent also fires this for the other department's button when a window opens.
@@ -107,6 +124,7 @@ function buttonFor(api: LiveAgentApi, id: string) {
       if (!chatWindowVisible()) chatListeners.forEach((listener) => listener(false));
     }, 300);
   };
+  if (button.chat) markOnline(id, true);
   buttons.set(id, button);
   return button;
 }
@@ -148,22 +166,38 @@ export async function prepareLiveAgent() {
   for (const id of new Set(Object.values(LIVEAGENT_CHAT_BUTTONS))) buttonFor(api, id);
 }
 
-/** Whether an agent is online for each department. LiveAgent only reports this when a button is created. */
+function departmentOnline(id: string) {
+  const flagged = online.get(id);
+  if (flagged === true) return true;
+  if (flagged === false) return false;
+  return Boolean(buttons.get(id)?.chat);
+}
+
+function departmentSettled(id: string) {
+  if (online.has(id)) return true;
+  const button = buttons.get(id);
+  return Boolean(button?.chat || button?.initRequestFailed);
+}
+
+/** Whether an agent is online for each department. LiveAgent reports this via onOnline/onOffline after the button loads. */
 export async function liveAgentStatus(): Promise<AgentStatus> {
   if (buttons.size > 0 && Date.now() - buttonsCreatedAt > STATUS_MAX_AGE_MS && !chatWindowVisible()) {
     buttons.forEach((button) => button.destroy());
     buttons.clear();
+    online.clear();
   }
   await prepareLiveAgent();
   const started = Date.now();
-  const settled = (button?: LiveAgentButton) => !button || button.chat || button.form || button.initRequestFailed;
+  const supportId = LIVEAGENT_CHAT_BUTTONS.support;
   while (Date.now() - started < STATUS_TIMEOUT_MS) {
-    if (Object.values(LIVEAGENT_CHAT_BUTTONS).every((id) => settled(buttons.get(id)))) break;
+    const button = buttons.get(supportId);
+    if (button?.chat) markOnline(supportId, true);
+    if (departmentSettled(supportId)) break;
     await wait(150);
   }
   return {
-    sales: Boolean(buttons.get(LIVEAGENT_CHAT_BUTTONS.sales)?.chat),
-    support: Boolean(buttons.get(LIVEAGENT_CHAT_BUTTONS.support)?.chat),
+    sales: departmentOnline(LIVEAGENT_CHAT_BUTTONS.sales),
+    support: departmentOnline(supportId),
   };
 }
 

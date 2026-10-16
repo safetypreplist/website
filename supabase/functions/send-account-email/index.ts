@@ -44,16 +44,20 @@ Deno.serve(async (req) => {
         <img src="${logo}" width="64" height="79" alt="Safety Prep List" style="display:inline-block;width:64px;height:auto;border:0;">
       </p>
       <p style="margin:0 0 6px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#556B2F;font-weight:bold;">Safety Prep List</p>
-      <h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;">Your account is ready</h1>
+      <h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;">Your account is all set!</h1>
       <p style="font-size:16px;line-height:1.5;">Hi ${first},</p>
-      <p style="font-size:16px;line-height:1.5;">Your Safety Prep List account is set up. Sign in anytime to check items off, add notes, and keep your household lists in one place.</p>
+      <p style="font-size:16px;line-height:1.5;">Your Safety Prep List account is all set!</p>
+      <p style="font-size:16px;line-height:1.5;">You can now sign in anytime to check off items, add notes, and keep your household preparedness lists organized in one place.</p>
+      <p style="font-size:16px;line-height:1.5;">A little preparation today can make a big difference tomorrow.</p>
+      <p style="font-size:16px;line-height:1.5;font-style:italic;">Hope for the best. Prepare for the rest.</p>
+      <p style="font-size:16px;line-height:1.5;">The Safety Prep List Team</p>
       <p style="margin:28px 0;text-align:center;">
-        <a href="${signIn}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">Sign in</a>
+        <a href="${signIn}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">Sign in Now</a>
       </p>
       <p style="font-size:13px;line-height:1.5;color:#4D5348;">If the button doesn’t work, copy this address into your browser:<br><span style="word-break:break-all;color:#556B2F;">${signIn}</span></p>
     </div>
   </div>`;
-  const text = `Hi ${firstNameOf(name) || "there"},\n\nYour Safety Prep List account is set up. Sign in anytime at:\n\n${configuredBase()}/signin\n`;
+  const text = `Hi ${firstNameOf(name) || "there"},\n\nYour Safety Prep List account is all set!\n\nYou can now sign in anytime to check off items, add notes, and keep your household preparedness lists organized in one place.\n\nA little preparation today can make a big difference tomorrow.\n\nHope for the best. Prepare for the rest.\n\nThe Safety Prep List Team\n\nSign in Now: ${configuredBase()}/signin\n`;
 
   const sent = await sendEmail({
     to: email,

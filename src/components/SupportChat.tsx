@@ -2,20 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { useApp } from "../context/AppContext";
-import { liveAgentStatus, onLiveAgentChatChange, openLiveAgentChat, type AgentStatus, type ChatTopic } from "../lib/liveAgent";
+import { liveAgentStatus, onLiveAgentChatChange, openLiveAgentChat, type AgentStatus } from "../lib/liveAgent";
 import { ANNUAL_CENTS, MONTHLY_CENTS, SURVIVAL_VAULT_CENTS } from "../lib/pricing";
 import { memberQuickAnswers, visitorQuickAnswers } from "../lib/quickAnswers";
-
-const OPTIONS: Record<ChatTopic, { title: string; detail: string }> = {
-  sales: {
-    title: "I have a question about Safety Prep List",
-    detail: "Plans, pricing, and what’s included",
-  },
-  support: {
-    title: "I need help with my order or account",
-    detail: "Billing, access, family seats, or something not working",
-  },
-};
 
 function ChatIcon() {
   return (
@@ -45,7 +34,7 @@ export function SupportChat() {
   const { session, profile, user, products, hasSurvivalVault } = useApp();
   const [open, setOpen] = useState(false);
   const [chatting, setChatting] = useState(false);
-  const [connecting, setConnecting] = useState<ChatTopic | null>(null);
+  const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState("");
   const [answerId, setAnswerId] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
@@ -55,7 +44,6 @@ export function SupportChat() {
   const attempt = useRef(0);
 
   const inApp = pathname.startsWith("/app");
-  const order: ChatTopic[] = session ? ["support", "sales"] : ["sales", "support"];
 
   const answers = useMemo(() => {
     const cents = (slug: string, fallback: number) => products.find((p) => p.slug === slug)?.amount_cents ?? fallback;
@@ -82,6 +70,7 @@ export function SupportChat() {
       attempt.current += 1;
       setChecking(false);
       setAnswerId(null);
+      setStatus(null);
       return;
     }
     panelRef.current?.querySelector<HTMLButtonElement>(".support-chat-body button")?.focus();
@@ -109,11 +98,11 @@ export function SupportChat() {
 
   if (pathname.startsWith("/admin")) return null;
 
-  async function choose(topic: ChatTopic) {
+  async function startChat() {
     setError("");
-    setConnecting(topic);
+    setConnecting(true);
     try {
-      await openLiveAgentChat(topic, {
+      await openLiveAgentChat("support", {
         email: profile?.email || user?.email,
         firstName: profile?.first_name,
         lastName: profile?.last_name,
@@ -122,11 +111,11 @@ export function SupportChat() {
     } catch {
       setError("Chat isn’t available right now. Send us a message and we’ll reply by email.");
     } finally {
-      setConnecting(null);
+      setConnecting(false);
     }
   }
 
-  async function startHelp() {
+  async function checkSupport() {
     const id = ++attempt.current;
     setError("");
     setChecking(true);
@@ -134,8 +123,6 @@ export function SupportChat() {
       const next = await liveAgentStatus();
       if (id !== attempt.current) return;
       setStatus(next);
-      const topic = order.find((t) => next[t]);
-      if (topic) await choose(topic);
     } catch {
       if (id === attempt.current) setStatus(null);
     } finally {
@@ -148,27 +135,24 @@ export function SupportChat() {
       setOpen(false);
       return;
     }
+    setChecking(true);
+    setStatus(null);
     setOpen(true);
-    void startHelp();
+    void checkSupport();
   }
 
   if (chatting) return null;
 
-  const offline = status !== null && !status.sales && !status.support;
+  const supportOffline = status?.support === false;
 
-  const chatOption = (topic: ChatTopic) => (
+  const chatButton = (
     <button
-      key={topic}
-      className="support-chat-option"
+      className="btn btn-primary btn-block support-chat-cta"
       type="button"
-      disabled={connecting !== null}
-      onClick={() => void choose(topic)}
+      disabled={connecting}
+      onClick={() => void startChat()}
     >
-      <span>
-        <b>{OPTIONS[topic].title}</b>
-        <small>{connecting === topic ? "Connecting you…" : OPTIONS[topic].detail}</small>
-      </span>
-      <i aria-hidden="true">›</i>
+      {connecting ? "Connecting…" : "Chat with us"}
     </button>
   );
 
@@ -186,16 +170,7 @@ export function SupportChat() {
             </div>
           </div>
           <div className="support-chat-body">
-            {checking ? (
-              <div className="support-chat-checking" role="status">
-                <span className="support-chat-dots" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <p>{connecting ? "Connecting you with our team…" : "Checking who’s available…"}</p>
-              </div>
-            ) : activeAnswer ? (
+            {activeAnswer ? (
               <div className="support-chat-answer">
                 <button className="support-chat-back" type="button" onClick={() => setAnswerId(null)}>
                   <span aria-hidden="true">‹</span> All questions
@@ -207,18 +182,37 @@ export function SupportChat() {
                     {activeAnswer.link.label} <span aria-hidden="true">→</span>
                   </Link>
                 ) : null}
-                <p className="support-chat-section">Still have a question?</p>
-                <div className="support-chat-options">{chatOption(activeAnswer.topic)}</div>
+                {checking ? null : supportOffline ? (
+                  <p className="support-chat-offline">
+                    Our team is offline right now. Leave a message and we’ll reply by email.
+                  </p>
+                ) : (
+                  <>
+                    <p className="support-chat-section">Still have a question?</p>
+                    {chatButton}
+                  </>
+                )}
               </div>
             ) : (
               <>
                 <p className="support-chat-greeting">Hello! How can we help you?</p>
-                {offline ? (
+                {checking ? (
+                  <div className="support-chat-checking is-inline" role="status">
+                    <span className="support-chat-dots" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    <p>Checking who’s available…</p>
+                  </div>
+                ) : supportOffline ? (
                   <p className="support-chat-offline">
                     Our team is offline right now. Browse quick answers below, or leave a message and we’ll reply by
                     email.
                   </p>
-                ) : null}
+                ) : (
+                  chatButton
+                )}
                 <p className="support-chat-section" id="support-chat-quick-label">
                   Quick answers
                 </p>
@@ -232,20 +226,16 @@ export function SupportChat() {
                     </li>
                   ))}
                 </ul>
-                <p className="support-chat-section">{offline ? "Leave us a message" : "Talk to us"}</p>
-                <div className="support-chat-options">{order.map(chatOption)}</div>
               </>
             )}
-            {error && !checking ? (
+            {error ? (
               <p className="support-chat-error" role="alert">
                 {error}
               </p>
             ) : null}
-            {!checking ? (
-              <Link className="support-chat-alt" to={session ? "/app/help" : "/contact"} onClick={() => setOpen(false)}>
-                Prefer to write? Send us a message
-              </Link>
-            ) : null}
+            <Link className="support-chat-alt" to={session ? "/app/help" : "/contact"} onClick={() => setOpen(false)}>
+              Prefer to write? Send us a message
+            </Link>
           </div>
         </div>
       ) : null}
