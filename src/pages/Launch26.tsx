@@ -105,7 +105,7 @@ const individualFeatures = [
 
 export function Launch26Page() {
   const [vaultOpen, setVaultOpen] = useState(false);
-  const [offerOpen, setOfferOpen] = useState(true);
+  const [offerOpen, setOfferOpen] = useState(false);
   const [unlocked, setUnlocked] = useState(hasUnlock);
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
