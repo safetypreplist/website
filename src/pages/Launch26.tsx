@@ -26,16 +26,21 @@ import { money } from "../lib/format";
 import { recordLegalAcceptance } from "../lib/legalConsent";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { HeroSlider } from "../components/HeroSlider";
-import { ANNUAL_CENTS, FAMILY_MIN_SEATS, LAUNCH_CODE, LAUNCH_FIRST_MONTH_CENTS, MONTHLY_CENTS } from "../lib/pricing";
+import {
+  ANNUAL_CENTS,
+  FAMILY_MIN_SEATS,
+  LAUNCH_CODE,
+  LAUNCH_FIRST_MONTH_CENTS,
+  MAX_CHECKLIST_QUANTITY,
+  MONTHLY_CENTS,
+} from "../lib/pricing";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { subscribeChecklist } from "../lib/subscribe";
 
 const CODE = LAUNCH_CODE;
 const UNLOCK_KEY = "spl.launch26.unlocked";
 const INDIVIDUAL_CENTS = MONTHLY_CENTS;
-const FAMILY_CENTS = MONTHLY_CENTS * FAMILY_MIN_SEATS;
 const INDIVIDUAL_FIRST_CENTS = LAUNCH_FIRST_MONTH_CENTS;
-const FAMILY_FIRST_CENTS = LAUNCH_FIRST_MONTH_CENTS * FAMILY_MIN_SEATS;
 const FIRST_MONTH = money(LAUNCH_FIRST_MONTH_CENTS);
 
 function checkoutHref(query: string, unlocked: boolean) {
@@ -108,7 +113,10 @@ export function Launch26Page() {
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
   const emailRef = useRef<HTMLInputElement>(null);
+  const familyCents = MONTHLY_CENTS * familyQty;
+  const familyFirstCents = LAUNCH_FIRST_MONTH_CENTS * familyQty;
 
   useEffect(() => {
     if (!offerOpen) return;
@@ -393,7 +401,7 @@ export function Launch26Page() {
               </span>
               <span className="step-num">Step 2</span>
               <h3>Complete your purchase</h3>
-              <p>Check out securely. Choose flexible payments: monthly or annual billing.</p>
+              <p>Check out securely. This launch price is for Monthly billing.</p>
             </li>
             <li>
               <span className="how-icon">
@@ -444,13 +452,37 @@ export function Launch26Page() {
               <h3>Family Plan</h3>
               <p className="launch-was">
                 <span>Regular price</span>
-                <s>{money(FAMILY_CENTS)}/month</s>
+                <s>{money(familyCents)}/month</s>
               </p>
               <div className="amount">
-                {money(FAMILY_FIRST_CENTS)} <small>first month</small>
+                {money(familyFirstCents)} <small>first month</small>
               </div>
-              <p className="launch-off">{FIRST_MONTH} per checklist, then {money(FAMILY_CENTS)}/month</p>
-              <p className="plan-line">{FAMILY_MIN_SEATS} Personal Checklists</p>
+              <p className="launch-off">{FIRST_MONTH} per checklist, then {money(familyCents)}/month</p>
+              <p className="plan-line">{familyQty} Personal Checklists</p>
+              <div className="qty-picker landing-qty">
+                <span>Family Members</span>
+                <div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    aria-label="One fewer family member"
+                    disabled={familyQty <= FAMILY_MIN_SEATS}
+                    onClick={() => setFamilyQty((n) => Math.max(FAMILY_MIN_SEATS, n - 1))}
+                  >
+                    -
+                  </button>
+                  <b>{familyQty}</b>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    aria-label="One more family member"
+                    disabled={familyQty >= MAX_CHECKLIST_QUANTITY}
+                    onClick={() => setFamilyQty((n) => Math.min(MAX_CHECKLIST_QUANTITY, n + 1))}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
               <p className="plan-plus">Everything in Individual, plus:</p>
               <ul>
                 <li><IconUser /> Each member gets their own Personal Checklist</li>
@@ -459,7 +491,7 @@ export function Launch26Page() {
               </ul>
               <Link
                 className="btn btn-primary btn-block"
-                to={checkoutHref(`plan=family&qty=${FAMILY_MIN_SEATS}&access=monthly`, unlocked)}
+                to={checkoutHref(`plan=family&qty=${familyQty}&access=monthly`, unlocked)}
               >
                 Choose Family
               </Link>

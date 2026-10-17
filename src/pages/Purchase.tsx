@@ -93,14 +93,13 @@ export function CheckoutPage() {
   const [additional, setAdditional] = useState(() =>
     Math.min(MAX_CHECKLIST_QUANTITY, Math.max(1, Number(params.get("qty") || 1) || 1)),
   );
-  const people = addingChecklists
-    ? additional
-    : requestedPlan === "family"
-      ? Math.min(
-          MAX_CHECKLIST_QUANTITY,
-          Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS),
-        )
-      : 1;
+  const [familyQty, setFamilyQty] = useState(() =>
+    Math.min(
+      MAX_CHECKLIST_QUANTITY,
+      Math.max(FAMILY_MIN_SEATS, Number(params.get("qty") || FAMILY_MIN_SEATS) || FAMILY_MIN_SEATS),
+    ),
+  );
+  const people = addingChecklists ? additional : requestedPlan === "family" ? familyQty : 1;
   const planKind = addingChecklists ? (people > 1 ? "family" : "individual") : requestedPlan;
   const access: AccessInterval = params.get("access") === "annual" ? "annual" : "monthly";
   const [vault, setVault] = useState(!renew && (params.get("vault") === "1" || params.get("household") === "1"));
@@ -300,9 +299,37 @@ export function CheckoutPage() {
               </p>
             </>
           ) : (
-            <p className="muted">
-              {people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
-            </p>
+            <>
+              {requestedPlan === "family" && !renew ? (
+                <div className="qty-picker">
+                  <span>Family Members</span>
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      aria-label="One fewer family member"
+                      disabled={familyQty <= FAMILY_MIN_SEATS}
+                      onClick={() => setFamilyQty((n) => Math.max(FAMILY_MIN_SEATS, n - 1))}
+                    >
+                      -
+                    </button>
+                    <b>{familyQty}</b>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      aria-label="One more family member"
+                      disabled={familyQty >= MAX_CHECKLIST_QUANTITY}
+                      onClick={() => setFamilyQty((n) => Math.min(MAX_CHECKLIST_QUANTITY, n + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              <p className="muted">
+                {people === 1 ? "1 Personal Checklist" : `${people} Personal Checklists`}
+              </p>
+            </>
           )}
           <p className="muted">{SCOPE_LINE}</p>
           {access === "annual" ? (
