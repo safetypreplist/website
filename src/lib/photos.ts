@@ -15,7 +15,6 @@ export const PHOTO_LIBRARY = {
   power: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1600&q=80",
   cooling: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1600&q=80",
   food: "/images/pantry-food.jpg?v=2",
-  video: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80",
 } as const;
 
 export const HERO_SLIDES = [

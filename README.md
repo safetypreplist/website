@@ -57,7 +57,7 @@ Follow the setup docs in order:
 | Annual | $79.99 per person / year (about $6.67/month) | Same as Monthly. Saves $15.89 a year per person versus $95.88 paid monthly (about 16.6%). |
 | LAUNCH26 | $4.99 first month per person, then $7.99/month | Monthly billing only. Annual stays $79.99. |
 | Family Plan | Same per-person price | Connected individual checklists — not one shared list |
-| Survival Vault | $10 one-time add-on | Advanced preparedness resources + How-To Videos. Not recurring. One purchase per family. |
+| Survival Vault | $10 one-time add-on | Advanced preparedness checklists (off-grid, water, battery/solar, cooling/heat, long-term food). Not recurring. One purchase per family. |
 
 Due today = the Monthly or Annual subscription total + optional Survival Vault. Renewals charge the subscription only.
 

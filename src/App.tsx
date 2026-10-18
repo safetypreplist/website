@@ -19,7 +19,7 @@ import { DemoPage } from "./pages/Demo";
 import { InstallPage } from "./pages/Install";
 import { NotFoundPage } from "./pages/NotFound";
 import { AccessEndedPage } from "./pages/AccessEnded";
-import { AccountPage, VaultPage } from "./pages/Account";
+import { AccountPage } from "./pages/Account";
 import { BillingPage, ReceiptPage } from "./pages/Billing";
 import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
@@ -280,7 +280,8 @@ export default function App() {
         }
       />
       <Route path="/app/household" element={<Navigate to="/app/survival" replace />} />
-      <Route path="/app/vault" element={<Navigate to="/app/survival/videos" replace />} />
+      <Route path="/app/vault" element={<Navigate to="/app/survival" replace />} />
+      <Route path="/app/survival/videos" element={<Navigate to="/app/survival" replace />} />
       <Route
         path="/app/survival"
         element={
@@ -294,18 +295,6 @@ export default function App() {
         }
       />
       <Route path="/invite/:token" element={<Navigate to="/create-account" replace />} />
-      <Route
-        path="/app/survival/videos"
-        element={
-          <RequireAuth>
-            <DeviceGate>
-              <AppShell>
-                <VaultPage />
-              </AppShell>
-            </DeviceGate>
-          </RequireAuth>
-        }
-      />
       <Route
         path="/admin"
         element={

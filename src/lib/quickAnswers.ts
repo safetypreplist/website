@@ -16,7 +16,7 @@ type Prices = { monthlyCents: number; annualCents: number; vaultCents: number };
 const CHECKLISTS =
   "5-Minute Grab-and-Go Bag, 15-Minute Ready Duffel (72-Hour Continuity Kit), 20-Minute Vehicle OR Suitcase Prep, and 60-Minute Home Resilience";
 const VAULT_LISTS =
-  "Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, Long-Term Food, and How-To Videos (a curated YouTube playlist)";
+  "Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food";
 const REFUND_RULE =
   "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded.";
 
@@ -127,7 +127,7 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
       id: "offline",
       question: "How do I use it without internet?",
       answer:
-        "Turn on Offline access on your Home page, or under Your data on your Account page, while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service, and your changes sync when you reconnect. Videos, purchases, and account changes still need a connection.",
+        "Turn on Offline access on your Home page, or under Your data on your Account page, while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service, and your changes sync when you reconnect. Purchases and account changes still need a connection.",
       topic: "support",
       link: { to: "/install", label: "Add the app icon" },
     },

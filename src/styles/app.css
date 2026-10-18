@@ -3455,33 +3455,6 @@ html.has-guidance-ack .app-main {
   margin-top: 0;
 }
 
-.how-to-videos {
-  max-width: 46rem;
-}
-
-.how-to-videos p {
-  margin: 0;
-  font-size: var(--text-body);
-  line-height: 1.55;
-  color: var(--ink);
-}
-
-.how-to-videos .how-to-videos-disclaimer {
-  margin-top: var(--space-3);
-  font-size: var(--text-muted);
-  color: var(--ink-soft);
-}
-
-.how-to-videos .btn {
-  min-height: var(--control-h-lg);
-}
-
-@media (max-width: 560px) {
-  .how-to-videos .btn {
-    width: 100%;
-  }
-}
-
 .system-list {
   display: grid;
   gap: 16px;
@@ -4706,8 +4679,7 @@ html.has-guidance-ack .app-main {
 
 .contact-card,
 .safety-card,
-.device-card,
-.how-to-videos {
+.device-card {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -5266,7 +5238,6 @@ html.has-guidance-ack .app-main {
 .app-shell .account-upgrade .btn,
 .app-shell .locked-panel > .btn,
 .app-shell .device-card .toolbar,
-.app-shell .how-to-videos .btn,
 .app-shell .account-page > .btn,
 .app-shell .status-banner .btn,
 .app-shell .empty-panel > .btn {

@@ -9,7 +9,6 @@ const VAULT_SUBJECTS: Record<(typeof VAULT_CHECKLISTS)[number]["title"], PhotoSu
   "Home Battery & Solar": "power",
   "Emergency Cooling / Heat Resilience": "cooling",
   "Long-Term Food": "food",
-  "How-To Videos": "video",
 };
 
 export function SurvivalVaultModal({

@@ -69,7 +69,6 @@ const vaultIcons = {
   "Home Battery & Solar": IconSolar,
   "Emergency Cooling / Heat Resilience": IconHeat,
   "Long-Term Food": IconFood,
-  "How-To Videos": IconChecklist,
 } as const;
 
 const coreFeatures = [
@@ -393,7 +392,7 @@ export function LandingPage() {
                 Survival Vault for an additional $10 <small>/ one time</small>
               </h3>
               <p>
-                Expand your checklist to include Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. How-To Videos is a curated YouTube playlist from independent creators and organizations.
+                Expand your checklist to include Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.
               </p>
             </div>
             <button className="btn btn-primary" type="button" onClick={() => setVaultOpen(true)}>

@@ -8,7 +8,7 @@ import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 import { checklistTitle, familyPageLabel, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { HOW_TO_PLAYLIST_URL, HOW_TO_VIDEOS_DESCRIPTION, HOW_TO_VIDEOS_DISCLAIMER, VAULT_APP_DESCRIPTION } from "../lib/copy";
+import { VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { invokeFunction } from "../lib/supabase";
 
 export function AccountPage() {
@@ -477,37 +477,4 @@ function accessDescription(profile: { access_status?: string | null; access_inte
       : "Monthly.";
   }
   return "Safety Prep List access is included with your plan.";
-}
-
-export function VaultPage() {
-  const { hasSurvivalVault } = useApp();
-
-  if (!hasSurvivalVault) {
-    return (
-      <div className="locked-panel">
-        <p className="eyebrow">How-To Videos</p>
-        <h2>Part of Survival Vault</h2>
-        <p className="muted">
-          How-To Videos come with Survival Vault. Watch the skills when you need them. Practical visual learning for water, power, off grid, food, communications, and home readiness. How-To Videos is a curated YouTube playlist from independent creators and organizations.
-        </p>
-        <SurvivalVaultPurchase />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <p className="eyebrow">
-        <Link to="/app/survival">Survival Vault</Link>
-      </p>
-      <h1 className="page-title">How-To Videos</h1>
-      <section className="panel how-to-videos">
-        <p>{HOW_TO_VIDEOS_DESCRIPTION}</p>
-        <p className="how-to-videos-disclaimer">{HOW_TO_VIDEOS_DISCLAIMER}</p>
-        <a className="btn btn-primary" href={HOW_TO_PLAYLIST_URL} target="_blank" rel="noopener noreferrer">
-          View How-To Videos
-        </a>
-      </section>
-    </div>
-  );
 }

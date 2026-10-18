@@ -8,7 +8,6 @@ import { checklistTitle, familyPageLabel, initialsFrom, permissionLabel, planTyp
 import { money } from "../lib/format";
 import { VAULT_APP_DESCRIPTION, VAULT_CHECKLISTS } from "../lib/copy";
 import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
-import { Photo } from "../components/Photo";
 import type { ConnectedChecklist, FamilyInviteResult } from "../types";
 import { AccessChoice, type AccessLevel } from "../components/AccessChoice";
 import { SystemRow, vaultSystems } from "./Dashboard";
@@ -575,7 +574,6 @@ export function ChecklistAccessPage() {
 
 export function HouseholdPage() {
   const { catalog, hasSurvivalVault, viewing, switchChecklist } = useApp();
-  const videos = VAULT_CHECKLISTS.find((item) => item.title === "How-To Videos");
 
   useEffect(() => {
     if (viewing.kind !== "household") void switchChecklist("household");
@@ -609,21 +607,6 @@ export function HouseholdPage() {
             ))}
           />
         ))}
-        {videos ? (
-          <article className="system-card">
-            <div className="illu">
-              <Photo alt="How-To Videos" subject="video" ratio="square" accent="forest" />
-            </div>
-            <div className="body">
-              <h3>{videos.title}</h3>
-              <p>{videos.line}</p>
-              <p>{videos.detail}</p>
-              <Link className="btn btn-moss" to="/app/survival/videos">
-                Open videos
-              </Link>
-            </div>
-          </article>
-        ) : null}
       </div>
     </div>
   );

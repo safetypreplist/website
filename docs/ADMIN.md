@@ -54,10 +54,6 @@ Refund requests from `/contact?topic=refund` are saved to `refund_requests` and 
 
 Do not invent phone numbers. Seed data includes Ready.gov, SAMHSA/988, Poison.org, FEMA, and official state emergency-management websites. Add a state-specific phone only after you confirm it on that agency’s current public page.
 
-## How-To Videos
-
-How-To Videos is one YouTube playlist, managed directly on YouTube: https://www.youtube.com/playlist?list=PLU4fSfttZ8NU. The app only links to it (`HOW_TO_PLAYLIST_URL` in `src/lib/copy.ts`). There is no admin video tool, and the app no longer reads the old `video_resources` table.
-
 ## Devices
 
 Each login gets 2 devices. The limit is per login, not per checklist or per family: a parent and child with separate logins each get 2, and two people sharing one login share its 2. Family pricing does not change the limit. The raw device token never leaves the device; only a SHA-256 hash is stored.
