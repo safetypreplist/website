@@ -1,5 +1,5 @@
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandMark } from "../components/Brand";
 import { Confetti } from "../components/Confetti";
 import { FamilySeatSetup, loadOpenFamilySeats } from "../components/FamilySeatSetup";
@@ -15,6 +15,7 @@ import { isPaypalConfigured } from "../lib/paypal";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   ANNUAL_MONTHLY_EQUIVALENT_CENTS,
+  LAUNCH_CODE,
   MAX_CHECKLIST_QUANTITY,
   MONTHLY_CENTS,
   SURVIVAL_VAULT_CENTS,
@@ -109,13 +110,14 @@ export function CheckoutPage() {
   }, [vaultOffered]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
-  const incomingCode = (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-  const [discountCode, setDiscountCode] = useState(incomingCode);
+  const fromLaunch = params.get("from") === "launch26";
+  const launchCode = fromLaunch ? LAUNCH_CODE : "";
+  const [discountCode, setDiscountCode] = useState(launchCode);
   const [appliedCode, setAppliedCode] = useState("");
   const [discountMessage, setDiscountMessage] = useState("");
   const [discountApplied, setDiscountApplied] = useState(0);
   const [discountPayments, setDiscountPayments] = useState(1);
-  const [checkingCode, setCheckingCode] = useState(false);
+  const [checkingCode, setCheckingCode] = useState(Boolean(launchCode));
   const [agreed, setAgreed] = useState(false);
   const [scopeAck, setScopeAck] = useState(false);
   const upgrade = products.find((p) => p.slug === "upgrade_full");
@@ -146,7 +148,7 @@ export function CheckoutPage() {
     );
   }, [discountApplied, discountedRenewalCents, discountPayments]);
 
-  async function applyCode(raw: string) {
+  const applyCode = useCallback(async (raw: string) => {
     const normalized = raw.trim().toUpperCase();
     if (!normalized) {
       setDiscountMessage("Enter a discount code.");
@@ -192,22 +194,12 @@ export function CheckoutPage() {
     } finally {
       setCheckingCode(false);
     }
-  }
+  }, [access, breakdown.subscriptionCents, people, planKind, vault]);
 
-  const autoApplied = useRef(false);
   useEffect(() => {
-    if (!incomingCode || autoApplied.current) return;
-    autoApplied.current = true;
-    void applyCode(incomingCode);
-  }, [incomingCode]);
-
-  const quotedFor = useRef(`${planKind}-${people}-${access}-${vault}`);
-  useEffect(() => {
-    const key = `${planKind}-${people}-${access}-${vault}`;
-    if (quotedFor.current === key) return;
-    quotedFor.current = key;
-    if (appliedCode) void applyCode(appliedCode);
-  }, [planKind, people, access, vault]);
+    if (!launchCode) return;
+    void applyCode(launchCode);
+  }, [launchCode, applyCode]);
 
   const onCaptured = useMemo(
     () => (result: { productCode: string; productType: string; linkedToUser?: boolean }) => {
@@ -337,6 +329,14 @@ export function CheckoutPage() {
               <p className="plan-line">{money(unit)}/person/month</p>
               <p className="checkout-rate">{money(breakdown.subscriptionCents)}/year</p>
             </>
+          ) : discountApplied > 0 && discountPayments === 1 ? (
+            <>
+              {people > 1 ? <p className="plan-line">{money(unit)} × {people}</p> : null}
+              <p className="checkout-rate">
+                {money(Math.max(0, breakdown.subscriptionCents - discountApplied))} <small>first month</small>
+              </p>
+              <p className="muted">Then {money(breakdown.subscriptionCents)}/month</p>
+            </>
           ) : (
             <>
               {people > 1 ? <p className="plan-line">{money(unit)} × {people}</p> : null}
@@ -397,8 +397,9 @@ export function CheckoutPage() {
                 {!addingChecklists && people > 1 ? ` (${people} checklists)` : ""}
               </span>
               <b>
-                {money(breakdown.subscriptionCents)}
-                {access === "annual" ? "/year" : "/month"}
+                {discountApplied > 0 && discountPayments === 1 && access !== "annual"
+                  ? `${money(Math.max(0, breakdown.subscriptionCents - discountApplied))} first month`
+                  : `${money(breakdown.subscriptionCents)}${access === "annual" ? "/year" : "/month"}`}
               </b>
             </p>
           </div>
@@ -447,7 +448,7 @@ export function CheckoutPage() {
               discountedPayments={discountApplied > 0 ? discountPayments : 1}
             />
             {error && <p className="form-error">{error}</p>}
-            {agreed && scopeAck ? (
+            {agreed && scopeAck && !(launchCode && checkingCode) ? (
               <PayPalCheckout
                 key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}-${addingChecklists ? "add" : "new"}`}
                 productSlug="core"
@@ -462,7 +463,9 @@ export function CheckoutPage() {
               />
             ) : (
               <p className="form-error checkout-paypal-locked">
-                {!agreed && !scopeAck
+                {launchCode && checkingCode
+                  ? `Applying ${launchCode}…`
+                  : !agreed && !scopeAck
                   ? "Check both boxes above to continue to PayPal."
                   : !scopeAck
                     ? "Agree to the Scope & Use Acknowledgment above to continue to PayPal."
@@ -474,7 +477,13 @@ export function CheckoutPage() {
           <p className="form-error">PayPal is not configured yet.</p>
         )}
         <p className="muted checkout-back">
-          {renew ? <Link to="/app/account">Back to account</Link> : <Link to="/#pricing">Change plan</Link>}
+          {renew ? (
+            <Link to="/app/account">Back to account</Link>
+          ) : fromLaunch ? (
+            <Link to="/launch26">Change plan</Link>
+          ) : (
+            <Link to="/#pricing">Change plan</Link>
+          )}
         </p>
       </main>
       <PublicFooter />

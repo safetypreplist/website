@@ -43,8 +43,8 @@ const INDIVIDUAL_CENTS = MONTHLY_CENTS;
 const INDIVIDUAL_FIRST_CENTS = LAUNCH_FIRST_MONTH_CENTS;
 const FIRST_MONTH = money(LAUNCH_FIRST_MONTH_CENTS);
 
-function checkoutHref(query: string, unlocked: boolean) {
-  return `/checkout?${query}${unlocked ? `&code=${CODE}` : ""}`;
+function checkoutHref(query: string) {
+  return `/checkout?${query}&code=${CODE}&from=launch26`;
 }
 
 function hasUnlock() {
@@ -442,7 +442,7 @@ export function Launch26Page() {
                   </li>
                 ))}
               </ul>
-              <Link className="btn btn-primary btn-block" to={checkoutHref("plan=individual&access=monthly", unlocked)}>
+              <Link className="btn btn-primary btn-block" to={checkoutHref("plan=individual&access=monthly")}>
                 Choose Individual
               </Link>
             </article>
@@ -490,7 +490,7 @@ export function Launch26Page() {
               </ul>
               <Link
                 className="btn btn-primary btn-block"
-                to={checkoutHref(`plan=family&qty=${familyQty}&access=monthly`, unlocked)}
+                to={checkoutHref(`plan=family&qty=${familyQty}&access=monthly`)}
               >
                 Choose Family
               </Link>
@@ -518,7 +518,7 @@ export function Launch26Page() {
 
       {vaultOpen ? (
         <SurvivalVaultModal
-          ctaHref={checkoutHref("plan=individual&access=monthly&vault=1", unlocked)}
+          ctaHref={checkoutHref("plan=individual&access=monthly&vault=1")}
           onClose={() => setVaultOpen(false)}
         />
       ) : null}

@@ -46,7 +46,9 @@ export function AutoRenewalNote({
     <p className="renewal-note">
       {discountedAmount && discountedPayments > 1
         ? `You will be charged ${discountedAmount} for each of your first ${discountedPayments} ${interval}s, then ${amount} every ${interval} until you cancel.`
-        : `You will be charged ${amount} every ${interval} until you cancel.`}{" "}
+        : discountedAmount
+          ? `Your first ${interval} is ${discountedAmount}, then ${amount} every ${interval} until you cancel.`
+          : `You will be charged ${amount} every ${interval} until you cancel.`}{" "}
       Cancel anytime in Account Settings before your next billing date.
     </p>
   );

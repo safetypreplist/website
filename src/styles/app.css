@@ -1408,6 +1408,14 @@ p {
   margin: 8px 0 0;
 }
 
+.checkout-rate small {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+  margin-left: 6px;
+}
+
 .plan-access {
   margin: 0 0 22px;
   color: var(--forest);
