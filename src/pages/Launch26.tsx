@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IconBackpack,
   IconCar,
@@ -23,7 +23,6 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
 import { money } from "../lib/format";
-import { recordLegalAcceptance } from "../lib/legalConsent";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { HeroSlider } from "../components/HeroSlider";
 import {
@@ -35,10 +34,8 @@ import {
   MONTHLY_CENTS,
 } from "../lib/pricing";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
-import { subscribeChecklist } from "../lib/subscribe";
 
 const CODE = LAUNCH_CODE;
-const UNLOCK_KEY = "spl.launch26.unlocked";
 const INDIVIDUAL_CENTS = MONTHLY_CENTS;
 const INDIVIDUAL_FIRST_CENTS = LAUNCH_FIRST_MONTH_CENTS;
 const FIRST_MONTH = money(LAUNCH_FIRST_MONTH_CENTS);
@@ -47,16 +44,12 @@ function checkoutHref(query: string) {
   return `/checkout?${query}&code=${CODE}&from=launch26`;
 }
 
-function hasUnlock() {
+function rememberLaunchVisit() {
   try {
-    return localStorage.getItem(UNLOCK_KEY) === "1";
+    sessionStorage.setItem("spl.launch26", "1");
   } catch {
-    return false;
+    // Private browsing can refuse storage; the checkout URL still carries from=launch26.
   }
-}
-
-function storeUnlock() {
-  localStorage.setItem(UNLOCK_KEY, "1");
 }
 
 const primarySystems = [
@@ -104,169 +97,17 @@ const individualFeatures = [
 
 export function Launch26Page() {
   const [vaultOpen, setVaultOpen] = useState(false);
-  const [offerOpen, setOfferOpen] = useState(false);
-  const [unlocked, setUnlocked] = useState(hasUnlock);
-  const [copied, setCopied] = useState(false);
-  const [email, setEmail] = useState("");
-  const [honeypot, setHoneypot] = useState("");
-  const [agreed, setAgreed] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
-  const emailRef = useRef<HTMLInputElement>(null);
   const familyCents = MONTHLY_CENTS * familyQty;
   const familyFirstCents = LAUNCH_FIRST_MONTH_CENTS * familyQty;
 
   useEffect(() => {
-    if (!offerOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOfferOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    if (!unlocked) emailRef.current?.focus();
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [offerOpen, unlocked]);
-
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(CODE);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      setCopied(false);
-    }
-  }
-
-  async function submitEmail(event: FormEvent) {
-    event.preventDefault();
-    setError("");
-    if (!agreed) {
-      setError("Please agree to receive emails and to the Privacy Policy.");
-      return;
-    }
-    setBusy(true);
-    try {
-      await subscribeChecklist(email, "", honeypot);
-      await recordLegalAcceptance("email_signup", email);
-      storeUnlock();
-      setUnlocked(true);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not send that. Please try again.";
-      if (import.meta.env.DEV && /not connected|BREVO/i.test(message)) {
-        await recordLegalAcceptance("email_signup", email);
-        storeUnlock();
-        setUnlocked(true);
-      } else {
-        setError(message);
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function goToPlans() {
-    setOfferOpen(false);
-    window.requestAnimationFrame(() => {
-      document.getElementById("plans")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
+    rememberLaunchVisit();
+  }, []);
 
   return (
     <div className="marketing-page launch-page">
       <PublicHeader howHref="#how" includedHref="#included" pricingHref="#plans" />
-
-      {offerOpen ? (
-        <div className="launch-offer-layer" role="presentation" onClick={() => setOfferOpen(false)}>
-          <div
-            className="launch-offer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="launch-offer-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button className="launch-offer-close" type="button" aria-label="Close" onClick={() => setOfferOpen(false)}>
-              ×
-            </button>
-            {unlocked ? (
-              <>
-                <p className="eyebrow">First month only</p>
-                <h2 id="launch-offer-title">Your {FIRST_MONTH} first-month code</h2>
-                <p>
-                  Choose a Monthly plan below and this code is applied at checkout automatically. Your first month is{" "}
-                  {FIRST_MONTH} per Personal Checklist; regular monthly pricing of {money(INDIVIDUAL_CENTS)} begins in month two.
-                </p>
-                <p className="launch-offer-hint">Use this code</p>
-                <div className="launch-offer-code">
-                  <b>{CODE}</b>
-                  <button className="btn btn-primary" type="button" onClick={() => void copyCode()}>
-                    {copied ? "Copied" : "Copy code"}
-                  </button>
-                </div>
-                {copied ? <p className="launch-offer-copied">{CODE} is copied. Paste it at checkout.</p> : null}
-                <button className="btn btn-ghost launch-offer-next" type="button" onClick={goToPlans}>
-                  Choose a plan
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="eyebrow">First month only</p>
-                <h2 id="launch-offer-title">Get your first month for {FIRST_MONTH}</h2>
-                <p>Enter your email and we’ll show the checkout code.</p>
-                <form className="launch-offer-form" onSubmit={(event) => void submitEmail(event)}>
-                  <label className="lead-honeypot" htmlFor="launch-company" aria-hidden="true">
-                    Company
-                    <input
-                      id="launch-company"
-                      name="company"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={honeypot}
-                      onChange={(event) => setHoneypot(event.target.value)}
-                    />
-                  </label>
-                  <label className="account-field">
-                    <span>Email</span>
-                    <input
-                      ref={emailRef}
-                      type="email"
-                      name="email"
-                      required
-                      autoComplete="email"
-                      placeholder="you@email.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                    />
-                  </label>
-                  {error ? <p className="form-error">{error}</p> : null}
-                  <label className="legal-agree" htmlFor="launch-agree">
-                    <input
-                      id="launch-agree"
-                      type="checkbox"
-                      checked={agreed}
-                      onChange={(event) => setAgreed(event.target.checked)}
-                    />
-                    <span>
-                      By continuing you agree to receive emails from us and to our{" "}
-                      <Link to="/privacy" target="_blank" rel="noreferrer">
-                        Privacy Policy
-                      </Link>
-                      . Unsubscribe anytime.
-                    </span>
-                  </label>
-                  <button className="btn btn-primary" type="submit" disabled={busy || !agreed}>
-                    {busy ? "Sending…" : "Get my code"}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      ) : null}
 
       <section className="hero-studio">
         <div className="hero-copy-col">
@@ -281,9 +122,9 @@ export function Launch26Page() {
             <p className="hero-sub">
               Practical preparedness for natural disasters, <span className="nowrap">local emergencies</span>, outages, evacuations, and temporary disruptions.
             </p>
-            <button className="btn btn-primary" type="button" onClick={() => setOfferOpen(true)}>
+            <a className="btn btn-primary" href="#plans">
               Claim Your {FIRST_MONTH} First Month
-            </button>
+            </a>
           </div>
         </div>
         <HeroSlider />
@@ -429,9 +270,9 @@ export function Launch26Page() {
                 <span>Regular price</span>
                 <s>{money(INDIVIDUAL_CENTS)}/month</s>
               </p>
-              <div className="amount">
+              <Link className="amount" to={checkoutHref("plan=individual&access=monthly")}>
                 {money(INDIVIDUAL_FIRST_CENTS)} <small>first month</small>
-              </div>
+              </Link>
               <p className="launch-off">Then {money(INDIVIDUAL_CENTS)}/month</p>
               <p className="plan-line">1 Personal Checklist</p>
               <ul>
@@ -453,9 +294,9 @@ export function Launch26Page() {
                 <span>Regular price</span>
                 <s>{money(familyCents)}/month</s>
               </p>
-              <div className="amount">
+              <Link className="amount" to={checkoutHref(`plan=family&qty=${familyQty}&access=monthly`)}>
                 {money(familyFirstCents)} <small>first month</small>
-              </div>
+              </Link>
               <p className="launch-off">{FIRST_MONTH} per checklist, then {money(familyCents)}/month</p>
               <p className="plan-line">{familyQty} Personal Checklists</p>
               <div className="qty-picker landing-qty">

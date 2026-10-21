@@ -107,6 +107,11 @@ export function LandingPage() {
   const annualSavedCents = Math.max(0, yearOfMonthlyCents - annualCents);
 
   useEffect(() => {
+    try {
+      sessionStorage.removeItem("spl.launch26");
+    } catch {
+      // Homepage checkout must stay at regular pricing even if storage is blocked.
+    }
     const scrollToHash = () => {
       const id = window.location.hash.replace("#", "");
       if (id === "full-system") {

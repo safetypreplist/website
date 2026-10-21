@@ -16,6 +16,7 @@ import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   ANNUAL_MONTHLY_EQUIVALENT_CENTS,
   LAUNCH_CODE,
+  LAUNCH_FIRST_MONTH_CENTS,
   MAX_CHECKLIST_QUANTITY,
   MONTHLY_CENTS,
   SURVIVAL_VAULT_CENTS,
@@ -110,10 +111,16 @@ export function CheckoutPage() {
   }, [vaultOffered]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
-  const fromLaunch = params.get("from") === "launch26";
+  const fromLaunch = params.get("from") === "launch26" || (() => {
+    try {
+      return sessionStorage.getItem("spl.launch26") === "1";
+    } catch {
+      return false;
+    }
+  })();
   const launchCode = fromLaunch ? LAUNCH_CODE : "";
   const [discountCode, setDiscountCode] = useState(launchCode);
-  const [appliedCode, setAppliedCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState(launchCode);
   const [discountMessage, setDiscountMessage] = useState("");
   const [discountApplied, setDiscountApplied] = useState(0);
   const [discountPayments, setDiscountPayments] = useState(1);
@@ -123,8 +130,16 @@ export function CheckoutPage() {
   const upgrade = products.find((p) => p.slug === "upgrade_full");
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
-  const discountedDueToday = Math.max(0, breakdown.dueTodayCents - discountApplied);
-  const discountedRenewalCents = Math.max(0, breakdown.recurringCents - discountApplied);
+  const launchPriceActive =
+    fromLaunch && access === "monthly" && discountCode.trim().toUpperCase() === LAUNCH_CODE;
+  const launchDiscountCents = launchPriceActive
+    ? Math.max(0, breakdown.subscriptionCents - LAUNCH_FIRST_MONTH_CENTS * people)
+    : 0;
+  const promoRejected = fromLaunch && !checkingCode && Boolean(discountMessage) && discountApplied <= 0 && !appliedCode;
+  const shownDiscount = promoRejected ? 0 : discountApplied || launchDiscountCents;
+  const shownCode = promoRejected ? "" : appliedCode || (shownDiscount ? LAUNCH_CODE : "");
+  const discountedDueToday = Math.max(0, breakdown.dueTodayCents - shownDiscount);
+  const discountedRenewalCents = Math.max(0, breakdown.recurringCents - shownDiscount);
   const title = addingChecklists
     ? "Additional Checklists"
     : `${renew ? "Renew " : ""}${planKind === "family" ? "Family Plan" : "Individual Plan"}`;
@@ -329,11 +344,11 @@ export function CheckoutPage() {
               <p className="plan-line">{money(unit)}/person/month</p>
               <p className="checkout-rate">{money(breakdown.subscriptionCents)}/year</p>
             </>
-          ) : discountApplied > 0 && discountPayments === 1 ? (
+          ) : shownDiscount > 0 && discountPayments === 1 ? (
             <>
               {people > 1 ? <p className="plan-line">{money(unit)} × {people}</p> : null}
               <p className="checkout-rate">
-                {money(Math.max(0, breakdown.subscriptionCents - discountApplied))} <small>first month</small>
+                {money(Math.max(0, breakdown.subscriptionCents - shownDiscount))} <small>first month</small>
               </p>
               <p className="muted">Then {money(breakdown.subscriptionCents)}/month</p>
             </>
@@ -386,7 +401,12 @@ export function CheckoutPage() {
               {checkingCode ? "Checking…" : "Apply"}
             </button>
           </div>
-          {discountMessage ? <p className={`discount-result ${discountApplied ? "success" : "error"}`}>{discountMessage}</p> : null}
+          {discountMessage || shownDiscount ? (
+            <p className={`discount-result ${shownDiscount ? "success" : "error"}`}>
+              {discountMessage ||
+                `${shownCode} applied — your first month is ${money(breakdown.subscriptionCents - shownDiscount)}, then ${money(breakdown.subscriptionCents)} per month.`}
+            </p>
+          ) : null}
         </section>
 
         <section className="checkout-step checkout-summary">
@@ -397,8 +417,8 @@ export function CheckoutPage() {
                 {!addingChecklists && people > 1 ? ` (${people} checklists)` : ""}
               </span>
               <b>
-                {discountApplied > 0 && discountPayments === 1 && access !== "annual"
-                  ? `${money(Math.max(0, breakdown.subscriptionCents - discountApplied))} first month`
+                {shownDiscount > 0 && discountPayments === 1 && access !== "annual"
+                  ? `${money(Math.max(0, breakdown.subscriptionCents - shownDiscount))} first month`
                   : `${money(breakdown.subscriptionCents)}${access === "annual" ? "/year" : "/month"}`}
               </b>
             </p>
@@ -411,11 +431,11 @@ export function CheckoutPage() {
               </p>
             </div>
           ) : null}
-          {discountApplied ? (
+          {shownDiscount ? (
             <div className="summary-block discount-summary">
               <p>
-                <span>Discount ({appliedCode})</span>
-                <b>−{money(discountApplied)}</b>
+                <span>Discount ({shownCode})</span>
+                <b>−{money(shownDiscount)}</b>
               </p>
             </div>
           ) : null}
@@ -424,13 +444,13 @@ export function CheckoutPage() {
             <b>{money(discountedDueToday)}</b>
           </p>
           <p className="muted">
-            {discountApplied > 0 && discountPayments > 1
+            {shownDiscount > 0 && discountPayments > 1
               ? access === "annual"
                 ? `Renews at ${money(discountedRenewalCents)} for the next ${plural(discountPayments - 1, "year")}, then ${money(breakdown.recurringCents)} per year.`
                 : `Then ${money(discountedRenewalCents)} per month for the next ${plural(discountPayments - 1, "month")}, then ${money(breakdown.recurringCents)} per month.`
               : access === "annual"
               ? `Renews annually at ${money(breakdown.recurringCents)}.`
-              : discountApplied > 0
+              : shownDiscount > 0
                 ? `Then ${money(breakdown.recurringCents)} per month afterwards.`
                 : `Renews monthly at ${money(breakdown.recurringCents)}.`}
             {vault ? " Survival Vault does not renew." : ""}
@@ -444,28 +464,26 @@ export function CheckoutPage() {
             <AutoRenewalNote
               amount={money(breakdown.recurringCents)}
               interval={access === "annual" ? "year" : "month"}
-              discountedAmount={discountApplied > 0 ? money(discountedRenewalCents) : undefined}
-              discountedPayments={discountApplied > 0 ? discountPayments : 1}
+              discountedAmount={shownDiscount > 0 ? money(discountedRenewalCents) : undefined}
+              discountedPayments={shownDiscount > 0 ? discountPayments : 1}
             />
             {error && <p className="form-error">{error}</p>}
-            {agreed && scopeAck && !(launchCode && checkingCode) ? (
+            {agreed && scopeAck ? (
               <PayPalCheckout
-                key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${appliedCode}-${addingChecklists ? "add" : "new"}`}
+                key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${shownCode}-${addingChecklists ? "add" : "new"}`}
                 productSlug="core"
                 quantity={people}
                 includeHousehold={vault}
                 accessInterval={access}
                 planKind={planKind}
-                discountCode={appliedCode}
+                discountCode={shownCode}
                 renew={renew}
                 onCaptured={onCaptured}
                 onError={setError}
               />
             ) : (
               <p className="form-error checkout-paypal-locked">
-                {launchCode && checkingCode
-                  ? `Applying ${launchCode}…`
-                  : !agreed && !scopeAck
+                {!agreed && !scopeAck
                   ? "Check both boxes above to continue to PayPal."
                   : !scopeAck
                     ? "Agree to the Scope & Use Acknowledgment above to continue to PayPal."

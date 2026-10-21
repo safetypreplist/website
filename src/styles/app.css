@@ -1238,6 +1238,12 @@ p {
   color: var(--forest);
 }
 
+a.amount {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .price-card .amount {
   margin: 18px 0 12px;
 }
@@ -8157,115 +8163,6 @@ html.tour-scroll-lock body {
   }
 }
 
-.launch-offer-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(20, 29, 22, 0.62);
-}
-
-.launch-offer {
-  position: relative;
-  width: min(480px, 100%);
-  padding: 28px 24px 22px;
-  border-radius: 18px;
-  background: #fffdf7;
-  color: var(--ink);
-  box-shadow: 0 24px 70px rgba(20, 29, 22, 0.28);
-}
-
-.launch-offer-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  background: transparent;
-  color: var(--ink-faint);
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.launch-offer .eyebrow {
-  color: var(--moss);
-}
-
-.launch-offer h2 {
-  margin: 8px 36px 12px 0;
-  color: var(--forest);
-  font-size: clamp(28px, 4vw, 36px);
-  line-height: 1.05;
-}
-
-.launch-offer p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1.55;
-}
-
-.launch-offer-hint {
-  margin-top: 18px !important;
-  color: var(--moss) !important;
-  font-size: 12px !important;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.launch-offer-code {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
-  padding: 10px 10px 10px 16px;
-  border: 1.5px dashed rgba(30, 42, 31, 0.28);
-  border-radius: 10px;
-  background: var(--sand);
-}
-
-.launch-offer-code b {
-  color: var(--forest);
-  font-size: 22px;
-  letter-spacing: 0.08em;
-}
-
-.launch-offer-copied {
-  margin-top: 10px !important;
-  color: var(--moss) !important;
-  font-weight: 650;
-}
-
-.launch-offer-form {
-  display: grid;
-  gap: 4px;
-  margin-top: 18px;
-}
-
-.launch-offer-form .account-field {
-  margin-bottom: 8px;
-}
-
-.launch-offer-form .legal-agree {
-  margin: 4px 0 10px;
-  font-size: 13px;
-}
-
-.launch-offer-form .btn {
-  width: 100%;
-}
-
-.launch-offer-next {
-  width: 100%;
-  margin-top: 16px;
-}
-
 .launch-page .pricing-band .section-head .eyebrow,
 .launch-page .pricing-band .section-head p,
 .launch-billing-note {
@@ -8314,19 +8211,6 @@ html.tour-scroll-lock body {
 }
 
 @media (max-width: 899px) {
-  .launch-offer {
-    padding: 24px 18px 18px;
-  }
-
-  .launch-offer-code {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .launch-offer-code .btn {
-    width: 100%;
-  }
-
   .launch-page .launch-was {
     font-size: 22px;
   }
