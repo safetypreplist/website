@@ -259,8 +259,10 @@ export function Launch26Page() {
         <div className="wrap">
           <div className="section-head">
             <p className="eyebrow">Limited time deal</p>
-            <h2>Your first month for {FIRST_MONTH}</h2>
-            <p>{FIRST_MONTH} per Personal Checklist for the first month on Monthly billing. Regular monthly pricing begins in the second month.</p>
+            <h2>Save 50% off your first month</h2>
+            <p>
+              Pay just {FIRST_MONTH} per Personal Checklist for your first month. Your subscription renews at the regular rate of {money(INDIVIDUAL_CENTS)} per checklist per month thereafter.
+            </p>
           </div>
           <div className="price-grid">
             <article className="price-card">
