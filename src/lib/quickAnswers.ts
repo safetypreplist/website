@@ -96,9 +96,9 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
     {
       id: "refund",
       question: "Can I get a refund?",
-      answer: `${REFUND_RULE} Send us a message and a team member will review it.`,
+      answer: `${REFUND_RULE} Open Request a refund, explain why, and include your confirmation number.`,
       topic: "support",
-      link: { to: "/app/help", label: "Send us a message" },
+      link: { to: "/contact?topic=refund", label: "Request a refund" },
     },
     {
       id: "family",

@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { startOnboardingReplay } from "../components/OnboardingTour";
 import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, withNewDefaults, type HelpFaq } from "../lib/help";
@@ -79,6 +80,11 @@ export function HelpPage() {
             <details key={faq.id} className="help-faq">
               <summary>{faq.question}</summary>
               <p>{faq.answer}</p>
+              {faq.linkTo && faq.linkLabel ? (
+                <p>
+                  <Link to={faq.linkTo}>{faq.linkLabel}</Link>
+                </p>
+              ) : null}
             </details>
           ))}
         </div>

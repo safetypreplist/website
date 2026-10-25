@@ -99,6 +99,10 @@ type CatalogPrice = {
   recurring?: { interval: "month" | "year" };
 };
 
+// Software as a service (SaaS) - personal use. Eligible for Managed Payments.
+// Hosted checklist access over the internet, not a downloaded app.
+const DIGITAL_TAX_CODE = "txcd_10103000";
+
 const CATALOG: Record<string, CatalogPrice> = {
   spl_monthly: {
     lookup: "spl_monthly",
@@ -132,9 +136,23 @@ async function priceByLookup(lookup: string) {
 }
 
 async function ensureProduct(id: string, name: string) {
-  const existing = await stripeRequest<{ id?: string }>("GET", `/products/${id}`);
-  if (existing.ok && existing.body.id) return existing.body.id;
-  const created = await stripeRequest<{ id?: string }>("POST", "/products", { id, name });
+  const existing = await stripeRequest<{ id?: string; tax_code?: string | { id?: string } }>("GET", `/products/${id}`);
+  if (existing.ok && existing.body.id) {
+    const current = typeof existing.body.tax_code === "string" ? existing.body.tax_code : existing.body.tax_code?.id || "";
+    if (current !== DIGITAL_TAX_CODE) {
+      const updated = await stripeRequest<{ id?: string }>("POST", `/products/${id}`, {
+        name,
+        tax_code: DIGITAL_TAX_CODE,
+      });
+      if (!updated.ok) throw new Error(stripeErrorMessage(updated.body, `Could not set the tax code on ${id}.`));
+    }
+    return existing.body.id;
+  }
+  const created = await stripeRequest<{ id?: string }>("POST", "/products", {
+    id,
+    name,
+    tax_code: DIGITAL_TAX_CODE,
+  });
   if (created.ok && created.body.id) return created.body.id;
   const retry = await stripeRequest<{ id?: string }>("GET", `/products/${id}`);
   if (retry.ok && retry.body.id) return retry.body.id;
@@ -142,9 +160,9 @@ async function ensureProduct(id: string, name: string) {
 }
 
 async function ensureCatalogPrice(spec: CatalogPrice) {
+  await ensureProduct(spec.product, spec.productName);
   const found = await priceByLookup(spec.lookup);
   if (found) return found;
-  await ensureProduct(spec.product, spec.productName);
   const created = await stripeRequest<{ id?: string }>("POST", "/prices", {
     currency: "usd",
     product: spec.product,

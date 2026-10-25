@@ -56,8 +56,17 @@ export function ContactPage() {
         <div className="wrap legal-page">
           <p className="eyebrow">Contact</p>
           <h1>{heading}</h1>
+          {topic === "refund" && !sent ? (
+            <p className="muted">
+              First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Tell us why you want a refund and include your confirmation number.
+            </p>
+          ) : null}
           {sent ? (
-            <p className="account-saved">Message sent. We will reply to the email you entered.</p>
+            <p className="account-saved">
+              {topic === "refund"
+                ? "Refund request sent. We’ll review it and reply to the email you entered."
+                : "Message sent. We will reply to the email you entered."}
+            </p>
           ) : (
             <form className="contact-form" onSubmit={(event) => void submit(event)}>
               <label className="account-field">
@@ -85,13 +94,17 @@ export function ContactPage() {
                 </select>
               </label>
               <label className="account-field">
-                <span>Message</span>
+                <span>{topic === "refund" ? "Why are you requesting this refund?" : "Message"}</span>
                 <textarea
                   rows={6}
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   required
-                  placeholder={topic === "refund" ? "Include your confirmation number if you have it." : "How can we help?"}
+                  placeholder={
+                    topic === "refund"
+                      ? "Tell us why, and include your confirmation number if you have it."
+                      : "How can we help?"
+                  }
                 />
               </label>
               <label className="contact-honey" aria-hidden="true">
@@ -100,7 +113,7 @@ export function ContactPage() {
               </label>
               {error ? <p className="form-error">{error}</p> : null}
               <button className="btn btn-primary" type="submit" disabled={sending}>
-                {sending ? "Sending…" : "Send message"}
+                {sending ? "Sending…" : topic === "refund" ? "Request a refund" : "Send message"}
               </button>
             </form>
           )}

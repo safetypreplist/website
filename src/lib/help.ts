@@ -2,6 +2,8 @@ export type HelpFaq = {
   id: string;
   question: string;
   answer: string;
+  linkTo?: string;
+  linkLabel?: string;
 };
 
 export const HELP_FAQS_KEY = "help_faqs";
@@ -34,6 +36,14 @@ export const DEFAULT_FAQS: HelpFaq[] = [
     answer: "Each login can stay active on a limited number of devices. Remove an old one from My Devices if you need a free slot.",
   },
   {
+    id: "refund",
+    question: "How do I request a refund?",
+    answer:
+      "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded. Open Request a refund, explain why, and include your confirmation number.",
+    linkTo: "/contact?topic=refund",
+    linkLabel: "Request a refund",
+  },
+  {
     id: "tour",
     question: "Can I see the guided tour again?",
     answer: "Yes. Use Replay the guided tour on this Help page anytime you want a walkthrough of the app.",
@@ -49,10 +59,13 @@ export function parseFaqs(value: unknown): HelpFaq[] {
       const question = typeof item.question === "string" ? item.question.trim() : "";
       const answer = typeof item.answer === "string" ? item.answer.trim() : "";
       if (!question || !answer) return null;
+      const linkTo = typeof item.linkTo === "string" && item.linkTo.startsWith("/") ? item.linkTo : undefined;
+      const linkLabel = typeof item.linkLabel === "string" ? item.linkLabel.trim() : "";
       return {
         id: typeof item.id === "string" && item.id ? item.id : `faq-${index}`,
         question,
         answer,
+        ...(linkTo && linkLabel ? { linkTo, linkLabel } : {}),
       };
     })
     .filter((row): row is HelpFaq => Boolean(row));
@@ -70,5 +83,10 @@ export function withNewDefaults(saved: HelpFaq[]): HelpFaq[] {
     merged.splice(at, 0, item);
     ids.add(item.id);
   });
-  return merged;
+  return merged.map((item) => {
+    if (item.linkTo) return item;
+    const fallback = DEFAULT_FAQS.find((row) => row.id === item.id);
+    if (!fallback?.linkTo || !fallback.linkLabel) return item;
+    return { ...item, linkTo: fallback.linkTo, linkLabel: fallback.linkLabel };
+  });
 }

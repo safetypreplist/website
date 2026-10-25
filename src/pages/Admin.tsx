@@ -699,6 +699,7 @@ function FaqSettings({ onSaved }: { onSaved: (message: string) => void }) {
         id: item.id || `faq-${index}`,
         question: item.question.trim(),
         answer: item.answer.trim(),
+        ...(item.linkTo && item.linkLabel ? { linkTo: item.linkTo, linkLabel: item.linkLabel } : {}),
       }))
       .filter((item) => item.question && item.answer);
     const { error } = await supabase.from("app_config").upsert({

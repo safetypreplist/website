@@ -81,6 +81,8 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [action, setAction] = useState<PendingAction | null>(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [dialogError, setDialogError] = useState("");
   const [endAccess, setEndAccess] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -135,10 +137,22 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
     setBusy(true);
     setError("");
     setNotice("");
+    setDialogError("");
     const note = notes[action.request.id] || "";
     try {
       if (action.kind === "refund") {
-        await invokeFunction("admin-refunds", { action: "refund", request_id: action.request.id, payment_ids: action.paymentIds, note });
+        if (!adminPassword) {
+          setDialogError("Enter the admin password to approve this refund.");
+          setBusy(false);
+          return;
+        }
+        await invokeFunction("admin-refunds", {
+          action: "refund",
+          request_id: action.request.id,
+          payment_ids: action.paymentIds,
+          note,
+          admin_password: adminPassword,
+        });
         setNotice(`Refunded ${money(action.cents)} to ${action.request.email} through Stripe.`);
       } else {
         await invokeFunction("admin-refunds", {
@@ -151,11 +165,19 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
         setNotice(action.kind === "deny" ? `Request from ${action.request.email} marked as denied.` : `Request from ${action.request.email} marked as refunded.`);
       }
       setAction(null);
+      setAdminPassword("");
+      setDialogError("");
       await load();
     } catch (err) {
-      setAction(null);
-      setError(err instanceof Error ? err.message : "That didn’t work. Try again.");
-      await load();
+      const message = err instanceof Error ? err.message : "That didn’t work. Try again.";
+      if (action.kind === "refund") {
+        setDialogError(message);
+        setAdminPassword("");
+      } else {
+        setAction(null);
+        setError(message);
+        await load();
+      }
     } finally {
       setBusy(false);
     }
@@ -261,7 +283,14 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
                   </dl>
                 ) : null}
 
-                {request.message ? <blockquote className="refund-message">{request.message}</blockquote> : null}
+                {request.message ? (
+                  <div className="refund-reason">
+                    <p className="eyebrow">Why they requested a refund</p>
+                    <blockquote className="refund-message">{request.message}</blockquote>
+                  </div>
+                ) : (
+                  <p className="muted">No explanation was included.</p>
+                )}
 
                 {request.status === "pending" ? (
                   <>
@@ -303,9 +332,13 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
                         className="btn btn-forest"
                         type="button"
                         disabled={!chosen.length}
-                        onClick={() => setAction({ kind: "refund", request, paymentIds: chosen, cents: chosenCents })}
+                        onClick={() => {
+                          setAdminPassword("");
+                          setDialogError("");
+                          setAction({ kind: "refund", request, paymentIds: chosen, cents: chosenCents });
+                        }}
                       >
-                        {chosen.length ? `Refund ${money(chosenCents)} through Stripe` : "Choose a payment to refund"}
+                        {chosen.length ? `Approve refund · ${money(chosenCents)}` : "Choose a payment to refund"}
                       </button>
                       <button className="btn btn-ghost" type="button" onClick={() => setAction({ kind: "deny", request })}>
                         Deny
@@ -340,24 +373,41 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
         <ConfirmDialog
           title={
             action.kind === "refund"
-              ? `Refund ${money(action.cents)}?`
+              ? `Approve refund of ${money(action.cents)}?`
               : action.kind === "deny"
                 ? "Deny this refund request?"
                 : "Mark as refunded in Stripe?"
           }
           body={
             action.kind === "refund"
-              ? `Stripe will send ${money(action.cents)} back to ${action.request.email}. Their subscription is cancelled and their access ends right away. This can’t be undone.`
+              ? `Stripe will send ${money(action.cents)} back to ${action.request.email}. Their subscription is cancelled and their access ends right away. Enter your admin password to approve it.`
               : action.kind === "deny"
                 ? `The request from ${action.request.email} moves to Closed. Remember to reply to them in LiveAgent.`
                 : `Use this after you refund ${action.request.email} directly in Stripe. The request moves to Closed.`
           }
-          confirmLabel={action.kind === "refund" ? "Refund now" : action.kind === "deny" ? "Deny request" : "Mark refunded"}
+          confirmLabel={action.kind === "refund" ? "Approve refund" : action.kind === "deny" ? "Deny request" : "Mark refunded"}
           danger={action.kind === "refund"}
           busy={busy}
-          onClose={() => setAction(null)}
+          onClose={() => {
+            setAction(null);
+            setAdminPassword("");
+            setDialogError("");
+          }}
           onConfirm={confirmAction}
         >
+          {action.kind === "refund" ? (
+            <label className="account-field">
+              <span>Admin password</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={adminPassword}
+                onChange={(event) => setAdminPassword(event.target.value)}
+                required
+              />
+            </label>
+          ) : null}
+          {dialogError ? <p className="form-error">{dialogError}</p> : null}
           {action.kind === "paypal" ? (
             <label className="refund-end-access">
               <input type="checkbox" checked={endAccess} onChange={(event) => setEndAccess(event.target.checked)} />

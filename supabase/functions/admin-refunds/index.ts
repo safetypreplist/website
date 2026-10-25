@@ -1,3 +1,4 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { json, preflight } from "../_shared/http.ts";
 import { paypalFetch } from "../_shared/paypal.ts";
 import { endSubscriptionAccess } from "../_shared/refundAccess.ts";
@@ -6,6 +7,15 @@ import { type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
 const REFUND_WINDOW_DAYS = 3;
+
+async function ownerPasswordMatches(email: string | undefined, password: string) {
+  const url = Deno.env.get("SUPABASE_URL") || "";
+  const anon = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  if (!url || !anon || !email || password.length < 1 || password.length > 128) return false;
+  const client = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  return !error;
+}
 
 type Admin = ReturnType<typeof serviceClient>;
 
@@ -287,6 +297,7 @@ Deno.serve(async (req) => {
       outcome?: "denied" | "refunded_in_paypal";
       end_access?: boolean;
       note?: string;
+      admin_password?: string;
     };
 
     if (body.action === "list") {
@@ -314,6 +325,8 @@ Deno.serve(async (req) => {
     const note = String(body.note || "").trim().slice(0, 1000) || null;
 
     if (body.action === "refund") {
+      const passwordOk = await ownerPasswordMatches(user.email, String(body.admin_password || ""));
+      if (!passwordOk) return json({ error: "That password doesn’t match this admin account." }, 403);
       const userId = await matchUser(admin, request);
       if (!userId) return json({ error: "No account uses this email, so refund it in Stripe instead." }, 400);
       const account = await loadAccount(admin, userId, false);

@@ -7276,7 +7276,9 @@ html.has-guidance-ack .app-main {
 .refund-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 18px; margin: 14px 0 0; }
 .refund-facts dt { color: var(--ink-faint); font: 600 10px/1.2 var(--font-label); letter-spacing: .09em; text-transform: uppercase; }
 .refund-facts dd { margin: 4px 0 0; color: var(--ink); font-size: 13px; line-height: 1.4; }
-.refund-message { margin: 14px 0 0; padding: 10px 14px; border-left: 3px solid var(--line-strong); background: rgba(230,226,214,.3); color: var(--ink-soft); font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.refund-reason { margin-top: 14px; }
+.refund-reason .eyebrow { margin-bottom: 6px; }
+.refund-message { margin: 0; padding: 10px 14px; border-left: 3px solid var(--line-strong); background: rgba(230,226,214,.3); color: var(--ink-soft); font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
 .refund-payments { margin: 16px 0 0; padding: 0; border: 0; }
 .refund-payments legend { margin-bottom: 8px; color: var(--ink-faint); font: 600 10px/1.2 var(--font-label); letter-spacing: .09em; text-transform: uppercase; }
 .refund-payments label { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: 13px; cursor: pointer; }
@@ -7426,6 +7428,10 @@ html.has-guidance-ack .app-main {
   color: var(--ink-soft);
   font-size: 14.5px;
   line-height: 1.55;
+}
+
+.help-faq a {
+  font-weight: 650;
 }
 
 .help-form textarea {
