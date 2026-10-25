@@ -1,32 +1,23 @@
 import { cookieChoice } from "./legalConsent";
 
-const GA_ID = "G-61Z9N8ET9R";
-
 declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
+    __splGaGranted?: boolean;
   }
 }
 
 let started = false;
 
-/** Load the Google tag after cookie consent. The first config call records the current page. */
+/** Turn analytics cookies on after Accept. The tag itself is already in the page head. */
 export function enableAnalytics() {
   if (started || cookieChoice() !== "all") return;
   started = true;
-
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag() {
-    window.dataLayer?.push(arguments);
-  };
-  window.gtag("js", new Date());
-  window.gtag("config", GA_ID);
-
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-  document.head.appendChild(script);
+  window.gtag?.("consent", "update", { analytics_storage: "granted" });
+  if (window.__splGaGranted) return;
+  window.__splGaGranted = true;
+  trackPageView(`${window.location.pathname}${window.location.search}`);
 }
 
 export function analyticsStarted() {
@@ -34,7 +25,7 @@ export function analyticsStarted() {
 }
 
 export function trackPageView(path: string) {
-  if (!started || !window.gtag) return;
+  if (!window.gtag) return;
   window.gtag("event", "page_view", {
     page_path: path,
     page_location: window.location.href,

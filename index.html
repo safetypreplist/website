@@ -3,6 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Google tag (gtag.js) -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("consent", "default", {
+        analytics_storage: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+      });
+      try {
+        window.__splGaGranted = localStorage.getItem("spl.cookie-consent") === "all";
+      } catch (e) {
+        window.__splGaGranted = false;
+      }
+      if (window.__splGaGranted) {
+        gtag("consent", "update", { analytics_storage: "granted" });
+      }
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-61Z9N8ET9R"></script>
+    <script>
+      gtag("js", new Date());
+      gtag("config", "G-61Z9N8ET9R");
+    </script>
     <meta name="theme-color" content="#1E2A1F" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
