@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { enableAnalytics } from "../lib/analytics";
+import { enableAnalytics, optOutContentsquare } from "../lib/analytics";
 import { cookieChoice, storeCookieChoice, type CookieChoice } from "../lib/legalConsent";
 
 export function CookieNotice() {
@@ -29,6 +29,7 @@ export function CookieNotice() {
     storeCookieChoice(next);
     setChoice(next);
     if (next === "all") enableAnalytics();
+    if (next === "essential") optOutContentsquare();
   }
 
   return (
@@ -37,7 +38,7 @@ export function CookieNotice() {
         <div className="cookie-notice-copy">
           <p className="eyebrow" id="cookie-notice-title">Cookie Policy</p>
           <p>
-            We use essential cookies to keep you signed in. Accept also turns on Google Analytics. See the <Link to="/privacy">Privacy Policy</Link>.
+            We use essential cookies to keep you signed in. Accept also turns on Google Analytics and Contentsquare. See the <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>
         <div className="cookie-notice-actions">

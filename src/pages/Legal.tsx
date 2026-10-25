@@ -289,8 +289,9 @@ export function PrivacyPage() {
       <h2>10. Cookies</h2>
       <p>
         Essential cookies and local storage keep you signed in and remember device and legal acknowledgments.
-        LiveAgent chat cookies load only when you open the chat. If you accept cookies, Google Analytics measures
-        how the site is used. Declining leaves only those essential cookies. We do not run advertising pixels.
+        LiveAgent chat cookies load only when you open the chat. If you accept cookies, Google Analytics and
+        Contentsquare measure how the site is used. Declining leaves only those essential cookies and turns
+        Contentsquare off in this browser. We do not run advertising pixels.
       </p>
 
       <h2>11. Changes and contact</h2>

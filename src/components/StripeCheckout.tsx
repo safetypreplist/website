@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LEGAL_VERSIONS } from "../lib/legal";
 import { storeScopeAcknowledgment } from "../lib/legalConsent";
+import { trackBeginCheckout } from "../lib/analytics";
 import { type AccessInterval } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
@@ -54,6 +55,13 @@ export function StripeCheckout({
       });
       if (!data?.url) throw new Error("Checkout did not return a Stripe URL.");
       storeScopeAcknowledgment();
+      const itemName =
+        productSlug === "spl_vault"
+          ? "Survival Vault"
+          : planKind === "family"
+            ? "Family Plan"
+            : "Individual Plan";
+      trackBeginCheckout(itemName);
       beforeRedirect?.();
       window.location.assign(data.url);
     } catch (err) {

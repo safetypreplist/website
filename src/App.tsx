@@ -10,7 +10,7 @@ import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { AppSplash } from "./components/AppSplash";
 import { ComingSoonOwnerPill, ComingSoonPage } from "./components/ComingSoon";
 import { isOpenDuringComingSoon, useComingSoon } from "./lib/comingSoon";
-import { analyticsStarted, enableAnalytics, trackPageView } from "./lib/analytics";
+import { analyticsStarted, enableAnalytics, trackContentsquarePage, trackPageView } from "./lib/analytics";
 import { cookieChoice } from "./lib/legalConsent";
 import { CookieNotice } from "./components/CookieNotice";
 import { PageMeta } from "./components/PageMeta";
@@ -46,6 +46,16 @@ function Analytics() {
   const location = useLocation();
   const path = `${location.pathname}${location.search}`;
   const lastPath = useRef<string | null>(null);
+  const sawFirstScreen = useRef(false);
+
+  useEffect(() => {
+    if (cookieChoice() === "essential") return;
+    if (!sawFirstScreen.current) {
+      sawFirstScreen.current = true;
+      return;
+    }
+    trackContentsquarePage();
+  }, [path]);
 
   useEffect(() => {
     if (cookieChoice() !== "all") return;

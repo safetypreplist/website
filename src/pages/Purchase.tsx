@@ -10,6 +10,7 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { useApp } from "../context/AppContext";
 import { money } from "../lib/format";
+import { trackPurchase } from "../lib/analytics";
 import { FAMILY_MIN_SEATS } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
@@ -588,6 +589,13 @@ export function ThankYouPage() {
     breakdown.dueTodayCents;
   const remainingDiscounted = discountTerms ? discountTerms.payments - 1 : listedPaid < listedRecurring ? 0 : 0;
   const intervalWord = access === "annual" ? "annual" : "monthly";
+
+  useEffect(() => {
+    if (!code || finishing) return;
+    const itemName = addOn ? "Additional Checklists" : plan === "family" ? "Family Plan" : "Individual Plan";
+    trackPurchase({ transactionId: code, valueCents: listedPaid, itemName });
+  }, [addOn, code, finishing, listedPaid, plan]);
+
   const renewal =
     listedPaid < listedRecurring
       ? `You paid ${money(listedPaid)} today. Then ${money(listedRecurring)} per ${access === "annual" ? "year" : "month"}.`

@@ -22,7 +22,7 @@ import {
   parseComingSoon,
 } from "../lib/comingSoon";
 
-type AdminTab = "accounts" | "refunds" | "discounts" | "content" | "onboarding" | "faqs" | "comingSoon";
+type AdminTab = "accounts" | "refunds" | "discounts" | "content" | "onboarding" | "faqs" | "comingSoon" | "analytics";
 type DiscountKind = "percent" | "fixed" | "price";
 type AppliesTo = "all" | "individual" | "family";
 type AppliesToInterval = "all" | "monthly" | "annual";
@@ -69,6 +69,7 @@ export function AdminPage() {
           <AdminNavButton active={tab === "onboarding"} label="Onboarding" onClick={() => setTab("onboarding")} />
           <AdminNavButton active={tab === "faqs"} label="FAQs" onClick={() => setTab("faqs")} />
           <p className="admin-rail-label admin-rail-label-spaced">Site</p>
+          <AdminNavButton active={tab === "analytics"} label="Analytics" onClick={() => setTab("analytics")} />
           <AdminNavButton active={tab === "comingSoon"} label="Maintenance Mode" onClick={() => setTab("comingSoon")} />
           <AdminNavButton active={false} label="Log out" onClick={() => void signOut()} />
         </aside>
@@ -91,6 +92,7 @@ export function AdminPage() {
           {tab === "content" && <ContentTools catalog={catalog} safety={safety} refreshAccount={refreshAccount} onSaved={setMessage} />}
           {tab === "onboarding" && <OnboardingSettings onSaved={setMessage} />}
           {tab === "faqs" && <FaqSettings onSaved={setMessage} />}
+          {tab === "analytics" && <AnalyticsDesk />}
           {tab === "comingSoon" && <ComingSoonSettings onSaved={setMessage} />}
         </section>
       </div>
@@ -108,6 +110,37 @@ function AdminNavButton({ active, label, badge = 0, onClick }: { active: boolean
         </b>
       ) : null}
     </button>
+  );
+}
+
+function AnalyticsDesk() {
+  return (
+    <div className="admin-panel analytics-desk">
+      <div className="admin-section-heading">
+        <div>
+          <p className="eyebrow">Site</p>
+          <h2>Analytics</h2>
+        </div>
+      </div>
+      <p className="muted">
+        You do not put hot spots on the pages. After people visit the live site, Contentsquare draws them from the clicks it recorded. Google Analytics shows where those visits came from and which devices they used.
+      </p>
+      <div className="analytics-desk-grid">
+        <article>
+          <h3>Google Analytics</h3>
+          <p>Traffic sources, devices, and whether anyone reached checkout or a purchase.</p>
+          <a className="btn btn-forest" href="https://analytics.google.com/" target="_blank" rel="noreferrer">Open Google Analytics</a>
+        </article>
+        <article>
+          <h3>Contentsquare</h3>
+          <p>Heatmaps and recordings of the public pages. Open a page, then look at Zoning or Heatmaps.</p>
+          <a className="btn btn-forest" href="https://app.contentsquare.com/" target="_blank" rel="noreferrer">Open Contentsquare</a>
+        </article>
+      </div>
+      <p className="muted">
+        The free plans keep the charts in those two sites. They do not offer a key that can pull the live charts into this console. Sign-in, account, and the thank-you page are left out of session recordings.
+      </p>
+    </div>
   );
 }
 
