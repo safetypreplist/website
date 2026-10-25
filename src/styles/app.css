@@ -6148,7 +6148,7 @@ html.has-guidance-ack .app-main {
   }
 
   .vault-included-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .cinematic,
@@ -6238,7 +6238,7 @@ html.has-guidance-ack .app-main {
   }
 
   .vault-included-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .footer-links {
@@ -7654,6 +7654,18 @@ html.tour-scroll-lock body {
   display: none;
 }
 
+.marketing-page .hero-devices {
+  display: none;
+}
+
+.marketing-page .story-video {
+  display: none;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #091712;
+}
+
 .marketing-page .hero-studio::after {
   display: block;
   height: 56px;
@@ -8113,69 +8125,69 @@ html.tour-scroll-lock body {
   }
 }
 
-/* Phone hero stays on one screen. Phone tour docks clear of the tab bar. */
+/* Phone: devices above the title, video in the story section. */
 @media (max-width: 899px) {
   .marketing-page .hero-studio {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    width: 100%;
-    height: calc(100svh - 65px);
-    max-height: calc(100svh - 65px);
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .marketing-page .hero-visual,
-  .marketing-page .hero-copy-col {
-    grid-column: 1;
-    grid-row: 1;
-    min-width: 0;
-  }
-
-  .marketing-page .hero-visual,
-  .marketing-page .hero-slides {
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    margin: 0;
-    overflow: hidden;
-  }
-
-  .marketing-page .hero-slide {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
-    object-position: center 30%;
-  }
-
-  .marketing-page .hero-copy-col {
-    z-index: 2;
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-end;
-    padding: 16px 20px calc(28px + env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(
-      to top,
-      rgba(8, 16, 12, 0.94) 0%,
-      rgba(8, 16, 12, 0.82) 18%,
-      rgba(8, 16, 12, 0.28) 36%,
-      transparent 52%
-    );
+    width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+    background: #091712;
+  }
+
+  .marketing-page .hero-visual {
+    display: none;
+  }
+
+  .marketing-page .hero-devices {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 100%;
+    padding: 6px 16px 0;
+  }
+
+  .marketing-page .hero-devices .story-device-stage {
+    width: min(100%, 420px);
+    min-height: 0;
+    padding: 0;
+  }
+
+  .marketing-page .hero-devices .story-phone-render {
+    width: min(38%, 140px) !important;
+    height: 220px !important;
+  }
+
+  .marketing-page .hero-devices .story-dashboard-frame {
+    width: min(58%, 210px);
+    margin: 0 0 8px -12px;
+    padding: 6px 6px 10px;
+  }
+
+  .marketing-page .hero-copy-col {
+    align-items: stretch;
+    justify-content: flex-start;
+    margin: 0;
+    padding: 20px 18px 28px;
+    background: none;
   }
 
   .marketing-page .hero-copy {
     max-width: none;
+    width: 100%;
     padding-right: 0;
     text-align: left;
   }
 
   .marketing-page .hero-copy .hero-product {
-    font-size: clamp(30px, 8.2vw, 38px);
-    line-height: 0.95;
+    font-size: clamp(38px, 11vw, 48px);
+    line-height: 0.96;
     max-width: none;
-    margin-bottom: 8px;
+    margin-bottom: 14px;
+    text-align: center;
   }
 
   .marketing-page .hero-copy .hero-product span {
@@ -8183,23 +8195,72 @@ html.tour-scroll-lock body {
   }
 
   .marketing-page .hero-tagline {
-    font-size: 21px;
-    line-height: 1.2;
-    margin-bottom: 8px;
+    width: 100%;
+    max-width: none;
+    font-size: 20px;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    text-align: center;
   }
 
   .marketing-page .hero-tagline span {
-    display: block;
+    display: inline;
   }
 
   .marketing-page .hero-sub {
-    width: auto;
-    max-width: 34ch;
+    width: 100%;
+    max-width: none;
     margin-inline: 0;
-    font-size: 15px;
-    line-height: 1.45;
-    margin-bottom: 16px;
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 22px;
+    text-align: center;
     text-wrap: balance;
+  }
+
+  .marketing-page .story-section {
+    min-height: 0;
+    padding-top: 8px;
+    padding-bottom: 40px;
+  }
+
+  .marketing-page .story-section .story-split {
+    gap: 12px;
+  }
+
+  .marketing-page .story-section .story-phone {
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .marketing-page .story-section .story-device-stage {
+    display: none;
+  }
+
+  .marketing-page .story-video {
+    display: block;
+  }
+
+  .marketing-page .story-section .story-copy h2 {
+    font-size: clamp(26px, 7vw, 32px);
+    line-height: 1.05;
+    margin-top: 28px;
+    margin-bottom: 10px;
+  }
+
+  .marketing-page .story-section .story-copy > p {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .marketing-page .story-section .story-platforms {
+    margin-top: 32px;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    gap: 12px 10px;
   }
 
   .marketing-page .hero-sub .nowrap {
@@ -8215,7 +8276,7 @@ html.tour-scroll-lock body {
     width: max-content;
     max-width: 100%;
     text-transform: none;
-    margin-inline: 0;
+    margin-inline: auto;
     min-height: 48px;
     justify-content: center;
     padding-inline: 20px;
@@ -8266,17 +8327,17 @@ html.tour-scroll-lock body {
 
 @media (max-width: 899px) and (max-height: 740px) {
   .marketing-page .hero-copy .hero-product {
-    font-size: 28px;
-    margin-bottom: 4px;
+    font-size: 34px;
+    margin-bottom: 10px;
   }
 
   .marketing-page .hero-tagline {
     font-size: 18px;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
   }
 
   .marketing-page .hero-sub {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
 }
 

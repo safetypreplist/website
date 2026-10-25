@@ -23,7 +23,9 @@ import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
+import { DeviceStage } from "../components/DeviceStage";
 import { HeroSlider } from "../components/HeroSlider";
+import { StoryVideo } from "../components/StoryVideo";
 import {
   ANNUAL_CENTS,
   FAMILY_MIN_SEATS,
@@ -134,6 +136,9 @@ export function LandingPage() {
       <PublicHeader pricingHref="#pricing" />
 
       <section className="hero-studio">
+        <div className="hero-devices">
+          <DeviceStage />
+        </div>
         <div className="hero-copy-col">
           <div className="hero-copy">
             <h1 className="hero-product">
@@ -160,12 +165,8 @@ export function LandingPage() {
       <section className="section forest story-section" id="about">
         <div className="wrap story-split">
           <div className="story-photo story-phone">
-            <div className="story-device-stage">
-              <img className="story-phone-render" src="/images/safety-prep-phone.png?v=2" alt="Safety Prep List checklist displayed on a smartphone" />
-              <div className="story-dashboard-frame">
-                <img src="/images/desktop-dashboard.webp" alt="Safety Prep List checklist dashboard on desktop" />
-              </div>
-            </div>
+            <DeviceStage />
+            <StoryVideo />
           </div>
           <div className="story-copy">
             <h2>A practical checklist for emergencies and disruptions</h2>
