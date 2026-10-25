@@ -222,12 +222,39 @@ async function loadAccount(admin: Admin, userId: string, backfill: boolean): Pro
   };
 }
 
+function stripeObjectId(value: unknown) {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  return (value as { id?: string }).id || null;
+}
+
+/** Invoice ids (in_) are not refundable. The charge or PaymentIntent on that invoice is. */
+async function stripeRefundBody(id: string) {
+  if (id.startsWith("ch_") || id.startsWith("py_")) return { charge: id };
+  if (id.startsWith("pi_")) return { payment_intent: id };
+  if (!id.startsWith("in_")) return null;
+  const invoice = await stripeRequest<{
+    charge?: unknown;
+    payment_intent?: unknown;
+    payments?: { data?: Array<{ status?: string; payment?: { charge?: unknown; payment_intent?: unknown } }> };
+  }>("GET", `/invoices/${encodeURIComponent(id)}`, { expand: ["payments"] });
+  if (!invoice.ok) return null;
+  const payments = invoice.body.payments?.data || [];
+  const paid = payments.find((row) => row.status === "paid") || payments[0];
+  const charge = stripeObjectId(paid?.payment?.charge) || stripeObjectId(invoice.body.charge);
+  const intent = stripeObjectId(paid?.payment?.payment_intent) || stripeObjectId(invoice.body.payment_intent);
+  if (charge?.startsWith("ch_") || charge?.startsWith("py_")) return { charge };
+  if (intent?.startsWith("pi_")) return { payment_intent: intent };
+  return null;
+}
+
 // Subscription charges are v1 "sales"; one-time checkouts are v2 "captures". Each falls back to the other API if PayPal can't find it.
 async function refundPayment(payment: Payment) {
   if (payment.processor === "stripe") {
-    const body = payment.processorId.startsWith("ch_") || payment.processorId.startsWith("py_")
-      ? { charge: payment.processorId }
-      : { payment_intent: payment.processorId };
+    const body = await stripeRefundBody(payment.processorId);
+    if (!body) {
+      return { ok: false as const, error: "Stripe could not find the card charge for this payment." };
+    }
     const res = await stripeRequest<{ id?: string }>("POST", "/refunds", body);
     if (!res.ok) {
       console.error("Stripe refund failed", payment.id, res.status, res.body);

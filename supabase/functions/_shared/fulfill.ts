@@ -312,14 +312,16 @@ export async function recordInvoicePayment(admin: Admin, invoice: Record<string,
   if (!row) return;
   const paid = invoice.status === "paid";
   const amount = Number(invoice.amount_paid ?? invoice.amount_due ?? row.regular_cents) || row.regular_cents;
+  const payments = (invoice.payments as { data?: Array<{ status?: string; payment?: { charge?: unknown; payment_intent?: unknown } }> } | undefined)?.data || [];
+  const paidPayment = payments.find((row) => row.status === "paid") || payments[0];
   await recordSubscriptionPayment(admin, row, {
     invoiceId: objectId(invoice) || String(invoice.id || ""),
     amountCents: amount,
     paidAt: new Date(
       (Number((invoice.status_transitions as { paid_at?: number } | undefined)?.paid_at || invoice.created) || Date.now() / 1000) * 1000,
     ).toISOString(),
-    paymentIntent: objectId(invoice.payment_intent),
-    chargeId: objectId(invoice.charge),
+    paymentIntent: objectId(paidPayment?.payment?.payment_intent) || objectId(invoice.payment_intent),
+    chargeId: objectId(paidPayment?.payment?.charge) || objectId(invoice.charge),
     status: paid ? "completed" : "failed",
     failureReason: paid ? null : String(invoice.last_finalization_error || invoice.billing_reason || "invoice.payment_failed"),
   });
