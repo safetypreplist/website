@@ -8,15 +8,15 @@ export const LEGAL = {
   supportEmail: "info@safetypreplist.com",
   governingState: "Nevada",
   governingCountry: "United States",
-  effectiveDate: "October 5, 2026",
+  effectiveDate: "October 24, 2026",
   refundPolicy:
     "3-day refund on a first purchase if requested through the contact form and no checklist has been printed or saved as a PDF. No partial-period refunds on renewals.",
   refundUpdatedDate: "October 13, 2026",
 } as const;
 
 export const LEGAL_VERSIONS = {
-  terms: "2026-10-05",
-  privacy: "2026-10-05",
+  terms: "2026-10-24",
+  privacy: "2026-10-24",
   refunds: "2026-10-13",
 } as const;
 

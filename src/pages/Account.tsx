@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { OfflineSwitch } from "../components/OfflineStatus";
-import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { ProfileWeather } from "../components/LocationStatus";
 import { useApp } from "../context/AppContext";
 import { formatDate } from "../lib/format";
 import { checklistTitle, familyPageLabel, initialsFrom, personName, planTypeLabel } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { invokeFunction } from "../lib/supabase";
 
 export function AccountPage() {
@@ -22,7 +20,6 @@ export function AccountPage() {
     uploadAvatar,
     myChecklist,
     familyMembers,
-    hasSurvivalVault,
     catalog,
     progress,
     customItems,
@@ -30,7 +27,6 @@ export function AccountPage() {
     demoMode,
     refreshAccount,
   } = useApp();
-  const location = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
   const [first, setFirst] = useState(profile?.first_name || "");
   const [last, setLast] = useState(profile?.last_name || "");
@@ -61,11 +57,6 @@ export function AccountPage() {
     setDisplay(profile?.display_name || "");
     setPhone(profile?.phone || "");
   }, [profile?.first_name, profile?.last_name, profile?.display_name, profile?.phone]);
-
-  useEffect(() => {
-    if (location.hash !== "#addons") return;
-    document.getElementById("addons")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [location.hash]);
 
   async function saveDetails() {
     setError("");
@@ -329,25 +320,6 @@ export function AccountPage() {
         </div>
       </article>
 
-      <article className="account-card" id="addons">
-        <h2>Survival Vault</h2>
-        {!hasSurvivalVault && (profile?.plan === "core" || profile?.plan === "full") ? (
-          <div className="account-upgrade">
-            <h3>Survival Vault</h3>
-            <p className="muted">{VAULT_APP_DESCRIPTION}</p>
-            <SurvivalVaultPurchase />
-          </div>
-        ) : hasSurvivalVault ? (
-          <div className="addon-owned">
-            <Link className="btn btn-primary" to="/app/survival">
-              Open Survival Vault
-            </Link>
-          </div>
-        ) : (
-          <p className="muted">Purchase a plan first, then add Survival Vault for $10 one time.</p>
-        )}
-      </article>
-
       <article className="account-card">
         <h2>Devices</h2>
         <p>
@@ -364,7 +336,7 @@ export function AccountPage() {
         {cancellable ? (
           <>
             <p className="muted">
-              Cancel anytime. PayPal stops future charges and you keep access through the period you already paid.{" "}
+              Cancel anytime. Stripe stops future charges and you keep access through the period you already paid.{" "}
               <Link to="/contact?topic=cancel">Click here to contact us</Link> if you need help.
             </p>
             <button className="btn btn-ghost" type="button" onClick={() => setCancelOpen(true)}>
@@ -422,8 +394,8 @@ export function AccountPage() {
           title="Cancel your subscription?"
           body={
             profile?.access_renews_at
-              ? `PayPal will stop future charges. You keep access until ${formatDate(profile.access_renews_at)}, and your checklists stay saved.`
-              : "PayPal will stop future charges. You keep access through the period you already paid, and your checklists stay saved."
+              ? `Stripe will stop future charges. You keep access until ${formatDate(profile.access_renews_at)}, and your checklists stay saved.`
+              : "Stripe will stop future charges. You keep access through the period you already paid, and your checklists stay saved."
           }
           confirmLabel="Cancel subscription"
           danger
@@ -435,7 +407,7 @@ export function AccountPage() {
       {deleteOpen ? (
         <ConfirmDialog
           title="Delete your account?"
-          body="This cancels any active subscription in PayPal and removes your profile, checklist progress, notes, custom items, contacts, and devices. Purchase records and terms acceptances are kept as required. This cannot be undone."
+          body="This cancels any active subscription in Stripe and removes your profile, checklist progress, notes, custom items, contacts, and devices. Purchase records and terms acceptances are kept as required. This cannot be undone."
           confirmLabel="Delete account"
           danger
           busy={deleteBusy}
@@ -464,7 +436,7 @@ function accessDescription(profile: { access_status?: string | null; access_inte
     return "Access ended. Renew to keep using your checklists.";
   }
   if (profile.access_status === "past_due") {
-    return "Your last payment did not go through. Update your payment method in PayPal to keep access.";
+    return "Your last payment did not go through. Update your payment method in Billing to keep access.";
   }
   if (profile.access_interval === "annual") {
     return profile.access_renews_at

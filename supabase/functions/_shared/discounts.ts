@@ -18,8 +18,16 @@ export type DiscountRow = {
   discount_payments: number;
 };
 
+export const LAUNCH_OFFER_CODE = "LAUNCH26";
+
 export function normalizeCode(raw: unknown) {
   return String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 32);
+}
+
+/** LAUNCH26 is only valid from /launch26 checkout, not the main homepage. */
+export function launchOfferAllowed(code: string, from: unknown) {
+  if (normalizeCode(code) !== LAUNCH_OFFER_CODE) return true;
+  return String(from || "").toLowerCase() === "launch26";
 }
 
 export function planKindFromQuantity(quantity: number, fallback?: unknown): PlanKind {

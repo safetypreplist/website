@@ -24,7 +24,7 @@ export function AccessEndedPage() {
           <p className="muted">
             Your checklists, notes, and contacts are saved. Renew to pick up where you left off.
             {profile?.access_status === "past_due"
-              ? " If a payment failed, you can also update your payment method in your PayPal account."
+              ? " If a payment failed, you can also update your payment method in Billing."
               : ""}
           </p>
           <Link className="btn btn-primary" to={renewHref}>

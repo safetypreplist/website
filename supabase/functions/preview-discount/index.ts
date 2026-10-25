@@ -3,6 +3,7 @@ import { parseAccessInterval } from "../_shared/billing.ts";
 import {
   discountAlreadyUsedBy,
   isDiscountUsable,
+  launchOfferAllowed,
   loadDiscount,
   normalizeCode,
   planKindFromQuantity,
@@ -43,7 +44,7 @@ Deno.serve(async (req) => {
     }
 
     const row = await loadDiscount(code);
-    if (!isDiscountUsable(row) || !row) {
+    if (!isDiscountUsable(row) || !row || !launchOfferAllowed(code, body.from)) {
       return json({ error: "That code is not active or does not apply to this plan." }, 400);
     }
     const quote = quoteWithDiscount({ row, planKind, subscriptionCents, vaultCents, quantity, interval: access });

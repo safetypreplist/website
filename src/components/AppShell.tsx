@@ -61,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Survival Vault
           </NavLink>
         ) : (
-          <Link className="nav-upgrade" to="/app/account#addons">
+          <Link className="nav-upgrade" to="/app/lists#survival-vault">
             Survival Vault
           </Link>
         )}

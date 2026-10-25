@@ -1,5 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
-import { paypalFetch } from "../_shared/paypal.ts";
+import { cancelRemoteNow } from "../_shared/cancelRemote.ts";
 import { syncSubscription, type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
@@ -21,17 +21,11 @@ Deno.serve(async (req) => {
     .eq("user_id", user.id)
     .in("status", ["active", "suspended"]);
   for (const row of (subscriptions || []) as SubscriptionRow[]) {
-    const res = await paypalFetch(`/v1/billing/subscriptions/${encodeURIComponent(row.paypal_subscription_id)}/cancel`, {
-      method: "POST",
-      body: JSON.stringify({ reason: "Account deleted by the customer" }),
-    }).catch((err) => {
-      console.error("PayPal cancel failed", err);
-      return { ok: false, status: 0, body: null };
-    });
-    // 422 means PayPal already considers it cancelled or expired.
-    if (!res.ok && res.status !== 422) {
-      console.error("PayPal cancel failed", res.status, res.body);
-      return json({ error: "We couldn't cancel your PayPal subscription, so your account was not deleted. Try again or contact us." }, 502);
+    try {
+      await cancelRemoteNow(row);
+    } catch (err) {
+      console.error("Subscription cancel failed", err);
+      return json({ error: "We couldn't cancel your subscription, so your account was not deleted. Try again or contact us." }, 502);
     }
     await syncSubscription(admin, row).catch((err) => console.error("Subscription sync failed", err));
   }

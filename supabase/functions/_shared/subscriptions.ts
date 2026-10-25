@@ -1,5 +1,6 @@
 import type { AccessInterval } from "./billing.ts";
 import { dollarsFromCents, PAYPAL_ENV, paypalFetch } from "./paypal.ts";
+import { stripeRequest } from "./stripe.ts";
 import { serviceClient } from "./supabase.ts";
 
 export const GRACE_DAYS = 3;
@@ -178,7 +179,8 @@ type PaypalSubscription = {
   };
 };
 
-export async function fetchSubscription(paypalSubscriptionId: string) {
+export async function fetchSubscription(paypalSubscriptionId: string | null | undefined) {
+  if (!paypalSubscriptionId) return null;
   const res = await paypalFetch(`/v1/billing/subscriptions/${encodeURIComponent(paypalSubscriptionId)}`);
   if (!res.ok) {
     console.error("PayPal subscription fetch failed", res.status, res.body);
@@ -209,10 +211,50 @@ function localStatus(paypalStatus: string) {
   }
 }
 
+function stripeLocalStatus(status: string, cancelAtPeriodEnd?: boolean) {
+  switch (status) {
+    case "active":
+    case "trialing":
+      return "active";
+    case "past_due":
+    case "unpaid":
+    case "paused":
+      return "suspended";
+    case "canceled":
+    case "incomplete_expired":
+      return "cancelled";
+    case "incomplete":
+      return cancelAtPeriodEnd ? "cancelled" : "approval_pending";
+    default:
+      return "approval_pending";
+  }
+}
+
+function unixToDate(value: unknown) {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!n) return null;
+  return new Date(n * 1000);
+}
+
+export async function fetchStripeSubscription(stripeSubscriptionId: string | null | undefined) {
+  if (!stripeSubscriptionId) return null;
+  const res = await stripeRequest<Record<string, unknown>>("GET", `/subscriptions/${encodeURIComponent(stripeSubscriptionId)}`);
+  if (!res.ok) {
+    console.error("Stripe subscription fetch failed", res.status, res.body);
+    return null;
+  }
+  return res.body;
+}
+
 export type SubscriptionRow = {
   id: string;
-  paypal_subscription_id: string;
-  paypal_plan_id: string;
+  provider?: "paypal" | "stripe";
+  paypal_subscription_id: string | null;
+  paypal_plan_id: string | null;
+  stripe_checkout_session_id?: string | null;
+  stripe_subscription_id?: string | null;
+  stripe_customer_id?: string | null;
+  stripe_price_id?: string | null;
   user_id: string | null;
   purchase_id: string | null;
   purpose: "new" | "add_member" | "renew";
@@ -230,8 +272,76 @@ export type SubscriptionRow = {
   refunded_at?: string | null;
 };
 
-// Pulls the subscription from PayPal and recomputes paid-through and access end, then updates checklists.
+function applyAccessDates(row: SubscriptionRow, status: string, paidThrough: Date | null) {
+  let endsAt: Date | null = null;
+  let through = paidThrough;
+  if (through && status !== "approval_pending") {
+    endsAt = new Date(through);
+    if (status === "active" || status === "suspended") endsAt.setUTCDate(endsAt.getUTCDate() + GRACE_DAYS);
+  }
+  if (row.refunded_at) {
+    through = new Date(row.refunded_at);
+    endsAt = new Date(row.refunded_at);
+  }
+  return { through, endsAt, status };
+}
+
+async function saveSubscriptionAccess(
+  admin: Admin,
+  row: SubscriptionRow,
+  status: string,
+  paidThrough: Date | null,
+) {
+  const dates = applyAccessDates(row, status, paidThrough);
+  const patch = {
+    status: dates.status,
+    paid_through: dates.through?.toISOString() ?? null,
+    access_ends_at: dates.endsAt?.toISOString() ?? null,
+    updated_at: new Date().toISOString(),
+    ...(dates.status === "cancelled" && !row.status.startsWith("cancel")
+      ? { cancelled_at: new Date().toISOString() }
+      : {}),
+  };
+  const { data, error } = await admin
+    .from("subscriptions")
+    .update(patch)
+    .eq("id", row.id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  await admin.rpc("sync_subscription_access", { p_subscription_id: row.id });
+  return data as SubscriptionRow;
+}
+
+export async function syncStripeSubscription(
+  admin: Admin,
+  row: SubscriptionRow,
+  remote?: Record<string, unknown> | null,
+) {
+  const sub = remote ?? (await fetchStripeSubscription(row.stripe_subscription_id || null));
+  if (!sub) return row;
+  const cancelAtPeriodEnd = Boolean(sub.cancel_at_period_end);
+  const status = stripeLocalStatus(String(sub.status || ""), cancelAtPeriodEnd);
+  const items = (sub.items as { data?: Array<{ current_period_end?: number }> } | undefined)?.data;
+  const periodEnd =
+    unixToDate(sub.current_period_end) ||
+    unixToDate(items?.[0]?.current_period_end) ||
+    unixToDate(sub.cancel_at);
+  let paidThrough = row.paid_through ? new Date(row.paid_through) : null;
+  if (periodEnd && (!paidThrough || periodEnd > paidThrough)) paidThrough = periodEnd;
+  const saved = await saveSubscriptionAccess(admin, row, status, paidThrough);
+  if (typeof sub.customer === "string") {
+    await admin.from("subscriptions").update({ stripe_customer_id: sub.customer }).eq("id", row.id);
+    if (row.user_id) await admin.from("profiles").update({ stripe_customer_id: sub.customer }).eq("id", row.user_id);
+  }
+  return saved;
+}
+
+// Pulls the subscription from PayPal or Stripe and recomputes paid-through and access end.
 export async function syncSubscription(admin: Admin, row: SubscriptionRow, remote?: PaypalSubscription | null) {
+  if (row.provider === "stripe" || row.stripe_subscription_id) {
+    return syncStripeSubscription(admin, row);
+  }
   const sub = remote ?? (await fetchSubscription(row.paypal_subscription_id));
   if (!sub) return row;
   const status = localStatus(sub.status);
@@ -246,31 +356,5 @@ export async function syncSubscription(admin: Admin, row: SubscriptionRow, remot
     const fromPayment = addInterval(new Date(lastPayment), interval);
     if (!paidThrough || fromPayment > paidThrough) paidThrough = fromPayment;
   }
-
-  let endsAt: Date | null = null;
-  if (paidThrough && status !== "approval_pending") {
-    endsAt = new Date(paidThrough);
-    if (status === "active" || status === "suspended") endsAt.setUTCDate(endsAt.getUTCDate() + GRACE_DAYS);
-  }
-  if (row.refunded_at) {
-    paidThrough = new Date(row.refunded_at);
-    endsAt = new Date(row.refunded_at);
-  }
-
-  const patch = {
-    status,
-    paid_through: paidThrough?.toISOString() ?? null,
-    access_ends_at: endsAt?.toISOString() ?? null,
-    updated_at: new Date().toISOString(),
-    ...(status === "cancelled" && !row.status.startsWith("cancel") ? { cancelled_at: new Date().toISOString() } : {}),
-  };
-  const { data, error } = await admin
-    .from("subscriptions")
-    .update(patch)
-    .eq("id", row.id)
-    .select("*")
-    .single();
-  if (error) throw error;
-  await admin.rpc("sync_subscription_access", { p_subscription_id: row.id });
-  return data as SubscriptionRow;
+  return saveSubscriptionAccess(admin, row, status, paidThrough);
 }

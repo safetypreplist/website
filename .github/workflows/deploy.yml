@@ -28,8 +28,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_PAYPAL_CLIENT_ID: ${{ secrets.VITE_PAYPAL_CLIENT_ID }}
-          VITE_PAYPAL_ENV: ${{ secrets.VITE_PAYPAL_ENV }}
           VITE_APP_URL: ${{ secrets.VITE_APP_URL }}
           VITE_SUPPORT_EMAIL: ${{ secrets.VITE_SUPPORT_EMAIL }}
           VITE_SUPPORT_NAME: ${{ secrets.VITE_SUPPORT_NAME }}

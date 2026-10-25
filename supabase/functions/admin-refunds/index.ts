@@ -1,6 +1,7 @@
 import { json, preflight } from "../_shared/http.ts";
 import { paypalFetch } from "../_shared/paypal.ts";
 import { endSubscriptionAccess } from "../_shared/refundAccess.ts";
+import { stripeErrorMessage, stripeRequest } from "../_shared/stripe.ts";
 import { type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
@@ -29,6 +30,8 @@ type PurchaseRow = {
   payment_status: string;
   paypal_capture_id: string | null;
   paypal_subscription_id: string | null;
+  stripe_payment_intent_id: string | null;
+  stripe_subscription_id: string | null;
   completed_at: string | null;
   created_at: string;
 };
@@ -36,7 +39,10 @@ type PurchaseRow = {
 type SalePaymentRow = {
   id: string;
   subscription_id: string;
-  paypal_sale_id: string;
+  paypal_sale_id: string | null;
+  stripe_invoice_id: string | null;
+  stripe_charge_id: string | null;
+  stripe_payment_intent_id: string | null;
   amount_cents: number;
   paid_at: string;
   status: string;
@@ -45,7 +51,8 @@ type SalePaymentRow = {
 type Payment = {
   id: string;
   kind: "sale" | "capture";
-  paypalId: string;
+  processor: "paypal" | "stripe";
+  processorId: string;
   amountCents: number;
   paidAt: string;
   status: string;
@@ -80,6 +87,7 @@ function paypalError(body: unknown) {
 
 // Subscription charges arrive by webhook; if none have arrived yet, pull them from PayPal directly.
 async function backfillSales(admin: Admin, sub: SubscriptionRow & { created_at?: string }) {
+  if (!sub.paypal_subscription_id) return;
   const start = new Date(new Date(sub.created_at || Date.now()).getTime() - 86_400_000).toISOString();
   const end = new Date().toISOString();
   const res = await paypalFetch(
@@ -111,7 +119,7 @@ async function loadAccount(admin: Admin, userId: string, backfill: boolean): Pro
     admin.from("profiles").select("email,full_name,plan,access_status").eq("id", userId).maybeSingle(),
     admin
       .from("purchases")
-      .select("id,product_type,amount_cents,payment_status,paypal_capture_id,paypal_subscription_id,completed_at,created_at")
+      .select("id,product_type,amount_cents,payment_status,paypal_capture_id,paypal_subscription_id,stripe_payment_intent_id,stripe_subscription_id,completed_at,created_at")
       .eq("user_id", userId),
     admin.from("subscriptions").select("*").eq("user_id", userId).neq("status", "approval_pending"),
     admin.from("print_events").select("created_at,list_slug,source").eq("user_id", userId).order("created_at"),
@@ -146,7 +154,8 @@ async function loadAccount(admin: Admin, userId: string, backfill: boolean): Pro
     payments.push({
       id: `sp:${sale.id}`,
       kind: "sale",
-      paypalId: sale.paypal_sale_id,
+      processor: sale.stripe_invoice_id || sale.stripe_charge_id || sale.stripe_payment_intent_id ? "stripe" : "paypal",
+      processorId: sale.stripe_charge_id || sale.stripe_payment_intent_id || sale.stripe_invoice_id || sale.paypal_sale_id || "",
       amountCents: sale.amount_cents,
       paidAt: sale.paid_at,
       status: sale.status,
@@ -157,13 +166,16 @@ async function loadAccount(admin: Admin, userId: string, backfill: boolean): Pro
     });
   }
   for (const p of purchases) {
-    if (p.paypal_subscription_id || !p.paypal_capture_id) continue;
+    if (p.paypal_subscription_id || p.stripe_subscription_id) continue;
+    const captureId = p.stripe_payment_intent_id || p.paypal_capture_id;
+    if (!captureId) continue;
     if (p.payment_status !== "completed" && p.payment_status !== "refunded") continue;
     const isVault = p.product_type === "upgrade_full";
     payments.push({
       id: `pu:${p.id}`,
       kind: "capture",
-      paypalId: p.paypal_capture_id,
+      processor: p.stripe_payment_intent_id ? "stripe" : "paypal",
+      processorId: captureId,
       amountCents: p.amount_cents,
       paidAt: p.completed_at || p.created_at,
       status: p.payment_status,
@@ -202,7 +214,18 @@ async function loadAccount(admin: Admin, userId: string, backfill: boolean): Pro
 
 // Subscription charges are v1 "sales"; one-time checkouts are v2 "captures". Each falls back to the other API if PayPal can't find it.
 async function refundPayment(payment: Payment) {
-  const id = encodeURIComponent(payment.paypalId);
+  if (payment.processor === "stripe") {
+    const body = payment.processorId.startsWith("ch_") || payment.processorId.startsWith("py_")
+      ? { charge: payment.processorId }
+      : { payment_intent: payment.processorId };
+    const res = await stripeRequest<{ id?: string }>("POST", "/refunds", body);
+    if (!res.ok) {
+      console.error("Stripe refund failed", payment.id, res.status, res.body);
+      return { ok: false as const, error: stripeErrorMessage(res.body, "Stripe rejected the refund.") };
+    }
+    return { ok: true as const, refundId: String(res.body.id || "") };
+  }
+  const id = encodeURIComponent(payment.processorId);
   const paths = [`/v1/payments/sale/${id}/refund`, `/v2/payments/captures/${id}/refund`];
   if (payment.kind === "capture") paths.reverse();
   const request = (path: string) =>
@@ -292,7 +315,7 @@ Deno.serve(async (req) => {
 
     if (body.action === "refund") {
       const userId = await matchUser(admin, request);
-      if (!userId) return json({ error: "No account uses this email, so refund it in PayPal instead." }, 400);
+      if (!userId) return json({ error: "No account uses this email, so refund it in Stripe instead." }, 400);
       const account = await loadAccount(admin, userId, false);
       const wanted = new Set(body.payment_ids || []);
       const selected = account.payments.filter((p) => wanted.has(p.id) && p.status === "completed");
@@ -328,7 +351,7 @@ Deno.serve(async (req) => {
 
       if (failure) {
         const done = refunded.length ? ` ${refunded.length} payment(s) were refunded before this one failed.` : "";
-        return json({ error: `PayPal could not refund ${failure}.${done}` }, 502);
+        return json({ error: `The processor could not refund ${failure}.${done}` }, 502);
       }
       return json({ ok: true, refundedCents });
     }

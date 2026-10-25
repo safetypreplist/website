@@ -263,6 +263,10 @@ export function CreateAccountPage() {
       setError("Please agree to the Terms of Service and Privacy Policy.");
       return;
     }
+    if (name.trim().split(/\s+/).filter(Boolean).length < 2) {
+      setError("Enter your first and last name.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -386,8 +390,14 @@ export function CreateAccountPage() {
       <form onSubmit={onSubmit}>
         {extraSeats ? <h2 className="signup-section-title">Your account (primary, billing)</h2> : null}
         <label className="field">
-          <span>Name</span>
-          <input required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+          <span>Full name</span>
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
+            placeholder="First and last name"
+          />
         </label>
         <label className="field">
           <span>Email</span>
@@ -528,6 +538,10 @@ export function JoinFamilyPage() {
       setError("Please agree to the Terms of Service and Privacy Policy.");
       return;
     }
+    if (name.trim().split(/\s+/).filter(Boolean).length < 2) {
+      setError("Enter your first and last name.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -650,8 +664,14 @@ export function JoinFamilyPage() {
       {mode === "create" ? (
         <form onSubmit={(e) => void onCreate(e)}>
           <label className="field">
-            <span>Name</span>
-            <input required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+            <span>Full name</span>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              placeholder="First and last name"
+            />
           </label>
           <label className="field">
             <span>Email</span>

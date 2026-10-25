@@ -139,7 +139,7 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
     try {
       if (action.kind === "refund") {
         await invokeFunction("admin-refunds", { action: "refund", request_id: action.request.id, payment_ids: action.paymentIds, note });
-        setNotice(`Refunded ${money(action.cents)} to ${action.request.email} through PayPal.`);
+        setNotice(`Refunded ${money(action.cents)} to ${action.request.email} through Stripe.`);
       } else {
         await invokeFunction("admin-refunds", {
           action: "close",
@@ -169,7 +169,7 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
           <h2>Refund requests</h2>
           <p className="muted">
             Refunds are allowed within {data?.windowDays ?? 3} days of the first purchase, as long as no checklist has been printed.
-            Refunding here sends the money back through PayPal, cancels the plan, and ends access.
+            Refunding here sends the money back through Stripe, cancels the plan, and ends access.
           </p>
         </div>
         <button className="btn btn-ghost" type="button" disabled={loading} onClick={() => void load()}>
@@ -287,7 +287,7 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
                         })}
                       </fieldset>
                     ) : (
-                      <p className="muted">No PayPal payments found for this email. If they paid with a different email, refund it in PayPal.</p>
+                      <p className="muted">No Stripe payments found for this email. If they paid with a different email, refund it in Stripe.</p>
                     )}
                     <label className="account-field">
                       <span>Private note (optional)</span>
@@ -305,7 +305,7 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
                         disabled={!chosen.length}
                         onClick={() => setAction({ kind: "refund", request, paymentIds: chosen, cents: chosenCents })}
                       >
-                        {chosen.length ? `Refund ${money(chosenCents)} through PayPal` : "Choose a payment to refund"}
+                        {chosen.length ? `Refund ${money(chosenCents)} through Stripe` : "Choose a payment to refund"}
                       </button>
                       <button className="btn btn-ghost" type="button" onClick={() => setAction({ kind: "deny", request })}>
                         Deny
@@ -318,14 +318,14 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
                           setAction({ kind: "paypal", request });
                         }}
                       >
-                        I refunded it in PayPal
+                        I refunded it in Stripe
                       </button>
                     </div>
                   </>
                 ) : (
                   <p className="muted refund-outcome">
                     {request.status === "refunded"
-                      ? `Closed ${day(request.resolved_at)}${request.refunded_cents ? ` · ${money(request.refunded_cents)} refunded through the admin` : " · refunded in PayPal"}`
+                      ? `Closed ${day(request.resolved_at)}${request.refunded_cents ? ` · ${money(request.refunded_cents)} refunded through the admin` : " · refunded in Stripe"}`
                       : `Denied ${day(request.resolved_at)}`}
                     {request.admin_note ? ` · Note: ${request.admin_note}` : ""}
                   </p>
@@ -343,14 +343,14 @@ export function AdminRefunds({ onPendingChange }: { onPendingChange: (count: num
               ? `Refund ${money(action.cents)}?`
               : action.kind === "deny"
                 ? "Deny this refund request?"
-                : "Mark as refunded in PayPal?"
+                : "Mark as refunded in Stripe?"
           }
           body={
             action.kind === "refund"
-              ? `PayPal will send ${money(action.cents)} back to ${action.request.email}. Their subscription is cancelled and their access ends right away. This can’t be undone.`
+              ? `Stripe will send ${money(action.cents)} back to ${action.request.email}. Their subscription is cancelled and their access ends right away. This can’t be undone.`
               : action.kind === "deny"
                 ? `The request from ${action.request.email} moves to Closed. Remember to reply to them in LiveAgent.`
-                : `Use this after you refund ${action.request.email} directly in PayPal. The request moves to Closed.`
+                : `Use this after you refund ${action.request.email} directly in Stripe. The request moves to Closed.`
           }
           confirmLabel={action.kind === "refund" ? "Refund now" : action.kind === "deny" ? "Deny request" : "Mark refunded"}
           danger={action.kind === "refund"}

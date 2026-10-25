@@ -93,7 +93,7 @@ export function TermsPage() {
       <p>
         Individual and Family plans are billed monthly or annually at the price shown at checkout, plus any applicable
         taxes. Billing renews automatically at the then-current rate until you cancel. Survival Vault is an optional
-        one-time purchase and does not renew. Payments are processed by PayPal. We do not store card numbers.
+        one-time purchase and does not renew. Payments are processed by Stripe. We do not store card numbers.
       </p>
       <p>
         Cancel anytime in Account Settings before your next billing date, or{" "}
@@ -212,7 +212,7 @@ export function PrivacyPage() {
       <h2 id="collect">1. What we collect</h2>
       <ul>
         <li>Account information: name, email, optional phone number, optional profile photo, and password (stored by our auth provider, not in readable form).</li>
-        <li>Plan and payment status: plan type, billing interval, renewal date, PayPal order references, and payer email. PayPal handles card and bank details. We do not store card numbers.</li>
+        <li>Plan and payment status: plan type, billing interval, renewal date, Stripe payment references, and payer email. Stripe handles card and bank details. We do not store card numbers.</li>
         <li>Checklist data: checkmarks, short notes, custom items, emergency contacts you add, and device nicknames.</li>
         <li>Family Plan relationships: who is connected, and whether they have View Only or Can Edit access.</li>
         <li>Email-list signups for the free Emergency Documents Checklist (name and email).</li>
@@ -239,7 +239,7 @@ export function PrivacyPage() {
       <p>We share data only with the service providers that run the product, when required by law, or in a business transfer. Current providers:</p>
       <ul>
         <li>Supabase — account authentication, database, file storage, and serverless functions.</li>
-        <li>PayPal — checkout and payment processing.</li>
+        <li>Stripe — checkout and payment processing.</li>
         <li>Resend — purchase and account email.</li>
         <li>Brevo — free Emergency Documents Checklist email list.</li>
         <li>LiveAgent — live chat and support requests.</li>

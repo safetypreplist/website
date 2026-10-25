@@ -53,7 +53,7 @@ const EXACT: Record<string, Meta> = {
   },
   "/checkout": {
     title: "Checkout — Safety Prep List",
-    description: "Complete your Safety Prep List purchase with PayPal.",
+    description: "Complete your Safety Prep List purchase with Stripe Checkout.",
     index: false,
   },
   "/thank-you": {

@@ -70,8 +70,10 @@ where email = 'you@yourdomain.com';
 From this repo:
 
 ```bash
-supabase functions deploy create-paypal-order
-supabase functions deploy capture-paypal-order
+supabase functions deploy create-checkout-session
+supabase functions deploy checkout-status
+supabase functions deploy stripe-webhook
+supabase functions deploy create-portal-session
 supabase functions deploy purchase-device-slot
 supabase functions deploy upgrade-plan
 supabase functions deploy subscribe-checklist
@@ -80,9 +82,8 @@ supabase functions deploy subscribe-checklist
 Then set secrets (see `supabase/functions/.env.example`):
 
 ```bash
-supabase secrets set PAYPAL_CLIENT_ID=...
-supabase secrets set PAYPAL_CLIENT_SECRET=...
-supabase secrets set PAYPAL_ENV=live
+supabase secrets set STRIPE_SECRET_KEY=rk_live_...
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 supabase secrets set RESEND_API_KEY=...
 supabase secrets set EMAIL_FROM="Safety Prep List <info@safetypreplist.com>"
 supabase secrets set APP_URL=https://yourdomain.com

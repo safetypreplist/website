@@ -5,13 +5,12 @@ import { Confetti } from "../components/Confetti";
 import { FamilySeatSetup, loadOpenFamilySeats } from "../components/FamilySeatSetup";
 import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
 import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
-import { PayPalCheckout } from "../components/PayPalCheckout";
+import { StripeCheckout } from "../components/StripeCheckout";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { useApp } from "../context/AppContext";
 import { money } from "../lib/format";
 import { FAMILY_MIN_SEATS } from "../lib/identity";
-import { isPaypalConfigured } from "../lib/paypal";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   ANNUAL_MONTHLY_EQUIVALENT_CENTS,
@@ -25,7 +24,6 @@ import {
   type AccessInterval,
 } from "../lib/pricing";
 import { SCOPE_LINE } from "../lib/copy";
-import { storeScopeAcknowledgment } from "../lib/legalConsent";
 import { invokeFunction } from "../lib/supabase";
 
 const PROGRESS = ["Choose Plan", "Purchase", "Create Account", "Get Ready"] as const;
@@ -83,9 +81,8 @@ export function PricingPage() {
 }
 
 export function CheckoutPage() {
-  const { products, session, loading, refreshAccount, signOut, myChecklist, hasSurvivalVault } = useApp();
+  const { products, session, loading, signOut, myChecklist, hasSurvivalVault } = useApp();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   const renew = params.get("renew") === "1";
   const requestedPlan = params.get("plan") === "family" ? "family" : "individual";
   // Customers who already own a checklist buy additional checklists; their own is never counted again.
@@ -144,7 +141,6 @@ export function CheckoutPage() {
     ? "Additional Checklists"
     : `${renew ? "Renew " : ""}${planKind === "family" ? "Family Plan" : "Individual Plan"}`;
   const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
-  const paypalReady = isPaypalConfigured();
 
   useEffect(() => {
     sessionStorage.setItem("spl.plan", planKind);
@@ -186,6 +182,7 @@ export function CheckoutPage() {
           quantity: people,
           accessInterval: access,
           includeHousehold: vault,
+          from: fromLaunch ? "launch26" : undefined,
         },
       );
       setAppliedCode(preview.code);
@@ -209,39 +206,12 @@ export function CheckoutPage() {
     } finally {
       setCheckingCode(false);
     }
-  }, [access, breakdown.subscriptionCents, people, planKind, vault]);
+  }, [access, breakdown.subscriptionCents, fromLaunch, people, planKind, vault]);
 
   useEffect(() => {
     if (!launchCode) return;
     void applyCode(launchCode);
   }, [launchCode, applyCode]);
-
-  const onCaptured = useMemo(
-    () => (result: { productCode: string; productType: string; linkedToUser?: boolean }) => {
-      if (!scopeAck) {
-        setError("Acknowledge the Safety Prep List scope and use before completing the purchase.");
-        return;
-      }
-      storeScopeAcknowledgment();
-      sessionStorage.setItem("spl.productCode", result.productCode);
-      sessionStorage.setItem("spl.productType", result.productType);
-      sessionStorage.setItem("spl.familyQty", String(people));
-      sessionStorage.setItem("spl.vault", vault ? "1" : "0");
-      sessionStorage.setItem("spl.household", vault ? "1" : "0");
-      sessionStorage.setItem("spl.access", access);
-      if (renew) {
-        void refreshAccount().then(() => navigate("/app"));
-        return;
-      }
-      const thankYou = `/thank-you?code=${encodeURIComponent(result.productCode)}&plan=${planKind}&qty=${people}&vault=${vault ? "1" : "0"}&access=${access}${addingChecklists ? "&add=1" : ""}`;
-      if (result.linkedToUser) {
-        void refreshAccount().then(() => navigate(`${thankYou}&linked=1`));
-        return;
-      }
-      navigate(thankYou);
-    },
-    [navigate, people, vault, planKind, access, scopeAck, renew, refreshAccount, addingChecklists],
-  );
 
   if (renew && !loading && !session) {
     return <Navigate to="/signin" replace />;
@@ -457,43 +427,39 @@ export function CheckoutPage() {
           </p>
         </section>
 
-        {paypalReady ? (
-          <>
-            <LegalAgreement checked={agreed} onChange={setAgreed} />
-            <ScopeAcknowledgment checked={scopeAck} onChange={setScopeAck} />
-            <AutoRenewalNote
-              amount={money(breakdown.recurringCents)}
-              interval={access === "annual" ? "year" : "month"}
-              discountedAmount={shownDiscount > 0 ? money(discountedRenewalCents) : undefined}
-              discountedPayments={shownDiscount > 0 ? discountPayments : 1}
+        <>
+          <LegalAgreement checked={agreed} onChange={setAgreed} />
+          <ScopeAcknowledgment checked={scopeAck} onChange={setScopeAck} />
+          <AutoRenewalNote
+            amount={money(breakdown.recurringCents)}
+            interval={access === "annual" ? "year" : "month"}
+            discountedAmount={shownDiscount > 0 ? money(discountedRenewalCents) : undefined}
+            discountedPayments={shownDiscount > 0 ? discountPayments : 1}
+          />
+          {error && <p className="form-error">{error}</p>}
+          {agreed && scopeAck ? (
+            <StripeCheckout
+              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${shownCode}-${addingChecklists ? "add" : "new"}`}
+              productSlug="core"
+              quantity={people}
+              includeHousehold={vault}
+              accessInterval={access}
+              planKind={planKind}
+              discountCode={shownCode}
+              from={fromLaunch ? "launch26" : undefined}
+              renew={renew}
+              onError={setError}
             />
-            {error && <p className="form-error">{error}</p>}
-            {agreed && scopeAck ? (
-              <PayPalCheckout
-                key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${shownCode}-${addingChecklists ? "add" : "new"}`}
-                productSlug="core"
-                quantity={people}
-                includeHousehold={vault}
-                accessInterval={access}
-                planKind={planKind}
-                discountCode={shownCode}
-                renew={renew}
-                onCaptured={onCaptured}
-                onError={setError}
-              />
-            ) : (
-              <p className="form-error checkout-paypal-locked">
-                {!agreed && !scopeAck
-                  ? "Check both boxes above to continue to PayPal."
-                  : !scopeAck
-                    ? "Agree to the Scope & Use Acknowledgment above to continue to PayPal."
-                    : "Agree to the Terms, Privacy Policy, and Refund Policy above to continue to PayPal."}
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="form-error">PayPal is not configured yet.</p>
-        )}
+          ) : (
+            <p className="form-error checkout-locked">
+              {!agreed && !scopeAck
+                ? "Check both boxes above to continue to checkout."
+                : !scopeAck
+                  ? "Agree to the Scope & Use Acknowledgment above to continue to checkout."
+                  : "Agree to the Terms, Privacy Policy, and Refund Policy above to continue to checkout."}
+            </p>
+          )}
+        </>
         <p className="muted checkout-back">
           {renew ? (
             <Link to="/app/account">Back to account</Link>
@@ -517,28 +483,81 @@ export function CheckoutPage() {
   );
 }
 
+const REVIEW_STEPS = [
+  "Checking with Stripe…",
+  "Confirming your payment…",
+  "Creating your confirmation number…",
+  "Getting your receipt ready…",
+];
+
+function PaymentReviewing({ error, onRetry }: { error: string; onRetry: () => void }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (error) return;
+    const id = window.setInterval(() => setStep((current) => (current + 1) % REVIEW_STEPS.length), 2200);
+    return () => window.clearInterval(id);
+  }, [error]);
+
+  return (
+    <div className="payment-review" role="status" aria-live="polite">
+      <p className="payment-review-kicker">Checkout</p>
+      <h1>Reviewing payment</h1>
+      <p className="payment-review-status">{error || REVIEW_STEPS[step]}</p>
+      {error ? (
+        <button className="btn btn-primary" type="button" onClick={onRetry}>
+          Try again
+        </button>
+      ) : (
+        <div className="payment-review-bar" aria-hidden="true" />
+      )}
+      <p className="payment-review-hint">{error ? "Your card was charged. We’re still matching it to your plan." : "This only takes a moment. Keep this page open."}</p>
+    </div>
+  );
+}
+
+type CheckoutReceipt = {
+  productCode: string;
+  linkedToUser?: boolean;
+  plan?: string;
+  quantity?: number;
+  vault?: boolean;
+  access?: AccessInterval;
+  paidCents?: number;
+  recurringCents?: number;
+  discountCents?: number;
+  discountPayments?: number;
+  addOn?: boolean;
+};
+
 export function ThankYouPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { refreshAccount, user } = useApp();
   const addOn = params.get("add") === "1" || (!params.get("plan") && sessionStorage.getItem("spl.addOn") === "1");
   const [linked, setLinked] = useState(params.get("linked") === "1" || addOn);
-  const paypalSubscription = params.get("subscription_id") || "";
-  const paypalToken = paypalSubscription || params.get("token") || params.get("orderId") || "";
-  const initialCode = params.get("code") || sessionStorage.getItem("spl.productCode") || "";
+  const checkoutSession = params.get("session_id") || "";
+  const initialCode = params.get("code") || (checkoutSession ? "" : sessionStorage.getItem("spl.productCode") || "");
   const [code, setCode] = useState(initialCode);
   const [captureError, setCaptureError] = useState("");
-  const [finishing, setFinishing] = useState(Boolean(paypalToken && !initialCode));
+  const [attempt, setAttempt] = useState(0);
   const capturing = useRef(false);
-  const plan = params.get("plan") || sessionStorage.getItem("spl.plan") || "individual";
-  const qty = Number(params.get("qty") || sessionStorage.getItem("spl.familyQty") || "1");
+  const [plan, setPlan] = useState(params.get("plan") || sessionStorage.getItem("spl.plan") || "individual");
+  const [qty, setQty] = useState(Number(params.get("qty") || sessionStorage.getItem("spl.familyQty") || "1"));
   const isFamily = plan === "family" && qty > 1;
-  const vault =
+  const [vault, setVault] = useState(
     params.get("vault") === "1" ||
-    params.get("household") === "1" ||
-    sessionStorage.getItem("spl.vault") === "1" ||
-    sessionStorage.getItem("spl.household") === "1";
-  const access = (params.get("access") || sessionStorage.getItem("spl.access") || "monthly") === "annual" ? "annual" : "monthly";
+      params.get("household") === "1" ||
+      sessionStorage.getItem("spl.vault") === "1" ||
+      sessionStorage.getItem("spl.household") === "1",
+  );
+  const [access, setAccess] = useState<AccessInterval>(
+    (params.get("access") || sessionStorage.getItem("spl.access") || "monthly") === "annual" ? "annual" : "monthly",
+  );
+  const [paidCents, setPaidCents] = useState(() => Number(params.get("paid") || sessionStorage.getItem("spl.paidCents") || "0") || 0);
+  const [recurringCents, setRecurringCents] = useState(
+    () => Number(params.get("renew") || sessionStorage.getItem("spl.recurringCents") || "0") || 0,
+  );
+  const finishing = Boolean(checkoutSession && !code);
   const [copied, setCopied] = useState(false);
   const [familySeats, setFamilySeats] = useState<string[]>([]);
   const [burst, setBurst] = useState(false);
@@ -546,7 +565,7 @@ export function ThankYouPage() {
 
   useEffect(() => {
     if (!code || finishing) return;
-    const timer = window.setTimeout(() => setBurst(true), 1000);
+    const timer = window.setTimeout(() => setBurst(true), 400);
     return () => window.clearTimeout(timer);
   }, [code, finishing]);
 
@@ -562,56 +581,106 @@ export function ThankYouPage() {
   }, [linked, code, userId, plan, addOn]);
   const breakdown = checkoutBreakdown(plan === "family" || addOn ? qty : 1, access, vault);
   const discountTerms = useMemo(() => readDiscountTerms(), []);
-  const remainingDiscounted = discountTerms ? discountTerms.payments - 1 : 0;
+  const listedRecurring = recurringCents || breakdown.recurringCents;
+  const listedPaid =
+    paidCents ||
+    (discountTerms ? Math.max(0, breakdown.dueTodayCents - (breakdown.recurringCents - discountTerms.renewalCents)) : 0) ||
+    breakdown.dueTodayCents;
+  const remainingDiscounted = discountTerms ? discountTerms.payments - 1 : listedPaid < listedRecurring ? 0 : 0;
   const intervalWord = access === "annual" ? "annual" : "monthly";
   const renewal =
-    discountTerms && remainingDiscounted > 0
-      ? remainingDiscounted === 1
-        ? `Your next ${intervalWord} payment is ${money(discountTerms.renewalCents)}, then ${money(breakdown.recurringCents)} per ${access === "annual" ? "year" : "month"}.`
-        : `Your next ${remainingDiscounted} ${intervalWord} payments are ${money(discountTerms.renewalCents)} each, then ${money(breakdown.recurringCents)} per ${access === "annual" ? "year" : "month"}.`
-      : `Renews ${access === "annual" ? "annually" : "monthly"} at ${money(breakdown.recurringCents)}.`;
+    listedPaid < listedRecurring
+      ? `You paid ${money(listedPaid)} today. Then ${money(listedRecurring)} per ${access === "annual" ? "year" : "month"}.`
+      : discountTerms && remainingDiscounted > 0
+        ? remainingDiscounted === 1
+          ? `Your next ${intervalWord} payment is ${money(discountTerms.renewalCents)}, then ${money(listedRecurring)} per ${access === "annual" ? "year" : "month"}.`
+          : `Your next ${remainingDiscounted} ${intervalWord} payments are ${money(discountTerms.renewalCents)} each, then ${money(listedRecurring)} per ${access === "annual" ? "year" : "month"}.`
+        : `Renews ${access === "annual" ? "annually" : "monthly"} at ${money(listedRecurring)}.`;
 
   useEffect(() => {
-    if (code || !paypalToken || capturing.current) return;
+    if (code || !checkoutSession) return;
     capturing.current = true;
-    setFinishing(true);
-    const finish = paypalSubscription
-      ? invokeFunction<{ productCode: string; linkedToUser?: boolean }>("activate-paypal-subscription", {
-          subscriptionId: paypalSubscription,
-        })
-      : invokeFunction<{ productCode: string; linkedToUser?: boolean }>("capture-paypal-order", {
-          orderId: paypalToken,
-          productSlug: "core",
-          quantity: qty,
-          includeHousehold: vault,
-          accessInterval: access,
-        });
-    void finish
-      .then((captured) => {
-        if (!captured?.productCode) throw new Error("No Product ID was returned.");
-        sessionStorage.setItem("spl.productCode", captured.productCode);
-        if (captured.linkedToUser) {
-          setLinked(true);
-          void refreshAccount();
+    setCaptureError("");
+    let cancelled = false;
+
+    async function wait(ms: number) {
+      await new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    async function finish() {
+      const pauses = [0, 900, 1400, 1800, 2200, 2800, 3500];
+      let lastError = "Could not finish the purchase.";
+      for (const pause of pauses) {
+        if (pause) await wait(pause);
+        if (cancelled) return;
+        try {
+          const captured = await invokeFunction<CheckoutReceipt>("checkout-status", {
+            sessionId: checkoutSession,
+          });
+          if (!captured?.productCode) throw new Error("No confirmation number was returned.");
+          if (cancelled) return;
+          sessionStorage.setItem("spl.productCode", captured.productCode);
+          const nextPlan = captured.plan || plan;
+          const nextQty = captured.quantity || qty;
+          const nextVault = Boolean(captured.vault ?? vault);
+          const nextAccess = captured.access === "annual" ? "annual" : captured.access === "monthly" ? "monthly" : access;
+          const nextPaid = captured.paidCents || 0;
+          const nextRecurring = captured.recurringCents || 0;
+          setPlan(nextPlan);
+          setQty(nextQty);
+          setVault(nextVault);
+          setAccess(nextAccess);
+          if (nextPaid) {
+            setPaidCents(nextPaid);
+            sessionStorage.setItem("spl.paidCents", String(nextPaid));
+          }
+          if (nextRecurring) {
+            setRecurringCents(nextRecurring);
+            sessionStorage.setItem("spl.recurringCents", String(nextRecurring));
+          }
+          if (captured.linkedToUser) {
+            setLinked(true);
+            void refreshAccount();
+          }
+          setCode(captured.productCode);
+          navigate(
+            `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${nextPlan}&qty=${nextQty}&vault=${nextVault ? "1" : "0"}&access=${nextAccess}&paid=${nextPaid}&renew=${nextRecurring}${addOn || captured.addOn ? "&add=1" : ""}${captured.linkedToUser ? "&linked=1" : ""}`,
+            { replace: true },
+          );
+          return;
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : "Could not finish the purchase.";
         }
-        setCode(captured.productCode);
-        navigate(
-          `/thank-you?code=${encodeURIComponent(captured.productCode)}&plan=${plan}&qty=${qty}&vault=${vault ? "1" : "0"}&access=${access}${addOn ? "&add=1" : ""}${captured.linkedToUser ? "&linked=1" : ""}`,
-          { replace: true },
-        );
-      })
-      .catch((err) => {
-        setCaptureError(err instanceof Error ? err.message : "Could not finish the purchase.");
-      })
-      .finally(() => setFinishing(false));
-  }, [access, addOn, code, navigate, paypalSubscription, paypalToken, plan, qty, vault, refreshAccount]);
+      }
+      if (!cancelled) setCaptureError(lastError);
+    }
+
+    void finish();
+    return () => {
+      cancelled = true;
+      capturing.current = false;
+    };
+  }, [access, addOn, attempt, checkoutSession, code, navigate, plan, qty, refreshAccount, vault]);
 
   async function copy() {
     await navigator.clipboard.writeText(code);
     setCopied(true);
   }
 
-  if (!code && !paypalToken) {
+  if (finishing) {
+    return (
+      <PaymentReviewing
+        error={captureError}
+        onRetry={() => {
+          capturing.current = false;
+          setCaptureError("");
+          setAttempt((n) => n + 1);
+        }}
+      />
+    );
+  }
+
+  if (!code) {
     return (
       <div className="checkout-stage">
         <div
@@ -624,8 +693,8 @@ export function ThankYouPage() {
           <BrandMark />
           <h1>No purchase to show yet.</h1>
           <p className="muted">
-            This page appears after checkout. If you already paid, check your PayPal receipt email, or contact us and
-            we’ll help.
+            This page appears after checkout. If you already paid, use the confirmation number in your email, or contact
+            us and we’ll help.
           </p>
           <Link className="btn btn-primary btn-block" style={{ marginTop: 18 }} to="/#pricing">
             See plans
@@ -668,8 +737,8 @@ export function ThankYouPage() {
               <h2>{addOn ? "Additional Checklists" : plan === "family" ? "Family Plan" : "Individual Plan"}</h2>
             </div>
             <p className="thank-you-plan-price">
-              {money(breakdown.recurringCents)}
-              <small>/{access === "annual" ? "year" : "month"}</small>
+              {money(listedPaid)}
+              <small>{listedPaid < listedRecurring ? " today" : `/${access === "annual" ? "year" : "month"}`}</small>
             </p>
           </div>
           <dl className="thank-you-plan-rows">
@@ -693,29 +762,21 @@ export function ThankYouPage() {
           <p className="thank-you-plan-note">{renewal}</p>
         </section>
 
-        {captureError ? <p className="form-error">{captureError}</p> : null}
-
-        {code ? (
-          <div className="thank-you-ref">
-            <div className="thank-you-ref-row">
-              <span className="thank-you-ref-label">Confirmation number</span>
-              <code>{code}</code>
-              <button
-                className="purchase-ref-copy"
-                type="button"
-                onClick={() => void copy()}
-                aria-label={copied ? "Copied confirmation number" : "Copy confirmation number"}
-                title={copied ? "Copied" : "Copy"}
-              >
-                {copied ? "✓" : <CopyIcon />}
-              </button>
-            </div>
+        <div className="thank-you-ref">
+          <div className="thank-you-ref-row">
+            <span className="thank-you-ref-label">Confirmation number</span>
+            <code>{code}</code>
+            <button
+              className="purchase-ref-copy"
+              type="button"
+              onClick={() => void copy()}
+              aria-label={copied ? "Copied confirmation number" : "Copy confirmation number"}
+              title={copied ? "Copied" : "Copy"}
+            >
+              {copied ? "✓" : <CopyIcon />}
+            </button>
           </div>
-        ) : (
-          <p className="muted" style={{ marginTop: 18 }}>
-            {finishing ? "Finishing your purchase…" : "Hang tight while we confirm your purchase."}
-          </p>
-        )}
+        </div>
 
         {code && linked && familySeats.length ? (
           <div className="thank-you-family">
@@ -749,7 +810,7 @@ export function ThankYouPage() {
             {isFamily ? "Create Accounts" : "Create My Account"}
           </Link>
         ) : null}
-        <p className="muted thank-you-receipt">PayPal will email your receipt to the address on the PayPal account you paid with.</p>
+        <p className="muted thank-you-receipt">Stripe will email your receipt to the address you used at checkout.</p>
       </main>
       <PublicFooter />
     </div>

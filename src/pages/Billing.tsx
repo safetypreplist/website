@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { formatDate, money } from "../lib/format";
 import { personName } from "../lib/identity";
-import { supabase } from "../lib/supabase";
+import { invokeFunction, supabase } from "../lib/supabase";
 
 type PaymentKind = "plan" | "plan_vault" | "vault" | "device" | "items";
 type PaymentStatus = "completed" | "failed" | "refunded" | "pending";
@@ -34,6 +34,7 @@ type BillingSubscription = {
   paid_cycles: number;
   paid_through: string | null;
   access_ends_at: string | null;
+  provider?: "paypal" | "stripe";
 };
 
 type Billing = {
@@ -44,10 +45,6 @@ type Billing = {
 
 const EMPTY: Billing = { payments: [], subscriptions: [], payer_email: null };
 
-const PAYPAL_AUTOPAY_URL =
-  import.meta.env.VITE_PAYPAL_ENV === "sandbox"
-    ? "https://www.sandbox.paypal.com/myaccount/autopay/"
-    : "https://www.paypal.com/myaccount/autopay/";
 
 function useBilling() {
   const { demoMode, user } = useApp();
@@ -126,9 +123,9 @@ function statusLabel(status: PaymentStatus) {
 }
 
 function failureText(reason: string | null) {
-  if (!reason) return "PayPal could not complete this payment.";
+  if (!reason) return "Stripe could not complete this payment.";
   const words = reason.toLowerCase().replace(/_/g, " ");
-  return `PayPal reason: ${words.charAt(0).toUpperCase()}${words.slice(1)}.`;
+  return `Stripe reason: ${words.charAt(0).toUpperCase()}${words.slice(1)}.`;
 }
 
 function nextChargeCents(sub: BillingSubscription) {
@@ -148,7 +145,7 @@ function SubscriptionRow({ sub }: { sub: BillingSubscription }) {
   } else if (sub.status === "suspended") {
     tone = "is-error";
     pill = "Past due";
-    detail = "Your last payment didn't go through. Update your payment method in PayPal to keep access.";
+    detail = "Your last payment didn't go through. Update your payment method to keep access.";
   } else {
     tone = "is-muted";
     pill = "Cancelled";
@@ -158,7 +155,11 @@ function SubscriptionRow({ sub }: { sub: BillingSubscription }) {
     <li className="billing-sub">
       <div>
         <b>{[planLabel(sub.purpose, sub.quantity), intervalLabel(sub.access_interval)].join(", ")}</b>
-        <span className="muted">{money(sub.regular_cents)}/{per}</span>
+        <span className="muted">
+          {sub.discount_cents > 0 && (sub.discount_payments == null || sub.paid_cycles < sub.discount_payments)
+            ? `${money(nextChargeCents(sub))} first, then ${money(sub.regular_cents)}/${per}`
+            : `${money(sub.regular_cents)}/${per}`}
+        </span>
         <p className="billing-sub-detail">{detail}</p>
       </div>
       <span className={`billing-status ${tone}`}>{pill}</span>
@@ -169,9 +170,24 @@ function SubscriptionRow({ sub }: { sub: BillingSubscription }) {
 export function BillingPage() {
   const { profile } = useApp();
   const { billing, error } = useBilling();
+  const [portalError, setPortalError] = useState("");
+  const [portalBusy, setPortalBusy] = useState(false);
   const subscriptions = billing?.subscriptions || [];
   const payments = billing?.payments || [];
   const recurring = subscriptions.some((sub) => sub.status !== "cancelled");
+
+  async function openPortal() {
+    setPortalBusy(true);
+    setPortalError("");
+    try {
+      const data = await invokeFunction<{ url?: string }>("create-portal-session", {});
+      if (!data?.url) throw new Error("Could not open billing portal.");
+      window.location.assign(data.url);
+    } catch (err) {
+      setPortalBusy(false);
+      setPortalError(err instanceof Error ? err.message : "Could not open billing portal.");
+    }
+  }
 
   return (
     <div className="billing-page">
@@ -210,20 +226,21 @@ export function BillingPage() {
               <>
                 <div className="billing-method">
                   <span className="billing-method-badge" aria-hidden="true">
-                    PayPal
+                    Stripe
                   </span>
                   <div>
-                    <b>Paid with PayPal</b>
+                    <b>Paid with Stripe</b>
                     {billing.payer_email ? <span className="muted">{billing.payer_email}</span> : null}
                   </div>
                 </div>
                 <p className="muted">
-                  PayPal stores your card or bank account securely. Safety Prep List never sees or stores your card
-                  details. To change how you pay, update it in PayPal under Automatic payments.
+                  Stripe stores your card securely. Safety Prep List never sees or stores your card numbers. To change
+                  how you pay, use the Stripe billing portal.
                 </p>
-                <a className="btn btn-ghost" href={PAYPAL_AUTOPAY_URL} target="_blank" rel="noopener noreferrer">
-                  Change payment method in PayPal
-                </a>
+                {portalError ? <p className="form-error">{portalError}</p> : null}
+                <button className="btn btn-ghost" type="button" disabled={portalBusy} onClick={() => void openPortal()}>
+                  {portalBusy ? "Opening…" : "Change payment method"}
+                </button>
               </>
             ) : (
               <p className="muted">No payment method is needed right now because nothing on this account renews.</p>
@@ -336,7 +353,7 @@ export function ReceiptPage() {
           </div>
           {receiptNumber ? (
             <div>
-              <dt>{payment.reference && payment.reference !== payment.product_code ? "PayPal transaction" : "Receipt number"}</dt>
+              <dt>{payment.reference && payment.reference !== payment.product_code ? "Stripe transaction" : "Receipt number"}</dt>
               <dd>{receiptNumber}</dd>
             </div>
           ) : null}
@@ -360,7 +377,7 @@ export function ReceiptPage() {
           </div>
           <div>
             <dt>Paid with</dt>
-            <dd>PayPal{billing?.payer_email ? ` (${billing.payer_email})` : ""}</dd>
+            <dd>Stripe{billing?.payer_email ? ` (${billing.payer_email})` : ""}</dd>
           </div>
         </dl>
 

@@ -1,5 +1,5 @@
 import { json, preflight } from "../_shared/http.ts";
-import { paypalFetch } from "../_shared/paypal.ts";
+import { cancelRemoteSubscription } from "../_shared/cancelRemote.ts";
 import { syncSubscription, type SubscriptionRow } from "../_shared/subscriptions.ts";
 import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
@@ -22,14 +22,10 @@ Deno.serve(async (req) => {
     if (!rows.length) return json({ error: "No active subscription to cancel." }, 400);
 
     for (const row of rows) {
-      const res = await paypalFetch(`/v1/billing/subscriptions/${encodeURIComponent(row.paypal_subscription_id)}/cancel`, {
-        method: "POST",
-        body: JSON.stringify({ reason: "Cancelled by the customer in Account Settings" }),
-      });
-      // 422 means PayPal already considers it cancelled or expired; the sync below records that.
-      if (!res.ok && res.status !== 422) {
-        console.error("PayPal cancel failed", res.status, res.body);
-        return json({ error: "PayPal could not cancel the subscription. Try again or contact us." }, 502);
+      const res = await cancelRemoteSubscription(row, "Cancelled by the customer in Account Settings");
+      if (!res.ok) {
+        console.error("Subscription cancel failed", res.processor, res.status, res.body);
+        return json({ error: "We could not cancel the subscription. Try again or contact us." }, 502);
       }
       await syncSubscription(admin, row);
     }

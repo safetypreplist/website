@@ -23,8 +23,7 @@ Settings → Secrets and variables → Actions, add:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
-- `VITE_PAYPAL_CLIENT_ID`
-- `VITE_PAYPAL_ENV` (`live` for production)
+- Stripe secrets belong on Supabase Edge Functions, not GitHub Actions (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`)
 - `VITE_APP_URL` (`https://yourdomain.com`)
 - `VITE_SUPPORT_EMAIL`
 - `VITE_SUPPORT_NAME`
@@ -54,7 +53,7 @@ Production already uses this CNAME in `public/CNAME`. For a new environment, rep
 4. Add the same URL to:
    - Supabase Auth redirect URLs
    - Edge Function `APP_URL`
-   - PayPal app return URLs (via `APP_URL` used by the functions)
+   - Stripe success/cancel URLs (via `APP_URL` used by the functions)
 
 ## 5. PWA
 

@@ -8,7 +8,7 @@ This repository is the GitHub-ready production app:
 
 - React + TypeScript frontend (GitHub Pages + custom domain)
 - Supabase Auth, Postgres, Row Level Security, Realtime
-- PayPal checkout with **server-side capture verification** (Supabase Edge Functions)
+- Stripe Checkout with **server-side webhook fulfillment** (Supabase Edge Functions)
 - Device slots (2 included per login; no paid extra devices)
 - PWA (Add to Home Screen) with install steps at `/install`
 - Offline checklists after **Prepare for offline use**, with a sync queue (IndexedDB) that uploads changes on reconnect
@@ -22,7 +22,7 @@ npm install
 npm run dev
 ```
 
-The app will load without secrets, but login, sync, and PayPal stay inactive until you add credentials.
+The app will load without secrets, but login, sync, and checkout stay inactive until you add credentials.
 
 ## What you must supply
 
@@ -32,8 +32,8 @@ Nothing secret belongs in the frontend or in git. You will add:
 |---|---|---|
 | `VITE_SUPABASE_URL` | `.env.local` and GitHub Actions secret | Yes (URL) |
 | `VITE_SUPABASE_ANON_KEY` | `.env.local` and GitHub Actions secret | Yes (anon key + RLS) |
-| `VITE_PAYPAL_CLIENT_ID` | `.env.local` and GitHub Actions secret | Yes (client id only) |
-| `PAYPAL_CLIENT_SECRET` | `supabase secrets set` | **Never** in the browser |
+| `STRIPE_SECRET_KEY` | `supabase secrets set` (restricted `rk_live_` key in production) | **Never** in the browser |
+| `STRIPE_WEBHOOK_SECRET` | `supabase secrets set` | **Never** in the browser |
 | `SUPABASE_SERVICE_ROLE_KEY` | Injected automatically into Edge Functions | **Never** in the browser |
 | `RESEND_API_KEY` | `supabase secrets set` | **Never** in the browser |
 | `BREVO_API_KEY` | `.env.local` (no `VITE_` prefix) for local, then `supabase secrets set` for the live site | **Never** in the browser |
@@ -44,7 +44,7 @@ Nothing secret belongs in the frontend or in git. You will add:
 Follow the setup docs in order:
 
 1. [docs/SUPABASE.md](docs/SUPABASE.md) — project, schema, RLS, seed data, Auth
-2. [docs/PAYPAL.md](docs/PAYPAL.md) — live PayPal app, Edge Functions, verification
+2. [docs/STRIPE.md](docs/STRIPE.md) — Stripe Checkout, webhooks, live keys
 3. [docs/EMAIL.md](docs/EMAIL.md) — Resend transactional purchase email
 4. [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — GitHub Pages + custom `.com` domain
 5. [docs/ADMIN.md](docs/ADMIN.md) — editing checklists, vault, and safety resources
@@ -73,16 +73,16 @@ Supabase
     ├─ Auth
     ├─ Postgres + RLS
     └─ Edge Functions
-           ├─ create-paypal-order
-           ├─ capture-paypal-order   ← verifies amount server-side
+           ├─ create-checkout-session
+           ├─ stripe-webhook / checkout-status
            ├─ purchase-device-slot
            ├─ upgrade-plan
            └─ subscribe-checklist    ← Brevo mailing list (API key stays on the server)
 ```
 
-PayPal secrets stay in Edge Functions. The Brevo API key stays in Edge Functions (live) or `.env.local` without a `VITE_` prefix (local).
+Stripe secrets stay in Edge Functions. The Brevo API key stays in Edge Functions (live) or `.env.local` without a `VITE_` prefix (local).
 
-The browser never sees PayPal’s secret, the service role key, or the email API key.
+The browser never sees the Stripe secret, webhook secret, service role key, or email API key.
 
 ## Scripts
 

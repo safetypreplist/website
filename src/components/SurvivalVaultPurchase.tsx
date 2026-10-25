@@ -1,10 +1,10 @@
 import { useId, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { LegalAgreement } from "./LegalAgreement";
-import { PayPalCheckout } from "./PayPalCheckout";
+import { StripeCheckout } from "./StripeCheckout";
 
 export function SurvivalVaultPurchase() {
-  const { profile, refreshAccount } = useApp();
+  const { profile } = useApp();
   const agreeId = useId();
   const [open, setOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -31,15 +31,9 @@ export function SurvivalVaultPurchase() {
       {error ? <p className="form-error">{error}</p> : null}
       <LegalAgreement id={agreeId} checked={agreed} onChange={setAgreed} />
       {agreed ? (
-        <PayPalCheckout
-          productSlug="upgrade_full"
-          onError={setError}
-          onCaptured={async () => {
-            await refreshAccount();
-          }}
-        />
+        <StripeCheckout productSlug="upgrade_full" onError={setError} />
       ) : (
-        <p className="muted">Agree to the policies above to enable PayPal checkout.</p>
+        <p className="muted">Agree to the policies above to continue to checkout.</p>
       )}
     </div>
   );

@@ -1,11 +1,13 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { Photo } from "../components/Photo";
 import { OfflineSwitch, syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { SCOPE_LINE } from "../lib/copy";
+import { SCOPE_LINE, VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem, Profile } from "../types";
 
@@ -145,7 +147,7 @@ export function DashboardPage() {
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
-      {viewing.isOwn && !isHousehold ? <SurvivalVaultButton /> : null}
+      {viewing.isOwn && !isHousehold ? <SurvivalVaultCta /> : null}
     </div>
   );
 }
@@ -162,26 +164,41 @@ function timedSystems(systems: ChecklistSystem[]) {
   return TIMED_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
 }
 
-function SurvivalVaultButton() {
+function SurvivalVaultCta() {
   const { hasSurvivalVault, profile, switchChecklist } = useApp();
   const entitled = hasPlanAccess(profile);
   if (!hasSurvivalVault && !entitled) return null;
   return (
-    <Link
-      className="btn btn-primary"
-      to="/app/survival"
-      onClick={() => {
-        if (hasSurvivalVault) void switchChecklist("household");
-      }}
-    >
-      Survival Vault
-    </Link>
+    <aside className="vault-list-cta" id="survival-vault">
+      <p className="eyebrow">Optional add-on</p>
+      <h2>Survival Vault</h2>
+      <p className="muted">{VAULT_APP_DESCRIPTION}</p>
+      {hasSurvivalVault ? (
+        <Link
+          className="btn btn-primary"
+          to="/app/survival"
+          onClick={() => {
+            void switchChecklist("household");
+          }}
+        >
+          Open Survival Vault
+        </Link>
+      ) : (
+        <SurvivalVaultPurchase />
+      )}
+    </aside>
   );
 }
 
 export function ListsPage() {
   const { catalog, viewing } = useApp();
+  const location = useLocation();
   const startSystems = timedSystems(catalog.systems);
+
+  useEffect(() => {
+    if (location.hash !== "#survival-vault") return;
+    document.getElementById("survival-vault")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash]);
 
   return (
     <div>
@@ -191,7 +208,7 @@ export function ListsPage() {
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
-      {viewing.isOwn ? <SurvivalVaultButton /> : null}
+      {viewing.isOwn ? <SurvivalVaultCta /> : null}
     </div>
   );
 }
@@ -232,7 +249,7 @@ export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string
     noPlan
       ? "/#pricing"
       : system.access_tier === "full" && !hasSurvivalVault
-        ? "/app/account#addons"
+        ? "/app/lists#survival-vault"
         : `/app/lists/${system.slug}`;
 
   return (

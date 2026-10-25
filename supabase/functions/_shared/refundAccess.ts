@@ -1,4 +1,4 @@
-import { paypalFetch } from "./paypal.ts";
+import { cancelRemoteNow } from "./cancelRemote.ts";
 import { syncSubscription, type SubscriptionRow } from "./subscriptions.ts";
 import { serviceClient } from "./supabase.ts";
 
@@ -7,11 +7,7 @@ type Admin = ReturnType<typeof serviceClient>;
 /** Cancels the PayPal subscription if it is still live, ends access now, and revokes the linked purchase. */
 export async function endSubscriptionAccess(admin: Admin, sub: SubscriptionRow) {
   if (sub.status === "active" || sub.status === "suspended") {
-    const res = await paypalFetch(`/v1/billing/subscriptions/${encodeURIComponent(sub.paypal_subscription_id)}/cancel`, {
-      method: "POST",
-      body: JSON.stringify({ reason: "Refunded" }),
-    });
-    if (!res.ok && res.status !== 422) console.error("PayPal cancel after refund failed", res.status, res.body);
+    await cancelRemoteNow(sub);
   }
   const now = new Date().toISOString();
   const { data } = await admin
@@ -25,11 +21,10 @@ export async function endSubscriptionAccess(admin: Admin, sub: SubscriptionRow) 
 }
 
 export async function endAccessForSale(admin: Admin, saleId: string) {
-  const { data: payment } = await admin
-    .from("subscription_payments")
-    .select("subscription_id")
-    .eq("paypal_sale_id", saleId)
-    .maybeSingle();
+  const byPaypal = await admin.from("subscription_payments").select("subscription_id").eq("paypal_sale_id", saleId).maybeSingle();
+  const byInvoice = await admin.from("subscription_payments").select("subscription_id").eq("stripe_invoice_id", saleId).maybeSingle();
+  const byCharge = await admin.from("subscription_payments").select("subscription_id").eq("stripe_charge_id", saleId).maybeSingle();
+  const payment = byPaypal.data ?? byInvoice.data ?? byCharge.data;
   const subscriptionId = (payment as { subscription_id?: string } | null)?.subscription_id;
   if (!subscriptionId) return;
   const { data: sub } = await admin.from("subscriptions").select("*").eq("id", subscriptionId).maybeSingle();
@@ -39,7 +34,10 @@ export async function endAccessForSale(admin: Admin, saleId: string) {
 export async function endAccessForCapture(admin: Admin, captureId: string) {
   if (!captureId) return;
   const byCapture = await admin.from("purchases").select("id").eq("paypal_capture_id", captureId).maybeSingle();
-  const row = byCapture.data ?? (await admin.from("purchases").select("id").eq("paypal_order_id", captureId).maybeSingle()).data;
+  const row =
+    byCapture.data ??
+    (await admin.from("purchases").select("id").eq("paypal_order_id", captureId).maybeSingle()).data ??
+    (await admin.from("purchases").select("id").eq("stripe_payment_intent_id", captureId).maybeSingle()).data;
   const id = (row as { id?: string } | null)?.id;
   if (id) await admin.rpc("revoke_refunded_purchase", { p_purchase_id: id, p_mark_refunded: true });
 }

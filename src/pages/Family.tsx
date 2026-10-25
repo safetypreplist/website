@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { AutoRenewalNote, LegalAgreement } from "../components/LegalAgreement";
-import { PayPalCheckout } from "../components/PayPalCheckout";
+import { StripeCheckout } from "../components/StripeCheckout";
 import { useApp } from "../context/AppContext";
 import { checklistTitle, familyPageLabel, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
 import { money } from "../lib/format";
@@ -12,6 +12,7 @@ import type { ConnectedChecklist, FamilyInviteResult } from "../types";
 import { AccessChoice, type AccessLevel } from "../components/AccessChoice";
 import { SystemRow, vaultSystems } from "./Dashboard";
 import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
+import { invokeFunction } from "../lib/supabase";
 
 export function ConnectedChecklistsPage() {
   return <Navigate to="/app/family" replace />;
@@ -31,6 +32,7 @@ export function ManageFamilyPage() {
     revokeChecklistAccess,
   } = useApp();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [adding, setAdding] = useState(false);
   const [paying, setPaying] = useState(false);
   const [first, setFirst] = useState("");
@@ -67,33 +69,43 @@ export function ManageFamilyPage() {
     }
   }
 
-  async function afterPurchase() {
-    const name = first.trim();
-    const address = email.trim();
-    setPaying(false);
-    setAdding(false);
-    setAgreed(false);
+  useEffect(() => {
+    const sessionId = params.get("session_id") || "";
+    if (params.get("paid") !== "1" && !sessionId) return;
+    let pending: { first?: string; last?: string; email?: string; access?: AccessLevel } | null = null;
     try {
-      await refreshAccount();
-      const result = await inviteFamilyMember(name, last.trim(), address, undefined, memberAccess);
-      setPurchaseNotice({ ...result, firstName: result.firstName || name });
-    } catch (err) {
-      setPurchaseNotice({
-        checklistId: "",
-        email: address,
-        firstName: name,
-        emailSent: false,
-        inviteUrl: "",
-        emailError: err instanceof Error ? err.message : "We couldn't send the invitation.",
-      });
-      await refreshAccount();
+      pending = JSON.parse(sessionStorage.getItem("spl.pendingInvite") || "null");
+    } catch {
+      pending = null;
     }
-    setFirst("");
-    setLast("");
-    setEmail("");
-    setMemberAccess("view");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+    if (!pending?.email) return;
+    sessionStorage.removeItem("spl.pendingInvite");
+    void (async () => {
+      try {
+        if (sessionId) await invokeFunction("checkout-status", { sessionId });
+        await refreshAccount();
+        const result = await inviteFamilyMember(
+          pending.first || "",
+          pending.last || "",
+          pending.email || "",
+          undefined,
+          pending.access,
+        );
+        setPurchaseNotice({ ...result, firstName: result.firstName || pending.first || "" });
+        setPaying(false);
+        setAdding(false);
+      } catch (err) {
+        setPurchaseNotice({
+          checklistId: "",
+          email: pending.email || "",
+          firstName: pending.first || "",
+          emailSent: false,
+          inviteUrl: "",
+          emailError: err instanceof Error ? err.message : "We couldn't send the invitation.",
+        });
+      }
+    })();
+  }, [inviteFamilyMember, params, refreshAccount]);
 
   return (
     <div>
@@ -238,15 +250,26 @@ export function ManageFamilyPage() {
                   interval={access === "annual" ? "year" : "month"}
                 />
                 {agreed ? (
-                  <PayPalCheckout
+                  <StripeCheckout
                     productSlug="core"
                     quantity={1}
                     accessInterval={access}
+                    returnPath="/app/family?paid=1"
+                    beforeRedirect={() => {
+                      sessionStorage.setItem(
+                        "spl.pendingInvite",
+                        JSON.stringify({
+                          first: first.trim(),
+                          last: last.trim(),
+                          email: email.trim(),
+                          access: memberAccess,
+                        }),
+                      );
+                    }}
                     onError={setError}
-                    onCaptured={afterPurchase}
                   />
                 ) : (
-                  <p className="muted">Agree to the policies above to enable PayPal checkout.</p>
+                  <p className="muted">Agree to the policies above to continue to checkout.</p>
                 )}
               </>
             ) : (

@@ -28,7 +28,7 @@ export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: P
       question: "How much does it cost?",
       answer: `${money(monthlyCents)} a month or ${money(annualCents)} a year for each Personal Checklist${
         savePct ? `. Annual billing saves ${money(monthlyCents * 12 - annualCents)} a year (about ${savePct}%)` : ""
-      }. You check out securely with PayPal, PayPal Credit, or a debit or credit card.`,
+      }. You check out securely with Stripe using a debit or credit card.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See plans" },
     },
@@ -104,16 +104,16 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
       id: "family",
       question: "How do I add family members?",
       answer:
-        "Open Connected Checklists in the menu to invite someone new or connect an existing checklist. Each person gets their own Personal Checklist, and you choose View Only or Can Edit.",
+        "Open Family in the menu to invite someone new or connect an existing checklist. Each person gets their own Personal Checklist, and you choose View Only or Can Edit.",
       topic: "support",
       link: { to: "/app/family", label: "Go to Connected Checklists" },
     },
     {
       id: "vault",
       question: "How do I get the Survival Vault?",
-      answer: `Add it from your Account page. It unlocks ${VAULT_LISTS}. It’s ${money(vaultCents)} one time, not per person, and it doesn’t renew.`,
+      answer: `Add it at the end of your basic checklists. It unlocks ${VAULT_LISTS}. It’s ${money(vaultCents)} one time, not per person, and it doesn’t renew.`,
       topic: "support",
-      link: { to: "/app/account#addons", label: "Add the Survival Vault" },
+      link: { to: "/app/lists#survival-vault", label: "Add the Survival Vault" },
     },
     {
       id: "devices",

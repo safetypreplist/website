@@ -39,6 +39,18 @@ verify_jwt = false
 [functions.cancel-paypal-subscription]
 verify_jwt = true
 
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.checkout-status]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.create-portal-session]
+verify_jwt = true
+
 [functions.family-invite]
 verify_jwt = true
 
