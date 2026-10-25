@@ -82,7 +82,9 @@ export function HelpPage() {
               <p>{faq.answer}</p>
               {faq.linkTo && faq.linkLabel ? (
                 <p>
-                  <Link to={faq.linkTo}>{faq.linkLabel}</Link>
+                  <Link className="btn btn-forest" to={faq.linkTo}>
+                    {faq.linkLabel}
+                  </Link>
                 </p>
               ) : null}
             </details>

@@ -55,7 +55,7 @@ export function parseFaqs(value: unknown): HelpFaq[] {
   return value
     .map((row, index) => {
       if (!row || typeof row !== "object") return null;
-      const item = row as { id?: unknown; question?: unknown; answer?: unknown };
+      const item = row as { id?: unknown; question?: unknown; answer?: unknown; linkTo?: unknown; linkLabel?: unknown };
       const question = typeof item.question === "string" ? item.question.trim() : "";
       const answer = typeof item.answer === "string" ? item.answer.trim() : "";
       if (!question || !answer) return null;
