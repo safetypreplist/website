@@ -42,25 +42,25 @@ const primarySystems = [
   {
     minutes: 5,
     mark: "backpack" as const,
-    title: "5-Minute Grab-and-Go Bag",
+    title: "Grab-and-Go Bag",
     line: "A backpack by the exit with essential items for a quick departure.",
   },
   {
     minutes: 15,
     mark: "duffel" as const,
-    title: "15-Minute Ready Duffel (72-Hour Continuity Kit)",
+    title: "Ready Duffel Bag",
     line: "A 72-hour preparedness kit tailored to your household’s needs.",
   },
   {
     minutes: 20,
     mark: "vehicle" as const,
-    title: "20-Minute Vehicle OR Suitcase Prep",
+    title: "Vehicle or Suitcase Prep",
     line: "Prepare your vehicle for emergencies or pack a suitcase for evacuation.",
   },
   {
     minutes: 60,
     mark: "home" as const,
-    title: "60-Minute Home Resilience",
+    title: "Home Resilience",
     line: "Prioritize essential supplies and systems to keep your household prepared at home.",
   },
 ];
@@ -74,10 +74,10 @@ const vaultIcons = {
 } as const;
 
 const coreFeatures = [
-  { label: "5-Minute Grab-and-Go Bag", Icon: IconBackpack },
-  { label: "15-Minute Ready Duffel (72-Hour Continuity Kit)", Icon: IconDuffel },
-  { label: "20-Minute Vehicle OR Suitcase Prep", Icon: IconCar },
-  { label: "60-Minute Home Resilience", Icon: IconHouse },
+  { label: "Grab-and-Go Bag", Icon: IconBackpack },
+  { label: "Ready Duffel Bag", Icon: IconDuffel },
+  { label: "Vehicle or Suitcase Prep", Icon: IconCar },
+  { label: "Home Resilience", Icon: IconHouse },
   { label: `Up to ${INCLUDED_CUSTOM_PER_SECTION} custom items per section`, Icon: IconNotes },
 ];
 

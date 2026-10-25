@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { enableAnalytics } from "../lib/analytics";
 import { cookieChoice, storeCookieChoice, type CookieChoice } from "../lib/legalConsent";
 
 export function CookieNotice() {
   const [choice, setChoice] = useState<CookieChoice | null>(() => cookieChoice());
   const noticeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cookieChoice() === "all") enableAnalytics();
+  }, []);
 
   useEffect(() => {
     const notice = noticeRef.current;
@@ -23,6 +28,7 @@ export function CookieNotice() {
   function choose(next: CookieChoice) {
     storeCookieChoice(next);
     setChoice(next);
+    if (next === "all") enableAnalytics();
   }
 
   return (
@@ -31,7 +37,7 @@ export function CookieNotice() {
         <div className="cookie-notice-copy">
           <p className="eyebrow" id="cookie-notice-title">Cookie Policy</p>
           <p>
-            We use essential cookies to keep you signed in. See the <Link to="/privacy">Privacy Policy</Link>.
+            We use essential cookies to keep you signed in. Accept also turns on Google Analytics. See the <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>
         <div className="cookie-notice-actions">

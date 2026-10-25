@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { isOnboardingPreview } from "./components/OnboardingTour";
@@ -9,6 +10,8 @@ import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { AppSplash } from "./components/AppSplash";
 import { ComingSoonOwnerPill, ComingSoonPage } from "./components/ComingSoon";
 import { isOpenDuringComingSoon, useComingSoon } from "./lib/comingSoon";
+import { analyticsStarted, enableAnalytics, trackPageView } from "./lib/analytics";
+import { cookieChoice } from "./lib/legalConsent";
 import { CookieNotice } from "./components/CookieNotice";
 import { PageMeta } from "./components/PageMeta";
 import { ScrollToTop } from "./components/ScrollToTop";
@@ -37,6 +40,27 @@ import { SystemPage } from "./pages/System";
 
 function isInsideSystem(pathname: string) {
   return pathname === "/app" || pathname.startsWith("/app/") || pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+function Analytics() {
+  const location = useLocation();
+  const path = `${location.pathname}${location.search}`;
+  const lastPath = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (cookieChoice() !== "all") return;
+    const first = !analyticsStarted();
+    enableAnalytics();
+    if (first) {
+      lastPath.current = path;
+      return;
+    }
+    if (lastPath.current === path) return;
+    lastPath.current = path;
+    trackPageView(path);
+  }, [path]);
+
+  return null;
 }
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -104,6 +128,7 @@ export default function App() {
     {showOwnerPill ? <ComingSoonOwnerPill /> : null}
     <PageMeta />
     <ScrollToTop />
+    <Analytics />
     <CookieNotice />
     <Routes>
       <Route path="/" element={<LandingPage />} />

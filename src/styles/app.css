@@ -7798,6 +7798,33 @@ html.tour-scroll-lock body {
   max-width: 390px;
 }
 
+@media (min-width: 1600px) {
+  .marketing-page .hero-copy-col {
+    padding-left: 48px;
+  }
+
+  .marketing-page .hero-copy {
+    max-width: 520px;
+  }
+
+  .marketing-page .hero-copy .hero-product {
+    font-size: clamp(56px, 3.3vw, 68px);
+    max-width: none;
+  }
+
+  .marketing-page .hero-tagline {
+    font-size: 32px;
+  }
+
+  .marketing-page .hero-sub {
+    font-size: 20px;
+  }
+
+  .marketing-page .hero-copy .lead {
+    font-size: 17px;
+  }
+}
+
 .marketing-page .hero-visual,
 .marketing-page .hero-slides,
 .marketing-page .hero-slide {
