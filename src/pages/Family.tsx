@@ -22,7 +22,6 @@ export function ManageFamilyPage() {
   const {
     familyMembers,
     profile,
-    products,
     inviteFamilyMember,
     cancelInvitation,
     demoMode,

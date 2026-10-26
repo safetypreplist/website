@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { HERO_TAGLINE, PAGE_TITLE, SITE_ORIGIN, SITE_DESCRIPTION } from "../lib/copy";
+import { PAGE_TITLE, SITE_ORIGIN, SITE_DESCRIPTION } from "../lib/copy";
 
 type Meta = { title: string; description: string; index?: boolean };
 
