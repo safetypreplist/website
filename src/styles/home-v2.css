@@ -618,21 +618,27 @@
   overflow: visible;
 }
 
-/* Light green pool of light on the section background, behind the devices only */
+/* Soft green spotlight on the forest bg, behind the tablet + phone only */
 .hv2-devices::before {
   content: "";
   position: absolute;
-  inset: 8% 0 4%;
+  left: 42%;
+  top: 48%;
+  width: min(520px, 118%);
+  height: min(360px, 95%);
   border-radius: 50%;
   background: radial-gradient(
-    ellipse 70% 60% at 48% 52%,
-    rgba(196, 220, 178, 0.55) 0%,
-    rgba(148, 186, 140, 0.32) 34%,
-    rgba(90, 130, 95, 0.12) 58%,
-    transparent 72%
+    ellipse at center,
+    rgba(178, 214, 148, 0.72) 0%,
+    rgba(120, 168, 108, 0.42) 38%,
+    rgba(74, 118, 78, 0.16) 62%,
+    transparent 78%
   );
+  filter: blur(22px);
   pointer-events: none;
   z-index: 0;
+  transform: translate(-50%, -50%);
+  animation: hv2-glow-pulse 5.5s ease-in-out infinite;
 }
 
 .hv2-device {
@@ -1019,12 +1025,12 @@
 @keyframes hv2-glow-pulse {
   0%,
   100% {
-    opacity: 0.55;
-    transform: scale(1);
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
   }
   50% {
-    opacity: 0.9;
-    transform: scale(1.06);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
   }
 }
 
@@ -1123,11 +1129,16 @@
   .hv2-reveal,
   .hv2-hero-inner,
   .hv2-hero-media,
-  .hv2-device,
-  .hv2-devices::before {
+  .hv2-device {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .hv2-devices::before {
+    animation: none !important;
+    opacity: 0.9 !important;
+    transform: translate(-50%, -50%) !important;
   }
 }
