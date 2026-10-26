@@ -10,6 +10,14 @@ export const HELP_FAQS_KEY = "help_faqs";
 
 export const DEFAULT_FAQS: HelpFaq[] = [
   {
+    id: "pricing",
+    question: "What does my plan cost?",
+    answer:
+      "Safety Prep List is billed once a year: $30 per Personal Checklist. There is no monthly plan for new purchases. Survival Vault is an optional $10/year add-on (not per person). Open Billing to see your renewal date and amount.",
+    linkTo: "/app/billing",
+    linkLabel: "Open Billing",
+  },
+  {
     id: "check",
     question: "How do I check items off?",
     answer: "Open a list and tap the circle next to an item. Checked items turn gray and italic so you can see what is already done.",

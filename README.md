@@ -53,13 +53,11 @@ Follow the setup docs in order:
 
 | Product | Price | Entitlement |
 |---|---|---|
-| Monthly | $7.99 per person / month | One personal Safety Prep Checklist per person, notes, contacts, 2 devices per login, 5 custom items per section |
-| Annual | $79.99 per person / year (about $6.67/month) | Same as Monthly. Saves $15.89 a year per person versus $95.88 paid monthly (about 16.6%). |
-| LAUNCH26 | $4.99 first month per person, then $7.99/month | Monthly billing only. Annual stays $79.99. |
-| Family Plan | Same per-person price | Connected individual checklists — not one shared list |
-| Survival Vault | $10 one-time add-on | Advanced preparedness checklists (off-grid, water, battery/solar, cooling/heat, long-term food). Not recurring. One purchase per family. |
+| Annual | $30 per person / year | One personal Safety Prep Checklist per person, notes, contacts, 2 devices per login, 5 custom items per section. No monthly option for new purchases. |
+| Family Plan | Same per-person yearly price | Connected individual checklists — not one shared list |
+| Survival Vault | $10/year add-on | Advanced preparedness checklists (off-grid, water, battery/solar, cooling/heat, long-term food). Renews yearly. Not per person. |
 
-Due today = the Monthly or Annual subscription total + optional Survival Vault. Renewals charge the subscription only.
+Due today = the yearly plan total + optional Survival Vault. Renewals charge the yearly plan and Vault when included.
 
 Prices live in the `products` table. Change them in Supabase without rebuilding the frontend math.
 

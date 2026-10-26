@@ -91,15 +91,13 @@ const planIncludes = [
 ];
 
 export function LandingPage() {
-  const { products, session, myChecklist } = useApp();
+  const { session, myChecklist } = useApp();
   const addingChecklists = Boolean(
     session && myChecklist?.status === "active" && myChecklist.ownerUserId === session.user.id,
   );
   const minFamilyQty = addingChecklists ? 1 : FAMILY_MIN_SEATS;
-  const annual = products.find((p) => p.slug === "access_annual");
-  const annualCents = annual?.amount_cents ?? ANNUAL_CENTS;
-  const vaultProduct = products.find((p) => p.slug === "upgrade_full");
-  const vaultCents = vaultProduct?.amount_cents ?? SURVIVAL_VAULT_CENTS;
+  const annualCents = ANNUAL_CENTS;
+  const vaultCents = SURVIVAL_VAULT_CENTS;
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
   const [vaultOpen, setVaultOpen] = useState(false);
   const family = checkoutBreakdown(familyQty, PUBLIC_ACCESS, false);
@@ -142,10 +140,14 @@ export function LandingPage() {
             <p className="hero-sub">
               Practical preparedness for natural disasters, <span className="nowrap">local emergencies</span>, outages, evacuations, and temporary disruptions.
             </p>
+            <div className="hero-price">
+              <p className="hero-price-amount">
+                {money(annualCents)} <small>/ year</small>
+              </p>
+              <p className="hero-price-meta">Per checklist · No monthly subscription</p>
+            </div>
             <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
-            <p className="hero-price-note">
-              <b>{money(annualCents)}/year</b> per checklist · Survival Vault {money(vaultCents)} one time
-            </p>
+            <p className="hero-price-note">Survival Vault add-on {money(vaultCents)}/year, optional</p>
           </div>
         </div>
         <HeroSlider />
@@ -219,7 +221,7 @@ export function LandingPage() {
           </div>
           <div className="vault-included">
             <p className="vault-included-lead">
-              <b>Survival Vault.</b> Get it for an additional one-time fee of $10, and you also unlock these checklists.
+              <b>Survival Vault.</b> For an extra $10/year, you also unlock these checklists.
             </p>
             <ul className="vault-included-grid">
               {VAULT_CHECKLISTS.map((item) => {
@@ -265,7 +267,7 @@ export function LandingPage() {
               </span>
               <span className="step-num">Step 2</span>
               <h3>Pay once for the year</h3>
-              <p>Secure checkout. One yearly payment. Optional Survival Vault is a $10 one-time add-on.</p>
+              <p>Secure checkout. Survival Vault add-on $10/year.</p>
             </li>
             <li>
               <span className="how-icon">
@@ -283,9 +285,9 @@ export function LandingPage() {
         <div className="wrap">
           <div className="section-head">
             <p className="eyebrow">Pricing</p>
-            <h2>One price. One year.</h2>
+            <h2>{money(annualCents)} a year</h2>
             <p className="pricing-lead">
-              {money(annualCents)} per Personal Checklist for the year. No monthly subscription.
+              Per Personal Checklist. One payment. No monthly subscription.
             </p>
           </div>
           <div className="price-grid">
@@ -294,8 +296,8 @@ export function LandingPage() {
               <span className="save-badge">Per checklist / year</span>
               <h3>Individual Plan</h3>
               <div className="amount">{money(annualCents)} <small>/ year</small></div>
-              <p className="plan-line">1 Personal Checklist · about {money(Math.round(annualCents / 12))}/mo if you use it all year</p>
-              <p className="plan-save">Pay once. You’re set for the year.</p>
+              <p className="plan-line">1 Personal Checklist</p>
+              <p className="plan-save">One yearly payment. No monthly bill.</p>
               <ul>
                 {coreFeatures.map((item) => (
                   <li key={item.label}>
@@ -353,12 +355,12 @@ export function LandingPage() {
           </div>
           <aside className="vault-cta-strip" id="survival-vault">
             <div>
-              <p className="eyebrow">One-time add-on</p>
+              <p className="eyebrow">Add-on</p>
               <h3>
-                Survival Vault · {money(vaultCents)} <small>one time</small>
+                Survival Vault · {money(vaultCents)} <small>/ year</small>
               </h3>
               <p>
-                Expand your checklist with Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. Does not renew.
+                For an extra {money(vaultCents)}/year: Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.
               </p>
             </div>
             <button className="btn btn-primary" type="button" onClick={() => setVaultOpen(true)}>

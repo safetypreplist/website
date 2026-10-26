@@ -175,7 +175,8 @@ export function DemoPage() {
             </ul>
             <p>
               Add your own items, keep notes, share with family, print a paper backup, and prepare your checklists for
-              offline use on your phone, tablet, or computer. Survival Vault is an optional one-time $10 add-on.
+              offline use on your phone, tablet, or computer. Plans are $30 per Personal Checklist per year — no monthly
+              option. Survival Vault is an optional $10/year add-on.
             </p>
             <div className="demo-actions">
               <a className="btn btn-primary" href="/#pricing">

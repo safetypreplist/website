@@ -41,8 +41,7 @@ export function ManageFamilyPage() {
   const [error, setError] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [memberAccess, setMemberAccess] = useState<AccessLevel>("view");
-  const annual = products.find((p) => p.slug === "access_annual");
-  const annualCents = annual?.amount_cents ?? ACCESS_ANNUAL_CENTS;
+  const annualCents = ACCESS_ANNUAL_CENTS;
   const addOn = memberAddBreakdown(PUBLIC_ACCESS);
   const familySize = familyMembers.filter((m) => m.status !== "cancelled").length;
   const openSeats = familyMembers.filter((m) => m.pending && !m.email).length;

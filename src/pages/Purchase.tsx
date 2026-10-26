@@ -18,7 +18,6 @@ import {
   MAX_CHECKLIST_QUANTITY,
   PUBLIC_ACCESS,
   SURVIVAL_VAULT_CENTS,
-  SURVIVAL_VAULT_DESCRIPTION,
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
@@ -80,7 +79,7 @@ export function PricingPage() {
 }
 
 export function CheckoutPage() {
-  const { products, session, loading, signOut, myChecklist, hasSurvivalVault } = useApp();
+  const { session, loading, signOut, myChecklist, hasSurvivalVault } = useApp();
   const [params] = useSearchParams();
   const renew = params.get("renew") === "1";
   const requestedPlan = params.get("plan") === "family" ? "family" : "individual";
@@ -116,10 +115,8 @@ export function CheckoutPage() {
   const [showDiscount, setShowDiscount] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [scopeAck, setScopeAck] = useState(false);
-  const upgrade = products.find((p) => p.slug === "upgrade_full");
-  const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
-  const annualProduct = products.find((p) => p.slug === "access_annual");
-  const unitCents = annualProduct?.amount_cents ?? ANNUAL_CENTS;
+  const vaultCents = SURVIVAL_VAULT_CENTS;
+  const unitCents = ANNUAL_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
   const shownDiscount = discountApplied;
   const shownCode = appliedCode;
@@ -296,13 +293,16 @@ export function CheckoutPage() {
 
         {!vaultOffered ? null : (
           <section className="checkout-step">
-            <p className="eyebrow">Optional</p>
+            <p className="eyebrow">Add-on</p>
             <div className={`vault-add ${vault ? "added" : ""}`}>
               <label>
                 <input type="checkbox" checked={vault} onChange={(e) => setVault(e.target.checked)} />
                 <span>
-                  <b>Add Survival Vault, $10 one time</b>
-                  <small>{SURVIVAL_VAULT_DESCRIPTION}</small>
+                  <b>Add Survival Vault for an extra $10/year</b>
+                  <small>
+                    Includes Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat
+                    Resilience, and Long-Term Food.
+                  </small>
                 </span>
               </label>
               <button type="button" className="vault-details" onClick={() => setDetailsOpen(true)}>
@@ -362,7 +362,7 @@ export function CheckoutPage() {
             <div className="summary-block">
               <p>
                 <span>Survival Vault</span>
-                <b>{money(vaultCents)} one time</b>
+                <b>{money(vaultCents)}/year</b>
               </p>
             </div>
           ) : null}
@@ -382,7 +382,6 @@ export function CheckoutPage() {
             {shownDiscount > 0 && discountPayments > 1
               ? `Renews at ${money(discountedRenewalCents)} for the next ${plural(discountPayments - 1, "year")}, then ${money(breakdown.recurringCents)} per year.`
               : `Renews once a year at ${money(breakdown.recurringCents)}. Cancel anytime before renewal.`}
-            {vault ? " Survival Vault is one time and does not renew." : ""}
           </p>
         </section>
 
@@ -712,7 +711,7 @@ export function ThankYouPage() {
             {vault ? (
               <div>
                 <dt>Survival Vault</dt>
-                <dd>Included, one time</dd>
+                <dd>Included, {money(SURVIVAL_VAULT_CENTS)}/year</dd>
               </div>
             ) : null}
           </dl>

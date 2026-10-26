@@ -6,15 +6,19 @@ Do not enable `automatic_tax` until Stripe Tax registrations (or Managed Payment
 
 Checkout uses whichever key is on the server. A `rk_test_` / `sk_test_` key is Test Mode. A `rk_live_` / `sk_live_` key is live and charges real cards. Test prices cannot be reused in live; the first live checkout creates `spl_monthly`, `spl_annual`, and `spl_vault` on the live account.
 
-## Test Mode catalog (already created)
+## Catalog (lookup keys)
 
 | Lookup key | Amount | Interval |
 |---|---|---|
 | `spl_monthly` | $7.99 | legacy month (not sold for new checkouts) |
-| `spl_annual` | $29.99 | year per checklist (public offer) |
-| `spl_vault` | $10.00 | one-time Survival Vault |
+| `spl_annual` | $30 | year per checklist (public offer) |
+| `spl_vault_annual` | $10 | year Survival Vault add-on |
 
-New checkouts are annual-only at $29.99 per checklist. If `spl_annual` already exists at an older amount, the server creates a new Stripe price and moves the `spl_annual` lookup key onto it. Clear `STRIPE_PRICE_ANNUAL` if that env still points at an old price id.
+Products: `spl_checklist` (Safety Prep List), `spl_vault` (Survival Vault). Tax code `txcd_10103000`.
+
+New checkouts are annual-only at $30 per checklist. `create-checkout-session` calls `stripePriceId`, which creates missing catalog prices on first use (and moves the lookup key if the amount changed). Clear `STRIPE_PRICE_ANNUAL` / `STRIPE_PRICE_VAULT` / `STRIPE_PRICE_MONTHLY` if those env vars still point at old price ids.
+
+**Live audit (SafetyPrepList `acct_1UUER4IE7Tqh1WW5`):** as of 2026-10-25, Live had `spl_checklist` + `spl_monthly` ($7.99) only. `spl_annual`, `spl_vault`, and `spl_vault_annual` were missing until created (by agent write or first successful live checkout).
 
 ## Secrets
 

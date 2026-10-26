@@ -4,7 +4,7 @@ const API_VERSION = "2026-09-30.endive";
 export const PRICE_LOOKUP = {
   monthly: "spl_monthly",
   annual: "spl_annual",
-  vault: "spl_vault",
+  vault: "spl_vault_annual",
 } as const;
 
 export function stripeSecret() {
@@ -88,7 +88,7 @@ async function parseStripe(res: Response) {
 const LOOKUP_ENV: Record<string, string> = {
   spl_monthly: "STRIPE_PRICE_MONTHLY",
   spl_annual: "STRIPE_PRICE_ANNUAL",
-  spl_vault: "STRIPE_PRICE_VAULT",
+  spl_vault_annual: "STRIPE_PRICE_VAULT",
 };
 
 type CatalogPrice = {
@@ -115,14 +115,15 @@ const CATALOG: Record<string, CatalogPrice> = {
     lookup: "spl_annual",
     product: "spl_checklist",
     productName: "Safety Prep List",
-    unit_amount: 2999,
+    unit_amount: 3000,
     recurring: { interval: "year" },
   },
-  spl_vault: {
-    lookup: "spl_vault",
+  spl_vault_annual: {
+    lookup: "spl_vault_annual",
     product: "spl_vault",
     productName: "Survival Vault",
     unit_amount: 1000,
+    recurring: { interval: "year" },
   },
 };
 

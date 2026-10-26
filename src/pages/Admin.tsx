@@ -232,9 +232,9 @@ function discountOfferLabel(row: Pick<Discount, "kind" | "value">) {
 }
 
 function intervalLabel(interval?: AppliesToInterval | null) {
-  if (interval === "monthly") return "Monthly billing only";
+  if (interval === "monthly") return "Legacy monthly only";
   if (interval === "annual") return "Annual billing only";
-  return "Monthly or Annual";
+  return "Annual (and legacy monthly)";
 }
 
 function discountDurationLabel(payments?: number | null) {
@@ -247,7 +247,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
   const [kind, setKind] = useState<DiscountKind>("percent");
   const [value, setValue] = useState("10");
   const [appliesTo, setAppliesTo] = useState<AppliesTo>("all");
-  const [billing, setBilling] = useState<AppliesToInterval>("all");
+  const [billing, setBilling] = useState<AppliesToInterval>("annual");
   const [expires, setExpires] = useState("");
   const [payments, setPayments] = useState("1");
   const [error, setError] = useState("");
@@ -318,9 +318,9 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
           <label className="field">
             <span>Billing</span>
             <select value={billing} onChange={(e) => setBilling(e.target.value as AppliesToInterval)}>
-              <option value="all">Monthly or Annual</option>
-              <option value="monthly">Monthly only</option>
               <option value="annual">Annual only</option>
+              <option value="all">Annual + legacy monthly</option>
+              <option value="monthly">Legacy monthly only</option>
             </select>
           </label>
         </div>
@@ -334,7 +334,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
         <p className="muted">
           {paymentCount === 1
             ? "Only the first payment is discounted. Renewals are at the regular price."
-            : `The first ${paymentCount} payments are discounted (${paymentCount} months on Monthly, ${paymentCount} years on Annual), then the regular price.`}{" "}
+            : `The first ${paymentCount} payments are discounted (${paymentCount} years on Annual), then the regular price.`}{" "}
           The expiration date only stops new customers from using the code.
         </p>
         {error ? <p className="form-error">{error}</p> : null}

@@ -482,19 +482,45 @@ p {
   font-size: 18px;
   font-weight: 650;
   color: var(--forest);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
-.hero-price-note {
-  margin: 14px 0 0;
-  font-size: 15px;
-  line-height: 1.45;
+.hero-price {
+  margin: 0 0 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--line-strong) 70%, transparent);
+}
+
+.hero-price-amount {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(36px, 4.2vw, 48px);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--forest);
+}
+
+.hero-price-amount small {
+  font-size: 0.42em;
+  font-weight: 650;
+  letter-spacing: 0;
   color: var(--ink-soft);
 }
 
-.hero-price-note b {
-  color: var(--forest);
-  font-weight: 750;
+.hero-price-meta {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+}
+
+.hero-price-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-soft);
 }
 
 .pricing-lead {
@@ -7670,6 +7696,20 @@ html.tour-scroll-lock body {
   font-size: 16px;
 }
 
+.marketing-page .hero-price {
+  border-top-color: rgba(244, 240, 229, 0.2);
+}
+
+.marketing-page .hero-price-amount {
+  color: var(--cream);
+}
+
+.marketing-page .hero-price-amount small,
+.marketing-page .hero-price-meta,
+.marketing-page .hero-price-note {
+  color: rgba(244, 240, 229, 0.72);
+}
+
 .marketing-page .hero-copy .lead {
   font-size: 14px;
   line-height: 1.55;
@@ -8279,9 +8319,34 @@ html.tour-scroll-lock body {
     margin-inline: 0;
     font-size: 16px;
     line-height: 1.5;
-    margin-bottom: 22px;
+    margin-bottom: 16px;
     text-align: center;
     text-wrap: balance;
+  }
+
+  .marketing-page .hero-price {
+    text-align: center;
+    margin: 0 auto 16px;
+    padding-top: 12px;
+    max-width: 20rem;
+    border-top-color: rgba(244, 240, 229, 0.22);
+  }
+
+  .marketing-page .hero-price-amount {
+    font-size: clamp(34px, 10vw, 42px);
+    color: var(--cream);
+  }
+
+  .marketing-page .hero-price-amount small,
+  .marketing-page .hero-price-meta,
+  .marketing-page .hero-price-note {
+    color: rgba(244, 240, 229, 0.72);
+    text-align: center;
+  }
+
+  .marketing-page .hero-price-meta,
+  .marketing-page .hero-price-note {
+    text-align: center;
   }
 
   .marketing-page .story-section {
@@ -9245,24 +9310,24 @@ body:has(.cookie-notice) .support-chat-panel {
   gap: 10px;
   min-height: 52px;
   padding: 0 20px 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(244, 240, 229, 0.16);
   border-radius: 999px;
-  background: var(--terracotta);
-  color: #fff;
+  background: #21473a;
+  color: var(--cream);
   font-size: 15px;
   font-weight: 700;
-  box-shadow: 0 12px 30px rgba(20, 29, 22, 0.3);
+  box-shadow: 0 12px 30px rgba(20, 29, 22, 0.28);
   transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .support-chat-launcher:hover {
   transform: translateY(-1px);
-  background: #b04e23;
-  box-shadow: 0 16px 34px rgba(20, 29, 22, 0.34);
+  background: #1a3a30;
+  box-shadow: 0 16px 34px rgba(20, 29, 22, 0.32);
 }
 
 .support-chat.open .support-chat-launcher {
-  background: var(--forest);
+  background: #163229;
 }
 
 .support-chat-launcher:focus-visible,

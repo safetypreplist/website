@@ -1,7 +1,10 @@
 export function money(cents: number, currency = "USD") {
+  const whole = Number.isFinite(cents) && cents % 100 === 0;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
 }
 

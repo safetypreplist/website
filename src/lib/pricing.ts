@@ -1,11 +1,11 @@
-/** Public offer: $29.99 per Personal Checklist per year. Monthly kept only for legacy accounts. */
+/** Public offer: $30 per Personal Checklist per year. Monthly kept only for legacy accounts. */
 export const MONTHLY_CENTS = 799;
 export const ANNUAL_MONTHLY_EQUIVALENT_CENTS = 250;
-export const ANNUAL_CENTS = 2999;
+export const ANNUAL_CENTS = 3000;
 export const SURVIVAL_VAULT_CENTS = 1000;
 export const SURVIVAL_VAULT_NAME = "Survival Vault";
 export const SURVIVAL_VAULT_DESCRIPTION =
-  "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. $10 one time, not $10 per person. Does not renew.";
+  "For an extra $10/year, unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.";
 export const FAMILY_MIN_SEATS = 2;
 export const MAX_CHECKLIST_QUANTITY = 20;
 
@@ -45,7 +45,8 @@ export function checkoutBreakdown(people: number, access: AccessInterval = PUBLI
     subscriptionCents,
     vaultCents,
     dueTodayCents: subscriptionCents + vaultCents,
-    recurringCents: subscriptionCents,
+    // Vault renews with the plan (yearly add-on).
+    recurringCents: subscriptionCents + vaultCents,
     interval: access,
     unitCents: subscriptionUnitCents(access),
     monthlyEquivalentCents: access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS,

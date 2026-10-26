@@ -93,7 +93,7 @@ export function TermsPage() {
       <p>
         Individual and Family plans are billed once per year at the price shown at checkout, plus any applicable taxes.
         Billing renews automatically each year at the then-current rate until you cancel. Survival Vault is an optional
-        one-time purchase and does not renew. Payments are processed by Stripe. We do not store card numbers.
+        yearly add-on billed with your plan. Payments are processed by Stripe. We do not store card numbers.
       </p>
       <p>
         Cancel anytime in Account Settings before your next yearly renewal, or{" "}
@@ -122,7 +122,7 @@ export function TermsPage() {
         next renewal date to avoid the next charge. You keep access through the end of the period you already paid.
       </p>
       <h3>Survival Vault</h3>
-      <p>Survival Vault is a one-time add-on. It does not renew. Refund requests follow the same 3-day, not-printed first-purchase rule.</p>
+      <p>Survival Vault is a yearly add-on. Refund requests follow the same 3-day, not-printed first-purchase rule.</p>
 
       <h2>6. User content</h2>
       <p>

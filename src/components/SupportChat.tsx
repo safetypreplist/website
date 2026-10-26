@@ -31,7 +31,7 @@ function CloseIcon() {
 
 export function SupportChat() {
   const { pathname } = useLocation();
-  const { session, profile, user, products, hasSurvivalVault } = useApp();
+  const { session, profile, user, hasSurvivalVault } = useApp();
   const [open, setOpen] = useState(false);
   const [chatting, setChatting] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -46,13 +46,13 @@ export function SupportChat() {
   const inApp = pathname.startsWith("/app");
 
   const answers = useMemo(() => {
-    const cents = (slug: string, fallback: number) => products.find((p) => p.slug === slug)?.amount_cents ?? fallback;
+    // Always use public pricing constants so chat matches homepage/checkout even if products lag.
     const prices = {
-      annualCents: cents("access_annual", ANNUAL_CENTS),
-      vaultCents: cents("upgrade_full", SURVIVAL_VAULT_CENTS),
+      annualCents: ANNUAL_CENTS,
+      vaultCents: SURVIVAL_VAULT_CENTS,
     };
     return session ? memberQuickAnswers(prices, hasSurvivalVault) : visitorQuickAnswers(prices);
-  }, [products, session, hasSurvivalVault]);
+  }, [session, hasSurvivalVault]);
   const activeAnswer = answers.find((answer) => answer.id === answerId) ?? null;
 
   useEffect(

@@ -101,8 +101,9 @@ Deno.serve(async (req) => {
       const vaultPrice = await stripePriceId(PRICE_LOOKUP.vault);
       const thankYou = new URL("/thank-you", appUrl);
       thankYou.searchParams.set("vault", "1");
+      thankYou.searchParams.set("access", "annual");
       const session = await stripeRequest<{ id: string; url?: string }>("POST", "/checkout/sessions", {
-        mode: "payment",
+        mode: "subscription",
         client_reference_id: user.id,
         ...(customer ? { customer } : customer_email ? { customer_email } : {}),
         success_url: `${thankYou.toString()}${thankYou.search ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`.replace(
@@ -111,8 +112,8 @@ Deno.serve(async (req) => {
         ),
         cancel_url: `${appUrl}/#pricing`,
         line_items: [{ price: vaultPrice, quantity: 1 }],
-        metadata: { product: "upgrade_full", user_id: user.id },
-        payment_intent_data: { metadata: { product: "upgrade_full", user_id: user.id } },
+        metadata: { product: "upgrade_full", user_id: user.id, access: "annual" },
+        subscription_data: { metadata: { product: "upgrade_full", user_id: user.id } },
         integration_identifier: integrationIdentifier(),
       });
       if (!session.ok || !session.body.url) {

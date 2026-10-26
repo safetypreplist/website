@@ -440,13 +440,13 @@ function accessDescription(profile: { access_status?: string | null; access_inte
   }
   if (profile.access_interval === "annual") {
     return profile.access_renews_at
-      ? `Annual. Next renewal ${formatDate(profile.access_renews_at)}.`
-      : "Annual.";
+      ? `Annual plan. Next yearly renewal ${formatDate(profile.access_renews_at)}.`
+      : "Annual plan. Billed once a year.";
   }
   if (profile.access_interval === "monthly") {
     return profile.access_renews_at
-      ? `Monthly. Next billing ${formatDate(profile.access_renews_at)}.`
-      : "Monthly.";
+      ? `Legacy monthly plan. Next billing ${formatDate(profile.access_renews_at)}.`
+      : "Legacy monthly plan.";
   }
   return "Safety Prep List access is included with your plan.";
 }

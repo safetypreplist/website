@@ -10,7 +10,7 @@ export type QuickAnswer = {
   link?: { to: string; label: string };
 };
 
-type Prices = { annualCents: number; vaultCents: number; monthlyCents?: number };
+type Prices = { annualCents: number; vaultCents: number };
 
 const CHECKLISTS =
   "5-Minute Grab-and-Go Bag, 15-Minute Ready Duffel (72-Hour Continuity Kit), 20-Minute Vehicle OR Suitcase Prep, and 60-Minute Home Resilience";
@@ -24,7 +24,7 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
     {
       id: "cost",
       question: "How much does it cost?",
-      answer: `${money(annualCents)} a year for each Personal Checklist — one payment, no monthly subscription. Optional Survival Vault is ${money(vaultCents)} one time. You check out securely with Stripe using a debit or credit card.`,
+      answer: `${money(annualCents)} per Personal Checklist per year. One yearly payment — there is no monthly plan. Family plans are ${money(annualCents)} per person per year. Survival Vault is an optional add-on for ${money(vaultCents)}/year (not per person). Checkout is secure with Stripe.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See plans" },
     },
@@ -44,7 +44,7 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
     {
       id: "vault",
       question: "What’s in the Survival Vault?",
-      answer: `${VAULT_LISTS}. It’s ${money(vaultCents)} one time, not per person, and it doesn’t renew. Add it at checkout.`,
+      answer: `For an extra ${money(vaultCents)}/year you unlock ${VAULT_LISTS}. Add it at checkout.`,
       topic: "sales",
     },
     {
@@ -65,7 +65,7 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
     {
       id: "cancel",
       question: "Can I cancel anytime?",
-      answer: `Yes. Cancel in Account Settings before your next billing date, and you keep access through the end of the period you paid for. ${REFUND_RULE}`,
+      answer: `Yes. Cancel in Account Settings before your next yearly renewal, and you keep access through the end of the year you paid for. ${REFUND_RULE}`,
       topic: "support",
       link: { to: "/refunds", label: "Read the refund policy" },
     },
@@ -79,13 +79,20 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
   ];
 }
 
-export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): QuickAnswer[] {
+export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault: boolean): QuickAnswer[] {
   const answers: QuickAnswer[] = [
+    {
+      id: "cost",
+      question: "What do I pay each year?",
+      answer: `Plans renew once a year. Each Personal Checklist is ${money(annualCents)}/year. Survival Vault is an optional ${money(vaultCents)}/year add-on (not per person). There is no monthly plan for new purchases. See Billing for your exact renewal amount.`,
+      topic: "support",
+      link: { to: "/app/billing", label: "Open Billing" },
+    },
     {
       id: "cancel",
       question: "How do I cancel my plan?",
       answer:
-        "Go to Account and choose Cancel subscription. You won’t be charged again, and you keep access through the end of the period you already paid for.",
+        "Go to Account and choose Cancel subscription. You won’t be charged again, and you keep access through the end of the yearly period you already paid for.",
       topic: "support",
       link: { to: "/app/account", label: "Go to Account" },
     },
@@ -107,7 +114,7 @@ export function memberQuickAnswers({ vaultCents }: Prices, hasVault: boolean): Q
     {
       id: "vault",
       question: "How do I get the Survival Vault?",
-      answer: `Add it at the end of your basic checklists. It unlocks ${VAULT_LISTS}. It’s ${money(vaultCents)} one time, not per person, and it doesn’t renew.`,
+      answer: `Add it at the end of your basic checklists or at checkout. For an extra ${money(vaultCents)}/year it unlocks ${VAULT_LISTS}.`,
       topic: "support",
       link: { to: "/app/lists#survival-vault", label: "Add the Survival Vault" },
     },

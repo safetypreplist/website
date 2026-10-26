@@ -53,7 +53,7 @@ export function SurvivalVaultModal({
           Close
         </button>
         <div className="modal-intro">
-          <p className="eyebrow">Optional add-on</p>
+          <p className="eyebrow">Add-on</p>
           <h2 id="survival-vault-title">Survival Vault</h2>
           <p>{SURVIVAL_VAULT_DESCRIPTION}</p>
         </div>

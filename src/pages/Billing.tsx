@@ -89,7 +89,7 @@ function useBilling() {
 
 function intervalLabel(interval: string | null) {
   if (interval === "annual") return "Annual";
-  if (interval === "monthly") return "Monthly";
+  if (interval === "monthly") return "Legacy monthly";
   return "";
 }
 
@@ -101,7 +101,7 @@ function planLabel(purpose: string, quantity: number) {
 }
 
 export function paymentDescription(payment: BillingPayment) {
-  if (payment.kind === "vault") return "Survival Vault, one time";
+  if (payment.kind === "vault") return "Survival Vault, yearly";
   if (payment.kind === "device") return "Extra device";
   if (payment.kind === "items") return "Extra custom items";
   const interval = intervalLabel(payment.access_interval);

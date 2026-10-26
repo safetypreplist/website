@@ -102,7 +102,7 @@ export function useComingSoon() {
 }
 
 /** Pages anyone may reach while Maintenance Mode is on, so owners and existing members can still sign in. */
-const OPEN_PATHS = ["/signin", "/reset-password", "/update-password", "/privacy", "/terms", "/app", "/admin"];
+const OPEN_PATHS = ["/signin", "/reset-password", "/update-password", "/privacy", "/terms", "/classic", "/app", "/admin"];
 
 export function isOpenDuringComingSoon(pathname: string) {
   return OPEN_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
