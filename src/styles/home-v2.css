@@ -160,9 +160,18 @@
   inset: 0;
   background-size: cover;
   background-position: 62% center;
-  transform: scale(1.04);
-  animation: hv2-hero-drift 18s var(--hv2-ease) both;
+  background-color: #091712;
   z-index: 0;
+}
+
+.hv2-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% center;
+  pointer-events: none;
 }
 
 .hv2-hero-shade {
@@ -986,15 +995,6 @@
   }
 }
 
-@keyframes hv2-hero-drift {
-  from {
-    transform: scale(1.08);
-  }
-  to {
-    transform: scale(1.02);
-  }
-}
-
 @keyframes hv2-float {
   0%,
   100% {
@@ -1022,6 +1022,10 @@
 
   .hv2-hero-media {
     background-position: 70% center;
+  }
+
+  .hv2-hero-video {
+    object-position: 70% center;
   }
 
   .hv2-hero-shade {
@@ -1119,4 +1123,7 @@
     transform: none !important;
   }
 
+  .hv2-hero-video {
+    display: none;
+  }
 }

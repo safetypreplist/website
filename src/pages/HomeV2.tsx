@@ -76,6 +76,7 @@ function useReveal() {
 
 export function HomeV2Page() {
   const root = useReveal();
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
   const [vaultOpen, setVaultOpen] = useState(false);
@@ -83,6 +84,13 @@ export function HomeV2Page() {
   const price = money(ANNUAL_CENTS);
   const vault = money(SURVIVAL_VAULT_CENTS);
   const familyTotal = money(ANNUAL_CENTS * familyQty);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    void video.play().catch(() => undefined);
+  }, []);
 
   function playStoryVideo() {
     const video = videoRef.current;
@@ -117,7 +125,21 @@ export function HomeV2Page() {
           className="hv2-hero-media"
           style={{ backgroundImage: `url(${PHOTO_LIBRARY.hero})` }}
           aria-hidden="true"
-        />
+        >
+          <video
+            ref={heroVideoRef}
+            className="hv2-hero-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster={PHOTO_LIBRARY.hero}
+            tabIndex={-1}
+          >
+            <source src="/videos/safety.mp4" type="video/mp4" />
+          </video>
+        </div>
         <div className="hv2-hero-shade" aria-hidden="true" />
         <div className="hv2-hero-inner">
           <h1>Be ready before you need to be.</h1>
