@@ -164,16 +164,23 @@ async function ensureCatalogPrice(spec: CatalogPrice) {
   await ensureProduct(spec.product, spec.productName);
   const found = await priceByLookup(spec.lookup);
   if (found) {
-    const detail = await stripeRequest<{ id?: string; unit_amount?: number }>("GET", `/prices/${found}`);
-    if (detail.ok && detail.body.unit_amount === spec.unit_amount) return found;
+    const detail = await stripeRequest<{ id?: string; unit_amount?: number; type?: string; recurring?: { interval?: string } | null }>(
+      "GET",
+      `/prices/${found}`,
+    );
+    const amountOk = detail.ok && detail.body.unit_amount === spec.unit_amount;
+    const recurringOk = spec.recurring
+      ? detail.body?.type === "recurring" && detail.body?.recurring?.interval === spec.recurring.interval
+      : detail.body?.type === "one_time" || !detail.body?.recurring;
+    if (amountOk && recurringOk) return found;
   }
-  // Stripe prices are immutable; move the lookup key onto a new amount when the catalog changes.
+  // Stripe prices are immutable. Always allow moving the lookup key off an archived/mismatched price.
   const created = await stripeRequest<{ id?: string }>("POST", "/prices", {
     currency: "usd",
     product: spec.product,
     unit_amount: spec.unit_amount,
     lookup_key: spec.lookup,
-    ...(found ? { transfer_lookup_key: true } : {}),
+    transfer_lookup_key: true,
     ...(spec.recurring ? { recurring: spec.recurring } : {}),
   });
   if (created.ok && created.body.id) return created.body.id;
