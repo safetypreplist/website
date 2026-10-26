@@ -14,11 +14,9 @@ import { trackPurchase } from "../lib/analytics";
 import { FAMILY_MIN_SEATS } from "../lib/identity";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
-  ANNUAL_MONTHLY_EQUIVALENT_CENTS,
-  LAUNCH_CODE,
-  LAUNCH_FIRST_MONTH_CENTS,
+  ANNUAL_CENTS,
   MAX_CHECKLIST_QUANTITY,
-  MONTHLY_CENTS,
+  PUBLIC_ACCESS,
   SURVIVAL_VAULT_CENTS,
   SURVIVAL_VAULT_DESCRIPTION,
   checkoutBreakdown,
@@ -101,7 +99,7 @@ export function CheckoutPage() {
   );
   const people = addingChecklists ? additional : requestedPlan === "family" ? familyQty : 1;
   const planKind = addingChecklists ? (people > 1 ? "family" : "individual") : requestedPlan;
-  const access: AccessInterval = params.get("access") === "annual" ? "annual" : "monthly";
+  const access: AccessInterval = PUBLIC_ACCESS;
   const [vault, setVault] = useState(!renew && (params.get("vault") === "1" || params.get("household") === "1"));
   const vaultOffered = !renew && !(addingChecklists && hasSurvivalVault);
   useEffect(() => {
@@ -109,39 +107,27 @@ export function CheckoutPage() {
   }, [vaultOffered]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [error, setError] = useState("");
-  const fromLaunch = params.get("from") === "launch26" || (() => {
-    try {
-      return sessionStorage.getItem("spl.launch26") === "1";
-    } catch {
-      return false;
-    }
-  })();
-  const launchCode = fromLaunch ? LAUNCH_CODE : "";
-  const [discountCode, setDiscountCode] = useState(launchCode);
-  const [appliedCode, setAppliedCode] = useState(launchCode);
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState("");
   const [discountMessage, setDiscountMessage] = useState("");
   const [discountApplied, setDiscountApplied] = useState(0);
   const [discountPayments, setDiscountPayments] = useState(1);
-  const [checkingCode, setCheckingCode] = useState(Boolean(launchCode));
+  const [checkingCode, setCheckingCode] = useState(false);
+  const [showDiscount, setShowDiscount] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [scopeAck, setScopeAck] = useState(false);
   const upgrade = products.find((p) => p.slug === "upgrade_full");
   const vaultCents = upgrade?.amount_cents ?? SURVIVAL_VAULT_CENTS;
+  const annualProduct = products.find((p) => p.slug === "access_annual");
+  const unitCents = annualProduct?.amount_cents ?? ANNUAL_CENTS;
   const breakdown = checkoutBreakdown(people, access, vault);
-  const launchPriceActive =
-    fromLaunch && access === "monthly" && discountCode.trim().toUpperCase() === LAUNCH_CODE;
-  const launchDiscountCents = launchPriceActive
-    ? Math.max(0, breakdown.subscriptionCents - LAUNCH_FIRST_MONTH_CENTS * people)
-    : 0;
-  const promoRejected = fromLaunch && !checkingCode && Boolean(discountMessage) && discountApplied <= 0 && !appliedCode;
-  const shownDiscount = promoRejected ? 0 : discountApplied || launchDiscountCents;
-  const shownCode = promoRejected ? "" : appliedCode || (shownDiscount ? LAUNCH_CODE : "");
+  const shownDiscount = discountApplied;
+  const shownCode = appliedCode;
   const discountedDueToday = Math.max(0, breakdown.dueTodayCents - shownDiscount);
   const discountedRenewalCents = Math.max(0, breakdown.recurringCents - shownDiscount);
   const title = addingChecklists
     ? "Additional Checklists"
     : `${renew ? "Renew " : ""}${planKind === "family" ? "Family Plan" : "Individual Plan"}`;
-  const unit = access === "annual" ? ANNUAL_MONTHLY_EQUIVALENT_CENTS : MONTHLY_CENTS;
 
   useEffect(() => {
     sessionStorage.setItem("spl.plan", planKind);
@@ -183,7 +169,6 @@ export function CheckoutPage() {
           quantity: people,
           accessInterval: access,
           includeHousehold: vault,
-          from: fromLaunch ? "launch26" : undefined,
         },
       );
       setAppliedCode(preview.code);
@@ -191,10 +176,9 @@ export function CheckoutPage() {
       setDiscountApplied(preview.discountCents);
       setDiscountPayments(payments);
       const regular = preview.regularCents ?? breakdown.subscriptionCents;
-      const period = access === "annual" ? "year" : "month";
       setDiscountMessage(
         preview.kind === "price" && payments === 1
-          ? `${preview.code} applied — your first ${period} is ${money(regular - preview.discountCents)}, then ${money(regular)} per ${period}.`
+          ? `${preview.code} applied — your first year is ${money(regular - preview.discountCents)}, then ${money(regular)} per year.`
           : payments > 1
             ? `${preview.code} applied — you save ${money(preview.discountCents)} on each of your first ${payments} payments.`
             : `${preview.code} applied — you save ${money(preview.discountCents)}.`,
@@ -207,12 +191,7 @@ export function CheckoutPage() {
     } finally {
       setCheckingCode(false);
     }
-  }, [access, breakdown.subscriptionCents, fromLaunch, people, planKind, vault]);
-
-  useEffect(() => {
-    if (!launchCode) return;
-    void applyCode(launchCode);
-  }, [launchCode, applyCode]);
+  }, [breakdown.subscriptionCents, people, planKind, vault]);
 
   if (renew && !loading && !session) {
     return <Navigate to="/signin" replace />;
@@ -310,25 +289,9 @@ export function CheckoutPage() {
             </>
           )}
           <p className="muted">{SCOPE_LINE}</p>
-          {access === "annual" ? (
-            <>
-              <p className="plan-line">{money(unit)}/person/month</p>
-              <p className="checkout-rate">{money(breakdown.subscriptionCents)}/year</p>
-            </>
-          ) : shownDiscount > 0 && discountPayments === 1 ? (
-            <>
-              {people > 1 ? <p className="plan-line">{money(unit)} × {people}</p> : null}
-              <p className="checkout-rate">
-                {money(Math.max(0, breakdown.subscriptionCents - shownDiscount))} <small>first month</small>
-              </p>
-              <p className="muted">Then {money(breakdown.subscriptionCents)}/month</p>
-            </>
-          ) : (
-            <>
-              {people > 1 ? <p className="plan-line">{money(unit)} × {people}</p> : null}
-              <p className="checkout-rate">{money(breakdown.subscriptionCents)}/month</p>
-            </>
-          )}
+          {people > 1 ? <p className="plan-line">{money(unitCents)} × {people} for the year</p> : null}
+          <p className="checkout-rate">{money(breakdown.subscriptionCents)} <small>/ year</small></p>
+          <p className="muted">One yearly payment. No monthly subscription.</p>
         </section>
 
         {!vaultOffered ? null : (
@@ -350,34 +313,39 @@ export function CheckoutPage() {
         )}
 
         <section className="checkout-step discount-checkout">
-          <p className="eyebrow">Have a code?</p>
-          <div className="discount-entry">
-            <input
-              value={discountCode}
-              onChange={(e) => {
-                setDiscountCode(e.target.value.toUpperCase());
-                setAppliedCode("");
-                setDiscountApplied(0);
-                setDiscountMessage("");
-              }}
-              placeholder="Enter discount code"
-              aria-label="Discount code"
-            />
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={checkingCode}
-              onClick={() => void applyCode(discountCode)}
-            >
-              {checkingCode ? "Checking…" : "Apply"}
+          {showDiscount ? (
+            <>
+              <p className="eyebrow">Have a code?</p>
+              <div className="discount-entry">
+                <input
+                  value={discountCode}
+                  onChange={(e) => {
+                    setDiscountCode(e.target.value.toUpperCase());
+                    setAppliedCode("");
+                    setDiscountApplied(0);
+                    setDiscountMessage("");
+                  }}
+                  placeholder="Enter discount code"
+                  aria-label="Discount code"
+                />
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={checkingCode}
+                  onClick={() => void applyCode(discountCode)}
+                >
+                  {checkingCode ? "Checking…" : "Apply"}
+                </button>
+              </div>
+              {discountMessage || shownDiscount ? (
+                <p className={`discount-result ${shownDiscount ? "success" : "error"}`}>{discountMessage}</p>
+              ) : null}
+            </>
+          ) : (
+            <button type="button" className="btn btn-ghost discount-toggle" onClick={() => setShowDiscount(true)}>
+              Have a discount code?
             </button>
-          </div>
-          {discountMessage || shownDiscount ? (
-            <p className={`discount-result ${shownDiscount ? "success" : "error"}`}>
-              {discountMessage ||
-                `${shownCode} applied — your first month is ${money(breakdown.subscriptionCents - shownDiscount)}, then ${money(breakdown.subscriptionCents)} per month.`}
-            </p>
-          ) : null}
+          )}
         </section>
 
         <section className="checkout-step checkout-summary">
@@ -387,11 +355,7 @@ export function CheckoutPage() {
                 {addingChecklists ? plural(people, "additional checklist") : title}
                 {!addingChecklists && people > 1 ? ` (${people} checklists)` : ""}
               </span>
-              <b>
-                {shownDiscount > 0 && discountPayments === 1 && access !== "annual"
-                  ? `${money(Math.max(0, breakdown.subscriptionCents - shownDiscount))} first month`
-                  : `${money(breakdown.subscriptionCents)}${access === "annual" ? "/year" : "/month"}`}
-              </b>
+              <b>{money(breakdown.subscriptionCents)}/year</b>
             </p>
           </div>
           {vault ? (
@@ -416,15 +380,9 @@ export function CheckoutPage() {
           </p>
           <p className="muted">
             {shownDiscount > 0 && discountPayments > 1
-              ? access === "annual"
-                ? `Renews at ${money(discountedRenewalCents)} for the next ${plural(discountPayments - 1, "year")}, then ${money(breakdown.recurringCents)} per year.`
-                : `Then ${money(discountedRenewalCents)} per month for the next ${plural(discountPayments - 1, "month")}, then ${money(breakdown.recurringCents)} per month.`
-              : access === "annual"
-              ? `Renews annually at ${money(breakdown.recurringCents)}.`
-              : shownDiscount > 0
-                ? `Then ${money(breakdown.recurringCents)} per month afterwards.`
-                : `Renews monthly at ${money(breakdown.recurringCents)}.`}
-            {vault ? " Survival Vault does not renew." : ""}
+              ? `Renews at ${money(discountedRenewalCents)} for the next ${plural(discountPayments - 1, "year")}, then ${money(breakdown.recurringCents)} per year.`
+              : `Renews once a year at ${money(breakdown.recurringCents)}. Cancel anytime before renewal.`}
+            {vault ? " Survival Vault is one time and does not renew." : ""}
           </p>
         </section>
 
@@ -433,21 +391,20 @@ export function CheckoutPage() {
           <ScopeAcknowledgment checked={scopeAck} onChange={setScopeAck} />
           <AutoRenewalNote
             amount={money(breakdown.recurringCents)}
-            interval={access === "annual" ? "year" : "month"}
+            interval="year"
             discountedAmount={shownDiscount > 0 ? money(discountedRenewalCents) : undefined}
             discountedPayments={shownDiscount > 0 ? discountPayments : 1}
           />
           {error && <p className="form-error">{error}</p>}
           {agreed && scopeAck ? (
             <StripeCheckout
-              key={`${planKind}-${people}-${access}-${vault ? "v" : "n"}-${shownCode}-${addingChecklists ? "add" : "new"}`}
+              key={`${planKind}-${people}-annual-${vault ? "v" : "n"}-${shownCode}-${addingChecklists ? "add" : "new"}`}
               productSlug="core"
               quantity={people}
               includeHousehold={vault}
-              accessInterval={access}
+              accessInterval={PUBLIC_ACCESS}
               planKind={planKind}
               discountCode={shownCode}
-              from={fromLaunch ? "launch26" : undefined}
               renew={renew}
               onError={setError}
             />
@@ -462,13 +419,7 @@ export function CheckoutPage() {
           )}
         </>
         <p className="muted checkout-back">
-          {renew ? (
-            <Link to="/app/account">Back to account</Link>
-          ) : fromLaunch ? (
-            <Link to="/launch26">Change plan</Link>
-          ) : (
-            <Link to="/#pricing">Change plan</Link>
-          )}
+          {renew ? <Link to="/app/account">Back to account</Link> : <Link to="/#pricing">Change plan</Link>}
         </p>
       </main>
       <PublicFooter />
@@ -551,9 +502,7 @@ export function ThankYouPage() {
       sessionStorage.getItem("spl.vault") === "1" ||
       sessionStorage.getItem("spl.household") === "1",
   );
-  const [access, setAccess] = useState<AccessInterval>(
-    (params.get("access") || sessionStorage.getItem("spl.access") || "monthly") === "annual" ? "annual" : "monthly",
-  );
+  const [access, setAccess] = useState<AccessInterval>(PUBLIC_ACCESS);
   const [paidCents, setPaidCents] = useState(() => Number(params.get("paid") || sessionStorage.getItem("spl.paidCents") || "0") || 0);
   const [recurringCents, setRecurringCents] = useState(
     () => Number(params.get("renew") || sessionStorage.getItem("spl.recurringCents") || "0") || 0,

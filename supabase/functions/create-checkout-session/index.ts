@@ -122,8 +122,9 @@ Deno.serve(async (req) => {
       return json({ url: session.body.url, sessionId: session.body.id });
     }
 
-    const access = parseAccessInterval(body.accessInterval);
-    if (!access) return json({ error: "Choose Monthly or Annual" }, 400);
+    // New checkouts are annual-only. Legacy monthly renewals may still pass monthly.
+    const requestedAccess = parseAccessInterval(body.accessInterval) || "annual";
+    const access = requestedAccess === "monthly" && Boolean(body.renew) ? "monthly" : "annual";
     const renew = Boolean(body.renew);
     if (renew && !user) return json({ error: "Sign in to renew your plan." }, 401);
 
@@ -264,7 +265,7 @@ Deno.serve(async (req) => {
       client_reference_id: user?.id || localId,
       ...(customer ? { customer } : customer_email ? { customer_email } : {}),
       success_url: successUrl,
-      cancel_url: String(body.from || "") === "launch26" ? `${appUrl}/launch26#plans` : `${appUrl}/#pricing`,
+      cancel_url: `${appUrl}/#pricing`,
       line_items: lineItems,
       ...(discounts.length ? { discounts } : {}),
       metadata: {

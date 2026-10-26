@@ -91,12 +91,12 @@ export function TermsPage() {
 
       <h2>4. Subscriptions and payments</h2>
       <p>
-        Individual and Family plans are billed monthly or annually at the price shown at checkout, plus any applicable
-        taxes. Billing renews automatically at the then-current rate until you cancel. Survival Vault is an optional
+        Individual and Family plans are billed once per year at the price shown at checkout, plus any applicable taxes.
+        Billing renews automatically each year at the then-current rate until you cancel. Survival Vault is an optional
         one-time purchase and does not renew. Payments are processed by Stripe. We do not store card numbers.
       </p>
       <p>
-        Cancel anytime in Account Settings before your next billing date, or{" "}
+        Cancel anytime in Account Settings before your next yearly renewal, or{" "}
         <Link to="/contact?topic=cancel">click here to contact us</Link>. After you cancel, you keep
         access through the end of the paid period. We do not provide partial-period refunds on renewals. Survival Vault
         access already purchased stays with the household unless we are required to remove it.
@@ -118,8 +118,8 @@ export function TermsPage() {
       </p>
       <h3>Renewals</h3>
       <p>
-        We do not give partial-period refunds on monthly or annual renewals. Cancel in Account Settings before the
-        next billing date to avoid the next charge. You keep access through the end of the period you already paid.
+        We do not give partial-period refunds on yearly renewals. Cancel in Account Settings before the
+        next renewal date to avoid the next charge. You keep access through the end of the period you already paid.
       </p>
       <h3>Survival Vault</h3>
       <p>Survival Vault is a one-time add-on. It does not renew. Refund requests follow the same 3-day, not-printed first-purchase rule.</p>

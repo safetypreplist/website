@@ -7,7 +7,7 @@ import { useApp } from "../context/AppContext";
 import { checklistTitle, familyPageLabel, initialsFrom, permissionLabel, planTypeLabel } from "../lib/identity";
 import { money } from "../lib/format";
 import { VAULT_APP_DESCRIPTION, VAULT_CHECKLISTS } from "../lib/copy";
-import { ACCESS_ANNUAL_CENTS, ACCESS_MONTHLY_CENTS, memberAddBreakdown, type AccessInterval } from "../lib/pricing";
+import { ACCESS_ANNUAL_CENTS, PUBLIC_ACCESS, memberAddBreakdown } from "../lib/pricing";
 import type { ConnectedChecklist, FamilyInviteResult } from "../types";
 import { AccessChoice, type AccessLevel } from "../components/AccessChoice";
 import { SystemRow, vaultSystems } from "./Dashboard";
@@ -39,14 +39,11 @@ export function ManageFamilyPage() {
   const [last, setLast] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [access, setAccess] = useState<AccessInterval>(profile?.access_interval === "annual" ? "annual" : "monthly");
   const [agreed, setAgreed] = useState(false);
   const [memberAccess, setMemberAccess] = useState<AccessLevel>("view");
-  const monthly = products.find((p) => p.slug === "access_monthly");
   const annual = products.find((p) => p.slug === "access_annual");
-  const monthlyCents = monthly?.amount_cents ?? ACCESS_MONTHLY_CENTS;
   const annualCents = annual?.amount_cents ?? ACCESS_ANNUAL_CENTS;
-  const addOn = memberAddBreakdown(access);
+  const addOn = memberAddBreakdown(PUBLIC_ACCESS);
   const familySize = familyMembers.filter((m) => m.status !== "cancelled").length;
   const openSeats = familyMembers.filter((m) => m.pending && !m.email).length;
   const [purchaseNotice, setPurchaseNotice] = useState<InviteNotice | null>(null);
@@ -185,7 +182,7 @@ export function ManageFamilyPage() {
         </p>
         {!demoMode ? (
           <p className="muted">
-            Adding several people? <Link to={`/checkout?plan=family&qty=2&access=${access}`}>Buy additional checklists at once</Link>.
+            Adding several people? <Link to="/checkout?plan=family&qty=2&access=annual">Buy additional checklists at once</Link>.
           </p>
         ) : null}
         {openSeats > 0 ? (
@@ -213,47 +210,22 @@ export function ManageFamilyPage() {
               <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </label>
             <AccessChoice name={first} value={memberAccess} onChange={setMemberAccess} />
-            <div className="access-choice">
-              <button
-                type="button"
-                className={`access-card ${access === "monthly" ? "selected" : ""}`}
-                onClick={() => setAccess("monthly")}
-              >
-                <b>Monthly</b>
-                <span>+{money(monthlyCents)}/month</span>
-              </button>
-              <button
-                type="button"
-                className={`access-card ${access === "annual" ? "selected" : ""}`}
-                onClick={() => setAccess("annual")}
-              >
-                <b>Annual</b>
-                <span>+{money(annualCents)}/year</span>
-                <small>{money(Math.round(annualCents / 12))}/month, billed annually</small>
-              </button>
-            </div>
+            <p className="plan-line">+{money(annualCents)}/year for this person</p>
             <p className="checkout-due">
               Due today
               <b>{money(addOn.dueTodayCents)}</b>
             </p>
-            <p className="muted">
-              {access === "annual"
-                ? `Renews annually at ${money(addOn.recurringCents)} for this person.`
-                : `Then ${money(addOn.recurringCents)}/month for this person.`}
-            </p>
+            <p className="muted">One yearly payment. Renews once a year at {money(addOn.recurringCents)} for this person.</p>
             {error ? <p className="form-error">{error}</p> : null}
             {paying && !demoMode ? (
               <>
                 <LegalAgreement id="family-agree" checked={agreed} onChange={setAgreed} />
-                <AutoRenewalNote
-                  amount={money(addOn.recurringCents)}
-                  interval={access === "annual" ? "year" : "month"}
-                />
+                <AutoRenewalNote amount={money(addOn.recurringCents)} interval="year" />
                 {agreed ? (
                   <StripeCheckout
                     productSlug="core"
                     quantity={1}
-                    accessInterval={access}
+                    accessInterval={PUBLIC_ACCESS}
                     returnPath="/app/family?paid=1"
                     beforeRedirect={() => {
                       sessionStorage.setItem(

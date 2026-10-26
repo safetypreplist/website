@@ -30,11 +30,11 @@ import {
   ANNUAL_CENTS,
   FAMILY_MIN_SEATS,
   MAX_CHECKLIST_QUANTITY,
-  MONTHLY_CENTS,
+  PUBLIC_ACCESS,
+  SURVIVAL_VAULT_CENTS,
   checkoutBreakdown,
-  type AccessInterval,
 } from "../lib/pricing";
-import { annualSavingsPercent, HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
+import { HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { useApp } from "../context/AppContext";
 
@@ -96,24 +96,15 @@ export function LandingPage() {
     session && myChecklist?.status === "active" && myChecklist.ownerUserId === session.user.id,
   );
   const minFamilyQty = addingChecklists ? 1 : FAMILY_MIN_SEATS;
-  const monthly = products.find((p) => p.slug === "access_monthly");
   const annual = products.find((p) => p.slug === "access_annual");
-  const monthlyCents = monthly?.amount_cents ?? MONTHLY_CENTS;
   const annualCents = annual?.amount_cents ?? ANNUAL_CENTS;
-  const [billing, setBilling] = useState<AccessInterval>("monthly");
+  const vaultProduct = products.find((p) => p.slug === "upgrade_full");
+  const vaultCents = vaultProduct?.amount_cents ?? SURVIVAL_VAULT_CENTS;
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
   const [vaultOpen, setVaultOpen] = useState(false);
-  const family = checkoutBreakdown(familyQty, billing, false);
-  const annualSavePct = annualSavingsPercent(monthlyCents, annualCents);
-  const yearOfMonthlyCents = monthlyCents * 12;
-  const annualSavedCents = Math.max(0, yearOfMonthlyCents - annualCents);
+  const family = checkoutBreakdown(familyQty, PUBLIC_ACCESS, false);
 
   useEffect(() => {
-    try {
-      sessionStorage.removeItem("spl.launch26");
-    } catch {
-      // Homepage checkout must stay at regular pricing even if storage is blocked.
-    }
     const scrollToHash = () => {
       const id = window.location.hash.replace("#", "");
       if (id === "full-system") {
@@ -152,6 +143,9 @@ export function LandingPage() {
               Practical preparedness for natural disasters, <span className="nowrap">local emergencies</span>, outages, evacuations, and temporary disruptions.
             </p>
             <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
+            <p className="hero-price-note">
+              <b>{money(annualCents)}/year</b> per checklist · Survival Vault {money(vaultCents)} one time
+            </p>
           </div>
         </div>
         <HeroSlider />
@@ -263,15 +257,15 @@ export function LandingPage() {
               </span>
               <span className="step-num">Step 1</span>
               <h3>Choose your plan</h3>
-              <p>Choose Individual Plan or Family Plan with connected Personal Checklists.</p>
+              <p>Individual or Family — {money(annualCents)} per Personal Checklist for the year.</p>
             </li>
             <li>
               <span className="how-icon">
                 <MarkImg name="bag" />
               </span>
               <span className="step-num">Step 2</span>
-              <h3>Complete your purchase</h3>
-              <p>Check out securely. Choose flexible payments: monthly or annual billing.</p>
+              <h3>Pay once for the year</h3>
+              <p>Secure checkout. One yearly payment. Optional Survival Vault is a $10 one-time add-on.</p>
             </li>
             <li>
               <span className="how-icon">
@@ -289,46 +283,19 @@ export function LandingPage() {
         <div className="wrap">
           <div className="section-head">
             <p className="eyebrow">Pricing</p>
-            <h2>Choose a Plan</h2>
-            <div className="billing-toggle" role="group" aria-label="Billing">
-              <button
-                type="button"
-                className={billing === "monthly" ? "selected" : ""}
-                onClick={() => setBilling("monthly")}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                className={billing === "annual" ? "selected" : ""}
-                onClick={() => setBilling("annual")}
-              >
-                Annual
-                {annualSavePct > 0 ? <small className="billing-save">Save {annualSavePct}%</small> : null}
-              </button>
-            </div>
+            <h2>One price. One year.</h2>
+            <p className="pricing-lead">
+              {money(annualCents)} per Personal Checklist for the year. No monthly subscription.
+            </p>
           </div>
           <div className="price-grid">
-            <article className={`price-card ${billing === "annual" ? "has-badge" : ""}`}>
+            <article className="price-card has-badge">
               <span className="price-corners" aria-hidden="true" />
-              {billing === "annual" && annualSavedCents > 0 ? <span className="save-badge">Save {money(annualSavedCents)}/year</span> : null}
+              <span className="save-badge">Per checklist / year</span>
               <h3>Individual Plan</h3>
-              {billing === "monthly" ? (
-                <>
-                  <div className="amount">{money(monthlyCents)} <small>/ month</small></div>
-                  <p className="plan-line">1 Personal Checklist</p>
-                </>
-              ) : (
-                <>
-                  <div className="amount">{money(annualCents)} <small>/ year</small></div>
-                  <p className="plan-line">1 Personal Checklist</p>
-                  {annualSavePct > 0 ? (
-                    <p className="plan-save">
-                      {money(yearOfMonthlyCents)} a year if paid monthly. Annual saves {money(annualSavedCents)} (about {annualSavePct}%).
-                    </p>
-                  ) : null}
-                </>
-              )}
+              <div className="amount">{money(annualCents)} <small>/ year</small></div>
+              <p className="plan-line">1 Personal Checklist · about {money(Math.round(annualCents / 12))}/mo if you use it all year</p>
+              <p className="plan-save">Pay once. You’re set for the year.</p>
               <ul>
                 {coreFeatures.map((item) => (
                   <li key={item.label}>
@@ -337,30 +304,23 @@ export function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link className="btn btn-primary btn-block" to={`/checkout?plan=individual&access=${billing}`}>
+              <Link className="btn btn-primary btn-block" to="/checkout?plan=individual&access=annual">
                 Choose Individual
               </Link>
             </article>
-            <article className={`price-card featured ${billing === "annual" ? "has-badge" : ""}`}>
+            <article className="price-card featured has-badge">
               <span className="price-corners" aria-hidden="true" />
-              {billing === "annual" && annualSavedCents > 0 ? (
-                <span className="save-badge">Save {money(annualSavedCents * familyQty)}/year</span>
-              ) : null}
+              <span className="save-badge">{money(annualCents)} × each person</span>
               <h3>{addingChecklists ? "Add Checklists" : "Family Plan"}</h3>
               <div className="amount">
-                {money(family.subscriptionCents)}{" "}
-                <small>{billing === "annual" ? "/ year" : "/ month"}</small>
+                {money(family.subscriptionCents)} <small>/ year</small>
               </div>
               <p className="plan-line">
                 {addingChecklists
                   ? `${familyQty} Additional Checklist${familyQty === 1 ? "" : "s"}. Your own checklist is already included.`
                   : `${familyQty} Personal Checklists`}
               </p>
-              {billing === "annual" && annualSavePct > 0 ? (
-                <p className="plan-save">
-                  Saves {money(annualSavedCents * familyQty)} a year versus monthly (about {annualSavePct}%).
-                </p>
-              ) : null}
+              <p className="plan-save">{money(annualCents)} per person for the year.</p>
               <div className="qty-picker landing-qty">
                 <span>{addingChecklists ? "Additional Checklists" : "Family Members"}</span>
                 <div>
@@ -375,7 +335,7 @@ export function LandingPage() {
                 <li><IconChecklist /> Connected under one Family Plan</li>
                 <li><IconNotes /> View Only or Can Edit permissions per owner</li>
               </ul>
-              <Link className="btn btn-primary btn-block" to={`/checkout?plan=family&qty=${familyQty}&access=${billing}`}>
+              <Link className="btn btn-primary btn-block" to={`/checkout?plan=family&qty=${familyQty}&access=annual`}>
                 {addingChecklists ? "Add Checklists" : "Choose Family"}
               </Link>
             </article>
@@ -393,12 +353,12 @@ export function LandingPage() {
           </div>
           <aside className="vault-cta-strip" id="survival-vault">
             <div>
-              <p className="eyebrow">Optional add-on</p>
+              <p className="eyebrow">One-time add-on</p>
               <h3>
-                Survival Vault for an additional $10 <small>/ one time</small>
+                Survival Vault · {money(vaultCents)} <small>one time</small>
               </h3>
               <p>
-                Expand your checklist to include Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.
+                Expand your checklist with Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. Does not renew.
               </p>
             </div>
             <button className="btn btn-primary" type="button" onClick={() => setVaultOpen(true)}>

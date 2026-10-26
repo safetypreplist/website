@@ -115,7 +115,7 @@ const CATALOG: Record<string, CatalogPrice> = {
     lookup: "spl_annual",
     product: "spl_checklist",
     productName: "Safety Prep List",
-    unit_amount: 7999,
+    unit_amount: 2999,
     recurring: { interval: "year" },
   },
   spl_vault: {
@@ -162,12 +162,17 @@ async function ensureProduct(id: string, name: string) {
 async function ensureCatalogPrice(spec: CatalogPrice) {
   await ensureProduct(spec.product, spec.productName);
   const found = await priceByLookup(spec.lookup);
-  if (found) return found;
+  if (found) {
+    const detail = await stripeRequest<{ id?: string; unit_amount?: number }>("GET", `/prices/${found}`);
+    if (detail.ok && detail.body.unit_amount === spec.unit_amount) return found;
+  }
+  // Stripe prices are immutable; move the lookup key onto a new amount when the catalog changes.
   const created = await stripeRequest<{ id?: string }>("POST", "/prices", {
     currency: "usd",
     product: spec.product,
     unit_amount: spec.unit_amount,
     lookup_key: spec.lookup,
+    ...(found ? { transfer_lookup_key: true } : {}),
     ...(spec.recurring ? { recurring: spec.recurring } : {}),
   });
   if (created.ok && created.body.id) return created.body.id;

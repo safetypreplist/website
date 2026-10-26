@@ -1,5 +1,4 @@
 import { money } from "./format";
-import { annualSavingsPercent } from "./copy";
 import { FAMILY_MIN_SEATS } from "./pricing";
 import type { ChatTopic } from "./liveAgent";
 
@@ -11,7 +10,7 @@ export type QuickAnswer = {
   link?: { to: string; label: string };
 };
 
-type Prices = { monthlyCents: number; annualCents: number; vaultCents: number };
+type Prices = { annualCents: number; vaultCents: number; monthlyCents?: number };
 
 const CHECKLISTS =
   "5-Minute Grab-and-Go Bag, 15-Minute Ready Duffel (72-Hour Continuity Kit), 20-Minute Vehicle OR Suitcase Prep, and 60-Minute Home Resilience";
@@ -20,22 +19,19 @@ const VAULT_LISTS =
 const REFUND_RULE =
   "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded.";
 
-export function visitorQuickAnswers({ monthlyCents, annualCents, vaultCents }: Prices): QuickAnswer[] {
-  const savePct = annualSavingsPercent(monthlyCents, annualCents);
+export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickAnswer[] {
   return [
     {
       id: "cost",
       question: "How much does it cost?",
-      answer: `${money(monthlyCents)} a month or ${money(annualCents)} a year for each Personal Checklist${
-        savePct ? `. Annual billing saves ${money(monthlyCents * 12 - annualCents)} a year (about ${savePct}%)` : ""
-      }. You check out securely with Stripe using a debit or credit card.`,
+      answer: `${money(annualCents)} a year for each Personal Checklist — one payment, no monthly subscription. Optional Survival Vault is ${money(vaultCents)} one time. You check out securely with Stripe using a debit or credit card.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See plans" },
     },
     {
       id: "family",
       question: "How does the Family Plan work?",
-      answer: `${FAMILY_MIN_SEATS} or more people, each with their own Personal Checklist, connected under one plan. The owner chooses View Only or Can Edit for each checklist. It’s ${money(monthlyCents)} a month or ${money(annualCents)} a year per member, so ${FAMILY_MIN_SEATS} members is ${money(monthlyCents * FAMILY_MIN_SEATS)} a month.`,
+      answer: `${FAMILY_MIN_SEATS} or more people, each with their own Personal Checklist, connected under one plan. The owner chooses View Only or Can Edit for each checklist. It’s ${money(annualCents)} a year per member, so ${FAMILY_MIN_SEATS} members is ${money(annualCents * FAMILY_MIN_SEATS)} a year.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See the Family Plan" },
     },

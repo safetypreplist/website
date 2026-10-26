@@ -11,8 +11,7 @@ export function AccessEndedPage() {
   if (!loading && accessMode === "full" && profile?.access_status !== "expired") return <Navigate to="/app" replace />;
   const payer = !myChecklist?.purchasedByUserId || myChecklist.purchasedByUserId === user?.id;
   const seats = 1 + connectedChecklists.filter((c) => c.purchasedByUserId === user?.id).length;
-  const access = profile?.access_interval === "annual" ? "annual" : "monthly";
-  const renewHref = `/checkout?renew=1&plan=${seats > 1 ? "family" : "individual"}&qty=${seats}&access=${access}`;
+  const renewHref = `/checkout?renew=1&plan=${seats > 1 ? "family" : "individual"}&qty=${seats}&access=annual`;
   const endedOn = myChecklist?.accessEndsAt ? formatDate(myChecklist.accessEndsAt) : null;
 
   return (

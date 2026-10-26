@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { useApp } from "../context/AppContext";
 import { liveAgentStatus, onLiveAgentChatChange, openLiveAgentChat, type AgentStatus } from "../lib/liveAgent";
-import { ANNUAL_CENTS, MONTHLY_CENTS, SURVIVAL_VAULT_CENTS } from "../lib/pricing";
+import { ANNUAL_CENTS, SURVIVAL_VAULT_CENTS } from "../lib/pricing";
 import { memberQuickAnswers, visitorQuickAnswers } from "../lib/quickAnswers";
 
 function ChatIcon() {
@@ -48,7 +48,6 @@ export function SupportChat() {
   const answers = useMemo(() => {
     const cents = (slug: string, fallback: number) => products.find((p) => p.slug === slug)?.amount_cents ?? fallback;
     const prices = {
-      monthlyCents: cents("access_monthly", MONTHLY_CENTS),
       annualCents: cents("access_annual", ANNUAL_CENTS),
       vaultCents: cents("upgrade_full", SURVIVAL_VAULT_CENTS),
     };

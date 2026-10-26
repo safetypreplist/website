@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LEGAL_VERSIONS } from "../lib/legal";
 import { storeScopeAcknowledgment } from "../lib/legalConsent";
 import { trackBeginCheckout } from "../lib/analytics";
-import { type AccessInterval } from "../lib/pricing";
+import { PUBLIC_ACCESS, type AccessInterval } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
 type Props = {
@@ -23,7 +23,7 @@ export function StripeCheckout({
   productSlug,
   quantity = 1,
   includeHousehold = false,
-  accessInterval,
+  accessInterval = PUBLIC_ACCESS,
   planKind = "individual",
   discountCode = "",
   from,

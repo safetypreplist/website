@@ -485,6 +485,40 @@ p {
   margin-bottom: 16px;
 }
 
+.hero-price-note {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.hero-price-note b {
+  color: var(--forest);
+  font-weight: 750;
+}
+
+.pricing-lead {
+  max-width: 34rem;
+  margin: 10px auto 0;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.section.forest .pricing-lead {
+  color: rgba(244, 240, 229, 0.82);
+}
+
+.price-card.featured .plan-save,
+.price-card.featured .plan-line {
+  color: rgba(244, 240, 229, 0.78);
+}
+
+.discount-toggle {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 
 .hero-copy .lead {
   color: var(--ink-soft);

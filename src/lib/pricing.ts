@@ -1,19 +1,20 @@
+/** Public offer: $29.99 per Personal Checklist per year. Monthly kept only for legacy accounts. */
 export const MONTHLY_CENTS = 799;
-export const ANNUAL_MONTHLY_EQUIVALENT_CENTS = 667;
-export const ANNUAL_CENTS = 7999;
+export const ANNUAL_MONTHLY_EQUIVALENT_CENTS = 250;
+export const ANNUAL_CENTS = 2999;
 export const SURVIVAL_VAULT_CENTS = 1000;
 export const SURVIVAL_VAULT_NAME = "Survival Vault";
 export const SURVIVAL_VAULT_DESCRIPTION =
   "Unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. $10 one time, not $10 per person. Does not renew.";
 export const FAMILY_MIN_SEATS = 2;
 export const MAX_CHECKLIST_QUANTITY = 20;
-export const LAUNCH_CODE = "LAUNCH26";
-export const LAUNCH_FIRST_MONTH_CENTS = 499;
 
 export const ACCESS_MONTHLY_CENTS = MONTHLY_CENTS;
 export const ACCESS_ANNUAL_CENTS = ANNUAL_CENTS;
 
+/** New purchases are annual only. */
 export type AccessInterval = "monthly" | "annual";
+export const PUBLIC_ACCESS: AccessInterval = "annual";
 
 /** What a year of monthly billing costs versus annual billing, per Personal Checklist. */
 export function annualSavings(monthlyCents = MONTHLY_CENTS, annualCents = ANNUAL_CENTS) {
@@ -35,7 +36,7 @@ export function accessProductSlug(interval: AccessInterval) {
   return interval === "annual" ? "access_annual" : "access_monthly";
 }
 
-export function checkoutBreakdown(people: number, access: AccessInterval, includeVault: boolean) {
+export function checkoutBreakdown(people: number, access: AccessInterval = PUBLIC_ACCESS, includeVault = false) {
   const seats = Math.min(MAX_CHECKLIST_QUANTITY, Math.max(1, Math.floor(people) || 1));
   const subscriptionCents = seats * subscriptionUnitCents(access);
   const vaultCents = includeVault ? SURVIVAL_VAULT_CENTS : 0;
@@ -51,7 +52,7 @@ export function checkoutBreakdown(people: number, access: AccessInterval, includ
   };
 }
 
-export function memberAddBreakdown(access: AccessInterval) {
+export function memberAddBreakdown(access: AccessInterval = PUBLIC_ACCESS) {
   return checkoutBreakdown(1, access, false);
 }
 

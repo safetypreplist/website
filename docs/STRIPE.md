@@ -10,11 +10,11 @@ Checkout uses whichever key is on the server. A `rk_test_` / `sk_test_` key is T
 
 | Lookup key | Amount | Interval |
 |---|---|---|
-| `spl_monthly` | $7.99 | month per checklist |
-| `spl_annual` | $79.99 | year per checklist |
+| `spl_monthly` | $7.99 | legacy month (not sold for new checkouts) |
+| `spl_annual` | $29.99 | year per checklist (public offer) |
 | `spl_vault` | $10.00 | one-time Survival Vault |
 
-LAUNCH26 ($4.99 first month) still lives in `discount_codes` and is attached only to `https://safetypreplist.com/launch26`. Checkout from that page sends `from=launch26`. The homepage cannot apply LAUNCH26. Checkout creates a one-invoice Stripe coupon for the subscription discount only, so Survival Vault stays $10. Cancel from that session returns to `/launch26#plans`.
+New checkouts are annual-only at $29.99 per checklist. If `spl_annual` already exists at an older amount, the server creates a new Stripe price and moves the `spl_annual` lookup key onto it. Clear `STRIPE_PRICE_ANNUAL` if that env still points at an old price id.
 
 ## Secrets
 

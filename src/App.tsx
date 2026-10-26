@@ -4,7 +4,6 @@ import { AppShell } from "./components/AppShell";
 import { isOnboardingPreview } from "./components/OnboardingTour";
 import { useApp } from "./context/AppContext";
 import { LandingPage } from "./pages/Landing";
-import { Launch26Page } from "./pages/Launch26";
 import { CreateAccountPage, JoinFamilyPage, ResetPasswordPage, SignInPage, UpdatePasswordPage } from "./pages/Auth";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { AppSplash } from "./components/AppSplash";
@@ -142,7 +141,7 @@ export default function App() {
     <CookieNotice />
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/launch26" element={<Launch26Page />} />
+      <Route path="/launch26" element={<Navigate to="/#pricing" replace />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/thank-you" element={<ThankYouPage />} />

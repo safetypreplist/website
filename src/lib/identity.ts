@@ -1,5 +1,5 @@
 import type { Profile, ViewingContext } from "../types";
-import { FAMILY_MIN_SEATS, MONTHLY_CENTS, checkoutBreakdown, type AccessInterval } from "./pricing";
+import { ANNUAL_CENTS, FAMILY_MIN_SEATS, PUBLIC_ACCESS, checkoutBreakdown, type AccessInterval } from "./pricing";
 
 export {
   ACCESS_ANNUAL_CENTS,
@@ -7,6 +7,7 @@ export {
   ANNUAL_CENTS,
   FAMILY_MIN_SEATS,
   MONTHLY_CENTS,
+  PUBLIC_ACCESS,
   SURVIVAL_VAULT_CENTS,
   SURVIVAL_VAULT_DESCRIPTION,
   SURVIVAL_VAULT_NAME,
@@ -56,10 +57,10 @@ export function familyPageLabel(members: { status?: string | null }[]) {
 
 export function familyPriceCents(people: number) {
   const seats = Math.max(FAMILY_MIN_SEATS, Math.floor(people) || FAMILY_MIN_SEATS);
-  return seats * MONTHLY_CENTS;
+  return seats * ANNUAL_CENTS;
 }
 
-export function checkoutTotalCents(people: number, includeVault: boolean, access: AccessInterval = "monthly") {
+export function checkoutTotalCents(people: number, includeVault: boolean, access: AccessInterval = PUBLIC_ACCESS) {
   return checkoutBreakdown(people, access, includeVault).dueTodayCents;
 }
 

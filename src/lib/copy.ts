@@ -6,7 +6,7 @@ export const FOOTER_TAGLINE = "Hope for the best, Prepare for the rest.";
 export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
 export const SITE_ORIGIN = "https://safetypreplist.com";
 export const SITE_DESCRIPTION =
-  "The Perfect Checklists for Emergency Situations. Safety Prep List is a practical resource for emergencies and disruptions — checklists, notes, and print-ready lists for your household.";
+  "Practical emergency checklists for $29.99 per person per year. Printable, phone, tablet, and desktop — plus an optional $10 one-time Survival Vault.";
 
 export const SCOPE_LINE =
   "Practical preparedness for natural disasters, local emergencies, outages, evacuations, and temporary disruptions.";
