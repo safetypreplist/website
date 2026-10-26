@@ -618,27 +618,47 @@
   overflow: visible;
 }
 
-/* Soft green spotlight on the forest bg, behind the tablet + phone only */
+/* Soft emerald spotlight behind tablet + phone — matches reference glow */
 .hv2-devices::before {
   content: "";
   position: absolute;
-  left: 42%;
-  top: 48%;
-  width: min(520px, 118%);
-  height: min(360px, 95%);
+  left: 50%;
+  top: 46%;
+  width: min(720px, 155%);
+  height: min(540px, 135%);
   border-radius: 50%;
   background: radial-gradient(
-    ellipse at center,
-    rgba(178, 214, 148, 0.72) 0%,
-    rgba(120, 168, 108, 0.42) 38%,
-    rgba(74, 118, 78, 0.16) 62%,
-    transparent 78%
+    circle at 48% 44%,
+    rgba(56, 181, 89, 0.62) 0%,
+    rgba(52, 160, 88, 0.4) 28%,
+    rgba(40, 118, 70, 0.2) 52%,
+    rgba(28, 78, 50, 0.08) 72%,
+    transparent 84%
   );
-  filter: blur(22px);
+  filter: blur(38px);
   pointer-events: none;
   z-index: 0;
   transform: translate(-50%, -50%);
-  animation: hv2-glow-pulse 5.5s ease-in-out infinite;
+}
+
+.hv2-devices::after {
+  content: "";
+  position: absolute;
+  left: 54%;
+  top: 40%;
+  width: min(360px, 80%);
+  height: min(280px, 68%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(90, 200, 120, 0.5) 0%,
+    rgba(56, 181, 89, 0.28) 42%,
+    transparent 72%
+  );
+  filter: blur(26px);
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
 }
 
 .hv2-device {
@@ -1022,18 +1042,6 @@
   }
 }
 
-@keyframes hv2-glow-pulse {
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-}
-
 @media (max-width: 900px) {
   .hv2-nav-end {
     gap: 0;
@@ -1136,9 +1144,4 @@
     transform: none !important;
   }
 
-  .hv2-devices::before {
-    animation: none !important;
-    opacity: 0.9 !important;
-    transform: translate(-50%, -50%) !important;
-  }
 }
