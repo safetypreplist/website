@@ -363,14 +363,8 @@ export function CheckoutPage() {
           {error && <p className="form-error">{error}</p>}
           {agreed && scopeAck ? (
             <StripeCheckout
-              key={`${planKind}-${people}-annual-${vault ? "v" : "n"}-${shownCode}-${addingChecklists ? "add" : "new"}`}
-              productSlug="core"
-              quantity={people}
-              includeHousehold={vault}
-              accessInterval={PUBLIC_ACCESS}
-              planKind={planKind}
-              discountCode={shownCode}
-              renew={renew}
+              key={`${planKind}-${people}-${vault ? "pro" : "basic"}-${addingChecklists ? "add" : "new"}`}
+              product={vault ? "pro" : "basic"}
               onError={setError}
             />
           ) : (
@@ -384,7 +378,7 @@ export function CheckoutPage() {
           )}
         </>
         <p className="muted checkout-back">
-          {renew ? <Link to="/app/account">Back to account</Link> : <Link to="/#pricing">Change plan</Link>}
+          <Link to="/#pricing">Change plan</Link>
         </p>
       </main>
       <PublicFooter />

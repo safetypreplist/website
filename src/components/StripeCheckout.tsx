@@ -2,49 +2,49 @@ import { useState } from "react";
 import { LEGAL_VERSIONS } from "../lib/legal";
 import { storeScopeAcknowledgment } from "../lib/legalConsent";
 import { trackBeginCheckout } from "../lib/analytics";
-import { PUBLIC_ACCESS, type AccessInterval } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
+export type CheckoutProduct = "basic" | "pro" | "upgrade_to_pro";
+
 type Props = {
-  productSlug: string;
-  quantity?: number;
-  includeHousehold?: boolean;
-  accessInterval?: AccessInterval;
-  planKind?: "individual" | "family";
-  discountCode?: string;
+  /** Lifetime product for create-checkout-session (Phase 1+). */
+  product?: CheckoutProduct;
+  licenseKey?: string;
   from?: string;
-  renew?: boolean;
   returnPath?: string;
   beforeRedirect?: () => void;
   onError: (message: string) => void;
+  /** @deprecated Prefer `product`. Mapped for leftover Purchase page wiring. */
+  productSlug?: string;
+  includeHousehold?: boolean;
 };
 
+function resolveProduct(props: Pick<Props, "product" | "productSlug" | "includeHousehold">): CheckoutProduct {
+  if (props.product) return props.product;
+  if (props.includeHousehold) return "pro";
+  if (props.productSlug === "spl_vault" || props.productSlug === "pro") return "pro";
+  return "basic";
+}
+
 export function StripeCheckout({
-  productSlug,
-  quantity = 1,
-  includeHousehold = false,
-  accessInterval = PUBLIC_ACCESS,
-  planKind = "individual",
-  discountCode = "",
+  product: productProp,
+  licenseKey,
   from,
-  renew = false,
   returnPath,
   beforeRedirect,
   onError,
+  productSlug,
+  includeHousehold = false,
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const product = resolveProduct({ product: productProp, productSlug, includeHousehold });
 
   async function start() {
     setBusy(true);
     try {
       const data = await invokeFunction<{ url?: string }>("create-checkout-session", {
-        productSlug,
-        quantity,
-        includeHousehold,
-        accessInterval,
-        plan: planKind,
-        renew,
-        discountCode: discountCode || undefined,
+        product,
+        ...(licenseKey ? { licenseKey } : {}),
         from,
         origin: window.location.origin,
         returnPath,
@@ -56,11 +56,7 @@ export function StripeCheckout({
       if (!data?.url) throw new Error("Checkout did not return a Stripe URL.");
       storeScopeAcknowledgment();
       const itemName =
-        productSlug === "spl_vault"
-          ? "Survival Vault"
-          : planKind === "family"
-            ? "Family Plan"
-            : "Individual Plan";
+        product === "pro" ? "Pro lifetime" : product === "upgrade_to_pro" ? "Upgrade to Pro" : "Basic lifetime";
       trackBeginCheckout(itemName);
       beforeRedirect?.();
       window.location.assign(data.url);
