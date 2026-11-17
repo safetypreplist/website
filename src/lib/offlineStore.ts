@@ -123,6 +123,15 @@ export async function readSnapshot(userId: string): Promise<Snapshot | null> {
   }
 }
 
+/** All offline snapshots on this device — used once to migrate into localStore. */
+export async function listAllSnapshots(): Promise<Snapshot[]> {
+  try {
+    return ((await run<Snapshot[]>(SNAPSHOTS, "readonly", (s) => s.getAll())) as Snapshot[]) || [];
+  } catch {
+    return [];
+  }
+}
+
 export async function writeSnapshot(snapshot: Snapshot) {
   try {
     await run(SNAPSHOTS, "readwrite", (s) => s.put(snapshot));
