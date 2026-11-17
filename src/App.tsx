@@ -30,6 +30,8 @@ import { SystemPage } from "./pages/System";
 import { ActivatePage } from "./pages/Activate";
 import { LicensePage } from "./pages/License";
 import { ResetDevicesPage } from "./pages/ResetDevices";
+import { ImportChecklistPage } from "./pages/ImportChecklist";
+import { ImportedListPage } from "./pages/ImportedList";
 
 function isInsideSystem(pathname: string) {
   return pathname === "/app" || pathname.startsWith("/app/") || pathname === "/admin" || pathname.startsWith("/admin/");
@@ -130,6 +132,7 @@ export default function App() {
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/activate" element={<ActivatePage />} />
         <Route path="/license" element={<LicensePage />} />
+        <Route path="/import" element={<ImportChecklistPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -159,6 +162,14 @@ export default function App() {
           element={
             <LicensedApp>
               <SystemPage />
+            </LicensedApp>
+          }
+        />
+        <Route
+          path="/app/imports/:id"
+          element={
+            <LicensedApp>
+              <ImportedListPage />
             </LicensedApp>
           }
         />

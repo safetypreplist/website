@@ -48,6 +48,11 @@ const EXACT: Record<string, Meta> = {
     description: "Look up your Safety Prep List license, devices, and upgrade options.",
     index: true,
   },
+  "/import": {
+    title: "Import Shared Checklist — Safety Prep List",
+    description: "Open a shared Safety Prep List checklist and save your own copy.",
+    index: false,
+  },
   "/checkout": {
     title: "Checkout — Safety Prep List",
     description: "Complete your Safety Prep List purchase with Stripe Checkout.",

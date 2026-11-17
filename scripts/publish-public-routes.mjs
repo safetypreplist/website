@@ -15,6 +15,7 @@ const routes = [
   "demo",
   "activate",
   "license",
+  "import",
   "checkout",
   "thank-you",
   "pricing",

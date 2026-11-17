@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { Photo } from "../components/Photo";
 import { OfflineSwitch, syncLabel } from "../components/OfflineStatus";
@@ -11,6 +11,7 @@ import { SCOPE_LINE, VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 import { isLicensed } from "../lib/licenseClient";
+import { loadImportedLists, type ImportedChecklist } from "../lib/localStore";
 
 function hasPlanAccess(profile: { plan?: string; role?: string } | null | undefined) {
   return isLicensed() || profile?.role === "owner" || profile?.plan === "core" || profile?.plan === "full";
@@ -194,12 +195,30 @@ function SurvivalVaultCta() {
 export function ListsPage() {
   const { catalog, viewing } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
   const startSystems = timedSystems(catalog.systems);
+  const [imports, setImports] = useState<ImportedChecklist[]>([]);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const shared = params.get("import") || params.get("payload");
+    if (shared) {
+      navigate(`/import?import=${encodeURIComponent(shared)}`, { replace: true });
+      return;
+    }
     if (location.hash !== "#survival-vault") return;
     document.getElementById("survival-vault")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [location.hash]);
+  }, [location.hash, location.search, navigate]);
+
+  useEffect(() => {
+    let live = true;
+    void loadImportedLists().then((rows) => {
+      if (live) setImports(rows.sort((a, b) => b.importedAt.localeCompare(a.importedAt)));
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   return (
     <div>
@@ -209,6 +228,27 @@ export function ListsPage() {
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
+      {imports.length ? (
+        <div style={{ marginTop: 28 }}>
+          <h2 className="page-title" style={{ fontSize: 22 }}>
+            Shared copies
+          </h2>
+          <p className="muted">Lists someone shared with you — saved separately from your main checklists.</p>
+          <div className="system-list" style={{ marginTop: 12 }}>
+            {imports.map((row) => (
+              <Link key={row.id} className="system-row" to={`/app/imports/${row.id}`}>
+                <span>
+                  <b>{row.title}</b>
+                  <small className="muted">
+                    {row.items.length} items
+                    {row.sharedBy ? ` · from ${row.sharedBy}` : ""}
+                  </small>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {viewing.isOwn ? <SurvivalVaultCta /> : null}
     </div>
   );

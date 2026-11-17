@@ -2,7 +2,7 @@ import type { Contact, CustomChecklistItem, ProgressRow } from "../types";
 import { listAllSnapshots, type Snapshot } from "./offlineStore";
 
 const DB_NAME = "spl-local";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_PROGRESS = "progress";
 const STORE_CUSTOM = "customItems";
 const STORE_CONTACTS = "contacts";
