@@ -56,7 +56,7 @@ const GUIDES: Guide[] = [
         Scroll down and tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, tap <b>View More</b>.
       </>,
       <>
-        Tap <b>Add</b>. Then open <b>Safety Prep List</b> from your Home Screen and sign in.
+        Tap <b>Add</b>. Then open <b>Safety Prep List</b> from your Home Screen and activate your license.
       </>,
     ],
     note: "From then on, open Safety Prep List from the icon instead of Safari.",
@@ -73,7 +73,7 @@ const GUIDES: Guide[] = [
         Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, scroll down or tap <b>View More</b>.
       </>,
       <>
-        Tap <b>Add</b>. Then open <b>Safety Prep List</b> from your Home Screen and sign in.
+        Tap <b>Add</b>. Then open <b>Safety Prep List</b> from your Home Screen and activate your license.
       </>,
     ],
     note: "From then on, open Safety Prep List from the icon instead of Safari.",
@@ -90,7 +90,7 @@ const GUIDES: Guide[] = [
         Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, open {INSTALL_URL_LABEL} in Safari instead.
       </>,
       <>
-        Open <b>Safety Prep List</b> from your Home Screen and sign in.
+        Open <b>Safety Prep List</b> from your Home Screen and activate your license.
       </>,
     ],
     note: "From then on, open Safety Prep List from the icon instead of the browser.",
@@ -107,7 +107,7 @@ const GUIDES: Guide[] = [
         Tap <AddIcon /> <b>Add to Home Screen</b>. If you don’t see it, open {INSTALL_URL_LABEL} in Safari instead.
       </>,
       <>
-        Open <b>Safety Prep List</b> from your Home Screen and sign in.
+        Open <b>Safety Prep List</b> from your Home Screen and activate your license.
       </>,
     ],
     note: "From then on, open Safety Prep List from the icon instead of the browser.",
@@ -123,7 +123,7 @@ const GUIDES: Guide[] = [
         Tap <b>Install app</b> (or <b>Add to Home screen</b>, then <b>Install</b>).
       </>,
       <>
-        Open <b>Safety Prep List</b> from your Home screen and sign in.
+        Open <b>Safety Prep List</b> from your Home screen and activate your license.
       </>,
     ],
     note: "Opened this from a QR scanner? Tap Open in Chrome first.",
@@ -225,7 +225,7 @@ export function InstallSteps({ compact = false }: { compact?: boolean }) {
     <div className={`install-steps${compact ? " compact" : ""}`}>
       {done ? (
         <p className="install-done" role="status">
-          Added. Open Safety Prep List from your {onPhone ? "Home Screen" : "apps"} and sign in.
+          Added. Open Safety Prep List from your {onPhone ? "Home Screen" : "apps"} and activate your license.
         </p>
       ) : canPrompt ? (
         <div className="install-prompt">

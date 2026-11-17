@@ -218,7 +218,7 @@ export function PrivacyPage() {
         <li>Email-list signups for the free Emergency Documents Checklist (name and email).</li>
         <li>Support chat messages and support requests you send us.</li>
         <li>Approximate location and weather if you use the in-app weather display (browser location or IP-based lookup).</li>
-        <li>Technical data needed to run the app: sign-in session, device registration, and a service worker for offline use.</li>
+        <li>Technical data needed to run the app: license activation on this device, device registration, and a service worker for offline use.</li>
       </ul>
 
       <h2>2. How we use it</h2>

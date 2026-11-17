@@ -182,8 +182,8 @@ export function DemoPage() {
               <a className="btn btn-primary" href="/#pricing">
                 Choose a Plan
               </a>
-              <Link className="btn btn-ghost" to="/signin">
-                Already a customer? Sign in
+              <Link className="btn btn-ghost" to="/activate">
+                Already have a license? Activate
               </Link>
             </div>
           </section>

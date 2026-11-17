@@ -13,8 +13,8 @@ const DEFAULT_STEPS: Step[] = [
   { title: "Start with your checklist", body: "Your readiness plan is organized into simple systems. Open any list to see what to gather and what is already complete.", selector: '[data-onboarding="checklist-card"]', path: "/app" },
   { title: "Check items off as you go", body: "Tap an item when it is ready. Your progress saves to your account and stays with you across devices.", selector: '[data-onboarding="check-item"]', path: "/app/lists/grab-go" },
   { title: "Leave a note for yourself", body: "Add short notes to remember where something is stored, what size to buy, or what still needs attention.", selector: '[data-onboarding="notes"]', path: "/app/lists/grab-go" },
-  { title: "Connect your family", body: "Invite family members or connect an existing checklist from the Family menu so everyone can prepare together.", selector: '[data-onboarding="family"]', path: "/app/family" },
-  { title: "Keep your account current", body: "Your Account is where you can update your details, change your password, manage devices, and find your Checklist ID.", selector: '[data-onboarding="profile"]', path: "/app/account" },
+  { title: "Share a checklist", body: "Use Share on any list to send a PDF quickly, or save a shared copy someone sent you — your own progress stays separate.", selector: '[data-onboarding="lists"]', path: "/app/lists" },
+  { title: "Manage your license", body: "Look up your key, see activated devices, or upgrade Basic to Pro on the license page.", selector: '[data-onboarding="lists"]', path: "/license" },
 ];
 
 const COPY_KEY = "spl.onboarding.copy.v1";

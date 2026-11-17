@@ -51,7 +51,7 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
       id: "offline",
       question: "Does it work without internet?",
       answer:
-        "Yes. Turn on Offline access when you sign in, and your checklist keeps working when Wi-Fi or service is down. Your changes sync when you reconnect. You can also add the Safety Prep List icon to your phone’s Home Screen; there’s nothing to download from an app store.",
+        "Yes. After you activate, your checklist works offline. Changes save on this device. You can also add the Safety Prep List icon to your phone’s Home Screen; there’s nothing to download from an app store.",
       topic: "sales",
       link: { to: "/install", label: "Add the app icon" },
     },
@@ -70,9 +70,9 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
       link: { to: "/refunds", label: "Read the refund policy" },
     },
     {
-      id: "signin",
-      question: "I can’t sign in",
-      answer: "Choose Forgot password on the sign-in page and we’ll email you a link to set a new one.",
+      id: "activate",
+      question: "I can’t activate my license",
+      answer: "Open Activate, enter your license key exactly as emailed, and try again. If this device was replaced, use Reset devices with your email and key.",
       topic: "support",
       link: { to: "/reset-password", label: "Reset my password" },
     },
@@ -86,7 +86,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
       question: "What do I pay each year?",
       answer: `Plans renew once a year. Each Personal Checklist is ${money(annualCents)}/year. Survival Vault is an optional ${money(vaultCents)}/year add-on (not per person). There is no monthly plan for new purchases. See Billing for your exact renewal amount.`,
       topic: "support",
-      link: { to: "/app/billing", label: "Open Billing" },
+      link: { to: "/license", label: "Open License" },
     },
     {
       id: "cancel",
@@ -94,7 +94,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
       answer:
         "Go to Account and choose Cancel subscription. You won’t be charged again, and you keep access through the end of the yearly period you already paid for.",
       topic: "support",
-      link: { to: "/app/account", label: "Go to Account" },
+      link: { to: "/license", label: "Manage license" },
     },
     {
       id: "refund",
@@ -109,7 +109,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
       answer:
         "Open Family in the menu to invite someone new or connect an existing checklist. Each person gets their own Personal Checklist, and you choose View Only or Can Edit.",
       topic: "support",
-      link: { to: "/app/family", label: "Go to Connected Checklists" },
+      link: { to: "/app/lists", label: "Go to Lists" },
     },
     {
       id: "vault",
@@ -124,7 +124,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
       answer:
         "Each login can be used on 2 devices, like a phone and a computer. To use a new one, remove a device you no longer use in My Devices. Your other devices stay signed in.",
       topic: "support",
-      link: { to: "/app/devices", label: "Go to My Devices" },
+      link: { to: "/license", label: "View devices" },
     },
     {
       id: "offline",
