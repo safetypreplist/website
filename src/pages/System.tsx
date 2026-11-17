@@ -35,10 +35,20 @@ import {
   type RefundWindow,
 } from "../lib/printTracking";
 import type { ChecklistItem, ProgressRow } from "../types";
+import {
+  IMPORT_SHARE_HELP,
+  QUICK_SHARE_HELP,
+  SHARE_IMPORT_ENABLED,
+  buildSharePayload,
+  buildTextPdf,
+  shareOrDownloadFile,
+  sharePayloadToFile,
+  uploadShareForImport,
+} from "../lib/checklistShare";
 
 export function SystemPage() {
   const { slug } = useParams();
-  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing, session } =
+  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } =
     useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   const sections = useMemo(
@@ -52,12 +62,16 @@ export function SystemPage() {
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
   const [printOpen, setPrintOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareNotice, setShareNotice] = useState("");
   const [lane, setLane] = useState<PrepLane>(() => readPrepLane());
   const [moreTimeOpen, setMoreTimeOpen] = useState(false);
   const [refundWindow, setRefundWindow] = useState<RefundWindow | null>(null);
   const [printConfirm, setPrintConfirm] = useState<{ blank: boolean; source: PrintSource } | null>(null);
   const [printNotice, setPrintNotice] = useState(false);
   const printMenuRef = useRef<HTMLDivElement>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
   const ownPrint = useRef(false);
   const printable = Boolean(system && !(system.access_tier === "full" && !hasSurvivalVault));
 
@@ -179,16 +193,16 @@ export function SystemPage() {
   }, [openTip]);
 
   useEffect(() => {
-    if (!printOpen) return;
+    if (!printOpen && !shareOpen) return;
     function onPointerDown(event: PointerEvent) {
       if (!printMenuRef.current?.contains(event.target as Node)) setPrintOpen(false);
+      if (!shareMenuRef.current?.contains(event.target as Node)) setShareOpen(false);
     }
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [printOpen]);
+  }, [printOpen, shareOpen]);
 
   useEffect(() => {
-    if (!session) return;
     let live = true;
     void loadRefundWindow().then((refund) => {
       if (live) setRefundWindow(refund);
@@ -196,7 +210,7 @@ export function SystemPage() {
     return () => {
       live = false;
     };
-  }, [session]);
+  }, []);
 
   useEffect(() => {
     if (!printable) return;
@@ -252,6 +266,85 @@ export function SystemPage() {
     setRefundWindow((refund) => (refund && !refund.printedAt ? { ...refund, printedAt: new Date().toISOString() } : refund));
   }
 
+
+  function collectShareItems() {
+    if (!system) return [] as { text: string; checked: boolean; note: string }[];
+    const rows: { text: string; checked: boolean; note: string }[] = [];
+    for (const section of orderedSections) {
+      for (const item of itemsForSection(catalog.items, customItems, section.id)) {
+        const row = progress[item.id];
+        rows.push({
+          text: item.text,
+          checked: Boolean(row?.checked),
+          note: row?.note || "",
+        });
+      }
+    }
+    return rows;
+  }
+
+  async function quickSharePdf() {
+    if (!system) return;
+    setShareOpen(false);
+    setShareBusy(true);
+    setShareNotice("");
+    try {
+      const lines: string[] = [
+        `Printed ${new Date().toLocaleDateString()}`,
+        "",
+      ];
+      for (const section of orderedSections) {
+        lines.push(section.title);
+        lines.push("-".repeat(Math.min(40, section.title.length + 4)));
+        for (const item of itemsForSection(catalog.items, customItems, section.id)) {
+          const row = progress[item.id];
+          const mark = row?.checked ? "[x]" : "[ ]";
+          lines.push(`${mark} ${item.text}`);
+          if (row?.note) lines.push(`    Note: ${row.note}`);
+        }
+        lines.push("");
+      }
+      const blob = buildTextPdf(system.title, lines);
+      const file = new File([blob], `${system.slug || "checklist"}.pdf`, { type: "application/pdf" });
+      await shareOrDownloadFile(file, system.title, QUICK_SHARE_HELP);
+    } catch (err) {
+      setShareNotice(err instanceof Error ? err.message : "Could not share PDF.");
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function shareForImport() {
+    if (!system) return;
+    setShareOpen(false);
+    if (!SHARE_IMPORT_ENABLED) {
+      setShareNotice("Share for import is coming soon. " + IMPORT_SHARE_HELP);
+      return;
+    }
+    setShareBusy(true);
+    setShareNotice("");
+    try {
+      const payload = buildSharePayload({
+        title: system.title,
+        items: collectShareItems(),
+      });
+      const { url } = await uploadShareForImport(payload);
+      await navigator.clipboard.writeText(url).catch(() => undefined);
+      setShareNotice("Share link copied. Links expire after 3 days.");
+    } catch (err) {
+      // Fallback: still allow downloading the JSON payload locally for testing.
+      try {
+        const payload = buildSharePayload({ title: system.title, items: collectShareItems() });
+        await shareOrDownloadFile(sharePayloadToFile(payload), system.title, IMPORT_SHARE_HELP);
+      } catch {
+        /* ignore */
+      }
+      setShareNotice(err instanceof Error ? err.message : "Could not create share link.");
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
   function startPrint(blank: boolean, source: PrintSource) {
     setPrintOpen(false);
     if (printEndsRefund(refundWindow)) setPrintConfirm({ blank, source });
@@ -295,7 +388,10 @@ export function SystemPage() {
             type="button"
             aria-expanded={printOpen}
             aria-haspopup="menu"
-            onClick={() => setPrintOpen((open) => !open)}
+            onClick={() => {
+              setShareOpen(false);
+              setPrintOpen((open) => !open);
+            }}
           >
             Print
           </button>
@@ -307,6 +403,42 @@ export function SystemPage() {
               <button type="button" role="menuitem" onClick={() => startPrint(true, "button")}>
                 Blank checklist
               </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="print-menu" ref={shareMenuRef}>
+          <button
+            className="btn btn-ghost"
+            type="button"
+            aria-expanded={shareOpen}
+            aria-haspopup="menu"
+            disabled={shareBusy || !printable}
+            onClick={() => {
+              setPrintOpen(false);
+              setShareOpen((open) => !open);
+            }}
+          >
+            {shareBusy ? "Sharing…" : "Share"}
+          </button>
+          {shareOpen ? (
+            <div className="print-menu-drop" role="menu" style={{ minWidth: 280 }}>
+              <button type="button" role="menuitem" onClick={() => void quickSharePdf()}>
+                Quick share (recommended)
+              </button>
+              <p className="muted" style={{ margin: "4px 12px 10px", fontSize: 12 }}>
+                {QUICK_SHARE_HELP}
+              </p>
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!SHARE_IMPORT_ENABLED}
+                onClick={() => void shareForImport()}
+              >
+                Share checklist for import{SHARE_IMPORT_ENABLED ? "" : " (coming soon)"}
+              </button>
+              <p className="muted" style={{ margin: "4px 12px 10px", fontSize: 12 }}>
+                {IMPORT_SHARE_HELP}
+              </p>
             </div>
           ) : null}
         </div>
@@ -324,6 +456,14 @@ export function SystemPage() {
             once a checklist has been printed or saved as a PDF.
           </p>
           <button className="btn btn-ghost" type="button" onClick={() => setPrintNotice(false)}>
+            Got it
+          </button>
+        </div>
+      ) : null}
+      {shareNotice ? (
+        <div className="print-refund-notice" role="status">
+          <p>{shareNotice}</p>
+          <button className="btn btn-ghost" type="button" onClick={() => setShareNotice("")}>
             Got it
           </button>
         </div>
