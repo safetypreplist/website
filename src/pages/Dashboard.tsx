@@ -9,10 +9,11 @@ import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SCOPE_LINE, VAULT_APP_DESCRIPTION } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
-import type { ChecklistSystem, CustomChecklistItem, Profile } from "../types";
+import type { ChecklistSystem, CustomChecklistItem } from "../types";
+import { isLicensed } from "../lib/licenseClient";
 
-function hasPlanAccess(profile: Profile | null | undefined) {
-  return profile?.role === "owner" || profile?.plan === "core" || profile?.plan === "full";
+function hasPlanAccess(profile: { plan?: string; role?: string } | null | undefined) {
+  return isLicensed() || profile?.role === "owner" || profile?.plan === "core" || profile?.plan === "full";
 }
 
 type Accent = "forest" | "moss" | "clay" | "terracotta";
@@ -243,13 +244,13 @@ export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string
   const items = trackedItems(system, catalog.sections, catalog.items, customItems, lane);
   const done = items.filter((i) => progress[i.id]?.checked).length;
   const pct = items.length ? Math.round((done / items.length) * 100) : 0;
-  const noPlan = profile?.plan === "none" && profile.role !== "owner";
+  const noPlan = !isLicensed() && profile?.role !== "owner";
   const locked = noPlan || (system.access_tier === "full" && !hasSurvivalVault);
   const to =
     noPlan
       ? "/#pricing"
       : system.access_tier === "full" && !hasSurvivalVault
-        ? "/app/lists#survival-vault"
+        ? "/license"
         : `/app/lists/${system.slug}`;
 
   return (

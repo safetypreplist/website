@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useApp, type OfflineStatus } from "../context/AppContext";
-import { readOnlyUntil } from "../lib/accessPolicy";
-import { formatDate } from "../lib/format";
 
 export function syncLabel(offline: OfflineStatus, online: boolean) {
   if (offline.pending > 0) return "Changes waiting to sync";
@@ -52,26 +49,18 @@ function ConnectionNotice({ offline, online }: { offline: OfflineStatus; online:
 
 /** Shown at the top of every signed-in page when something about saving needs the customer's attention. */
 export function AppStatusBanners() {
-  const { offline, online, accessMode, myChecklist, retrySync, discardChange, demoMode } = useApp();
+  const { offline, online, retrySync, discardChange, demoMode } = useApp();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   if (demoMode) return null;
-  const endsAt = myChecklist?.accessEndsAt;
 
   return (
     <>
-      {accessMode === "readonly" ? (
-        <div className="status-banner offline-banner warn" role="status">
-          <b>Your plan has ended.</b> Your checklists are read-only
-          {endsAt ? ` until ${formatDate(readOnlyUntil(endsAt) as string)}` : ""}. Nothing has been deleted.{" "}
-          <Link to="/app/renew">Renew to keep checking items off</Link>.
-        </div>
-      ) : null}
       <ConnectionNotice offline={offline} online={online} />
       {offline.issues.length ? (
         <div className="status-banner offline-banner warn" role="alert">
           <b>
-            {offline.issues.length} {offline.issues.length === 1 ? "change has" : "changes have"} not reached your account.
+            {offline.issues.length} {offline.issues.length === 1 ? "change has" : "changes have"} not saved yet.
           </b>{" "}
           {offline.issues[0].message}
           <div className="offline-banner-actions">
@@ -86,11 +75,6 @@ export function AppStatusBanners() {
             >
               {busy ? "Trying…" : "Try again"}
             </button>
-            {offline.issues.some((issue) => issue.message.includes("registered devices")) ? (
-              <Link className="btn btn-ghost" to="/app/devices">
-                My Devices
-              </Link>
-            ) : null}
             <button className="btn btn-ghost" type="button" onClick={() => setOpen((value) => !value)}>
               {open ? "Hide details" : "Details"}
             </button>
@@ -100,7 +84,7 @@ export function AppStatusBanners() {
               {offline.issues.map((issue) => (
                 <li key={issue.key}>
                   <span>
-                    <b>{issue.itemLabel}</b>
+                    <b>{issue.key}</b>
                     <small>{issue.message}</small>
                   </span>
                   <button

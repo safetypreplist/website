@@ -31,7 +31,8 @@ function CloseIcon() {
 
 export function SupportChat() {
   const { pathname } = useLocation();
-  const { session, profile, user, hasSurvivalVault } = useApp();
+  const { hasSurvivalVault } = useApp();
+  const session = null as null;
   const [open, setOpen] = useState(false);
   const [chatting, setChatting] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -102,10 +103,7 @@ export function SupportChat() {
     setConnecting(true);
     try {
       await openLiveAgentChat("support", {
-        email: profile?.email || user?.email,
-        firstName: profile?.first_name,
-        lastName: profile?.last_name,
-        phone: profile?.phone,
+        email: undefined,
       });
     } catch {
       setError("Chat isn’t available right now. Send us a message and we’ll reply by email.");

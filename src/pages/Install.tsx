@@ -2,13 +2,12 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { InstallQr, InstallSteps } from "../components/InstallSteps";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
-import { useApp } from "../context/AppContext";
+import { isLicensed } from "../lib/licenseClient";
 import { detectPlatform, deviceName, isInstalledApp, isPhoneOrTablet } from "../lib/install";
 
 export function InstallPage() {
-  const { session, profile } = useApp();
   const [platform] = useState(detectPlatform);
-  const signedIn = Boolean(session && profile);
+  const licensed = isLicensed();
   const onPhone = isPhoneOrTablet(platform);
 
   if (isInstalledApp()) return <Navigate to="/app" replace />;
@@ -30,8 +29,8 @@ export function InstallPage() {
           <InstallSteps />
 
           <div className="install-actions">
-            <Link className="btn btn-ghost" to={signedIn ? "/app" : "/signin"}>
-              {signedIn ? "Open my checklist" : "Sign in"}
+            <Link className="btn btn-ghost" to={licensed ? "/app" : "/activate"}>
+              {licensed ? "Open my checklist" : "Activate license"}
             </Link>
           </div>
 

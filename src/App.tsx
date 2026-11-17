@@ -24,7 +24,7 @@ import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
 import { ContactsPage } from "./pages/Contacts";
 import { DashboardPage, ListsPage } from "./pages/Dashboard";
-import { HouseholdPage } from "./pages/Family";
+import { HouseholdPage } from "./pages/Survival";
 import { SafetyPage } from "./pages/Safety";
 import { SystemPage } from "./pages/System";
 import { ActivatePage } from "./pages/Activate";

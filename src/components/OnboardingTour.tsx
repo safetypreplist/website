@@ -240,7 +240,7 @@ export function OnboardingTour() {
   const { profile } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
-  const storageKey = profile ? `spl.onboarding.v1.${profile.id}` : "";
+  const storageKey = profile ? "spl.onboarding.v1.local" : "";
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"welcome" | "offline" | "choice" | "tour" | "done">("welcome");
   const [stepIndex, setStepIndex] = useState(0);
@@ -277,7 +277,7 @@ export function OnboardingTour() {
 
   useEffect(() => {
     function syncOpen() {
-      if (!profile?.id) return;
+      if (!profile) return;
       if (replayActive()) {
         sessionStorage.removeItem(REPLAY_KEY);
         holdingTour.current = true;
@@ -306,10 +306,6 @@ export function OnboardingTour() {
         return;
       }
       if (holdingTour.current) return;
-      if (profile.plan === "none") {
-        setOpen(false);
-        return;
-      }
       setOpen(localStorage.getItem(storageKey) !== "done");
     }
     syncOpen();
@@ -319,7 +315,7 @@ export function OnboardingTour() {
       window.removeEventListener(PREVIEW_EVENT, syncOpen);
       window.removeEventListener(REPLAY_EVENT, syncOpen);
     };
-  }, [profile?.id, profile?.plan, storageKey, navigate]);
+  }, [profile, storageKey, navigate]);
 
   useEffect(() => {
     if (!open || mode !== "tour") return;
@@ -471,7 +467,7 @@ export function OnboardingTour() {
   }, [open, mode, navigate, storageKey]);
 
   const progress = useMemo(() => `${stepIndex + 1} of ${DEFAULT_STEPS.length}`, [stepIndex]);
-  const firstName = firstNameOf(profile?.first_name || profile?.display_name || profile?.full_name);
+  const firstName = firstNameOf(profile?.full_name || "there");
   if (!open || !profile) return null;
 
   function finish() {

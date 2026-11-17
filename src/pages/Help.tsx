@@ -7,13 +7,14 @@ import { openLiveAgentChat } from "../lib/liveAgent";
 import { invokeFunction, supabase } from "../lib/supabase";
 
 export function HelpPage() {
-  const { profile, user } = useApp();
+  useApp();
   const [faqs, setFaqs] = useState<HelpFaq[]>(DEFAULT_FAQS);
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [chatting, setChatting] = useState(false);
+  const [replyEmail, setReplyEmail] = useState("");
 
   useEffect(() => {
     void supabase.from("app_config").select("value").eq("key", HELP_FAQS_KEY).maybeSingle().then(({ data }) => {
@@ -32,9 +33,9 @@ export function HelpPage() {
     setError("");
     setSent("");
     try {
-      await invokeFunction("support-ticket", { message: text });
+      await invokeFunction("support-ticket", { message: text, email: replyEmail.trim() || undefined });
       setMessage("");
-      setSent(`Message sent. We’ll reply to ${user?.email || profile?.email || "your account email"} as soon as we can.`);
+      setSent("Message sent. We’ll reply by email as soon as we can.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send that message. Please try again.");
     } finally {
@@ -47,10 +48,7 @@ export function HelpPage() {
     setChatting(true);
     try {
       await openLiveAgentChat("support", {
-        email: profile?.email || user?.email,
-        firstName: profile?.first_name,
-        lastName: profile?.last_name,
-        phone: profile?.phone,
+        email: replyEmail.trim() || undefined,
       });
     } catch {
       setError("Chat isn’t available right now. Send a message instead.");
@@ -94,8 +92,18 @@ export function HelpPage() {
 
       <article className="account-card">
         <h2>Still need help?</h2>
-        <p className="muted">Tell us what’s going on with your checklist, account, or devices. We’ll follow up by email.</p>
+        <p className="muted">Tell us what’s going on with your checklist or license. We’ll follow up by email.</p>
         <form className="help-form" onSubmit={(event) => void sendMessage(event)}>
+          <label className="account-field">
+            <span>Reply email</span>
+            <input
+              type="email"
+              value={replyEmail}
+              onChange={(event) => setReplyEmail(event.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+          </label>
           <label className="account-field">
             <span>Your message</span>
             <textarea

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { isLicensed } from "../lib/licenseClient";
 import { GUIDANCE_ACK, LEGAL_VERSIONS } from "../lib/legal";
 import {
   hasCurrentLegalAcceptance,
@@ -8,11 +8,10 @@ import {
   recordLegalAcceptance,
   storeGuidanceAck,
 } from "../lib/legalConsent";
-import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { LegalAgreement } from "./LegalAgreement";
 
 export function LegalNotices() {
-  const { session, user } = useApp();
+  const licensed = isLicensed();
   const location = useLocation();
   const onChecklist = location.pathname.startsWith("/app/lists");
   const [needsTerms, setNeedsTerms] = useState(false);
@@ -21,34 +20,16 @@ export function LegalNotices() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!session) return;
-    if (hasCurrentLegalAcceptance()) {
+    if (!licensed) {
       setNeedsTerms(false);
       return;
     }
-    if (!isSupabaseConfigured() || !user?.id) {
-      setNeedsTerms(true);
-      return;
-    }
-    void supabase
-      .from("terms_acceptances")
-      .select("terms_version, privacy_version, refund_version")
-      .eq("user_id", user.id)
-      .order("accepted_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        const latest = data?.[0];
-        const current =
-          latest?.terms_version === LEGAL_VERSIONS.terms &&
-          latest?.privacy_version === LEGAL_VERSIONS.privacy &&
-          latest?.refund_version === LEGAL_VERSIONS.refunds;
-        setNeedsTerms(!current);
-      });
-  }, [session, user?.id]);
+    setNeedsTerms(!hasCurrentLegalAcceptance());
+  }, [licensed]);
 
   useEffect(() => {
-    setShowGuidance(Boolean(session && onChecklist && !hasGuidanceAck()));
-  }, [session, onChecklist]);
+    setShowGuidance(Boolean(licensed && onChecklist && !hasGuidanceAck()));
+  }, [licensed, onChecklist]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("has-guidance-ack", showGuidance);
@@ -77,14 +58,14 @@ export function LegalNotices() {
   async function acceptTerms() {
     if (!agreed) return;
     setBusy(true);
-    await recordLegalAcceptance("terms_update", user?.email || undefined);
+    await recordLegalAcceptance("terms_update");
     setNeedsTerms(false);
     setBusy(false);
   }
 
   function dismissGuidance() {
     storeGuidanceAck();
-    void recordLegalAcceptance("in_app_ack", user?.email || undefined);
+    void recordLegalAcceptance("in_app_ack");
     setShowGuidance(false);
   }
 
@@ -96,22 +77,24 @@ export function LegalNotices() {
           <p className="muted">
             Please review the{" "}
             <Link to="/terms" target="_blank" rel="noreferrer">
-              Terms of Service
+              Terms
             </Link>
             ,{" "}
             <Link to="/privacy" target="_blank" rel="noreferrer">
               Privacy Policy
             </Link>
             , and{" "}
-            <Link to="/terms#refunds" target="_blank" rel="noreferrer">
+            <Link to="/refunds" target="_blank" rel="noreferrer">
               Refund Policy
             </Link>{" "}
-            before continuing.
+            (v{LEGAL_VERSIONS.terms}).
           </p>
-          <LegalAgreement id="terms-update-agree" checked={agreed} onChange={setAgreed} />
-          <button className="btn btn-primary btn-block" type="button" disabled={!agreed || busy} onClick={() => void acceptTerms()}>
-            {busy ? "Saving…" : "Agree and continue"}
-          </button>
+          <LegalAgreement checked={agreed} onChange={setAgreed} />
+          <div className="toolbar" style={{ marginTop: 16 }}>
+            <button className="btn btn-primary" type="button" disabled={!agreed || busy} onClick={() => void acceptTerms()}>
+              {busy ? "Saving…" : "I agree"}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -121,10 +104,12 @@ export function LegalNotices() {
 
   return (
     <div className="guidance-ack" role="status">
-      <p>{GUIDANCE_ACK}</p>
-      <button className="btn btn-ghost" type="button" onClick={dismissGuidance}>
-        Got it
-      </button>
+      <p>
+        {GUIDANCE_ACK}{" "}
+        <button className="btn btn-ghost" type="button" onClick={dismissGuidance}>
+          Got it
+        </button>
+      </p>
     </div>
   );
 }

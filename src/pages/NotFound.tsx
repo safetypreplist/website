@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
-import { useApp } from "../context/AppContext";
+import { isLicensed } from "../lib/licenseClient";
 
 export function NotFoundPage() {
-  const { session } = useApp();
   return (
     <div className="marketing-page">
       <PublicHeader />
@@ -13,7 +12,7 @@ export function NotFoundPage() {
           <h1>We couldn’t find that page.</h1>
           <p>The link may be old or mistyped.</p>
           <p className="legal-nav">
-            {session ? <Link to="/app">Go to my checklist</Link> : <Link to="/">Go to the homepage</Link>}
+            {isLicensed() ? <Link to="/app">Go to my checklist</Link> : <Link to="/">Go to the homepage</Link>}
             <Link to="/contact">Contact us</Link>
           </p>
         </div>

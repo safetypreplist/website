@@ -83,10 +83,6 @@ async function getMeta<T>(key: string): Promise<T | null> {
   }
 }
 
-async function setMeta(key: string, value: unknown) {
-  await run(STORE_META, "readwrite", (s) => s.put({ key, value } satisfies MetaRow));
-}
-
 function mergeProgress(into: Record<string, ProgressRow>, rows: Record<string, ProgressRow>) {
   for (const [id, row] of Object.entries(rows)) {
     const existing = into[id];

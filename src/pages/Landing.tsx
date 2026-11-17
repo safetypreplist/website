@@ -91,11 +91,9 @@ const planIncludes = [
 ];
 
 export function LandingPage() {
-  const { session, myChecklist } = useApp();
-  const addingChecklists = Boolean(
-    session && myChecklist?.status === "active" && myChecklist.ownerUserId === session.user.id,
-  );
-  const minFamilyQty = addingChecklists ? 1 : FAMILY_MIN_SEATS;
+  useApp();
+  const addingChecklists = false;
+  const minFamilyQty = FAMILY_MIN_SEATS;
   const annualCents = ANNUAL_CENTS;
   const vaultCents = SURVIVAL_VAULT_CENTS;
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
