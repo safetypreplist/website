@@ -1,71 +1,59 @@
-# Stripe setup
+# Stripe — one-time licenses (Phase 1)
 
-New purchases use Stripe Checkout and Stripe Billing. Secrets stay on Edge Functions. The GitHub Pages frontend never receives `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET`.
+**Phase 1 is Test Mode only.** Do not create or archive Live prices until Phase 1 review passes.
 
-Do not enable `automatic_tax` until Stripe Tax registrations (or Managed Payments) are actually active on the account. Selecting a digital-sales option in onboarding is not enough.
+## Products (lookup keys)
 
-Checkout uses whichever key is on the server. A `rk_test_` / `sk_test_` key is Test Mode. A `rk_live_` / `sk_live_` key is live and charges real cards. Test prices cannot be reused in live; the first live checkout creates `spl_monthly`, `spl_annual`, and `spl_vault` on the live account.
-
-## Catalog (lookup keys)
-
-| Lookup key | Amount | Interval |
+| Lookup key | Amount | Product |
 |---|---|---|
-| `spl_monthly` | $7.99 | legacy month (not sold for new checkouts) |
-| `spl_annual` | $30 | year per checklist (public offer) |
-| `spl_vault_annual` | $10 | year Survival Vault add-on |
+| `spl_basic_lifetime` | $12.99 (1299) | Basic — one-time |
+| `spl_pro_lifetime` | $24.99 (2499) | Pro — one-time |
+| `spl_upgrade_basic_pro` | $12.00 (1200) | Upgrade Basic → Pro — one-time |
 
-Products: `spl_checklist` (Safety Prep List), `spl_vault` (Survival Vault). Tax code `txcd_10103000`.
+Checkout uses `mode: "payment"` only. Annual/monthly lookup keys (`spl_annual`, `spl_vault_annual`, `spl_monthly`) are removed from code.
 
-New checkouts are annual-only at $30 per checklist. `create-checkout-session` calls `stripePriceId`, which creates missing catalog prices on first use (and moves the lookup key if the amount changed). Clear `STRIPE_PRICE_ANNUAL` / `STRIPE_PRICE_VAULT` / `STRIPE_PRICE_MONTHLY` if those env vars still point at old price ids.
+## How price IDs are chosen
 
-**Live audit (SafetyPrepList `acct_1UUER4IE7Tqh1WW5`):** as of 2026-10-25, Live had `spl_checklist` + `spl_monthly` ($7.99) only. `spl_annual`, `spl_vault`, and `spl_vault_annual` were missing until created (by agent write or first successful live checkout).
+1. Optional env overrides: `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_UPGRADE` (must start with `price_`)
+2. Else `stripePriceId` → `ensureCatalogPrice` finds or creates the one-time price by lookup key (Test Mode)
+
+Owner should create the three Test prices in the Stripe Dashboard (or let the first Test checkout create them). **Do not change Live Stripe prices in Phase 1.**
+
+## Checkout body
+
+```json
+{ "product": "basic" | "pro" | "upgrade_to_pro", "licenseKey": "SPL-...." }
+```
+
+`licenseKey` is required for `upgrade_to_pro` and must be an active Basic license.
+
+Success URL: `/thank-you?session_id={CHECKOUT_SESSION_ID}`
+
+## Webhook
+
+Handles `checkout.session.completed` (and async payment succeeded). Creates or upgrades a row in `licenses` and emails the key via Resend. Idempotent on `stripe_session_id`.
 
 ## Secrets
 
-```bash
-supabase secrets set STRIPE_SECRET_KEY=rk_live_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-supabase secrets set APP_URL=https://safetypreplist.com
+```
+STRIPE_SECRET_KEY=rk_test_...   # Test only for Phase 1
+STRIPE_WEBHOOK_SECRET=whsec_...
+ADMIN_SECRET=...                # for admin-licenses (min 16 chars)
+RESEND_API_KEY=...
+APP_URL=https://safetypreplist.com
 ```
 
-Use a [restricted key](https://docs.stripe.com/keys.md#manage-your-api-keys) (`rk_live_` in production) with:
-
-**Write:** Checkout Sessions, Customers, Subscriptions, Coupons, Customer portal sessions, Refunds (admin only)
-
-**Read:** Products, Prices, Invoices, Payment methods, Events
-
-After you switch to live keys, register a **Live** webhook endpoint (Test endpoints do not receive live events) at the same URL, then put that endpoint’s signing secret in `STRIPE_WEBHOOK_SECRET`. Enable the Customer Portal in the Live Dashboard as well.
-
-## Database
-
-Apply `supabase/migrations/0044_stripe_billing.sql` on the Supabase project.
-
-## Deploy functions
+## Deploy (after migration applied)
 
 ```bash
+supabase db push   # or apply 0047_licenses.sql
 supabase functions deploy create-checkout-session
-supabase functions deploy checkout-status
 supabase functions deploy stripe-webhook
-supabase functions deploy create-portal-session
-supabase functions deploy cancel-paypal-subscription
-supabase functions deploy admin-refunds
-supabase functions deploy delete-account
+supabase functions deploy checkout-status
+supabase functions deploy activate-license
+supabase functions deploy deactivate-license
+supabase functions deploy reset-license
+supabase functions deploy admin-licenses
 ```
 
-Webhook URL:
-
-`https://rhjarmxgglvwcxiwqcsq.supabase.co/functions/v1/stripe-webhook`
-
-Copy the endpoint’s signing secret into `STRIPE_WEBHOOK_SECRET`. Do not commit it.
-
-## Customer Portal
-
-Enable the Customer Portal in the Stripe Dashboard (Test) so “Change payment method” on Billing can open a portal session. Until that Dashboard config exists, the portal call will fail even if the function is deployed.
-
-## Tax
-
-Stripe Tax / Managed Payments is not wired. `automatic_tax` is off. If you sell in the US or EU, review [Collect taxes for recurring payments](https://docs.stripe.com/billing/taxes/collect-taxes.md) before collecting tax.
-
-## Legacy PayPal
-
-Existing PayPal subscriptions can still cancel, refund, and receive PayPal webhooks if PayPal secrets remain on the project. New checkout no longer starts PayPal.
+Point the **Test** webhook endpoint at `stripe-webhook` for `checkout.session.completed`.

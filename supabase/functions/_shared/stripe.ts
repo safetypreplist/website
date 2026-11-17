@@ -1,11 +1,20 @@
 const API = "https://api.stripe.com/v1";
 const API_VERSION = "2026-09-30.endive";
 
+/** One-time license lookup keys (Stripe Test first; Live only after Phase 1 review). */
 export const PRICE_LOOKUP = {
-  monthly: "spl_monthly",
-  annual: "spl_annual",
-  vault: "spl_vault_annual",
+  basicLifetime: "spl_basic_lifetime",
+  proLifetime: "spl_pro_lifetime",
+  upgradeBasicToPro: "spl_upgrade_basic_pro",
 } as const;
+
+export type LifetimeProduct = "basic" | "pro" | "upgrade_to_pro";
+
+export function lookupForProduct(product: LifetimeProduct) {
+  if (product === "basic") return PRICE_LOOKUP.basicLifetime;
+  if (product === "pro") return PRICE_LOOKUP.proLifetime;
+  return PRICE_LOOKUP.upgradeBasicToPro;
+}
 
 export function stripeSecret() {
   const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
@@ -18,6 +27,12 @@ export function stripeSecret() {
 export function isStripeConfigured() {
   const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
   return (key.startsWith("rk_") || key.startsWith("sk_")) && !key.includes("your_");
+}
+
+/** True when the configured secret is a Test Mode key. */
+export function isStripeTestMode() {
+  const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
+  return key.includes("_test_");
 }
 
 function flatten(value: unknown, key: string, out: URLSearchParams) {
@@ -62,7 +77,7 @@ export async function stripeRequest<T = Record<string, unknown>>(
     const res = await fetch(joined, init);
     return parseStripe(res) as Promise<{ ok: boolean; status: number; body: T }>;
   }
-  if (body && method !== "GET") {
+  if (body && method !== "DELETE") {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
     init.body = encodeStripeBody(body);
   }
@@ -86,9 +101,9 @@ async function parseStripe(res: Response) {
 }
 
 const LOOKUP_ENV: Record<string, string> = {
-  spl_monthly: "STRIPE_PRICE_MONTHLY",
-  spl_annual: "STRIPE_PRICE_ANNUAL",
-  spl_vault_annual: "STRIPE_PRICE_VAULT",
+  spl_basic_lifetime: "STRIPE_PRICE_BASIC",
+  spl_pro_lifetime: "STRIPE_PRICE_PRO",
+  spl_upgrade_basic_pro: "STRIPE_PRICE_UPGRADE",
 };
 
 type CatalogPrice = {
@@ -96,37 +111,36 @@ type CatalogPrice = {
   product: string;
   productName: string;
   unit_amount: number;
-  recurring?: { interval: "month" | "year" };
+  /** One-time license prices only. */
+  type: "one_time";
 };
 
-// Software as a service (SaaS) - personal use. Eligible for Managed Payments.
-// Hosted checklist access over the internet, not a downloaded app.
+// Software as a service (SaaS) - personal use.
 const DIGITAL_TAX_CODE = "txcd_10103000";
 
 const CATALOG: Record<string, CatalogPrice> = {
-  spl_monthly: {
-    lookup: "spl_monthly",
-    product: "spl_checklist",
-    productName: "Safety Prep List",
-    unit_amount: 799,
-    recurring: { interval: "month" },
+  spl_basic_lifetime: {
+    lookup: "spl_basic_lifetime",
+    product: "spl_basic",
+    productName: "Safety Prep List — Basic",
+    unit_amount: 1299,
+    type: "one_time",
   },
-  spl_annual: {
-    lookup: "spl_annual",
-    product: "spl_checklist",
-    productName: "Safety Prep List",
-    unit_amount: 3000,
-    recurring: { interval: "year" },
+  spl_pro_lifetime: {
+    lookup: "spl_pro_lifetime",
+    product: "spl_pro",
+    productName: "Safety Prep List — Pro",
+    unit_amount: 2499,
+    type: "one_time",
   },
-  spl_vault_annual: {
-    lookup: "spl_vault_annual",
-    product: "spl_vault",
-    productName: "Survival Vault",
-    unit_amount: 1000,
-    recurring: { interval: "year" },
+  spl_upgrade_basic_pro: {
+    lookup: "spl_upgrade_basic_pro",
+    product: "spl_upgrade",
+    productName: "Safety Prep List — Upgrade to Pro",
+    unit_amount: 1200,
+    type: "one_time",
   },
 };
-
 
 async function priceByLookup(lookup: string) {
   const res = await stripeRequest<{ data?: Array<{ id: string }> }>(
@@ -164,24 +178,23 @@ async function ensureCatalogPrice(spec: CatalogPrice) {
   await ensureProduct(spec.product, spec.productName);
   const found = await priceByLookup(spec.lookup);
   if (found) {
-    const detail = await stripeRequest<{ id?: string; unit_amount?: number; type?: string; recurring?: { interval?: string } | null }>(
-      "GET",
-      `/prices/${found}`,
-    );
+    const detail = await stripeRequest<{
+      id?: string;
+      unit_amount?: number;
+      type?: string;
+      recurring?: { interval?: string } | null;
+    }>("GET", `/prices/${found}`);
     const amountOk = detail.ok && detail.body.unit_amount === spec.unit_amount;
-    const recurringOk = spec.recurring
-      ? detail.body?.type === "recurring" && detail.body?.recurring?.interval === spec.recurring.interval
-      : detail.body?.type === "one_time" || !detail.body?.recurring;
-    if (amountOk && recurringOk) return found;
+    const oneTimeOk = detail.body?.type === "one_time" || !detail.body?.recurring;
+    if (amountOk && oneTimeOk) return found;
   }
-  // Stripe prices are immutable. Always allow moving the lookup key off an archived/mismatched price.
+  // Stripe prices are immutable. Move the lookup key onto a matching one-time price.
   const created = await stripeRequest<{ id?: string }>("POST", "/prices", {
     currency: "usd",
     product: spec.product,
     unit_amount: spec.unit_amount,
     lookup_key: spec.lookup,
     transfer_lookup_key: true,
-    ...(spec.recurring ? { recurring: spec.recurring } : {}),
   });
   if (created.ok && created.body.id) return created.body.id;
   const again = await priceByLookup(spec.lookup);
@@ -223,17 +236,16 @@ export async function verifyStripeSignature(payload: string, header: string, sec
     false,
     ["sign"],
   );
-  const digest = hex(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`)));
-  return signatures.some((signature) => timingSafeEqual(digest, signature));
+  const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`));
+  const digest = hex(signed);
+  return signatures.some((sig) => timingSafeEqual(digest, sig));
+}
+
+export function stripeErrorMessage(body: unknown, fallback: string) {
+  const err = body as { error?: { message?: string } } | null;
+  return err?.error?.message || fallback;
 }
 
 export function integrationIdentifier() {
-  const alphabet = "abcdefghijklmnopqrstuvwxyz";
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  return `spl_hosted_${[...bytes].map((b) => alphabet[b % 26]).join("")}`;
-}
-
-export function stripeErrorMessage(body: unknown, fallback = "Stripe could not complete this request.") {
-  const message = (body as { error?: { message?: string } } | null)?.error?.message;
-  return message || fallback;
+  return "safety_prep_list";
 }
