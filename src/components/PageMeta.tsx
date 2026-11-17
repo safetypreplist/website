@@ -38,20 +38,15 @@ const EXACT: Record<string, Meta> = {
     title: "Sample Checklist — Safety Prep List",
     description: "Try a short sample from the 5-Minute Grab-and-Go Bag. Nothing you check is saved.",
   },
-  "/signin": {
-    title: "Sign In — Safety Prep List",
-    description: "Sign in to your Safety Prep List checklists.",
-    index: false,
+  "/activate": {
+    title: "Activate License — Safety Prep List",
+    description: "Activate your Safety Prep List license key on this device.",
+    index: true,
   },
-  "/create-account": {
-    title: "Create Account — Safety Prep List",
-    description: "Create your Safety Prep List account after checkout.",
-    index: false,
-  },
-  "/join": {
-    title: "Join Family Plan — Safety Prep List",
-    description: "Accept your family’s invitation to a paid Safety Prep List checklist.",
-    index: false,
+  "/license": {
+    title: "Your License — Safety Prep List",
+    description: "Look up your Safety Prep List license, devices, and upgrade options.",
+    index: true,
   },
   "/checkout": {
     title: "Checkout — Safety Prep List",
@@ -63,31 +58,15 @@ const EXACT: Record<string, Meta> = {
     description: "Your Safety Prep List purchase is complete.",
     index: false,
   },
-  "/reset-password": {
-    title: "Reset Password — Safety Prep List",
-    description: "Reset the password for your Safety Prep List account.",
-    index: false,
-  },
-  "/update-password": {
-    title: "Update Password — Safety Prep List",
-    description: "Choose a new password for your Safety Prep List account.",
-    index: false,
-  },
 };
 
 const PREFIX: Array<[string, Meta]> = [
   ["/app/lists", { title: "Checklists — Safety Prep List", description: "Your Safety Prep List checklists.", index: false }],
   ["/app/contacts", { title: "Contacts — Safety Prep List", description: "Safety contacts for your household.", index: false }],
   ["/app/safety", { title: "Safety Resources — Safety Prep List", description: "Official emergency-management websites.", index: false }],
-  ["/app/account", { title: "Account — Safety Prep List", description: "Your Safety Prep List account.", index: false }],
-  ["/app/billing/receipt", { title: "Receipt — Safety Prep List", description: "A Safety Prep List payment receipt.", index: false }],
-  ["/app/billing", { title: "Billing — Safety Prep List", description: "Your Safety Prep List billing history.", index: false }],
-  ["/app/renew", { title: "Renew — Safety Prep List", description: "Renew your Safety Prep List plan.", index: false }],
   ["/app/help", { title: "Help — Safety Prep List", description: "Help for Safety Prep List.", index: false }],
-  ["/app/devices", { title: "Devices — Safety Prep List", description: "Devices signed in to your Safety Prep List account.", index: false }],
-  ["/app/family", { title: "Family Plan — Safety Prep List", description: "Manage your Safety Prep List Family Plan.", index: false }],
+  ["/app/reset-devices", { title: "Reset Devices — Safety Prep List", description: "Clear activated devices for your license.", index: false }],
   ["/app/survival", { title: "Survival Vault — Safety Prep List", description: "Survival Vault checklists.", index: false }],
-  ["/app/access", { title: "Checklist Access — Safety Prep List", description: "Who can view or edit family checklists.", index: false }],
   ["/admin", { title: "Owner — Safety Prep List", description: "Safety Prep List owner tools.", index: false }],
   ["/app", { title: "My Checklist — Safety Prep List", description: "Your Safety Prep List dashboard.", index: false }],
 ];

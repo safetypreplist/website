@@ -13,6 +13,7 @@ export type LicenseRow = {
   status: "active" | "revoked";
   email: string | null;
   stripe_session_id: string | null;
+  amount_cents: number | null;
   created_at: string;
 };
 

@@ -31,7 +31,7 @@ export function PublicHeader({
           <a href={howHref} onClick={close}>How It Works</a>
           <a href={includedHref} onClick={close}>What’s Included</a>
           <a href={pricingHref} onClick={close}>Choose a Plan</a>
-          <NavLink to="/signin" onClick={close}>Log In</NavLink>
+          <NavLink to="/activate" onClick={close}>Activate</NavLink>
         </nav>
         <button className="menu-toggle" aria-label="Menu" onClick={() => setOpen((v) => !v)}>
           ☰
@@ -62,7 +62,8 @@ export function PublicFooter({
           <a href={howHref}>How It Works</a>
           <a href={includedHref}>What’s Included</a>
           <a href={pricingHref}>Choose a Plan</a>
-          <NavLink to="/signin">Log In</NavLink>
+          <NavLink to="/activate">Activate</NavLink>
+          <NavLink to="/license">License</NavLink>
           <NavLink to="/contact">Contact</NavLink>
           <NavLink to="/privacy">Privacy</NavLink>
           <NavLink to="/terms">Terms of Service</NavLink>

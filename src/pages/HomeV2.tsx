@@ -110,8 +110,8 @@ export function HomeV2Page() {
             <a href="#included">What’s included</a>
             <a href="#pricing">Pricing</a>
             <Link to="/demo">Try a sample</Link>
-            <Link className="hv2-nav-login" to="/signin">
-              Log in
+            <Link className="hv2-nav-login" to="/activate">
+              Activate
             </Link>
           </nav>
           <a className="hv2-nav-cta" href="#pricing">

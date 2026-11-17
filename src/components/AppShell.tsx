@@ -1,28 +1,18 @@
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { HeaderClock } from "./LocationStatus";
 import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
 import { AppStatusBanners } from "./OfflineStatus";
-import { checklistTitle, familyPageLabel, initialsFrom } from "../lib/identity";
-import { usePendingRefunds } from "../lib/refunds";
+import { isProLicense } from "../lib/licenseClient";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { signOut, profile, user, viewing, hasSurvivalVault, switchChecklist, myChecklist, familyMembers } = useApp();
+  const { hasSurvivalVault } = useApp();
   const location = useLocation();
-  const initial = initialsFrom(profile?.full_name || viewing.ownerName, user?.email);
   const vaultActive = location.pathname.startsWith("/app/survival");
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const [pendingRefunds] = usePendingRefunds(profile?.role === "owner" && !isAdminRoute);
-
-  useEffect(() => {
-    const onPersonalHome = location.pathname === "/app" || location.pathname === "/app/lists";
-    if (onPersonalHome && viewing.kind === "household") {
-      void switchChecklist("personal", myChecklist?.id ?? null);
-    }
-  }, [location.pathname, viewing.kind, myChecklist?.id, switchChecklist]);
+  const pro = hasSurvivalVault || isProLicense();
 
   return (
     <div className={`app-shell${isAdminRoute ? " admin-console-shell" : ""}`}>
@@ -34,20 +24,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <b>Safety Prep List</b>
           </div>
         </div>
-        <ChecklistSwitcher className="mobile-switcher" />
         <div className="app-top-end">
           <HeaderClock />
-          <NavLink className="header-avatar" to="/app/account" aria-label="Account">
-            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <span>{initial}</span>}
+          <NavLink className="header-avatar" to="/license" aria-label="License">
+            <span>Key</span>
           </NavLink>
         </div>
       </header>
       <nav className="desktop-sidebar" aria-label="Main">
-        <ChecklistSwitcher className="sidebar-switcher" />
         <NavLink to="/app" end className={({ isActive }) => (isActive ? "active" : "")}>
           Home
         </NavLink>
-          <NavLink data-onboarding="my-checklist" to="/app/lists" className={({ isActive }) => (isActive ? "active" : "")}>
+        <NavLink data-onboarding="my-checklist" to="/app/lists" className={({ isActive }) => (isActive ? "active" : "")}>
           My Checklist
         </NavLink>
         <NavLink to="/app/contacts" className={({ isActive }) => (isActive ? "active" : "")}>
@@ -56,50 +44,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink to="/app/safety" className={({ isActive }) => (isActive ? "active" : "")}>
           Safety Resources
         </NavLink>
-        {hasSurvivalVault ? (
+        {pro ? (
           <NavLink to="/app/survival" className={vaultActive ? "active" : ""}>
             Survival Vault
           </NavLink>
         ) : (
-          <Link className="nav-upgrade" to="/app/lists#survival-vault">
-            Survival Vault
+          <Link className="nav-upgrade" to="/license">
+            Upgrade to Pro
           </Link>
         )}
-        <p className="sidebar-label">Family</p>
-        <NavLink data-onboarding="family" to="/app/family" end className={({ isActive }) => (isActive ? "active" : "")}>
-          {familyPageLabel(familyMembers)}
+        <p className="sidebar-label">License</p>
+        <NavLink to="/license" className={({ isActive }) => (isActive ? "active" : "")}>
+          My license
         </NavLink>
-        <p className="sidebar-label">Account</p>
-        <NavLink
-          data-onboarding="profile"
-          to="/app/account"
-          className={({ isActive }) => (isActive || location.pathname.startsWith("/app/billing") ? "active" : "")}
-        >
-          Account
+        <NavLink to="/app/reset-devices" className={({ isActive }) => (isActive ? "active" : "")}>
+          Reset devices
         </NavLink>
-        <NavLink to="/app/devices" className={({ isActive }) => (isActive ? "active" : "")}>
-          My Devices
-        </NavLink>
-        {profile?.role === "owner" ? (
-          <NavLink to="/admin" className={({ isActive }) => (isActive ? "active" : "")}>
-            Owner Console
-            {pendingRefunds > 0 ? (
-              <span className="nav-alert-badge" aria-label={`${pendingRefunds} refund ${pendingRefunds === 1 ? "request" : "requests"} waiting`}>
-                {pendingRefunds}
-              </span>
-            ) : null}
-          </NavLink>
-        ) : null}
         <NavLink to="/app/help" className={({ isActive }) => (isActive ? "active" : "")}>
           Help
         </NavLink>
-        <button className="btn btn-ghost sidebar-logout" type="button" onClick={() => void signOut()}>
-          Log out
-        </button>
       </nav>
       <main className="app-main">
         {!isAdminRoute ? <AppStatusBanners /> : null}
-        {!viewing.isOwn && viewing.kind !== "household" && !viewing.canEdit ? <ViewingBanner /> : null}
         {children}
       </main>
       <nav className="bottom-nav" aria-label="Mobile">
@@ -119,111 +85,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ShieldIcon />
           Safety
         </NavLink>
-        <NavLink to="/app/account" data-onboarding="profile">
-          <UserIcon />
-          Account
+        <NavLink to="/license">
+          <KeyIcon />
+          License
         </NavLink>
       </nav>
       <LegalNotices />
       <OnboardingTour />
-    </div>
-  );
-}
-
-function ViewingBanner() {
-  const { viewing } = useApp();
-  return (
-    <div className="viewing-banner view">
-      <span>Viewing {checklistTitle(viewing.ownerName)} · View only</span>
-    </div>
-  );
-}
-
-function ChecklistSwitcher({ className }: { className?: string }) {
-  const { viewing, myChecklist, connectedChecklists, switchChecklist, profile } = useApp();
-  const [open, setOpen] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const mineName = myChecklist?.displayName || viewing.ownerName;
-  const lists = [
-    myChecklist
-      ? { id: myChecklist.id, title: checklistTitle(mineName), avatarUrl: myChecklist.avatarUrl || profile?.avatar_url }
-      : null,
-    ...connectedChecklists
-      .filter((c) => !c.pending)
-      .map((c) => ({ id: c.id, title: checklistTitle(c.displayName), avatarUrl: c.avatarUrl })),
-  ].filter((row): row is { id: string; title: string; avatarUrl: string | null | undefined } => Boolean(row));
-  const activeId = viewing.kind === "personal" ? viewing.checklistId : myChecklist?.id;
-  const active = lists.find((row) => row.id === activeId) || lists[0];
-  const label = active?.title || viewing.title;
-  const avatar = active?.avatarUrl || profile?.avatar_url;
-
-  useEffect(() => {
-    function onDoc(event: MouseEvent) {
-      if (!wrap.current?.contains(event.target as Node)) setOpen(false);
-    }
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, []);
-
-  async function choose(id: string) {
-    await switchChecklist("personal", id);
-    setOpen(false);
-    navigate("/app");
-  }
-
-  return (
-    <div className={`checklist-switcher ${className || ""}${open ? " is-open" : ""}`} ref={wrap}>
-      <button
-        className="checklist-switcher-btn"
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-label={`Switch checklist, ${label}`}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span className="switcher-avatar">
-          {avatar ? <img src={avatar} alt="" /> : <span>{initialsFrom(label)}</span>}
-        </span>
-        <span className="switcher-copy">
-          <small>Switch Checklist</small>
-          <b>{label}</b>
-        </span>
-        <span className="switcher-caret" aria-hidden="true">
-          ▼
-        </span>
-      </button>
-      {open ? (
-        <div className="checklist-switcher-menu" role="listbox" aria-label="Checklists">
-          {lists.map((row) => {
-            const selected = row.id === activeId;
-            return (
-              <button
-                key={row.id}
-                type="button"
-                role="option"
-                aria-selected={selected}
-                onClick={() => void choose(row.id)}
-              >
-                <span className="switcher-option">
-                  <span className="switcher-avatar switcher-avatar-sm">
-                    {row.avatarUrl ? <img src={row.avatarUrl} alt="" /> : <span>{initialsFrom(row.title)}</span>}
-                  </span>
-                  <span className="switcher-option-title">{row.title}</span>
-                </span>
-                {selected ? <span className="checklist-switcher-check" aria-hidden="true">✓</span> : null}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -259,11 +127,11 @@ function ShieldIcon() {
     </svg>
   );
 }
-function UserIcon() {
+function KeyIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20c1.2-3.5 3.8-5.5 7-5.5s5.8 2 7 5.5" />
+      <circle cx="8" cy="14" r="3" />
+      <path d="M10.5 12.5 20 3m-5 1 2 2" />
     </svg>
   );
 }

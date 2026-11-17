@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.admin-licenses]
 verify_jwt = false
+
+[functions.license-status]
+verify_jwt = false

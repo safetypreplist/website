@@ -13,16 +13,14 @@ const routes = [
   "contact",
   "install",
   "demo",
-  "signin",
-  "create-account",
-  "join",
+  "activate",
+  "license",
   "checkout",
   "thank-you",
-  "reset-password",
-  "update-password",
   "pricing",
   "support",
   "refunds",
+  "classic",
 ];
 
 for (const route of routes) {

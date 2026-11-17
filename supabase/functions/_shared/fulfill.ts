@@ -88,6 +88,7 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
     if (!license || license.status !== "active" || license.product !== "basic") {
       return { ok: false, status: 400, error: "Upgrade requires an active Basic license." };
     }
+    // Keep original amount_cents and created_at; only flip product + latest session id.
     const updated = await admin
       .from("licenses")
       .update({
@@ -124,6 +125,7 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
 
   const product = productMeta as LicenseProduct;
   const licenseKey = await uniqueLicenseKey(admin);
+  const amountCents = typeof session.amount_total === "number" ? session.amount_total : null;
   const insert = await admin
     .from("licenses")
     .insert({
@@ -133,6 +135,7 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
       status: "active",
       email,
       stripe_session_id: session.id,
+      amount_cents: amountCents,
     })
     .select("*")
     .single();
