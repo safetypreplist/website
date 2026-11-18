@@ -386,6 +386,7 @@ export function SystemPage() {
           <button
             className="btn btn-forest"
             type="button"
+            data-onboarding="print"
             aria-expanded={printOpen}
             aria-haspopup="menu"
             onClick={() => {
@@ -410,6 +411,7 @@ export function SystemPage() {
           <button
             className="btn btn-ghost"
             type="button"
+            data-onboarding="share"
             aria-expanded={shareOpen}
             aria-haspopup="menu"
             disabled={shareBusy || !printable}

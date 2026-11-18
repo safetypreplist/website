@@ -45,16 +45,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           Safety Resources
         </NavLink>
         {pro ? (
-          <NavLink to="/app/survival" className={vaultActive ? "active" : ""}>
+          <NavLink data-onboarding="survival-vault" to="/app/survival" className={vaultActive ? "active" : ""}>
             Survival Vault
           </NavLink>
         ) : (
-          <Link className="nav-upgrade" to="/license">
+          <Link className="nav-upgrade" data-onboarding="survival-vault" to="/license">
             Upgrade to Pro
           </Link>
         )}
         <p className="sidebar-label">License</p>
-        <NavLink to="/license" className={({ isActive }) => (isActive ? "active" : "")}>
+        <NavLink data-onboarding="license" to="/license" className={({ isActive }) => (isActive ? "active" : "")}>
           My license
         </NavLink>
         <NavLink to="/app/reset-devices" className={({ isActive }) => (isActive ? "active" : "")}>
@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ShieldIcon />
           Safety
         </NavLink>
-        <NavLink to="/license">
+        <NavLink data-onboarding="license" to="/license">
           <KeyIcon />
           License
         </NavLink>

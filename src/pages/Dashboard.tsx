@@ -171,7 +171,7 @@ function SurvivalVaultCta() {
   const entitled = hasPlanAccess(profile);
   if (!hasSurvivalVault && !entitled) return null;
   return (
-    <aside className="vault-list-cta" id="survival-vault">
+    <aside className="vault-list-cta" id="survival-vault" data-onboarding="survival-vault">
       <p className="eyebrow">Optional add-on</p>
       <h2>Survival Vault</h2>
       <p className="muted">{VAULT_APP_DESCRIPTION}</p>

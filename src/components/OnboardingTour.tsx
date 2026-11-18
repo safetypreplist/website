@@ -10,11 +10,48 @@ type Step = { title: string; body: string; selector: string; path: string };
 export type TourCopy = Pick<Step, "title" | "body">[];
 
 const DEFAULT_STEPS: Step[] = [
-  { title: "Start with your checklist", body: "Your readiness plan is organized into simple systems. Open any list to see what to gather and what is already complete.", selector: '[data-onboarding="checklist-card"]', path: "/app" },
-  { title: "Check items off as you go", body: "Tap an item when it is ready. Your progress saves to your account and stays with you across devices.", selector: '[data-onboarding="check-item"]', path: "/app/lists/grab-go" },
-  { title: "Leave a note for yourself", body: "Add short notes to remember where something is stored, what size to buy, or what still needs attention.", selector: '[data-onboarding="notes"]', path: "/app/lists/grab-go" },
-  { title: "Share a checklist", body: "Use Share on any list to send a PDF quickly, or save a shared copy someone sent you — your own progress stays separate.", selector: '[data-onboarding="lists"]', path: "/app/lists" },
-  { title: "Manage your license", body: "Look up your key, see activated devices, or upgrade Basic to Pro on the license page.", selector: '[data-onboarding="lists"]', path: "/license" },
+  {
+    title: "Start with your checklist",
+    body: "Your readiness plan is organized into simple systems. Open any list to see what to gather and what is already complete.",
+    selector: '[data-onboarding="checklist-card"]',
+    path: "/app",
+  },
+  {
+    title: "Check items off as you go",
+    body: "Tap an item when it is ready. Your progress saves on this device and stays with you offline.",
+    selector: '[data-onboarding="check-item"]',
+    path: "/app/lists/grab-go",
+  },
+  {
+    title: "Leave a note for yourself",
+    body: "Add short notes to remember where something is stored, what size to buy, or what still needs attention.",
+    selector: '[data-onboarding="notes"]',
+    path: "/app/lists/grab-go",
+  },
+  {
+    title: "Share or print",
+    body: "Share a PDF quickly, or print a paper backup when you want one offline.",
+    selector: '[data-onboarding="share"]',
+    path: "/app/lists/grab-go",
+  },
+  {
+    title: "Print or save a PDF",
+    body: "Use Print for a paper copy or a PDF of this checklist.",
+    selector: '[data-onboarding="print"]',
+    path: "/app/lists/grab-go",
+  },
+  {
+    title: "Survival Vault / Pro",
+    body: "Pro unlocks Survival Vault checklists. Find Upgrade to Pro or Survival Vault here when it applies to your license.",
+    selector: '[data-onboarding="survival-vault"]',
+    path: "/app",
+  },
+  {
+    title: "Your license",
+    body: "Open License to see your key, devices, or upgrade options.",
+    selector: '[data-onboarding="license"]',
+    path: "/app",
+  },
 ];
 
 const COPY_KEY = "spl.onboarding.copy.v1";
@@ -252,6 +289,7 @@ export function OnboardingTour() {
   const [copy, setCopy] = useState<TourCopy>(loadCopy);
   const [videoUrl, setVideoUrl] = useState(loadCachedVideo);
   const holdingTour = useRef(false);
+  const skipGuard = useRef(0);
   const step = { ...(DEFAULT_STEPS[stepIndex] ?? DEFAULT_STEPS[0]), ...copy[stepIndex] };
   const video = onboardingVideoSrc(videoUrl);
 
@@ -413,8 +451,28 @@ export function OnboardingTour() {
         await new Promise((resolve) => window.setTimeout(resolve, 80));
       }
       if (!cancelled) {
+        // Target missing (moved, Pro-only, etc.) — skip instead of centering a blank pop-up.
         setRect(null);
         setSearching(false);
+        skipGuard.current += 1;
+        if (skipGuard.current > DEFAULT_STEPS.length + 2) {
+          completeTour();
+          return;
+        }
+        window.setTimeout(() => {
+          if (cancelled) return;
+          if (stepIndex >= DEFAULT_STEPS.length - 1) {
+            completeTour();
+            return;
+          }
+          const nextIndex = stepIndex + 1;
+          const next = DEFAULT_STEPS[nextIndex];
+          holdStep(nextIndex);
+          setRect(null);
+          setPlacedStep(-1);
+          setStepIndex(nextIndex);
+          if (next?.path && next.path !== window.location.pathname) navigate(next.path);
+        }, 0);
       }
     }
 
@@ -424,6 +482,7 @@ export function OnboardingTour() {
     window.addEventListener("scroll", pinScroll, true);
     void locate().then(() => {
       if (cancelled || !target) return;
+      skipGuard.current = 0;
       observer.observe(target);
       const guidance = document.querySelector(".guidance-ack");
       const header = document.querySelector(".app-top");
@@ -442,7 +501,7 @@ export function OnboardingTour() {
       demoItem?.classList.remove("tour-check-demo");
       window.removeEventListener("resize", measure);
     };
-  }, [open, mode, step.selector, stepIndex, location.pathname]);
+  }, [open, mode, step.selector, stepIndex, location.pathname, navigate]);
 
   useLayoutEffect(() => {
     if (mode !== "tour" || searching || !cardRef.current) return;
@@ -486,6 +545,7 @@ export function OnboardingTour() {
   }
   function startTour() {
     holdingTour.current = true;
+    skipGuard.current = 0;
     holdStep(0);
     setRect(null);
     setMode("tour");
@@ -494,6 +554,7 @@ export function OnboardingTour() {
     navigate(DEFAULT_STEPS[0].path);
   }
   function nextTour() {
+    skipGuard.current = 0;
     if (stepIndex >= DEFAULT_STEPS.length - 1) {
       completeTour();
       return;
@@ -557,8 +618,7 @@ export function OnboardingTour() {
             )}
           </div>
           <p className="onboarding-copy onboarding-welcome-intro">
-            <strong>{firstName ? `Congratulations, ${firstName}!` : "Congratulations!"}</strong> You’re officially the
-            owner of your Safety Prep List account. Your preparation journey starts here. We’re glad to have you with us!
+            <strong>{firstName ? `Congratulations, ${firstName}!` : "Congratulations!"}</strong> Your Safety Prep List license is ready. Your preparation journey starts here. We’re glad to have you with us!
             Feel free to watch the introduction video and take the guided tour so you can get familiar with your new
             checklist.
           </p>
@@ -600,7 +660,7 @@ export function OnboardingTour() {
           <p className="eyebrow">Getting started</p>
           <h2 id="onboarding-choice-title">Would you like a guided tour?</h2>
           <p className="onboarding-copy">
-            We can show you where to check items off, leave notes, and connect your family. It only takes a minute.
+            We can show you where to check items off, leave notes, share or print, and find your license. It only takes a minute.
           </p>
           <div className="onboarding-actions">
             <button className="btn btn-ghost" type="button" onClick={finish}>Skip and explore on my own</button>
@@ -643,33 +703,44 @@ export function OnboardingTour() {
                 style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
               />
             </>
-          ) : (
+          ) : searching ? (
             <div className="onboarding-tint onboarding-tint-full" aria-hidden="true" />
-          )}
-          <aside
-            ref={cardRef}
-            className={`onboarding-tour-card place-${tourPlace?.placement ?? "below"}${!searching && placedStep === stepIndex ? "" : " is-placing"}`}
-            style={tourCardStyle}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="tour-title"
-          >
-            {tourPlace ? (
-              <span
-                className={`onboarding-tour-arrow ${tourPlace.placement}`}
-                style={tourArrowStyle}
-                aria-hidden="true"
-              />
-            ) : null}
-            <div className="onboarding-tour-head"><span>{progress}</span><button type="button" onClick={finish}>×</button></div>
-            <p className="eyebrow">Guided tour</p>
-            <h2 id="tour-title">{step.title}</h2>
-            <p>{step.body}</p>
-            <div className="onboarding-tour-actions">
-              <button className="btn btn-ghost" type="button" onClick={finish}>Exit tour</button>
-              <button className="btn btn-primary" type="button" onClick={nextTour}>{stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}</button>
-            </div>
-          </aside>
+          ) : null}
+          {hole ? (
+            <aside
+              ref={cardRef}
+              className={`onboarding-tour-card place-${tourPlace?.placement ?? "below"}${!searching && placedStep === stepIndex ? "" : " is-placing"}`}
+              style={tourCardStyle}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tour-title"
+            >
+              {tourPlace ? (
+                <span
+                  className={`onboarding-tour-arrow ${tourPlace.placement}`}
+                  style={tourArrowStyle}
+                  aria-hidden="true"
+                />
+              ) : null}
+              <div className="onboarding-tour-head">
+                <span>{progress}</span>
+                <button type="button" onClick={finish}>
+                  ×
+                </button>
+              </div>
+              <p className="eyebrow">Guided tour</p>
+              <h2 id="tour-title">{step.title}</h2>
+              <p>{step.body}</p>
+              <div className="onboarding-tour-actions">
+                <button className="btn btn-ghost" type="button" onClick={finish}>
+                  Exit tour
+                </button>
+                <button className="btn btn-primary" type="button" onClick={nextTour}>
+                  {stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}
+                </button>
+              </div>
+            </aside>
+          ) : null}
         </>
       )}
     </div>
