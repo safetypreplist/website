@@ -1,8 +1,9 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
-import { activate, getLicense, setLocalProduct } from "../lib/licenseClient";
+import { activate, getDeviceId, getLicense, isLicensed, setLocalProduct } from "../lib/licenseClient";
+import { BASIC_ADDITIONAL_CENTS } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
 type LicenseStatus = {
@@ -22,7 +23,10 @@ function formatDate(iso: string) {
 }
 
 export function LicensePage() {
-  const [key, setKey] = useState(getLicense()?.key || "");
+  const local = getLicense();
+  const licensedHere = isLicensed();
+  const deviceId = getDeviceId();
+  const [key, setKey] = useState(local?.key || "");
   const [busy, setBusy] = useState(false);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
   const [addBusy, setAddBusy] = useState(false);
@@ -44,6 +48,23 @@ export function LicensePage() {
     }
   }
 
+  useEffect(() => {
+    if (!local?.key) return;
+    let live = true;
+    void invokeFunction<LicenseStatus>("license-status", { key: local.key })
+      .then((data) => {
+        if (live) setStatus(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [local?.key]);
+
+  const thisDeviceActive =
+    Boolean(licensedHere && local?.key && status?.licenseKey === local.key) &&
+    Boolean(status?.devices.some((d) => d.deviceId === deviceId));
+
   async function upgrade() {
     if (!status || status.product !== "basic") return;
     setUpgradeBusy(true);
@@ -62,12 +83,15 @@ export function LicensePage() {
     }
   }
 
-  async function addAnotherDevice() {
+  async function addSecondDevice() {
+    if (!thisDeviceActive || !local?.key) return;
     setAddBusy(true);
     setError(null);
     try {
       const data = await invokeFunction<{ url?: string }>("create-checkout-session", {
         product: "basic_additional",
+        licenseKey: local.key,
+        deviceId,
         origin: window.location.origin,
       });
       if (!data?.url) throw new Error("Checkout did not return a Stripe URL.");
@@ -123,11 +147,10 @@ export function LicensePage() {
         ) : null}
 
         {status ? (
-          <div className="panel" style={{ marginTop: 28 }}>
+          <div className="panel" style={{ marginTop: 28 }} data-onboarding="license-panel">
             <p className="eyebrow">{status.product === "pro" ? "Pro" : "Basic"}</p>
             <p>
-              <strong>Paid:</strong>{" "}
-              {status.amountCents != null ? money(status.amountCents) : "—"} one time
+              <strong>Paid:</strong> {status.amountCents != null ? money(status.amountCents) : "—"} one time
             </p>
             <p>
               <strong>Purchase date:</strong> {formatDate(status.purchasedAt)}
@@ -146,18 +169,29 @@ export function LicensePage() {
                 {status.devices.map((device) => (
                   <li key={device.deviceId}>
                     <code>{device.deviceId.slice(0, 8)}…</code> · {formatDate(device.activatedAt)}
+                    {device.deviceId === deviceId ? " · this device" : ""}
                   </li>
                 ))}
               </ul>
             )}
             <div className="stack" style={{ gap: 10, marginTop: 18 }}>
-              <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateHere()}>
-                Activate on this device
-              </button>
-              <button className="btn btn-ghost" type="button" disabled={addBusy} onClick={() => void addAnotherDevice()}>
-                {addBusy ? "Redirecting…" : "Add another device — $9.99"}
-              </button>
-              {status.product === "basic" ? (
+              {!thisDeviceActive ? (
+                <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateHere()}>
+                  Activate on this device
+                </button>
+              ) : null}
+              {thisDeviceActive ? (
+                <button
+                  className="btn btn-ghost"
+                  type="button"
+                  disabled={addBusy}
+                  onClick={() => void addSecondDevice()}
+                  data-onboarding="second-device-offer"
+                >
+                  {addBusy ? "Redirecting…" : `Add a second device license, ${money(BASIC_ADDITIONAL_CENTS)}.`}
+                </button>
+              ) : null}
+              {status.product === "basic" && thisDeviceActive ? (
                 <button className="btn btn-ghost" type="button" disabled={upgradeBusy} onClick={() => void upgrade()}>
                   {upgradeBusy ? "Redirecting…" : "Upgrade to Pro — $12.00"}
                 </button>
@@ -165,16 +199,7 @@ export function LicensePage() {
               <Link to="/app/reset-devices">Reset devices</Link>
             </div>
           </div>
-        ) : (
-          <div style={{ marginTop: 28 }}>
-            <button className="btn btn-ghost" type="button" disabled={addBusy} onClick={() => void addAnotherDevice()}>
-              {addBusy ? "Redirecting…" : "Add another device — $9.99"}
-            </button>
-            <p className="muted" style={{ marginTop: 10 }}>
-              One license covers one device. Need another? Add a second license for $9.99.
-            </p>
-          </div>
-        )}
+        ) : null}
       </main>
       <PublicFooter />
     </div>

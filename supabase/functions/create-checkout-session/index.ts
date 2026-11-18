@@ -74,6 +74,28 @@ Deno.serve(async (req) => {
       licenseKey = license.license_key;
     }
 
+    if (product === "basic_additional") {
+      const key = normalizeLicenseKeyLoose(String(body.licenseKey || ""));
+      const deviceId = String(body.deviceId || "").trim();
+      if (!key.startsWith("SPL-") || !deviceId) {
+        return json({ error: "An activated license on this device is required to buy an additional license." }, 400);
+      }
+      const license = await findLicenseByKey(admin, key);
+      if (!license || license.status !== "active") {
+        return json({ error: "That license key is not active." }, 400);
+      }
+      const activeDevice = await admin
+        .from("license_devices")
+        .select("device_id")
+        .eq("license_id", license.id)
+        .eq("device_id", deviceId)
+        .maybeSingle();
+      if (!activeDevice.data) {
+        return json({ error: "Additional licenses can only be purchased from a device that already holds this key." }, 403);
+      }
+      licenseKey = license.license_key;
+    }
+
     const priceId = await stripePriceId(lookupForProduct(product));
     const successUrl = `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`;
 
