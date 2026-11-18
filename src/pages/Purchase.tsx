@@ -7,20 +7,27 @@ import { StripeCheckout } from "../components/StripeCheckout";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import {
-  BASIC_ADDITIONAL_CENTS,
-  BASIC_LICENSE_CENTS,
-  PRO_LICENSE_CENTS,
-} from "../lib/pricing";
-import {
-  BASIC_LICENSE_DESCRIPTION,
-  ONE_LICENSE_ONE_DEVICE_LINE,
-  PRO_LICENSE_DESCRIPTION,
-  SCOPE_LINE,
-} from "../lib/copy";
+import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
+import { SCOPE_LINE } from "../lib/copy";
 import { invokeFunction } from "../lib/supabase";
 
 const PROGRESS = ["Choose Plan", "Purchase", "Activate"] as const;
+
+const BASIC_FEATURES = [
+  "Grab-and-Go Bag",
+  "Ready Duffel Bag",
+  "Vehicle or Suitcase Prep",
+  "Home Resilience",
+  "Works offline on one device",
+  "Lifetime access — one-time purchase",
+] as const;
+
+const PRO_FEATURES = [
+  "Everything in Basic",
+  "Off-grid, water, power, and long-term food",
+  "Works offline on one device",
+  "Lifetime access — one-time purchase",
+] as const;
 
 export function CheckoutProgress({ current }: { current: number }) {
   return (
@@ -34,7 +41,14 @@ export function CheckoutProgress({ current }: { current: number }) {
           <span className="checkout-progress-dot" aria-hidden="true">
             {index < current ? (
               <svg viewBox="0 0 24 24">
-                <path d="m6 12.5 4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="m6 12.5 4 4 8-9"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ) : (
               index + 1
@@ -67,7 +81,7 @@ export function CheckoutPage() {
 
   const amount = product === "pro" ? PRO_LICENSE_CENTS : BASIC_LICENSE_CENTS;
   const title = product === "pro" ? "Pro" : "Basic";
-  const description = product === "pro" ? PRO_LICENSE_DESCRIPTION : BASIC_LICENSE_DESCRIPTION;
+  const features = product === "pro" ? PRO_FEATURES : BASIC_FEATURES;
 
   return (
     <div className="checkout-stage">
@@ -82,30 +96,35 @@ export function CheckoutPage() {
         <BrandMark />
 
         <section className="checkout-step">
-          <p className="eyebrow">Your license</p>
+          <p className="eyebrow">License</p>
+          <div className="checkout-plan-toggle" role="group" aria-label="Choose plan">
+            <button
+              type="button"
+              className={product === "basic" ? "is-active" : ""}
+              aria-pressed={product === "basic"}
+              onClick={() => setProduct("basic")}
+            >
+              Basic
+            </button>
+            <button
+              type="button"
+              className={product === "pro" ? "is-active" : ""}
+              aria-pressed={product === "pro"}
+              onClick={() => setProduct("pro")}
+            >
+              Pro
+            </button>
+          </div>
           <h1>{title}</h1>
-          <p className="muted">{SCOPE_LINE}</p>
           <p className="checkout-rate">
             {money(amount)} <small>one time</small>
           </p>
-          <p className="muted">{description}</p>
-          <p className="muted">{ONE_LICENSE_ONE_DEVICE_LINE}</p>
-          <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              className={`btn ${product === "basic" ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => setProduct("basic")}
-            >
-              Basic — {money(BASIC_LICENSE_CENTS)}
-            </button>
-            <button
-              type="button"
-              className={`btn ${product === "pro" ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => setProduct("pro")}
-            >
-              Pro — {money(PRO_LICENSE_CENTS)}
-            </button>
-          </div>
+          <p className="muted">{SCOPE_LINE}</p>
+          <ul className="checkout-feature-list">
+            {features.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </section>
 
         <section className="checkout-step checkout-summary">
@@ -119,9 +138,7 @@ export function CheckoutPage() {
             Due today
             <b>{money(amount)}</b>
           </p>
-          <p className="muted">
-            Need another device later? An additional Basic license is {money(BASIC_ADDITIONAL_CENTS)}.
-          </p>
+          <p className="muted">One license covers one device. Lifetime access.</p>
         </section>
 
         <>
@@ -155,12 +172,8 @@ export function ThankYouPage() {
   const checkoutSession = params.get("session_id") || "";
   const [licenseKey, setLicenseKey] = useState("");
   const [product, setProduct] = useState<"basic" | "pro" | "">("");
-  const [checkoutProduct, setCheckoutProduct] = useState<"basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "">(
-    "",
-  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(checkoutSession));
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!checkoutSession) {
@@ -174,14 +187,11 @@ export function ThankYouPage() {
         const captured = await invokeFunction<{
           licenseKey?: string;
           product?: "basic" | "pro";
-          checkoutProduct?: "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
-          error?: string;
         }>("checkout-status", { sessionId: checkoutSession });
         if (cancelled) return;
         if (captured?.licenseKey) {
           setLicenseKey(captured.licenseKey);
           setProduct(captured.product || "");
-          setCheckoutProduct(captured.checkoutProduct || captured.product || "");
           setBusy(false);
           return;
         }
@@ -209,17 +219,6 @@ export function ThankYouPage() {
     };
   }, [checkoutSession]);
 
-  async function copyKey() {
-    if (!licenseKey) return;
-    try {
-      await navigator.clipboard.writeText(licenseKey);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
   if (!checkoutSession && !licenseKey) {
     return (
       <div className="marketing-page">
@@ -244,41 +243,18 @@ export function ThankYouPage() {
       <main className="section cream">
         <div className="wrap legal-page" style={{ maxWidth: 560 }}>
           <p className="eyebrow">Purchase complete</p>
-          <h1>{checkoutProduct === "basic_additional" ? "Your second license" : "Your license key"}</h1>
+          <h1>Your license key</h1>
           {busy ? <p className="muted">Confirming payment…</p> : null}
           {error ? <p className="form-error">{error}</p> : null}
           {licenseKey ? (
             <>
-              <p>
-                {checkoutProduct === "basic_additional"
-                  ? "Your second license is ready. Enter this key on the other device at /activate."
-                  : product === "pro"
-                    ? "Pro license is ready."
-                    : product === "basic"
-                      ? "Basic license is ready."
-                      : "Your license is ready."}
-              </p>
-              <p
-                style={{
-                  fontFamily: "Consolas, Monaco, monospace",
-                  fontSize: 22,
-                  letterSpacing: "0.04em",
-                  fontWeight: 700,
-                }}
-              >
+              <p>{product === "pro" ? "Pro" : product === "basic" ? "Basic" : "Your"} license is ready.</p>
+              <p style={{ fontFamily: "Consolas, Monaco, monospace", fontSize: 22, letterSpacing: "0.04em", fontWeight: 700 }}>
                 {licenseKey}
               </p>
-              <div className="toolbar" style={{ gap: 10, marginTop: 12 }}>
-                <button className="btn btn-primary" type="button" onClick={() => void copyKey()}>
-                  {copied ? "Copied" : "Copy key"}
-                </button>
-                <button className="btn btn-ghost" type="button" onClick={() => navigate("/activate")}>
-                  Activate now
-                </button>
-              </div>
-              <p className="muted" style={{ marginTop: 16 }}>
-                We&apos;ve also emailed this key to you. One license covers one device.
-              </p>
+              <button className="btn btn-ghost" type="button" onClick={() => navigate(`/activate?key=${encodeURIComponent(licenseKey)}`)}>
+                Continue to activate
+              </button>
             </>
           ) : null}
         </div>

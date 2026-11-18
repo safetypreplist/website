@@ -1482,6 +1482,66 @@ a.amount {
   margin-left: 6px;
 }
 
+.checkout-plan-toggle {
+  display: inline-flex;
+  margin: 10px 0 14px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(30, 42, 31, 0.08);
+  border: 1px solid rgba(30, 42, 31, 0.12);
+  gap: 2px;
+}
+
+.checkout-plan-toggle button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.checkout-plan-toggle button.is-active {
+  background: #fff;
+  color: var(--forest);
+  box-shadow: 0 1px 2px rgba(15, 33, 27, 0.12);
+}
+
+.checkout-feature-list {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.checkout-feature-list li {
+  position: relative;
+  padding-left: 28px;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.checkout-feature-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.15em;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2 6.4 11l6-6.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / 11px no-repeat,
+    var(--moss);
+}
+
 .plan-access {
   margin: 0 0 22px;
   color: var(--forest);
