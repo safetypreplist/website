@@ -1,5 +1,5 @@
 import { money } from "./format";
-import { FAMILY_MIN_SEATS } from "./pricing";
+import { BASIC_ADDITIONAL_CENTS, BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS, UPGRADE_TO_PRO_CENTS } from "./pricing";
 import type { ChatTopic } from "./liveAgent";
 
 export type QuickAnswer = {
@@ -10,7 +10,7 @@ export type QuickAnswer = {
   link?: { to: string; label: string };
 };
 
-type Prices = { annualCents: number; vaultCents: number };
+type Prices = { annualCents?: number; vaultCents?: number; basicCents?: number; proCents?: number };
 
 const CHECKLISTS =
   "5-Minute Grab-and-Go Bag, 15-Minute Ready Duffel (72-Hour Continuity Kit), 20-Minute Vehicle OR Suitcase Prep, and 60-Minute Home Resilience";
@@ -19,21 +19,21 @@ const VAULT_LISTS =
 const REFUND_RULE =
   "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded.";
 
-export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickAnswer[] {
+export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
   return [
     {
       id: "cost",
       question: "How much does it cost?",
-      answer: `${money(annualCents)} per Personal Checklist per year. One yearly payment — there is no monthly plan. Family plans are ${money(annualCents)} per person per year. Survival Vault is an optional add-on for ${money(vaultCents)}/year (not per person). Checkout is secure with Stripe.`,
+      answer: `Basic is ${money(BASIC_LICENSE_CENTS)} one time (core checklists, one device). Pro is ${money(PRO_LICENSE_CENTS)} one time and includes Survival Vault. Need another device? An additional Basic license is ${money(BASIC_ADDITIONAL_CENTS)}. Checkout is secure with Stripe.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See plans" },
     },
     {
-      id: "family",
-      question: "How does the Family Plan work?",
-      answer: `${FAMILY_MIN_SEATS} or more people, each with their own Personal Checklist, connected under one plan. The owner chooses View Only or Can Edit for each checklist. It’s ${money(annualCents)} a year per member, so ${FAMILY_MIN_SEATS} members is ${money(annualCents * FAMILY_MIN_SEATS)} a year.`,
+      id: "devices",
+      question: "Can I use it on more than one device?",
+      answer: `One license covers one device. For another phone or computer, buy an additional Basic license for ${money(BASIC_ADDITIONAL_CENTS)}. Each key activates separately.`,
       topic: "sales",
-      link: { to: "/#pricing", label: "See the Family Plan" },
+      link: { to: "/license", label: "Add another device" },
     },
     {
       id: "included",
@@ -44,7 +44,7 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
     {
       id: "vault",
       question: "What’s in the Survival Vault?",
-      answer: `For an extra ${money(vaultCents)}/year you unlock ${VAULT_LISTS}. Add it at checkout.`,
+      answer: `Pro includes ${VAULT_LISTS}. Buy Pro for ${money(PRO_LICENSE_CENTS)}, or upgrade from Basic for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key).`,
       topic: "sales",
     },
     {
@@ -65,7 +65,7 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
     {
       id: "cancel",
       question: "Can I cancel anytime?",
-      answer: `Yes. Cancel in Account Settings before your next yearly renewal, and you keep access through the end of the year you paid for. ${REFUND_RULE}`,
+      answer: `Licenses are one-time purchases — there is no subscription to cancel. ${REFUND_RULE}`,
       topic: "support",
       link: { to: "/refunds", label: "Read the refund policy" },
     },
@@ -74,17 +74,17 @@ export function visitorQuickAnswers({ annualCents, vaultCents }: Prices): QuickA
       question: "I can’t activate my license",
       answer: "Open Activate, enter your license key exactly as emailed, and try again. If this device was replaced, use Reset devices with your email and key.",
       topic: "support",
-      link: { to: "/reset-password", label: "Reset my password" },
+      link: { to: "/app/reset-devices", label: "Reset devices" },
     },
   ];
 }
 
-export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault: boolean): QuickAnswer[] {
+export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): QuickAnswer[] {
   const answers: QuickAnswer[] = [
     {
       id: "cost",
       question: "What do I pay each year?",
-      answer: `Plans renew once a year. Each Personal Checklist is ${money(annualCents)}/year. Survival Vault is an optional ${money(vaultCents)}/year add-on (not per person). There is no monthly plan for new purchases. See Billing for your exact renewal amount.`,
+      answer: `Your license is a one-time purchase. Basic is ${money(BASIC_LICENSE_CENTS)}; Pro is ${money(PRO_LICENSE_CENTS)}. Upgrade Basic to Pro for ${money(UPGRADE_TO_PRO_CENTS)}. Manage your key on the license page.`,
       topic: "support",
       link: { to: "/license", label: "Open License" },
     },
@@ -92,7 +92,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
       id: "cancel",
       question: "How do I cancel my plan?",
       answer:
-        "Go to Account and choose Cancel subscription. You won’t be charged again, and you keep access through the end of the yearly period you already paid for.",
+        "Licenses are one-time — there is no subscription to cancel. If you need help with a refund, use the contact form within the refund window.",
       topic: "support",
       link: { to: "/license", label: "Manage license" },
     },
@@ -114,7 +114,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
     {
       id: "vault",
       question: "How do I get the Survival Vault?",
-      answer: `Add it at the end of your basic checklists or at checkout. For an extra ${money(vaultCents)}/year it unlocks ${VAULT_LISTS}.`,
+      answer: `Upgrade to Pro for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key). Pro unlocks ${VAULT_LISTS}.`,
       topic: "support",
       link: { to: "/app/lists#survival-vault", label: "Add the Survival Vault" },
     },

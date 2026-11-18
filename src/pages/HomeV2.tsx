@@ -6,11 +6,15 @@ import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
-  ANNUAL_CENTS,
-  FAMILY_MIN_SEATS,
-  MAX_CHECKLIST_QUANTITY,
-  SURVIVAL_VAULT_CENTS,
+  BASIC_ADDITIONAL_CENTS,
+  BASIC_LICENSE_CENTS,
+  PRO_LICENSE_CENTS,
 } from "../lib/pricing";
+import {
+  BASIC_LICENSE_DESCRIPTION,
+  ONE_LICENSE_ONE_DEVICE_LINE,
+  PRO_LICENSE_DESCRIPTION,
+} from "../lib/copy";
 import "../styles/home-v2.css";
 
 const SYSTEMS = [
@@ -36,19 +40,20 @@ const SYSTEMS = [
   },
 ] as const;
 
-const INDIVIDUAL_FEATURES = [
+const BASIC_FEATURES = [
   "Grab-and-Go Bag",
   "Ready Duffel Bag",
   "Vehicle or Suitcase Prep",
   "Home Resilience",
   "Works offline on one device",
-  "Works when offline",
+  "Lifetime access — one-time purchase",
 ] as const;
 
-const FAMILY_FEATURES = [
-  "Everything in Individual, for each person",
-  "Connected under one Family Plan",
-  "View Only or Can Edit per checklist",
+const PRO_FEATURES = [
+  "Everything in Basic",
+  "Off-grid, water, power, and long-term food",
+  "Works offline on one device",
+  "Lifetime access — one-time purchase",
 ] as const;
 
 function useReveal() {
@@ -78,12 +83,11 @@ export function HomeV2Page() {
   const root = useReveal();
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
   const [vaultOpen, setVaultOpen] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
-  const price = money(ANNUAL_CENTS);
-  const vault = money(SURVIVAL_VAULT_CENTS);
-  const familyTotal = money(ANNUAL_CENTS * familyQty);
+  const basicPrice = money(BASIC_LICENSE_CENTS);
+  const proPrice = money(PRO_LICENSE_CENTS);
+  const extraDevice = money(BASIC_ADDITIONAL_CENTS);
 
   useEffect(() => {
     const video = heroVideoRef.current;
@@ -148,26 +152,26 @@ export function HomeV2Page() {
           </p>
           <div className="hv2-hero-actions">
             <a className="hv2-btn hv2-btn-primary" href="#pricing">
-              Get your checklist, {price}/year
+              Get started — from {basicPrice}
             </a>
             <Link className="hv2-btn hv2-btn-ghost" to="/demo">
               Try a free sample
             </Link>
           </div>
-          <p className="hv2-hero-price">One yearly payment. No monthly subscription.</p>
+          <p className="hv2-hero-price">One-time purchase. Lifetime access on one device.</p>
         </div>
         <div className="hv2-strip" aria-label="At a glance">
           <p>
-            <b>{price}</b> per checklist per year
+            <b>{basicPrice}</b> Basic · <b>{proPrice}</b> Pro
           </p>
           <span aria-hidden="true" />
-          <p>No monthly subscription</p>
+          <p>One-time purchase</p>
           <span aria-hidden="true" />
-          <p>Access from all devices</p>
+          <p>One license, one device</p>
           <span aria-hidden="true" />
-          <p>Available offline</p>
+          <p>Works offline</p>
           <span aria-hidden="true" />
-          <p>Family plans available</p>
+          <p>Extra device {extraDevice}</p>
         </div>
       </section>
 
@@ -248,9 +252,9 @@ export function HomeV2Page() {
             </p>
             <ul className="hv2-ticks">
               <li>Check off items on phone, tablet, or desktop</li>
-              <li>Works offline after you turn it on</li>
+              <li>Works offline on the device you activate</li>
               <li>Print any list for the bag or the fridge</li>
-              <li>Family Plan connects personal checklists</li>
+              <li>One license covers one device</li>
             </ul>
           </div>
           <div className="hv2-devices" aria-hidden="false">
@@ -275,18 +279,20 @@ export function HomeV2Page() {
           <ol className="hv2-steps">
             <li className="hv2-reveal">
               <span>01</span>
-              <h3>Choose Individual or Family</h3>
-              <p>{price} per Personal Checklist for the year.</p>
+              <h3>Choose Basic or Pro</h3>
+              <p>
+                {basicPrice} or {proPrice} — one-time, lifetime access on one device.
+              </p>
             </li>
             <li className="hv2-reveal" style={{ transitionDelay: "80ms" }}>
               <span>02</span>
-              <h3>Pay once for the year</h3>
-              <p className="hv2-step-tight">Secure checkout. Survival Vault add-on {vault}/year.</p>
+              <h3>Pay once</h3>
+              <p className="hv2-step-tight">Secure checkout. No subscription.</p>
             </li>
             <li className="hv2-reveal" style={{ transitionDelay: "160ms" }}>
               <span>03</span>
-              <h3>Start checking things off</h3>
-              <p>Create your account and prep at your pace.</p>
+              <h3>Activate and start checking things off</h3>
+              <p>Enter your license key on this device and prep at your pace.</p>
             </li>
           </ol>
         </div>
@@ -296,70 +302,53 @@ export function HomeV2Page() {
         <div className="hv2-wrap">
           <div className="hv2-section-head hv2-reveal">
             <p className="hv2-eyebrow">Pricing</p>
-            <h2>Easy pricing. No hassle.</h2>
-            <p>One annual fee. No monthly subscription.</p>
+            <h2>One-time purchase. Lifetime access.</h2>
+            <p>{ONE_LICENSE_ONE_DEVICE_LINE}</p>
           </div>
 
           <div className="hv2-price-grid">
             <article className="hv2-price hv2-reveal">
-              <p className="hv2-price-kicker">Individual</p>
+              <p className="hv2-price-kicker">Basic</p>
               <p className="hv2-price-amount">
-                {price} <small>/ year</small>
+                {basicPrice} <small>one time</small>
               </p>
-              <p className="hv2-price-line">1 Personal Checklist</p>
+              <p className="hv2-price-line">Core checklists · one device</p>
               <ul className="hv2-checks">
-                {INDIVIDUAL_FEATURES.map((item) => (
+                {BASIC_FEATURES.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <Link className="hv2-btn hv2-btn-primary hv2-btn-block" to="/checkout?plan=individual&access=annual">
-                Choose Individual
+              <p className="muted" style={{ marginTop: 12, fontSize: 14 }}>
+                {BASIC_LICENSE_DESCRIPTION}
+              </p>
+              <Link className="hv2-btn hv2-btn-primary hv2-btn-block" to="/checkout?product=basic">
+                Choose Basic
               </Link>
             </article>
 
             <article className="hv2-price hv2-price-feature hv2-reveal" style={{ transitionDelay: "90ms" }}>
-              <p className="hv2-price-kicker">Family</p>
+              <p className="hv2-price-kicker">Pro</p>
               <p className="hv2-price-amount">
-                {familyTotal} <small>/ year</small>
+                {proPrice} <small>one time</small>
               </p>
-              <p className="hv2-price-line">
-                {familyQty} Personal Checklists · {price} each
-              </p>
-              <div className="hv2-qty-row">
-                <span className="hv2-qty-label">Quantity</span>
-                <div className="hv2-qty" role="group" aria-label="Family checklist quantity">
-                  <button
-                    type="button"
-                    aria-label="Fewer checklists"
-                    disabled={familyQty <= FAMILY_MIN_SEATS}
-                    onClick={() => setFamilyQty((n) => Math.max(FAMILY_MIN_SEATS, n - 1))}
-                  >
-                    −
-                  </button>
-                  <b>{familyQty}</b>
-                  <button
-                    type="button"
-                    aria-label="More checklists"
-                    disabled={familyQty >= MAX_CHECKLIST_QUANTITY}
-                    onClick={() => setFamilyQty((n) => Math.min(MAX_CHECKLIST_QUANTITY, n + 1))}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
+              <p className="hv2-price-line">Everything in Basic + Survival Vault</p>
               <ul className="hv2-checks">
-                {FAMILY_FEATURES.map((item) => (
+                {PRO_FEATURES.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <Link
-                className="hv2-btn hv2-btn-primary hv2-btn-block"
-                to={`/checkout?plan=family&qty=${familyQty}&access=annual`}
-              >
-                Choose Family
+              <p className="muted" style={{ marginTop: 12, fontSize: 14 }}>
+                {PRO_LICENSE_DESCRIPTION}
+              </p>
+              <Link className="hv2-btn hv2-btn-primary hv2-btn-block" to="/checkout?product=pro">
+                Choose Pro
               </Link>
             </article>
           </div>
+          <p className="muted" style={{ marginTop: 22, textAlign: "center" }}>
+            Already have Basic? Upgrade to Pro for $12.00 on the{" "}
+            <Link to="/license">license page</Link> — same key, same device.
+          </p>
         </div>
       </section>
 
@@ -372,9 +361,9 @@ export function HomeV2Page() {
         <div className="hv2-close-shade" aria-hidden="true" />
         <div className="hv2-close-inner hv2-reveal">
           <h2>Hope for the best. Prepare for the rest.</h2>
-          <p>One checklist per person. One annual fee.</p>
+          <p>One license. One device. Lifetime access.</p>
           <a className="hv2-btn hv2-btn-primary" href="#pricing">
-            Get Safety Prep List, {price}/year
+            Get started — from {basicPrice}
           </a>
         </div>
       </section>

@@ -174,9 +174,8 @@ export function DemoPage() {
               <li>60-Minute Home Resilience</li>
             </ul>
             <p>
-              Add your own items, keep notes, share with family, print a paper backup, and prepare your checklists for
-              offline use on your phone, tablet, or computer. Plans are $30 per Personal Checklist per year — no monthly
-              option. Survival Vault is an optional $10/year add-on.
+              Add your own items, keep notes, print a paper backup, and use your checklists offline on one device. Basic
+              is $12.99 one time; Pro is $24.99 one time and includes Survival Vault.
             </p>
             <div className="demo-actions">
               <a className="btn btn-primary" href="/#pricing">

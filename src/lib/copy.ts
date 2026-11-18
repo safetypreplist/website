@@ -6,7 +6,7 @@ export const FOOTER_TAGLINE = "Hope for the best, Prepare for the rest.";
 export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
 export const SITE_ORIGIN = "https://safetypreplist.com";
 export const SITE_DESCRIPTION =
-  "Practical emergency checklists for $30 per person per year. No monthly subscription. Printable, phone, tablet, and desktop, plus an optional $10/year Survival Vault.";
+  "Practical emergency checklists as a one-time purchase. Basic $12.99 or Pro $24.99 — works offline on one device. Printable on phone, tablet, and desktop.";
 
 export const SCOPE_LINE =
   "Practical preparedness for natural disasters, local emergencies, outages, evacuations, and temporary disruptions.";
@@ -19,7 +19,7 @@ export const MORE_TIME_LINE =
   "You've handled the essentials. Now build a stronger preparedness system.";
 
 export const VAULT_APP_DESCRIPTION =
-  "For an extra $10/year, unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.";
+  "Pro unlocks Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. Upgrade from Basic for $12.00 — same license key, same device.";
 
 export const BASIC_LICENSE_DESCRIPTION =
   "One-time purchase, lifetime access to the core checklists: Grab-and-Go Bag, Ready Duffel Bag, Vehicle or Suitcase Prep, and Home Resilience. Works offline on one device.";

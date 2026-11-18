@@ -1,11 +1,18 @@
-/** Public offer: $30 per Personal Checklist per year. Monthly kept only for legacy accounts. */
+/** One-time lifetime licenses (public offer). Legacy annual/monthly constants kept for older screens. */
+export const BASIC_LICENSE_CENTS = 1299;
+export const PRO_LICENSE_CENTS = 2499;
+export const BASIC_ADDITIONAL_CENTS = 999;
+export const UPGRADE_TO_PRO_CENTS = 1200;
+
+/** @deprecated Legacy annual pricing — prefer BASIC_LICENSE_CENTS / PRO_LICENSE_CENTS. */
 export const MONTHLY_CENTS = 799;
 export const ANNUAL_MONTHLY_EQUIVALENT_CENTS = 250;
 export const ANNUAL_CENTS = 3000;
+/** @deprecated Pro is a one-time license; Survival Vault is included in Pro. */
 export const SURVIVAL_VAULT_CENTS = 1000;
 export const SURVIVAL_VAULT_NAME = "Survival Vault";
 export const SURVIVAL_VAULT_DESCRIPTION =
-  "For an extra $10/year, unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.";
+  "Pro unlocks Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. Upgrade from Basic for $12.00 (same key, same device).";
 export const FAMILY_MIN_SEATS = 2;
 export const MAX_CHECKLIST_QUANTITY = 20;
 
