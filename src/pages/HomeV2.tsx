@@ -8,7 +8,6 @@ import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   BASIC_LICENSE_CENTS,
   PRO_LICENSE_CENTS,
-  UPGRADE_TO_PRO_CENTS,
 } from "../lib/pricing";
 import { ONE_LICENSE_ONE_DEVICE_LINE } from "../lib/copy";
 import "../styles/home-v2.css";
@@ -147,7 +146,7 @@ export function HomeV2Page() {
           </p>
           <div className="hv2-hero-actions">
             <a className="hv2-btn hv2-btn-primary" href="#pricing">
-              Get started — from {basicPrice}
+              Get started for {basicPrice}
             </a>
             <Link className="hv2-btn hv2-btn-ghost" to="/demo">
               Try a free sample
@@ -161,6 +160,8 @@ export function HomeV2Page() {
           <p>One-time purchase</p>
           <span aria-hidden="true" />
           <p>One license, one device</p>
+          <span aria-hidden="true" />
+          <p>Works offline</p>
           <span aria-hidden="true" />
           <p>No subscription</p>
         </div>
@@ -282,7 +283,7 @@ export function HomeV2Page() {
             </li>
             <li className="hv2-reveal" style={{ transitionDelay: "160ms" }}>
               <span>03</span>
-              <h3 className="hv2-step-tight">Activate and start your checklist</h3>
+              <h3 className="hv2-step-tight">Activate and start checklist</h3>
               <p>Enter your license key on this device and prep at your pace.</p>
             </li>
           </ol>
@@ -330,10 +331,6 @@ export function HomeV2Page() {
               </Link>
             </article>
           </div>
-          <p className="muted" style={{ marginTop: 22, textAlign: "center" }}>
-            Already have Basic? Upgrade to Pro for {money(UPGRADE_TO_PRO_CENTS)} on the{" "}
-            <Link to="/license">license page</Link> — same key, same device.
-          </p>
         </div>
       </section>
 
@@ -348,7 +345,7 @@ export function HomeV2Page() {
           <h2>Hope for the best. Prepare for the rest.</h2>
           <p>One license. One device. Lifetime access.</p>
           <a className="hv2-btn hv2-btn-primary" href="#pricing">
-            Get started — from {basicPrice}
+            Get started for {basicPrice}
           </a>
         </div>
       </section>
