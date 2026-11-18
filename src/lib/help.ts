@@ -13,7 +13,7 @@ export const DEFAULT_FAQS: HelpFaq[] = [
     id: "pricing",
     question: "What does my plan cost?",
     answer:
-      "Basic is $12.99 one time (core checklists, one device). Pro is $24.99 one time and includes Survival Vault. An additional Basic license for another device is $9.99. Upgrade Basic to Pro for $12.00 on the license page.",
+      "Basic is $12.99 one time (core checklists, one device). Pro is $24.99 one time and includes Survival Vault. Upgrade Basic to Pro for $12.00 from your license page after you activate.",
     linkTo: "/license",
     linkLabel: "Open License",
   },

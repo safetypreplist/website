@@ -28,7 +28,7 @@ export const PRO_LICENSE_DESCRIPTION =
   "One-time purchase, lifetime access to everything in Basic, plus off-grid, water, power, and long-term food checklists. Works offline on one device.";
 
 export const ONE_LICENSE_ONE_DEVICE_LINE =
-  "One license covers one device. Need another? Add a second license for $9.99.";
+  "One license covers one device.";
 
 export const VAULT_CHECKLISTS = [
   {

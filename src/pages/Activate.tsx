@@ -1,15 +1,17 @@
-import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { FormEvent, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { activate, getLicense, isLicensed } from "../lib/licenseClient";
 
 const DEVICE_TAKEN =
-  "This license is already active on another device. Use a second license for another device, or reset your devices if you've lost access.";
+  "This license is already active on another device. If that's your device, open Safety Prep List there and reset it from your license page. If you've lost that device, use Reset devices.";
 
 export function ActivatePage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const existing = getLicense();
-  const [key, setKey] = useState("");
+  const keyFromUrl = useMemo(() => (params.get("key") || "").trim(), [params]);
+  const [key, setKey] = useState(keyFromUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceTaken, setDeviceTaken] = useState(false);
@@ -35,12 +37,9 @@ export function ActivatePage() {
               Open checklists
             </Link>
             <Link className="btn btn-ghost" to="/license">
-              Manage license
+              License details
             </Link>
           </div>
-          <p className="muted" style={{ marginTop: 18 }}>
-            Need another device? <Link to="/license">Add another device</Link> with a second license.
-          </p>
         </main>
         <PublicFooter />
       </div>
@@ -58,7 +57,7 @@ export function ActivatePage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not activate that license key.";
       setError(message);
-      setDeviceTaken(message.includes("already active on another device"));
+      setDeviceTaken(message.toLowerCase().includes("already active on another device"));
       setBusy(false);
     }
   }
@@ -88,8 +87,6 @@ export function ActivatePage() {
               {deviceTaken ? (
                 <p className="muted" style={{ marginTop: 10 }}>
                   <Link to="/app/reset-devices">Reset devices</Link>
-                  {" · "}
-                  <Link to="/license">Buy a second license</Link>
                 </p>
               ) : null}
             </div>
@@ -101,7 +98,7 @@ export function ActivatePage() {
         <p className="muted" style={{ marginTop: 18 }}>
           Lost access to your device? <Link to="/app/reset-devices">Reset devices</Link>
           {" · "}
-          <Link to="/license">Look up a license</Link>
+          <Link to="/license">License details</Link>
         </p>
       </main>
       <PublicFooter />

@@ -1,5 +1,5 @@
 import { money } from "./format";
-import { BASIC_ADDITIONAL_CENTS, BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS, UPGRADE_TO_PRO_CENTS } from "./pricing";
+import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS, UPGRADE_TO_PRO_CENTS } from "./pricing";
 import type { ChatTopic } from "./liveAgent";
 
 export type QuickAnswer = {
@@ -24,16 +24,16 @@ export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
     {
       id: "cost",
       question: "How much does it cost?",
-      answer: `Basic is ${money(BASIC_LICENSE_CENTS)} one time (core checklists, one device). Pro is ${money(PRO_LICENSE_CENTS)} one time and includes Survival Vault. Need another device? An additional Basic license is ${money(BASIC_ADDITIONAL_CENTS)}. Checkout is secure with Stripe.`,
+      answer: `Basic is ${money(BASIC_LICENSE_CENTS)} one time (core checklists, one device). Pro is ${money(PRO_LICENSE_CENTS)} one time and includes Survival Vault. One license covers one device. Checkout is secure with Stripe.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See plans" },
     },
     {
       id: "devices",
       question: "Can I use it on more than one device?",
-      answer: `One license covers one device. For another phone or computer, buy an additional Basic license for ${money(BASIC_ADDITIONAL_CENTS)}. Each key activates separately.`,
+      answer: `One license covers one device. After you activate, you can add a second device license from your license page inside the app.`,
       topic: "sales",
-      link: { to: "/license", label: "Add another device" },
+      link: { to: "/activate", label: "Activate" },
     },
     {
       id: "included",
@@ -122,7 +122,7 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       id: "devices",
       question: "Why am I asked about devices?",
       answer:
-        "One license covers one device. Need another phone or computer? Buy an additional Basic license for $9.99, or use Reset devices if you've lost access to the one you activated.",
+        "One license covers one device. If you've lost that device, use Reset devices. A second device license is available from your license page after you activate.",
       topic: "support",
       link: { to: "/license", label: "View devices" },
     },

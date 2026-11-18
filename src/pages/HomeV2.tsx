@@ -6,7 +6,6 @@ import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
-  BASIC_ADDITIONAL_CENTS,
   BASIC_LICENSE_CENTS,
   PRO_LICENSE_CENTS,
 } from "../lib/pricing";
@@ -87,7 +86,6 @@ export function HomeV2Page() {
   const [videoStarted, setVideoStarted] = useState(false);
   const basicPrice = money(BASIC_LICENSE_CENTS);
   const proPrice = money(PRO_LICENSE_CENTS);
-  const extraDevice = money(BASIC_ADDITIONAL_CENTS);
 
   useEffect(() => {
     const video = heroVideoRef.current;
@@ -170,8 +168,6 @@ export function HomeV2Page() {
           <p>One license, one device</p>
           <span aria-hidden="true" />
           <p>Works offline</p>
-          <span aria-hidden="true" />
-          <p>Extra device {extraDevice}</p>
         </div>
       </section>
 
