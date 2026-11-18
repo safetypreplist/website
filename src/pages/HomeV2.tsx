@@ -10,11 +10,7 @@ import {
   PRO_LICENSE_CENTS,
   UPGRADE_TO_PRO_CENTS,
 } from "../lib/pricing";
-import {
-  BASIC_LICENSE_DESCRIPTION,
-  ONE_LICENSE_ONE_DEVICE_LINE,
-  PRO_LICENSE_DESCRIPTION,
-} from "../lib/copy";
+import { ONE_LICENSE_ONE_DEVICE_LINE } from "../lib/copy";
 import "../styles/home-v2.css";
 
 const SYSTEMS = [
@@ -160,15 +156,13 @@ export function HomeV2Page() {
           <p className="hv2-hero-price">One-time purchase. Lifetime access on one device.</p>
         </div>
         <div className="hv2-strip" aria-label="At a glance">
-          <p>
-            <b>{basicPrice}</b> Basic · <b>{proPrice}</b> Pro
-          </p>
+          <p>Affordable pricing</p>
           <span aria-hidden="true" />
           <p>One-time purchase</p>
           <span aria-hidden="true" />
           <p>One license, one device</p>
           <span aria-hidden="true" />
-          <p>Works offline</p>
+          <p>No subscription</p>
         </div>
       </section>
 
@@ -288,7 +282,7 @@ export function HomeV2Page() {
             </li>
             <li className="hv2-reveal" style={{ transitionDelay: "160ms" }}>
               <span>03</span>
-              <h3>Activate and start checking things off</h3>
+              <h3 className="hv2-step-tight">Activate and start your checklist</h3>
               <p>Enter your license key on this device and prep at your pace.</p>
             </li>
           </ol>
@@ -315,9 +309,6 @@ export function HomeV2Page() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <p className="muted" style={{ marginTop: 12, fontSize: 14 }}>
-                {BASIC_LICENSE_DESCRIPTION}
-              </p>
               <Link className="hv2-btn hv2-btn-primary hv2-btn-block" to="/checkout?product=basic">
                 Choose Basic
               </Link>
@@ -334,9 +325,6 @@ export function HomeV2Page() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <p className="muted" style={{ marginTop: 12, fontSize: 14 }}>
-                {PRO_LICENSE_DESCRIPTION}
-              </p>
               <Link className="hv2-btn hv2-btn-primary hv2-btn-block" to="/checkout?product=pro">
                 Choose Pro
               </Link>

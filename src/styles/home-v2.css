@@ -713,6 +713,10 @@
   font-size: 22px;
 }
 
+.hv2-steps h3.hv2-step-tight {
+  white-space: nowrap;
+}
+
 .hv2-steps p {
   margin: 0;
   color: var(--ink-soft);
@@ -825,6 +829,7 @@
 .hv2-price-amount small {
   font-size: 0.38em;
   font-weight: 650;
+  letter-spacing: 0.08em;
   color: inherit;
   opacity: 0.7;
 }
@@ -1105,6 +1110,11 @@
   .hv2-step-tight {
     white-space: normal;
     font-size: 14px;
+  }
+
+  .hv2-steps h3.hv2-step-tight {
+    white-space: nowrap;
+    font-size: clamp(15px, 4.2vw, 20px);
   }
 
   .hv2-price {
