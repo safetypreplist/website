@@ -1,11 +1,13 @@
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BrandMark } from "../components/Brand";
+import { Confetti } from "../components/Confetti";
 import { LegalAgreement } from "../components/LegalAgreement";
 import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { StripeCheckout } from "../components/StripeCheckout";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
+import { activate } from "../lib/licenseClient";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
 import { SCOPE_LINE } from "../lib/copy";
@@ -172,8 +174,13 @@ export function ThankYouPage() {
   const checkoutSession = params.get("session_id") || "";
   const [licenseKey, setLicenseKey] = useState("");
   const [product, setProduct] = useState<"basic" | "pro" | "">("");
+  const [checkoutProduct, setCheckoutProduct] = useState<"basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "">(
+    "",
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(checkoutSession));
+  const [activating, setActivating] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     if (!checkoutSession) {
@@ -187,11 +194,14 @@ export function ThankYouPage() {
         const captured = await invokeFunction<{
           licenseKey?: string;
           product?: "basic" | "pro";
+          checkoutProduct?: "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
+          error?: string;
         }>("checkout-status", { sessionId: checkoutSession });
         if (cancelled) return;
         if (captured?.licenseKey) {
           setLicenseKey(captured.licenseKey);
           setProduct(captured.product || "");
+          setCheckoutProduct(captured.checkoutProduct || captured.product || "");
           setBusy(false);
           return;
         }
@@ -219,6 +229,19 @@ export function ThankYouPage() {
     };
   }, [checkoutSession]);
 
+  async function activateNow() {
+    if (!licenseKey) return;
+    setActivating(true);
+    setError("");
+    try {
+      await activate(licenseKey);
+      navigate("/app", { replace: true });
+    } catch (err) {
+      setActivating(false);
+      setError(err instanceof Error ? err.message : "Could not activate on this device.");
+    }
+  }
+
   if (!checkoutSession && !licenseKey) {
     return (
       <div className="marketing-page">
@@ -239,22 +262,57 @@ export function ThankYouPage() {
 
   return (
     <div className="marketing-page">
+      <Confetti fire={Boolean(licenseKey)} />
       <PublicHeader />
       <main className="section cream">
         <div className="wrap legal-page" style={{ maxWidth: 560 }}>
           <p className="eyebrow">Purchase complete</p>
-          <h1>Your license key</h1>
-          {busy ? <p className="muted">Confirming payment…</p> : null}
+          {busy ? (
+            <>
+              <h1>Thank you for your purchase</h1>
+              <p className="muted">Thank you for your purchase. Now loading your license key.</p>
+            </>
+          ) : null}
           {error ? <p className="form-error">{error}</p> : null}
           {licenseKey ? (
             <>
-              <p>{product === "pro" ? "Pro" : product === "basic" ? "Basic" : "Your"} license is ready.</p>
-              <p style={{ fontFamily: "Consolas, Monaco, monospace", fontSize: 22, letterSpacing: "0.04em", fontWeight: 700 }}>
+              <h1>Your license key</h1>
+              <p>
+                {checkoutProduct === "basic_additional"
+                  ? "Your second license is ready."
+                  : product === "pro"
+                    ? "Pro license is ready."
+                    : product === "basic"
+                      ? "Basic license is ready."
+                      : "Your license is ready."}
+              </p>
+              <p
+                style={{
+                  fontFamily: "Consolas, Monaco, monospace",
+                  fontSize: 22,
+                  letterSpacing: "0.04em",
+                  fontWeight: 700,
+                }}
+              >
                 {licenseKey}
               </p>
-              <button className="btn btn-ghost" type="button" onClick={() => navigate(`/activate?key=${encodeURIComponent(licenseKey)}`)}>
-                Continue to activate
-              </button>
+              <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+                <button className="btn btn-primary" type="button" disabled={activating} onClick={() => void activateNow()}>
+                  {activating ? "Activating…" : "Activate now"}
+                </button>
+              </div>
+              <div style={{ marginTop: 14 }}>
+                <button className="btn btn-ghost" type="button" onClick={() => setShowDetails((v) => !v)}>
+                  {showDetails ? "Hide details" : "Details"}
+                </button>
+                {showDetails ? (
+                  <p className="muted" style={{ marginTop: 10 }}>
+                    We&apos;ve also emailed this key to you. One license covers one device. You can open{" "}
+                    <Link to={`/activate?key=${encodeURIComponent(licenseKey)}`}>Activate</Link> on another browser with
+                    the key already filled in.
+                  </p>
+                ) : null}
+              </div>
             </>
           ) : null}
         </div>
