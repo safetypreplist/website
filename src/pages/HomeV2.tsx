@@ -9,7 +9,6 @@ import {
   BASIC_LICENSE_CENTS,
   PRO_LICENSE_CENTS,
 } from "../lib/pricing";
-import { ONE_LICENSE_ONE_DEVICE_LINE } from "../lib/copy";
 import "../styles/home-v2.css";
 
 const SYSTEMS = [
@@ -294,8 +293,11 @@ export function HomeV2Page() {
         <div className="hv2-wrap">
           <div className="hv2-section-head hv2-reveal">
             <p className="hv2-eyebrow">Pricing</p>
-            <h2>One-time purchase. Lifetime access.</h2>
-            <p>{ONE_LICENSE_ONE_DEVICE_LINE}</p>
+            <h2 className="hv2-price-heading">
+              One-time purchase.
+              <span>Lifetime access.</span>
+            </h2>
+            <p>No subscription.</p>
           </div>
 
           <div className="hv2-price-grid">
