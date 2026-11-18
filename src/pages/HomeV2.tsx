@@ -40,14 +40,16 @@ const BASIC_FEATURES = [
   "Vehicle or Suitcase Prep",
   "Home Resilience",
   "Works offline on one device",
-  "Lifetime access — one-time purchase",
 ] as const;
 
 const PRO_FEATURES = [
   "Everything in Basic",
-  "Off-grid, water, power, and long-term food",
+  "Off-grid systems",
+  "Water purification",
+  "Home battery and solar",
+  "Emergency cooling",
+  "Long-term food",
   "Works offline on one device",
-  "Lifetime access — one-time purchase",
 ] as const;
 
 function useReveal() {
@@ -111,9 +113,9 @@ export function HomeV2Page() {
               Activate
             </Link>
           </nav>
-          <a className="hv2-nav-cta" href="#pricing">
+          <Link className="hv2-nav-cta" to="/checkout?product=basic">
             Get started
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -141,28 +143,24 @@ export function HomeV2Page() {
         <div className="hv2-hero-inner">
           <h1>Be ready before you need to be.</h1>
           <p className="hv2-hero-lead">
-            Practical checklists for outages, evacuations, and disruptions on your phone, printed, or offline.
+            Practical checklists for outages, evacuations, and disasters. Works offline once activated, no account needed.
           </p>
           <div className="hv2-hero-actions">
-            <a className="hv2-btn hv2-btn-primary" href="#pricing">
+            <Link className="hv2-btn hv2-btn-primary" to="/checkout?product=basic">
               Get started for {basicPrice}
-            </a>
+            </Link>
             <Link className="hv2-btn hv2-btn-ghost" to="/demo">
               Try a free sample
             </Link>
           </div>
-          <p className="hv2-hero-price">One-time purchase. Lifetime access on one device.</p>
+          <p className="hv2-hero-price">One-time purchase, lifetime access on one device.</p>
         </div>
         <div className="hv2-strip" aria-label="At a glance">
-          <p>Affordable pricing</p>
+          <p>Works offline after activation</p>
           <span aria-hidden="true" />
-          <p>One-time purchase</p>
+          <p>Personalize your checklist</p>
           <span aria-hidden="true" />
-          <p>One license, one device</p>
-          <span aria-hidden="true" />
-          <p>Works offline</p>
-          <span aria-hidden="true" />
-          <p>No subscription</p>
+          <p>Print or PDF</p>
         </div>
       </section>
 
@@ -172,8 +170,9 @@ export function HomeV2Page() {
             <p className="hv2-eyebrow">Why it exists</p>
             <h2>Most people wait until something goes wrong.</h2>
             <p>
-              Then the questions pile up: What goes in the bag? What’s already in the car? What’s missing at home?
-              Safety Prep List turns that scramble into a clear list you can work through before the moment arrives.
+              Most of us don’t think about emergencies until they’re right in front of us. Then the questions come fast.
+              What do I grab? What’s already in the car? What’s missing at home? Safety Prep List helps you answer those
+              questions before the moment arrives.
             </p>
           </div>
           <figure className={`hv2-story-video${videoStarted ? " is-playing" : ""}`}>
@@ -205,8 +204,10 @@ export function HomeV2Page() {
         <div className="hv2-wrap">
           <div className="hv2-section-head hv2-reveal">
             <p className="hv2-eyebrow">What’s included</p>
-            <h2>Four checklists. One system.</h2>
-            <p>Every Personal Checklist covers the essentials for leaving fast, lasting 72 hours, traveling, and staying home.</p>
+            <h2>Checklists That Make Preparing Easier.</h2>
+            <p>
+              Every core checklist helps you prepare to leave quickly, stay 72 hours, travel, and stay ready at home.
+            </p>
           </div>
           <div className="hv2-systems">
             {SYSTEMS.map((system, index) => (
@@ -224,9 +225,9 @@ export function HomeV2Page() {
             ))}
           </div>
           <p className="hv2-vault-hint hv2-reveal">
-            Pro includes Survival Vault and these extra checklists.{" "}
+            Want to go further? Pro includes everything in Basic, plus additional checklists and preparedness resources.{" "}
             <button type="button" className="hv2-text-link" onClick={() => setVaultOpen(true)}>
-              See what’s included
+              See what’s included.
             </button>
           </p>
         </div>
@@ -235,18 +236,20 @@ export function HomeV2Page() {
       <section className="hv2-section hv2-product">
         <div className="hv2-wrap hv2-product-grid hv2-reveal">
           <div className="hv2-product-copy">
-            <p className="hv2-eyebrow">Works where you are</p>
-            <h2>Works online or offline from any device.</h2>
+            <h2>Works anywhere, no Wi-Fi needed.</h2>
             <p>
-              Add notes. Add a few of your own items. Keep going when the signal drops. Built for real households, not a
-              binder you never open.
+              Your checklists live on your device, so they’re there when the power is out, the signal is gone, or you’re
+              somewhere with no connection at all. Add notes, keep track of what you have, and stay organized without
+              ever needing the internet.
             </p>
             <ul className="hv2-ticks">
-              <li>Check off items on phone, tablet, or desktop</li>
-              <li>Works offline on the device you activate</li>
-              <li>Print any list for the bag or the fridge</li>
-              <li>One license covers one device</li>
+              <li>Check things off right on your phone or computer.</li>
+              <li>Your checklist stays on your device. No account, no sign-in, no internet needed.</li>
+              <li>Print or save as PDF if you want a paper copy.</li>
             </ul>
+            <p className="hv2-product-note">
+              Wi-Fi is needed once, to activate. After that, go fully offline.
+            </p>
           </div>
           <div className="hv2-devices" aria-hidden="false">
             <div className="hv2-device hv2-device-tablet">
@@ -272,18 +275,18 @@ export function HomeV2Page() {
               <span>01</span>
               <h3>Choose Basic or Pro</h3>
               <p>
-                {basicPrice} or {proPrice} — one-time, lifetime access on one device.
+                Basic covers the core checklists. Pro adds the extra off-grid, water, power, and food checklists.
               </p>
             </li>
             <li className="hv2-reveal" style={{ transitionDelay: "80ms" }}>
               <span>02</span>
               <h3>Pay once</h3>
-              <p className="hv2-step-tight">Secure checkout. No subscription.</p>
+              <p>No recurring payments. Complete secure checkout. No subscriptions, ever.</p>
             </li>
             <li className="hv2-reveal" style={{ transitionDelay: "160ms" }}>
               <span>03</span>
-              <h3 className="hv2-step-tight">Activate and start checklist</h3>
-              <p>Enter your license key on this device and prep at your pace.</p>
+              <h3>Activate and get prepared</h3>
+              <p>Wi-Fi is needed for that one step. After that, your checklists work offline.</p>
             </li>
           </ol>
         </div>
@@ -297,7 +300,7 @@ export function HomeV2Page() {
               One-time purchase.
               <span>Lifetime access.</span>
             </h2>
-            <p>No subscription.</p>
+            <p>No subscription. Choose the level of preparedness that’s right for you.</p>
           </div>
 
           <div className="hv2-price-grid">
@@ -306,7 +309,6 @@ export function HomeV2Page() {
               <p className="hv2-price-amount">
                 {basicPrice} <small>one time</small>
               </p>
-              <p className="hv2-price-line">Core checklists · one device</p>
               <ul className="hv2-checks">
                 {BASIC_FEATURES.map((item) => (
                   <li key={item}>{item}</li>
@@ -322,7 +324,6 @@ export function HomeV2Page() {
               <p className="hv2-price-amount">
                 {proPrice} <small>one time</small>
               </p>
-              <p className="hv2-price-line">Everything in Basic + Survival Vault</p>
               <ul className="hv2-checks">
                 {PRO_FEATURES.map((item) => (
                   <li key={item}>{item}</li>
@@ -345,10 +346,9 @@ export function HomeV2Page() {
         <div className="hv2-close-shade" aria-hidden="true" />
         <div className="hv2-close-inner hv2-reveal">
           <h2>Hope for the best. Prepare for the rest.</h2>
-          <p>One license. One device. Lifetime access.</p>
-          <a className="hv2-btn hv2-btn-primary" href="#pricing">
+          <Link className="hv2-btn hv2-btn-primary" to="/checkout?product=basic">
             Get started for {basicPrice}
-          </a>
+          </Link>
         </div>
       </section>
 

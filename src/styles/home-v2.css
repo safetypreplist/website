@@ -612,6 +612,14 @@
   max-width: 38ch;
 }
 
+.hv2-product-note {
+  margin: 18px 0 0 !important;
+  font-size: 14.5px !important;
+  font-weight: 650;
+  color: rgba(244, 240, 229, 0.92) !important;
+  max-width: 42ch !important;
+}
+
 .hv2-ticks {
   list-style: none;
   display: grid;

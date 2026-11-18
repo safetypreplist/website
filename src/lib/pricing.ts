@@ -12,7 +12,7 @@ export const ANNUAL_CENTS = 3000;
 export const SURVIVAL_VAULT_CENTS = 1000;
 export const SURVIVAL_VAULT_NAME = "Survival Vault";
 export const SURVIVAL_VAULT_DESCRIPTION =
-  "Pro unlocks Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. Upgrade from Basic for $12.00 (same key, same device).";
+  "Pro unlocks Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.";
 export const FAMILY_MIN_SEATS = 2;
 export const MAX_CHECKLIST_QUANTITY = 20;
 

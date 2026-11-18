@@ -66,7 +66,7 @@ export function PublicFooter({
           <NavLink to="/license">License</NavLink>
           <NavLink to="/contact">Contact</NavLink>
           <NavLink to="/privacy">Privacy</NavLink>
-          <NavLink to="/terms">Terms of Service</NavLink>
+          <NavLink to="/terms">Terms</NavLink>
         </nav>
       </div>
       <p className="wrap footer-disclaimer">{OFFICIAL_GUIDANCE_DISCLAIMER}</p>
