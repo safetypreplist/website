@@ -10,6 +10,16 @@ function adminAuthorized(req: Request, body: Record<string, unknown>) {
   return header === expected || fromBody === expected;
 }
 
+function logAdmin(action: string, licenseId: string) {
+  console.log(
+    JSON.stringify({
+      event: `admin_license_${action}`,
+      licenseId,
+      at: new Date().toISOString(),
+    }),
+  );
+}
+
 Deno.serve(async (req) => {
   const opt = preflight(req);
   if (opt) return opt;
@@ -35,22 +45,64 @@ Deno.serve(async (req) => {
       const rows = data || [];
       const withCounts = [];
       for (const row of rows) {
+        const id = (row as { id: string }).id;
         const { count } = await admin
           .from("license_devices")
           .select("device_id", { count: "exact", head: true })
-          .eq("license_id", (row as { id: string }).id);
+          .eq("license_id", id);
         withCounts.push({ ...row, devices_used: count ?? 0 });
       }
       return json({ licenses: withCounts });
     }
 
+    const licenseId = String(body.licenseId || "").trim();
+
+    if (action === "deactivate") {
+      if (!licenseId) return json({ error: "License id required." }, 400);
+      const { data: license, error: findError } = await admin
+        .from("licenses")
+        .select("id, status")
+        .eq("id", licenseId)
+        .maybeSingle();
+      if (findError) {
+        console.error(findError);
+        return json({ error: "Could not deactivate license." }, 500);
+      }
+      if (!license) return json({ error: "License not found." }, 404);
+
+      const cleared = await admin.from("license_devices").delete().eq("license_id", licenseId);
+      if (cleared.error) {
+        console.error(cleared.error);
+        return json({ error: "Could not deactivate license." }, 500);
+      }
+      logAdmin("deactivate", licenseId);
+      return json({ ok: true, licenseId, devicesCleared: true });
+    }
+
     if (action === "revoke") {
-      const key = normalizeLicenseKeyLoose(String(body.licenseKey || body.key || ""));
-      if (!key.startsWith("SPL-")) return json({ error: "License key required." }, 400);
+      if (!licenseId) {
+        const key = normalizeLicenseKeyLoose(String(body.licenseKey || body.key || ""));
+        if (!key.startsWith("SPL-")) return json({ error: "License id or key required." }, 400);
+        const { data, error } = await admin
+          .from("licenses")
+          .update({ status: "revoked" })
+          .eq("license_key", key)
+          .select("id, license_key, status")
+          .maybeSingle();
+        if (error) {
+          console.error(error);
+          return json({ error: "Could not revoke license." }, 500);
+        }
+        if (!data) return json({ error: "License not found." }, 404);
+        await admin.from("license_devices").delete().eq("license_id", (data as { id: string }).id);
+        logAdmin("revoke", (data as { id: string }).id);
+        return json({ ok: true, license: data });
+      }
+
       const { data, error } = await admin
         .from("licenses")
         .update({ status: "revoked" })
-        .eq("license_key", key)
+        .eq("id", licenseId)
         .select("id, license_key, status")
         .maybeSingle();
       if (error) {
@@ -58,6 +110,25 @@ Deno.serve(async (req) => {
         return json({ error: "Could not revoke license." }, 500);
       }
       if (!data) return json({ error: "License not found." }, 404);
+      await admin.from("license_devices").delete().eq("license_id", licenseId);
+      logAdmin("revoke", licenseId);
+      return json({ ok: true, license: data });
+    }
+
+    if (action === "restore") {
+      if (!licenseId) return json({ error: "License id required." }, 400);
+      const { data, error } = await admin
+        .from("licenses")
+        .update({ status: "active" })
+        .eq("id", licenseId)
+        .select("id, license_key, status")
+        .maybeSingle();
+      if (error) {
+        console.error(error);
+        return json({ error: "Could not restore license." }, 500);
+      }
+      if (!data) return json({ error: "License not found." }, 404);
+      logAdmin("restore", licenseId);
       return json({ ok: true, license: data });
     }
 

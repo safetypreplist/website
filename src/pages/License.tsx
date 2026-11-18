@@ -1,8 +1,17 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
-import { activate, getDeviceId, getLicense, isLicensed, setLocalProduct } from "../lib/licenseClient";
+import {
+  activate,
+  deactivate,
+  getDeviceId,
+  getLicense,
+  isLicensed,
+  setActivateMessage,
+  setLocalProduct,
+} from "../lib/licenseClient";
 import { BASIC_ADDITIONAL_CENTS, UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
@@ -30,6 +39,8 @@ export function LicensePage() {
   const [busy, setBusy] = useState(false);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
   const [addBusy, setAddBusy] = useState(false);
+  const [deactivateBusy, setDeactivateBusy] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<LicenseStatus | null>(null);
 
@@ -116,6 +127,20 @@ export function LicensePage() {
     }
   }
 
+  async function deactivateHere() {
+    setDeactivateBusy(true);
+    setError(null);
+    try {
+      await deactivate();
+      setActivateMessage("This device is no longer activated. Enter your license key to activate it again.");
+      window.location.assign("/activate?reason=deactivated");
+    } catch (err) {
+      setDeactivateBusy(false);
+      setConfirmDeactivate(false);
+      setError(err instanceof Error ? err.message : "Could not deactivate this device.");
+    }
+  }
+
   return (
     <div className="public-page">
       <PublicHeader />
@@ -196,12 +221,35 @@ export function LicensePage() {
                   {upgradeBusy ? "Redirecting…" : `Upgrade to Pro — ${money(UPGRADE_TO_PRO_CENTS)}`}
                 </button>
               ) : null}
+              {thisDeviceActive ? (
+                <button
+                  className="btn btn-ghost"
+                  type="button"
+                  disabled={deactivateBusy}
+                  onClick={() => setConfirmDeactivate(true)}
+                >
+                  Deactivate this device
+                </button>
+              ) : null}
               <Link to="/app/reset-devices">Reset devices</Link>
             </div>
           </div>
         ) : null}
       </main>
       <PublicFooter />
+      {confirmDeactivate ? (
+        <ConfirmDialog
+          title="Deactivate this device?"
+          body="This will turn off Safety Prep List on this device. You can activate it again on another device with the same license key."
+          confirmLabel="Deactivate this device"
+          danger
+          busy={deactivateBusy}
+          onClose={() => {
+            if (!deactivateBusy) setConfirmDeactivate(false);
+          }}
+          onConfirm={() => void deactivateHere()}
+        />
+      ) : null}
     </div>
   );
 }

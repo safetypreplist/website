@@ -1,16 +1,17 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
-import { activate, getLicense, isLicensed } from "../lib/licenseClient";
+import { activate, getLicense, isLicensed, takeActivateMessage } from "../lib/licenseClient";
 
 const DEVICE_TAKEN =
-  "This license is already active on another device. If that's your device, open Safety Prep List there and reset it from Reset devices. If you've lost that device, use Reset devices.";
+  "This license is active on another device. Deactivate it there first, or use Reset devices if you no longer have it.";
 
 export function ActivatePage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const existing = getLicense();
   const keyFromUrl = useMemo(() => (params.get("key") || "").trim(), [params]);
+  const reason = (params.get("reason") || "").trim();
   const urlKeyNorm = keyFromUrl.toUpperCase();
   const existingKeyNorm = (existing?.key || "").toUpperCase();
   const switchingKey = Boolean(urlKeyNorm && existing && urlKeyNorm !== existingKeyNorm);
@@ -19,6 +20,20 @@ export function ActivatePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceTaken, setDeviceTaken] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = takeActivateMessage();
+    if (stored) {
+      setNotice(stored);
+      return;
+    }
+    if (reason === "deactivated") {
+      setNotice("This device is no longer activated. Enter your license key to activate it again.");
+    } else if (reason === "moved") {
+      setNotice("This license is active on another device. Enter the license key here to move it to this device.");
+    }
+  }, [reason]);
 
   if (isLicensed() && existing && !switchingKey) {
     return (
@@ -61,7 +76,7 @@ export function ActivatePage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not activate that license key.";
       setError(message);
-      setDeviceTaken(message.toLowerCase().includes("already active on another device"));
+      setDeviceTaken(message.toLowerCase().includes("active on another device"));
       setBusy(false);
     }
   }
@@ -77,6 +92,11 @@ export function ActivatePage() {
             ? "This device already has a license. Activating a different key replaces it on this device. For a second device, activate that key there instead."
             : "Enter the license key from your purchase email. One license covers one device."}
         </p>
+        {notice ? (
+          <p className="panel" role="status" style={{ marginTop: 16 }}>
+            {notice}
+          </p>
+        ) : null}
         <form onSubmit={(e) => void onSubmit(e)} className="stack" style={{ gap: 14, marginTop: 22 }}>
           <label>
             License key

@@ -334,6 +334,10 @@ export function HomeV2Page() {
               </Link>
             </article>
           </div>
+          <p className="muted" style={{ marginTop: 22, textAlign: "center", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+            Your license works on one device at a time. To move it, deactivate it on the old device, then activate it on
+            the new one.
+          </p>
         </div>
       </section>
 
@@ -346,6 +350,7 @@ export function HomeV2Page() {
         <div className="hv2-close-shade" aria-hidden="true" />
         <div className="hv2-close-inner hv2-reveal">
           <h2>Hope for the best. Prepare for the rest.</h2>
+          <p>One license. One device. Lifetime access.</p>
           <Link className="hv2-btn hv2-btn-primary" to="/checkout?product=basic">
             Get started for {basicPrice}
           </Link>

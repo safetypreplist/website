@@ -2,6 +2,7 @@ import { invokeFunction } from "./supabase";
 
 const DEVICE_KEY = "spl.license.deviceId.v1";
 const LICENSE_KEY = "spl.license.session.v1";
+export const ACTIVATE_MESSAGE_KEY = "spl.activate.message";
 
 export type LicenseProduct = "basic" | "pro";
 
@@ -16,6 +17,12 @@ type ActivateResponse = {
   status: "active";
   licenseKey?: string;
   error?: string;
+};
+
+type LicenseStatusResponse = {
+  product: LicenseProduct;
+  licenseKey: string;
+  devices: Array<{ deviceId: string; activatedAt: string }>;
 };
 
 function readStored(): StoredLicense | null {
@@ -61,6 +68,16 @@ export function clearLocalLicense() {
   writeStored(null);
 }
 
+export function setActivateMessage(message: string) {
+  sessionStorage.setItem(ACTIVATE_MESSAGE_KEY, message);
+}
+
+export function takeActivateMessage() {
+  const message = sessionStorage.getItem(ACTIVATE_MESSAGE_KEY);
+  if (message) sessionStorage.removeItem(ACTIVATE_MESSAGE_KEY);
+  return message;
+}
+
 export function isProLicense() {
   return readStored()?.product === "pro";
 }
@@ -86,13 +103,38 @@ export async function activate(key: string): Promise<StoredLicense> {
 export async function deactivate() {
   const license = readStored();
   if (!license) return;
+  await invokeFunction("deactivate-license", {
+    key: license.key,
+    deviceId: getDeviceId(),
+  });
+  writeStored(null);
+}
+
+/**
+ * When online, confirm this device is still the active one for the stored key.
+ * Returns "moved" if another device holds the license, "invalid" if the key is revoked/invalid.
+ */
+export async function confirmLocalLicenseActive(): Promise<"ok" | "moved" | "invalid" | "skip"> {
+  const license = readStored();
+  if (!license) return "skip";
+  if (typeof navigator !== "undefined" && !navigator.onLine) return "ok";
   try {
-    await invokeFunction("deactivate-license", {
-      key: license.key,
-      deviceId: getDeviceId(),
-    });
-  } finally {
-    writeStored(null);
+    const data = await invokeFunction<LicenseStatusResponse>("license-status", { key: license.key });
+    const deviceId = getDeviceId();
+    const activeHere = data.devices.some((row) => row.deviceId === deviceId);
+    if (!activeHere) {
+      writeStored(null);
+      return "moved";
+    }
+    return "ok";
+  } catch (err) {
+    const message = err instanceof Error ? err.message.toLowerCase() : "";
+    if (message.includes("not valid") || message.includes("revoked")) {
+      writeStored(null);
+      return "invalid";
+    }
+    // Network / server errors: keep local access for offline-capable use.
+    return "ok";
   }
 }
 

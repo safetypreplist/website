@@ -1,12 +1,7 @@
 import { json, preflight } from "../_shared/http.ts";
-import { findLicenseByKey, normalizeLicenseKeyLoose, type LicenseRow } from "../_shared/licenses.ts";
+import { findLicenseByKey, normalizeLicenseKeyLoose } from "../_shared/licenses.ts";
 import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { serviceClient } from "../_shared/supabase.ts";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-const COOLDOWN_DAYS = 30;
-
-type LicenseWithDeactivate = LicenseRow & { last_deactivated_at?: string | null };
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
@@ -23,7 +18,7 @@ Deno.serve(async (req) => {
     if (!key || !deviceId) return json({ error: "License key and device id are required." }, 400);
 
     const admin = serviceClient();
-    const license = (await findLicenseByKey(admin, key)) as LicenseWithDeactivate | null;
+    const license = await findLicenseByKey(admin, key);
     if (!license || license.status !== "active") {
       return json({ error: "That license key is not valid." }, 403);
     }
@@ -35,18 +30,7 @@ Deno.serve(async (req) => {
       .eq("device_id", deviceId)
       .maybeSingle();
     if (!active.data) {
-      return json({ error: "This device is not the active device for that license." }, 403);
-    }
-
-    const last = license.last_deactivated_at ? Date.parse(license.last_deactivated_at) : NaN;
-    if (Number.isFinite(last) && Date.now() - last < COOLDOWN_DAYS * DAY_MS) {
-      return json(
-        {
-          error:
-            "This license was already deactivated recently. Wait 30 days, or use Reset devices with your email and key.",
-        },
-        429,
-      );
+      return json({ error: "This device is not the active device for that license." }, 404);
     }
 
     const deleted = await admin
@@ -59,10 +43,13 @@ Deno.serve(async (req) => {
       return json({ error: "Could not deactivate device." }, 500);
     }
 
-    await admin
-      .from("licenses")
-      .update({ last_deactivated_at: new Date().toISOString() })
-      .eq("id", license.id);
+    console.log(
+      JSON.stringify({
+        event: "license_deactivate",
+        licenseId: license.id,
+        at: new Date().toISOString(),
+      }),
+    );
 
     return json({ ok: true });
   } catch (err) {

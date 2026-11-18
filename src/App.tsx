@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { useApp } from "./context/AppContext";
@@ -9,7 +9,7 @@ import { ComingSoonOwnerPill, ComingSoonPage } from "./components/ComingSoon";
 import { isOpenDuringComingSoon, useComingSoon } from "./lib/comingSoon";
 import { analyticsStarted, enableAnalytics, trackContentsquarePage, trackPageView } from "./lib/analytics";
 import { cookieChoice } from "./lib/legalConsent";
-import { isLicensed } from "./lib/licenseClient";
+import { confirmLocalLicenseActive, isLicensed, setActivateMessage } from "./lib/licenseClient";
 import { CookieNotice } from "./components/CookieNotice";
 import { PageMeta } from "./components/PageMeta";
 import { ScrollToTop } from "./components/ScrollToTop";
@@ -68,9 +68,42 @@ function Analytics() {
 }
 
 function RequireLicense({ children }: { children: React.ReactNode }) {
-  const { loading } = useApp();
-  if (loading) return <AppSplash />;
-  if (!isLicensed()) return <Navigate to="/activate" replace />;
+  const { loading, refreshAccount } = useApp();
+  const [checking, setChecking] = useState(true);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      if (!isLicensed()) {
+        if (live) {
+          setRedirectTo("/activate");
+          setChecking(false);
+        }
+        return;
+      }
+      const result = await confirmLocalLicenseActive();
+      if (!live) return;
+      if (result === "moved") {
+        setActivateMessage(
+          "This license is active on another device. Enter the license key here to move it to this device.",
+        );
+        await refreshAccount();
+        setRedirectTo("/activate?reason=moved");
+      } else if (result === "invalid") {
+        setActivateMessage("This device is no longer activated. Enter your license key to activate it again.");
+        await refreshAccount();
+        setRedirectTo("/activate?reason=deactivated");
+      }
+      setChecking(false);
+    })();
+    return () => {
+      live = false;
+    };
+  }, [refreshAccount]);
+
+  if (loading || checking) return <AppSplash />;
+  if (redirectTo || !isLicensed()) return <Navigate to={redirectTo || "/activate"} replace />;
   return <>{children}</>;
 }
 

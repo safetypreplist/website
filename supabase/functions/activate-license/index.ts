@@ -4,7 +4,7 @@ import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 
 const DEVICE_TAKEN =
-  "This license is already active on another device. Use a second license for another device, or reset your devices if you've lost access.";
+  "This license is active on another device. Deactivate it there first, or use Reset devices if you no longer have it.";
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
@@ -23,7 +23,13 @@ Deno.serve(async (req) => {
 
     const admin = serviceClient();
     const license = await findLicenseByKey(admin, key);
-    if (!license || license.status !== "active") {
+    if (!license) {
+      return json({ error: "That license key is not valid." }, 403);
+    }
+    if (license.status === "revoked") {
+      return json({ error: "That license key is not valid." }, 403);
+    }
+    if (license.status !== "active") {
       return json({ error: "That license key is not valid." }, 403);
     }
 
@@ -54,7 +60,6 @@ Deno.serve(async (req) => {
       device_id: deviceId,
     });
     if (inserted.error) {
-      // Race: another request activated this device, or another device won the slot.
       const again = await admin
         .from("license_devices")
         .select("device_id")
@@ -72,6 +77,14 @@ Deno.serve(async (req) => {
       console.error(inserted.error);
       return json({ error: "Could not activate license." }, 500);
     }
+
+    console.log(
+      JSON.stringify({
+        event: "license_activate",
+        licenseId: license.id,
+        at: new Date().toISOString(),
+      }),
+    );
 
     return json({ product: license.product, status: "active", licenseKey: license.license_key });
   } catch (err) {
