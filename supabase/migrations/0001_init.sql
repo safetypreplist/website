@@ -71,7 +71,7 @@ insert into public.app_config (key, value) values
 on conflict (key) do nothing;
 
 insert into public.products (slug, name, description, amount_cents, kind, grants_plan, device_slots) values
-  ('core', 'Core', 'Four core preparedness systems, contacts, printing, and two devices.', 999, 'core', 'core', 2),
+  ('core', 'Core', 'Four core preparedness systems, contacts, printing, and offline access on one device.', 999, 'core', 'core', 2),
   ('full', 'Full System', 'Everything in Core plus advanced systems and Video Vault.', 1999, 'full', 'full', 2),
   ('extra_device', 'Additional Device', 'Adds one registered device slot to an existing account.', 500, 'extra_device', null, 1),
   ('upgrade_full', 'Upgrade to Full System', 'Upgrade from Core. Price is configurable in app_config.', 1000, 'upgrade_full', 'full', 0)

@@ -53,7 +53,7 @@ Follow the setup docs in order:
 
 | Product | Price | Entitlement |
 |---|---|---|
-| Annual | $30 per person / year | One personal Safety Prep Checklist per person, notes, contacts, 2 devices per login, 5 custom items per section. No monthly option for new purchases. |
+| Annual | $30 per person / year | One personal Safety Prep Checklist per person, notes, contacts, one device per license, 5 custom items per section. No monthly option for new purchases. |
 | Family Plan | Same per-person yearly price | Connected individual checklists — not one shared list |
 | Survival Vault | $10/year add-on | Advanced preparedness checklists (off-grid, water, battery/solar, cooling/heat, long-term food). Renews yearly. Not per person. |
 

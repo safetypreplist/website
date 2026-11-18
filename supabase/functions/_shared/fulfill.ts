@@ -17,6 +17,7 @@ export type LicenseFulfillResult =
       alreadyProcessed: boolean;
       licenseKey: string;
       product: LicenseProduct;
+      checkoutProduct: "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
       licenseId: string;
       email: string | null;
     }
@@ -44,12 +45,13 @@ function customerEmail(session: StripeSession) {
   return session.customer_details?.email || session.customer_email || null;
 }
 
-function processed(row: LicenseRow): LicenseFulfillResult {
+function processedRow(row: LicenseRow, checkoutProduct: "basic" | "basic_additional" | "pro" | "upgrade_to_pro"): LicenseFulfillResult {
   return {
     ok: true,
     alreadyProcessed: true,
     licenseKey: row.license_key,
     product: row.product,
+    checkoutProduct,
     licenseId: row.id,
     email: row.email,
   };
@@ -65,7 +67,7 @@ export async function retrieveCheckoutSession(sessionId: string) {
 
 /**
  * Idempotent on stripe_session_id.
- * basic/pro → insert license + email key.
+ * basic / basic_additional / pro → insert license + email key.
  * upgrade_to_pro → flip existing Basic license to Pro (same key).
  */
 export async function fulfillCheckoutSession(admin: Admin, session: StripeSession): Promise<LicenseFulfillResult> {
@@ -76,10 +78,16 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
     return { ok: false, status: 400, error: "Unexpected checkout mode." };
   }
 
-  const existing = await admin.from("licenses").select("*").eq("stripe_session_id", session.id).maybeSingle();
-  if (existing.data) return processed(existing.data as LicenseRow);
-
   const productMeta = String(session.metadata?.product || "");
+  const existing = await admin.from("licenses").select("*").eq("stripe_session_id", session.id).maybeSingle();
+  if (existing.data) {
+    const row = existing.data as LicenseRow;
+    if (productMeta === "upgrade_to_pro") return processedRow(row, "upgrade_to_pro");
+    if (productMeta === "basic_additional" || row.linked_to) return processedRow(row, "basic_additional");
+    if (row.product === "pro") return processedRow(row, "pro");
+    return processedRow(row, "basic");
+  }
+
   const email = customerEmail(session);
 
   if (productMeta === "upgrade_to_pro") {
@@ -102,7 +110,7 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
       .maybeSingle();
     if (!updated.data) {
       const raced = await admin.from("licenses").select("*").eq("stripe_session_id", session.id).maybeSingle();
-      if (raced.data) return processed(raced.data as LicenseRow);
+      if (raced.data) return processedRow(raced.data as LicenseRow, "upgrade_to_pro");
       return { ok: false, status: 500, error: "Could not upgrade license." };
     }
     const row = updated.data as LicenseRow;
@@ -114,42 +122,68 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
       alreadyProcessed: false,
       licenseKey: row.license_key,
       product: "pro",
+      checkoutProduct: "upgrade_to_pro",
       licenseId: row.id,
       email: row.email,
     };
   }
 
-  if (productMeta !== "basic" && productMeta !== "pro") {
+  const isAdditional = productMeta === "basic_additional";
+  if (productMeta !== "basic" && productMeta !== "pro" && !isAdditional) {
     return { ok: false, status: 400, error: "Unknown product on checkout session." };
   }
 
-  const product = productMeta as LicenseProduct;
+  const product: LicenseProduct = productMeta === "pro" ? "pro" : "basic";
   const licenseKey = await uniqueLicenseKey(admin);
   const amountCents = typeof session.amount_total === "number" ? session.amount_total : null;
+  const linkedTo = isAdditional && email ? email.trim().toLowerCase() : null;
+
+  // Persist linked_to on the Stripe session metadata for support/audit when possible.
+  if (isAdditional && linkedTo) {
+    try {
+      await stripeRequest("POST", `/checkout/sessions/${encodeURIComponent(session.id)}`, {
+        metadata: {
+          product: "basic_additional",
+          linked_to: linkedTo,
+        },
+      });
+    } catch (err) {
+      console.warn("Could not write linked_to onto checkout session", err);
+    }
+  }
+
   const insert = await admin
     .from("licenses")
     .insert({
       license_key: licenseKey,
       product,
-      devices_allowed: 2,
+      devices_allowed: 1,
       status: "active",
       email,
       stripe_session_id: session.id,
       amount_cents: amountCents,
+      linked_to: linkedTo,
     })
     .select("*")
     .single();
 
   if (insert.error) {
     const raced = await admin.from("licenses").select("*").eq("stripe_session_id", session.id).maybeSingle();
-    if (raced.data) return processed(raced.data as LicenseRow);
+    if (raced.data) {
+      return processedRow(raced.data as LicenseRow, isAdditional ? "basic_additional" : product);
+    }
     console.error(insert.error);
     return { ok: false, status: 500, error: "Could not create license." };
   }
 
   const row = insert.data as LicenseRow;
   if (email) {
-    await sendLicenseEmail({ to: email, licenseKey: row.license_key, product: row.product });
+    await sendLicenseEmail({
+      to: email,
+      licenseKey: row.license_key,
+      product: row.product,
+      additional: isAdditional,
+    });
   }
 
   return {
@@ -157,6 +191,7 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
     alreadyProcessed: false,
     licenseKey: row.license_key,
     product: row.product,
+    checkoutProduct: isAdditional ? "basic_additional" : product,
     licenseId: row.id,
     email: row.email,
   };

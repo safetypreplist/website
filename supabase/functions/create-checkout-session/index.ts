@@ -31,7 +31,9 @@ function siteUrl(requested: unknown, fallback: string) {
 
 function parseProduct(raw: unknown): LifetimeProduct | null {
   const value = String(raw || "").trim();
-  if (value === "basic" || value === "pro" || value === "upgrade_to_pro") return value;
+  if (value === "basic" || value === "basic_additional" || value === "pro" || value === "upgrade_to_pro") {
+    return value;
+  }
   return null;
 }
 
@@ -53,7 +55,9 @@ Deno.serve(async (req) => {
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const product = parseProduct(body.product);
-    if (!product) return json({ error: "Choose Basic, Pro, or Upgrade to Pro." }, 400);
+    if (!product) {
+      return json({ error: "Choose Basic, Additional Basic, Pro, or Upgrade to Pro." }, 400);
+    }
 
     const rawAppUrl = (Deno.env.get("APP_URL") || "https://safetypreplist.com").trim();
     const appUrl = siteUrl(body.origin, rawAppUrl);

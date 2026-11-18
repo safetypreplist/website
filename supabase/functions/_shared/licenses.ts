@@ -14,6 +14,8 @@ export type LicenseRow = {
   email: string | null;
   stripe_session_id: string | null;
   amount_cents: number | null;
+  linked_to?: string | null;
+  last_deactivated_at?: string | null;
   created_at: string;
 };
 
@@ -58,16 +60,32 @@ export async function sendLicenseEmail(opts: {
   licenseKey: string;
   product: LicenseProduct;
   upgraded?: boolean;
+  additional?: boolean;
 }) {
   if (!emailConfigured() || !opts.to) return { skipped: true as const };
   const appUrl = (Deno.env.get("APP_URL") || "https://safetypreplist.com").replace(/\/+$/, "");
   const support = Deno.env.get("SUPPORT_EMAIL") || "info@safetypreplist.com";
   const plan = opts.product === "pro" ? "Pro" : "Basic";
-  const title = opts.upgraded ? "Your upgrade to Pro is complete" : "Your license key";
+  const title = opts.upgraded
+    ? "Your upgrade to Pro is complete"
+    : opts.additional
+      ? "Your second license is ready"
+      : "Your license key";
+  const subject = opts.additional
+    ? "Your second Safety Prep List license."
+    : `Your Safety Prep List ${plan} license — ${opts.licenseKey}`;
   const key = escapeHtml(opts.licenseKey);
   const activate = escapeHtml(`${appUrl}/activate`);
   const logo = escapeHtml(`${appUrl}/brand/logo.png`);
   const supportSafe = escapeHtml(support);
+  const oneDevice =
+    "No account is required. One license covers one device. Need another device? Buy an additional license, or use Reset devices if you've lost access to this one.";
+
+  const intro = opts.additional
+    ? "You purchased an additional Basic license for another device. Enter this key on that device at Activate."
+    : opts.upgraded
+      ? `Your license is now <strong>${escapeHtml(plan)}</strong>. Your key stays the same.`
+      : `You purchased <strong>${escapeHtml(plan)}</strong> as a one-time license. Save this key — you will need it to activate on your device.`;
 
   const html = `<!DOCTYPE html>
 <html>
@@ -81,7 +99,7 @@ export async function sendLicenseEmail(opts: {
               <p style="margin:0 0 18px;"><img src="${logo}" width="64" alt="Safety Prep List" style="display:inline-block;width:64px;height:auto;border:0;"></p>
               <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#556B2F;font-weight:bold;">Safety Prep List</p>
               <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;">${escapeHtml(title)}</h1>
-              <p style="margin:0 0 18px;font-size:16px;line-height:1.55;">You purchased <strong>${escapeHtml(plan)}</strong> as a one-time license. Save this key — you will need it to activate on your devices.</p>
+              <p style="margin:0 0 18px;font-size:16px;line-height:1.55;">${intro}</p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F4F0E5;border:1px solid #E6E2D6;border-radius:12px;">
                 <tr>
                   <td style="padding:16px 18px;">
@@ -93,7 +111,7 @@ export async function sendLicenseEmail(opts: {
               <p style="margin:22px 0;text-align:center;">
                 <a href="${activate}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">Activate your license</a>
               </p>
-              <p style="margin:0;font-size:14px;line-height:1.55;color:#4D5348;">No account is required. You can activate on up to 2 devices. If you replace a device, use Reset devices in the app.</p>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#4D5348;">${escapeHtml(oneDevice)}</p>
               <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#556B2F;">Questions? ${supportSafe}</p>
             </td>
           </tr>
@@ -111,14 +129,14 @@ License key: ${opts.licenseKey}
 
 Activate: ${appUrl}/activate
 
-No account is required. You can activate on up to 2 devices.
+${oneDevice}
 
 Support: ${support}
 `;
 
   const sent = await sendEmail({
     to: opts.to,
-    subject: `Your Safety Prep List ${plan} license — ${opts.licenseKey}`,
+    subject,
     html,
     text,
   });

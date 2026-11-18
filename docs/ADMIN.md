@@ -56,7 +56,7 @@ Do not invent phone numbers. Seed data includes Ready.gov, SAMHSA/988, Poison.or
 
 ## Devices
 
-Each login gets 2 devices. The limit is per login, not per checklist or per family: a parent and child with separate logins each get 2, and two people sharing one login share its 2. Family pricing does not change the limit. The raw device token never leaves the device; only a SHA-256 hash is stored.
+Each license covers one device. Need another device? Buy an additional Basic license ($9.99). Reset devices (email + key) clears the active device so you can activate on a replacement phone. The raw device id never leaves the device except as needed for activation.
 
 - `register_device` enforces the limit on the server, and every checklist save checks that the device is registered. An unregistered device can still open what it already has saved, but its changes stay queued on the device with an explanation until a slot is free.
 - Removing a device (`remove_device`, migration `0038_device_sessions.sql`) signs out only that device's session. The customer's other devices stay signed in. If the removed device had changes waiting to sync, they stay on it and sync after the customer signs in there again.

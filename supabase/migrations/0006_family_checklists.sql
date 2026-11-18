@@ -11,7 +11,7 @@ create extension if not exists pgcrypto;
 update public.products
 set
   name = 'Personal Safety Prep Checklist',
-  description = 'One personal Safety Prep Checklist, lifetime access, and sign-in on up to 2 devices.',
+  description = 'One personal Safety Prep Checklist, lifetime access, and offline use on one device.',
   amount_cents = 1000,
   active = true
 where slug = 'core';
@@ -33,7 +33,7 @@ where slug = 'upgrade_full';
 
 update public.products
 set
-  description = 'Legacy device slot. New accounts include 2 devices and cannot purchase more.',
+  description = 'Legacy device slot. New licenses cover one device; buy an additional license for another device.',
   active = false
 where slug = 'extra_device';
 

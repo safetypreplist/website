@@ -18,7 +18,7 @@ import {
   checkoutBreakdown,
   type AccessInterval,
 } from "../lib/pricing";
-import { SCOPE_LINE } from "../lib/copy";
+import { BASIC_LICENSE_DESCRIPTION, ONE_LICENSE_ONE_DEVICE_LINE, PRO_LICENSE_DESCRIPTION, SCOPE_LINE } from "../lib/copy";
 import { invokeFunction } from "../lib/supabase";
 
 const PROGRESS = ["Choose Plan", "Purchase", "Activate"] as const;
@@ -315,6 +315,12 @@ export function CheckoutPage() {
         </section>
 
         <section className="checkout-step checkout-summary">
+          <p className="muted" style={{ marginBottom: 14 }}>
+            {vault ? PRO_LICENSE_DESCRIPTION : BASIC_LICENSE_DESCRIPTION}
+          </p>
+          <p className="muted" style={{ marginBottom: 14 }}>
+            {ONE_LICENSE_ONE_DEVICE_LINE}
+          </p>
           <div className="summary-block">
             <p>
               <span>
@@ -404,6 +410,9 @@ export function ThankYouPage() {
   const checkoutSession = params.get("session_id") || "";
   const [licenseKey, setLicenseKey] = useState("");
   const [product, setProduct] = useState<"basic" | "pro" | "">("");
+  const [checkoutProduct, setCheckoutProduct] = useState<"basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "">(
+    "",
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(checkoutSession));
   const [copied, setCopied] = useState(false);
@@ -420,12 +429,14 @@ export function ThankYouPage() {
         const captured = await invokeFunction<{
           licenseKey?: string;
           product?: "basic" | "pro";
+          checkoutProduct?: "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
           error?: string;
         }>("checkout-status", { sessionId: checkoutSession });
         if (cancelled) return;
         if (captured?.licenseKey) {
           setLicenseKey(captured.licenseKey);
           setProduct(captured.product || "");
+          setCheckoutProduct(captured.checkoutProduct || captured.product || "");
           setBusy(false);
           return;
         }
@@ -488,13 +499,19 @@ export function ThankYouPage() {
       <main className="section cream">
         <div className="wrap legal-page" style={{ maxWidth: 560 }}>
           <p className="eyebrow">Purchase complete</p>
-          <h1>Your license key</h1>
+          <h1>{checkoutProduct === "basic_additional" ? "Your second license" : "Your license key"}</h1>
           {busy ? <p className="muted">Confirming payment…</p> : null}
           {error ? <p className="form-error">{error}</p> : null}
           {licenseKey ? (
             <>
               <p>
-                {product === "pro" ? "Pro" : product === "basic" ? "Basic" : "Your"} license is ready.
+                {checkoutProduct === "basic_additional"
+                  ? "Your second license is ready. Enter this key on the other device at /activate."
+                  : product === "pro"
+                    ? "Pro license is ready."
+                    : product === "basic"
+                      ? "Basic license is ready."
+                      : "Your license is ready."}
               </p>
               <p
                 style={{
@@ -515,7 +532,7 @@ export function ThankYouPage() {
                 </button>
               </div>
               <p className="muted" style={{ marginTop: 16 }}>
-                We&apos;ve also emailed this key to you. Save it — you will need it on each device.
+                We&apos;ve also emailed this key to you. One license covers one device.
               </p>
             </>
           ) : null}

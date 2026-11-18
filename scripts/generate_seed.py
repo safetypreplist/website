@@ -1479,7 +1479,7 @@ def frontend_catalog() -> dict:
         {
             "slug": "core",
             "name": "Core",
-            "description": "Four core preparedness systems, contacts, printing, and two devices.",
+            "description": "Four core preparedness systems, contacts, printing, and offline access on one device.",
             "amount_cents": 999,
             "currency": "USD",
             "kind": "core",

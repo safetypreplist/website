@@ -21,6 +21,15 @@ export const MORE_TIME_LINE =
 export const VAULT_APP_DESCRIPTION =
   "For an extra $10/year, unlock Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.";
 
+export const BASIC_LICENSE_DESCRIPTION =
+  "One-time purchase, lifetime access to the core checklists: Grab-and-Go Bag, Ready Duffel Bag, Vehicle or Suitcase Prep, and Home Resilience. Works offline on one device.";
+
+export const PRO_LICENSE_DESCRIPTION =
+  "One-time purchase, lifetime access to everything in Basic, plus off-grid, water, power, and long-term food checklists. Works offline on one device.";
+
+export const ONE_LICENSE_ONE_DEVICE_LINE =
+  "One license covers one device. Need another? Add a second license for $9.99.";
+
 export const VAULT_CHECKLISTS = [
   {
     title: "Off-Grid Systems",

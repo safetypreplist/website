@@ -122,7 +122,7 @@ export function memberQuickAnswers({ annualCents, vaultCents }: Prices, hasVault
       id: "devices",
       question: "Why am I asked about devices?",
       answer:
-        "Each login can be used on 2 devices, like a phone and a computer. To use a new one, remove a device you no longer use in My Devices. Your other devices stay signed in.",
+        "One license covers one device. Need another phone or computer? Buy an additional Basic license for $9.99, or use Reset devices if you've lost access to the one you activated.",
       topic: "support",
       link: { to: "/license", label: "View devices" },
     },

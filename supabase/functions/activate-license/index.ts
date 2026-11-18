@@ -3,6 +3,9 @@ import { findLicenseByKey, normalizeLicenseKeyLoose } from "../_shared/licenses.
 import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 
+const DEVICE_TAKEN =
+  "This license is already active on another device. Use a second license for another device, or reset your devices if you've lost access.";
+
 Deno.serve(async (req) => {
   const opt = preflight(req);
   if (opt) return opt;
@@ -42,8 +45,8 @@ Deno.serve(async (req) => {
       console.error(countError);
       return json({ error: "Could not activate license." }, 500);
     }
-    if ((count ?? 0) >= license.devices_allowed) {
-      return json({ error: "Device limit reached. Reset your devices to continue." }, 409);
+    if ((count ?? 0) >= 1) {
+      return json({ error: DEVICE_TAKEN }, 409);
     }
 
     const inserted = await admin.from("license_devices").insert({
@@ -51,7 +54,7 @@ Deno.serve(async (req) => {
       device_id: deviceId,
     });
     if (inserted.error) {
-      // Race: another request activated this device.
+      // Race: another request activated this device, or another device won the slot.
       const again = await admin
         .from("license_devices")
         .select("device_id")
@@ -61,6 +64,11 @@ Deno.serve(async (req) => {
       if (again.data) {
         return json({ product: license.product, status: "active", licenseKey: license.license_key });
       }
+      const { count: afterRace } = await admin
+        .from("license_devices")
+        .select("device_id", { count: "exact", head: true })
+        .eq("license_id", license.id);
+      if ((afterRace ?? 0) >= 1) return json({ error: DEVICE_TAKEN }, 409);
       console.error(inserted.error);
       return json({ error: "Could not activate license." }, 500);
     }

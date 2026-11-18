@@ -9,12 +9,13 @@
 | `spl_basic_lifetime` | $12.99 (1299) | Basic — one-time |
 | `spl_pro_lifetime` | $24.99 (2499) | Pro — one-time |
 | `spl_upgrade_basic_pro` | $12.00 (1200) | Upgrade Basic → Pro — one-time |
+| `spl_basic_additional` | $9.99 (999) | Additional Basic license (second device) — one-time |
 
 Checkout uses `mode: "payment"` only. Annual/monthly lookup keys (`spl_annual`, `spl_vault_annual`, `spl_monthly`) are removed from code.
 
 ## How price IDs are chosen
 
-1. Optional env overrides: `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_UPGRADE` (must start with `price_`)
+1. Optional env overrides: `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_BASIC_ADDITIONAL`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_UPGRADE` (must start with `price_`)
 2. Else `stripePriceId` → `ensureCatalogPrice` finds or creates the one-time price by lookup key (Test Mode)
 
 Owner should create the three Test prices in the Stripe Dashboard (or let the first Test checkout create them). **Do not change Live Stripe prices in Phase 1.**
@@ -22,7 +23,7 @@ Owner should create the three Test prices in the Stripe Dashboard (or let the fi
 ## Checkout body
 
 ```json
-{ "product": "basic" | "pro" | "upgrade_to_pro", "licenseKey": "SPL-...." }
+{ "product": "basic" | "basic_additional" | "pro" | "upgrade_to_pro", "licenseKey": "SPL-...." }
 ```
 
 `licenseKey` is required for `upgrade_to_pro` and must be an active Basic license.

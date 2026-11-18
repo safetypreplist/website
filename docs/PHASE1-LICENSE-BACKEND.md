@@ -37,7 +37,7 @@
 
 ## Migration
 `0047_licenses.sql` creates:
-- `licenses (id, license_key unique, product basic|pro, devices_allowed default 2, status active|revoked, email, stripe_session_id unique, created_at)`
+- `licenses (id, license_key unique, product basic|pro, devices_allowed default 1, status active|revoked, email, stripe_session_id unique, created_at)`
 - `license_devices (license_id, device_id, activated_at)` PK `(license_id, device_id)`
 - RLS enabled; no policies (service role only)
 

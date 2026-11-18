@@ -4,14 +4,16 @@ const API_VERSION = "2026-09-30.endive";
 /** One-time license lookup keys (Stripe Test first; Live only after Phase 1 review). */
 export const PRICE_LOOKUP = {
   basicLifetime: "spl_basic_lifetime",
+  basicAdditional: "spl_basic_additional",
   proLifetime: "spl_pro_lifetime",
   upgradeBasicToPro: "spl_upgrade_basic_pro",
 } as const;
 
-export type LifetimeProduct = "basic" | "pro" | "upgrade_to_pro";
+export type LifetimeProduct = "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
 
 export function lookupForProduct(product: LifetimeProduct) {
   if (product === "basic") return PRICE_LOOKUP.basicLifetime;
+  if (product === "basic_additional") return PRICE_LOOKUP.basicAdditional;
   if (product === "pro") return PRICE_LOOKUP.proLifetime;
   return PRICE_LOOKUP.upgradeBasicToPro;
 }
@@ -102,6 +104,7 @@ async function parseStripe(res: Response) {
 
 const LOOKUP_ENV: Record<string, string> = {
   spl_basic_lifetime: "STRIPE_PRICE_BASIC",
+  spl_basic_additional: "STRIPE_PRICE_BASIC_ADDITIONAL",
   spl_pro_lifetime: "STRIPE_PRICE_PRO",
   spl_upgrade_basic_pro: "STRIPE_PRICE_UPGRADE",
 };
@@ -124,6 +127,13 @@ const CATALOG: Record<string, CatalogPrice> = {
     product: "spl_basic",
     productName: "Safety Prep List — Basic",
     unit_amount: 1299,
+    type: "one_time",
+  },
+  spl_basic_additional: {
+    lookup: "spl_basic_additional",
+    product: "spl_basic_additional",
+    productName: "Safety Prep List — Additional Basic license",
+    unit_amount: 999,
     type: "one_time",
   },
   spl_pro_lifetime: {

@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
         alreadyProcessed: true,
         licenseKey: row.license_key,
         product: row.product,
+        checkoutProduct: row.linked_to ? "basic_additional" : row.product,
         licenseId: row.id,
         email: row.email,
       });
@@ -34,6 +35,7 @@ Deno.serve(async (req) => {
       alreadyProcessed: result.alreadyProcessed,
       licenseKey: result.licenseKey,
       product: result.product,
+      checkoutProduct: result.checkoutProduct,
       licenseId: result.licenseId,
       email: result.email,
     });

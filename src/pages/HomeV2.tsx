@@ -41,7 +41,7 @@ const INDIVIDUAL_FEATURES = [
   "Ready Duffel Bag",
   "Vehicle or Suitcase Prep",
   "Home Resilience",
-  "Compatible on all devices",
+  "Works offline on one device",
   "Works when offline",
 ] as const;
 

@@ -25,6 +25,7 @@ export function LicensePage() {
   const [key, setKey] = useState(getLicense()?.key || "");
   const [busy, setBusy] = useState(false);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
+  const [addBusy, setAddBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<LicenseStatus | null>(null);
 
@@ -61,6 +62,22 @@ export function LicensePage() {
     }
   }
 
+  async function addAnotherDevice() {
+    setAddBusy(true);
+    setError(null);
+    try {
+      const data = await invokeFunction<{ url?: string }>("create-checkout-session", {
+        product: "basic_additional",
+        origin: window.location.origin,
+      });
+      if (!data?.url) throw new Error("Checkout did not return a Stripe URL.");
+      window.location.assign(data.url);
+    } catch (err) {
+      setAddBusy(false);
+      setError(err instanceof Error ? err.message : "Could not start additional license checkout.");
+    }
+  }
+
   async function activateHere() {
     if (!status) return;
     setBusy(true);
@@ -81,7 +98,7 @@ export function LicensePage() {
       <main className="wrap auth-card" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 560 }}>
         <p className="eyebrow">License</p>
         <h1>Your license</h1>
-        <p className="muted">Look up a key to see what you purchased and which devices are active.</p>
+        <p className="muted">One license, one device. Look up a key to see what you purchased and which device is active.</p>
         <form onSubmit={(e) => void lookup(e)} className="stack" style={{ gap: 14, marginTop: 22 }}>
           <label>
             License key
@@ -118,9 +135,12 @@ export function LicensePage() {
             <p>
               <strong>Key:</strong> <code>{status.licenseKey}</code>
             </p>
+            <p className="muted" style={{ marginTop: 12 }}>
+              One license, one device.
+            </p>
             <h3 style={{ marginTop: 18, marginBottom: 8 }}>Activated devices</h3>
             {status.devices.length === 0 ? (
-              <p className="muted">No devices activated yet.</p>
+              <p className="muted">No device activated yet.</p>
             ) : (
               <ul>
                 {status.devices.map((device) => (
@@ -134,6 +154,9 @@ export function LicensePage() {
               <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateHere()}>
                 Activate on this device
               </button>
+              <button className="btn btn-ghost" type="button" disabled={addBusy} onClick={() => void addAnotherDevice()}>
+                {addBusy ? "Redirecting…" : "Add another device — $9.99"}
+              </button>
               {status.product === "basic" ? (
                 <button className="btn btn-ghost" type="button" disabled={upgradeBusy} onClick={() => void upgrade()}>
                   {upgradeBusy ? "Redirecting…" : "Upgrade to Pro — $12.00"}
@@ -142,7 +165,16 @@ export function LicensePage() {
               <Link to="/app/reset-devices">Reset devices</Link>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div style={{ marginTop: 28 }}>
+            <button className="btn btn-ghost" type="button" disabled={addBusy} onClick={() => void addAnotherDevice()}>
+              {addBusy ? "Redirecting…" : "Add another device — $9.99"}
+            </button>
+            <p className="muted" style={{ marginTop: 10 }}>
+              One license covers one device. Need another? Add a second license for $9.99.
+            </p>
+          </div>
+        )}
       </main>
       <PublicFooter />
     </div>
