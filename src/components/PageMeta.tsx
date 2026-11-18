@@ -9,8 +9,7 @@ const DEFAULT: Meta = { title: PAGE_TITLE, description: SITE_DESCRIPTION, index:
 const EXACT: Record<string, Meta> = {
   "/": {
     title: "Safety Prep List — Be ready before you need to be.",
-    description:
-      "$30 per Personal Checklist per year. No monthly subscription. Optional Survival Vault is $10/year.",
+    description: SITE_DESCRIPTION,
     index: true,
   },
   "/classic": DEFAULT,
@@ -24,7 +23,7 @@ const EXACT: Record<string, Meta> = {
   },
   "/contact": {
     title: "Contact — Safety Prep List",
-    description: "Questions about Safety Prep List, billing, or your account? Send a message.",
+    description: "Questions about Safety Prep List, billing, or your license? Send a message.",
   },
   "/install": {
     title: "Install the App — Safety Prep List",
@@ -32,7 +31,7 @@ const EXACT: Record<string, Meta> = {
   },
   "/pricing": {
     title: "Plans — Safety Prep List",
-    description: "$30 per Personal Checklist per year. No monthly subscription. Family Plans and optional Survival Vault $10/year add-on.",
+    description: SITE_DESCRIPTION,
   },
   "/demo": {
     title: "Sample Checklist — Safety Prep List",

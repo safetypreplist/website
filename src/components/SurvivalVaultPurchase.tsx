@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { getLicense } from "../lib/licenseClient";
-import { invokeFunction } from "../lib/supabase";
 import { useState } from "react";
+import { getLicense } from "../lib/licenseClient";
+import { money } from "../lib/format";
+import { UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
+import { invokeFunction } from "../lib/supabase";
 
 /** Basic licenses see this on Survival Vault routes — upgrade to Pro, same key. */
 export function SurvivalVaultPurchase() {
@@ -37,7 +39,7 @@ export function SurvivalVaultPurchase() {
       </p>
       {error ? <p className="form-error">{error}</p> : null}
       <button className="btn btn-primary vault-purchase-open" type="button" disabled={busy} onClick={() => void upgrade()}>
-        {busy ? "Redirecting…" : "Upgrade to Pro — $12.00"}
+        {busy ? "Redirecting…" : `Upgrade to Pro — ${money(UPGRADE_TO_PRO_CENTS)}`}
       </button>
       <p className="muted" style={{ marginTop: 12 }}>
         Or manage your key on the <Link to="/license">license page</Link>.

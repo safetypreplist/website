@@ -166,7 +166,7 @@ export function DemoPage() {
 
           <section className="demo-full">
             <h2>The full Safety Prep List</h2>
-            <p>With a plan, you get the complete checklists, saved to your account:</p>
+            <p>With a license, you get the complete checklists, saved on this device:</p>
             <ul>
               <li>5-Minute Grab-and-Go Bag</li>
               <li>15-Minute Ready Duffel (72-Hour Continuity Kit)</li>

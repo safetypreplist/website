@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
+import { clearLocalLicense, getLicense } from "../lib/licenseClient";
 import { invokeFunction } from "../lib/supabase";
 
 const GENERIC = "If that matches a purchase, your devices have been reset.";
@@ -15,11 +16,16 @@ export function ResetDevicesPage() {
     e.preventDefault();
     setBusy(true);
     setMessage(null);
+    const trimmedKey = key.trim().toUpperCase();
     try {
       const data = await invokeFunction<{ message?: string }>("reset-license", {
         key: key.trim(),
         email: email.trim(),
       });
+      const local = getLicense();
+      if (local && local.key.toUpperCase() === trimmedKey) {
+        clearLocalLicense();
+      }
       setMessage(data?.message || GENERIC);
     } catch {
       setMessage(GENERIC);
@@ -66,7 +72,7 @@ export function ResetDevicesPage() {
         <p className="muted" style={{ marginTop: 18 }}>
           <Link to="/activate">Activate a license</Link>
           {" · "}
-          <Link to="/license">Look up a license</Link>
+          <Link to="/license">License details</Link>
         </p>
       </main>
       <PublicFooter />

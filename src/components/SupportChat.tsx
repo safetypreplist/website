@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { useApp } from "../context/AppContext";
 import { liveAgentStatus, onLiveAgentChatChange, openLiveAgentChat, type AgentStatus } from "../lib/liveAgent";
-import { ANNUAL_CENTS, SURVIVAL_VAULT_CENTS } from "../lib/pricing";
+import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
 import { memberQuickAnswers, visitorQuickAnswers } from "../lib/quickAnswers";
 
 function ChatIcon() {
@@ -49,8 +49,8 @@ export function SupportChat() {
   const answers = useMemo(() => {
     // Always use public pricing constants so chat matches homepage/checkout even if products lag.
     const prices = {
-      annualCents: ANNUAL_CENTS,
-      vaultCents: SURVIVAL_VAULT_CENTS,
+      basicCents: BASIC_LICENSE_CENTS,
+      proCents: PRO_LICENSE_CENTS,
     };
     return session ? memberQuickAnswers(prices, hasSurvivalVault) : visitorQuickAnswers(prices);
   }, [session, hasSurvivalVault]);

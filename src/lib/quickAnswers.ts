@@ -17,7 +17,7 @@ const CHECKLISTS =
 const VAULT_LISTS =
   "Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food";
 const REFUND_RULE =
-  "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded.";
+  "First purchases can be refunded within 3 days as long as no checklist has been printed or saved as a PDF.";
 
 export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
   return [
@@ -38,7 +38,7 @@ export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
     {
       id: "included",
       question: "What checklists are included?",
-      answer: `Every plan includes the ${CHECKLISTS}. The minutes are a priority session, not a promise that every item is done in that time. Check items off on any device, add notes, add up to 5 of your own items per section, and print any list.`,
+      answer: `Basic includes the ${CHECKLISTS}. Pro adds Survival Vault. Check items off on the device you activate, add notes, add up to 5 of your own items per section, and print any list.`,
       topic: "sales",
     },
     {
@@ -83,14 +83,14 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
   const answers: QuickAnswer[] = [
     {
       id: "cost",
-      question: "What do I pay each year?",
+      question: "What did I pay?",
       answer: `Your license is a one-time purchase. Basic is ${money(BASIC_LICENSE_CENTS)}; Pro is ${money(PRO_LICENSE_CENTS)}. Upgrade Basic to Pro for ${money(UPGRADE_TO_PRO_CENTS)}. Manage your key on the license page.`,
       topic: "support",
       link: { to: "/license", label: "Open License" },
     },
     {
       id: "cancel",
-      question: "How do I cancel my plan?",
+      question: "How do I cancel?",
       answer:
         "Licenses are one-time — there is no subscription to cancel. If you need help with a refund, use the contact form within the refund window.",
       topic: "support",
@@ -104,19 +104,11 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       link: { to: "/contact?topic=refund", label: "Request a refund" },
     },
     {
-      id: "family",
-      question: "How do I add family members?",
-      answer:
-        "Open Family in the menu to invite someone new or connect an existing checklist. Each person gets their own Personal Checklist, and you choose View Only or Can Edit.",
-      topic: "support",
-      link: { to: "/app/lists", label: "Go to Lists" },
-    },
-    {
       id: "vault",
       question: "How do I get the Survival Vault?",
       answer: `Upgrade to Pro for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key). Pro unlocks ${VAULT_LISTS}.`,
       topic: "support",
-      link: { to: "/app/lists#survival-vault", label: "Add the Survival Vault" },
+      link: { to: "/license", label: "Open License" },
     },
     {
       id: "devices",
@@ -130,7 +122,7 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       id: "offline",
       question: "How do I use it without internet?",
       answer:
-        "Turn on Offline access on your Home page, or under Your data on your Account page, while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service, and your changes sync when you reconnect. Purchases and account changes still need a connection.",
+        "Turn on Offline access on Home while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service. Purchases still need a connection.",
       topic: "support",
       link: { to: "/install", label: "Add the app icon" },
     },

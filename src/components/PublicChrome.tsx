@@ -28,9 +28,9 @@ export function PublicHeader({
           </div>
         </Link>
         <nav className={`public-links ${open ? "open" : ""}`}>
-          <a href={howHref} onClick={close}>How It Works</a>
-          <a href={includedHref} onClick={close}>What’s Included</a>
-          <a href={pricingHref} onClick={close}>Choose a Plan</a>
+          <a href={howHref} onClick={close}>How it works</a>
+          <a href={includedHref} onClick={close}>What’s included</a>
+          <a href={pricingHref} onClick={close}>Pricing</a>
           <NavLink to="/activate" onClick={close}>Activate</NavLink>
         </nav>
         <button className="menu-toggle" aria-label="Menu" onClick={() => setOpen((v) => !v)}>
@@ -59,9 +59,9 @@ export function PublicFooter({
           </Link>
         </div>
         <nav className="footer-links">
-          <a href={howHref}>How It Works</a>
-          <a href={includedHref}>What’s Included</a>
-          <a href={pricingHref}>Choose a Plan</a>
+          <a href={howHref}>How it works</a>
+          <a href={includedHref}>What’s included</a>
+          <a href={pricingHref}>Pricing</a>
           <NavLink to="/activate">Activate</NavLink>
           <NavLink to="/license">License</NavLink>
           <NavLink to="/contact">Contact</NavLink>

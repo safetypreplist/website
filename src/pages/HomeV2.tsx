@@ -8,6 +8,7 @@ import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   BASIC_LICENSE_CENTS,
   PRO_LICENSE_CENTS,
+  UPGRADE_TO_PRO_CENTS,
 } from "../lib/pricing";
 import {
   BASIC_LICENSE_DESCRIPTION,
@@ -229,7 +230,7 @@ export function HomeV2Page() {
             ))}
           </div>
           <p className="hv2-vault-hint hv2-reveal">
-            Add Survival Vault and you also get more checklists.{" "}
+            Pro includes Survival Vault and these extra checklists.{" "}
             <button type="button" className="hv2-text-link" onClick={() => setVaultOpen(true)}>
               See what’s included
             </button>
@@ -342,7 +343,7 @@ export function HomeV2Page() {
             </article>
           </div>
           <p className="muted" style={{ marginTop: 22, textAlign: "center" }}>
-            Already have Basic? Upgrade to Pro for $12.00 on the{" "}
+            Already have Basic? Upgrade to Pro for {money(UPGRADE_TO_PRO_CENTS)} on the{" "}
             <Link to="/license">license page</Link> — same key, same device.
           </p>
         </div>

@@ -56,6 +56,11 @@ export function isLicensed() {
   return Boolean(readStored()?.key);
 }
 
+/** Clear the local license session without calling the server (e.g. after Reset devices). */
+export function clearLocalLicense() {
+  writeStored(null);
+}
+
 export function isProLicense() {
   return readStored()?.product === "pro";
 }

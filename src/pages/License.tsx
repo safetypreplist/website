@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import { activate, getDeviceId, getLicense, isLicensed, setLocalProduct } from "../lib/licenseClient";
-import { BASIC_ADDITIONAL_CENTS } from "../lib/pricing";
+import { BASIC_ADDITIONAL_CENTS, UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
 type LicenseStatus = {
@@ -193,7 +193,7 @@ export function LicensePage() {
               ) : null}
               {status.product === "basic" && thisDeviceActive ? (
                 <button className="btn btn-ghost" type="button" disabled={upgradeBusy} onClick={() => void upgrade()}>
-                  {upgradeBusy ? "Redirecting…" : "Upgrade to Pro — $12.00"}
+                  {upgradeBusy ? "Redirecting…" : `Upgrade to Pro — ${money(UPGRADE_TO_PRO_CENTS)}`}
                 </button>
               ) : null}
               <Link to="/app/reset-devices">Reset devices</Link>

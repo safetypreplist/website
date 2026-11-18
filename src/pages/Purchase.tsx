@@ -7,7 +7,7 @@ import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { StripeCheckout } from "../components/StripeCheckout";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
-import { activate } from "../lib/licenseClient";
+import { activate, isLicensed } from "../lib/licenseClient";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
 import { SCOPE_LINE } from "../lib/copy";
@@ -231,6 +231,12 @@ export function ThankYouPage() {
 
   async function activateNow() {
     if (!licenseKey) return;
+    if (checkoutProduct === "basic_additional" && isLicensed()) {
+      setError(
+        "This additional license is for another device. Open Activate on that device — the key below is ready to use.",
+      );
+      return;
+    }
     setActivating(true);
     setError("");
     try {
@@ -238,7 +244,12 @@ export function ThankYouPage() {
       navigate("/app", { replace: true });
     } catch (err) {
       setActivating(false);
-      setError(err instanceof Error ? err.message : "Could not activate on this device.");
+      const message = err instanceof Error ? err.message : "Could not activate on this device.";
+      setError(
+        message.toLowerCase().includes("already active on another device")
+          ? "This license is already active on another device. If you've lost that device, use Reset devices."
+          : message,
+      );
     }
   }
 
@@ -279,7 +290,7 @@ export function ThankYouPage() {
               <h1>Your license key</h1>
               <p>
                 {checkoutProduct === "basic_additional"
-                  ? "Your second license is ready."
+                  ? "Your additional device license is ready."
                   : product === "pro"
                     ? "Pro license is ready."
                     : product === "basic"
@@ -297,9 +308,18 @@ export function ThankYouPage() {
                 {licenseKey}
               </p>
               <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-                <button className="btn btn-primary" type="button" disabled={activating} onClick={() => void activateNow()}>
-                  {activating ? "Activating…" : "Activate now"}
-                </button>
+                {checkoutProduct === "basic_additional" && isLicensed() ? (
+                  <Link
+                    className="btn btn-primary"
+                    to={`/activate?key=${encodeURIComponent(licenseKey)}`}
+                  >
+                    Open Activate with this key
+                  </Link>
+                ) : (
+                  <button className="btn btn-primary" type="button" disabled={activating} onClick={() => void activateNow()}>
+                    {activating ? "Activating…" : "Activate now"}
+                  </button>
+                )}
               </div>
               <div style={{ marginTop: 14 }}>
                 <button className="btn btn-ghost" type="button" onClick={() => setShowDetails((v) => !v)}>

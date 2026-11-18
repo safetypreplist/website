@@ -6,7 +6,7 @@ import { invokeFunction, isSupabaseConfigured } from "../lib/supabase";
 const TOPICS = [
   { id: "general", label: "General question" },
   { id: "refund", label: "Refund request" },
-  { id: "cancel", label: "Cancel subscription" },
+  { id: "cancel", label: "License or refund help" },
   { id: "privacy", label: "Privacy request" },
   { id: "do-not-sell", label: "Do not sell or share" },
 ] as const;

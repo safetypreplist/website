@@ -117,7 +117,7 @@ export function DashboardPage() {
 
       {!entitled && (
         <div className="status-banner">
-          We couldn’t confirm this subscription yet. If you just purchased, give it a moment — or contact help if payment didn’t go through.
+          We couldn’t confirm this purchase yet. If you just paid, give it a moment — or contact help if payment didn’t go through.
           <div style={{ marginTop: 10 }}>
             <Link className="btn btn-ghost" to="/app/help">Get help</Link>
           </div>

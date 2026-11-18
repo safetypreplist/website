@@ -4,19 +4,23 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { activate, getLicense, isLicensed } from "../lib/licenseClient";
 
 const DEVICE_TAKEN =
-  "This license is already active on another device. If that's your device, open Safety Prep List there and reset it from your license page. If you've lost that device, use Reset devices.";
+  "This license is already active on another device. If that's your device, open Safety Prep List there and reset it from Reset devices. If you've lost that device, use Reset devices.";
 
 export function ActivatePage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const existing = getLicense();
   const keyFromUrl = useMemo(() => (params.get("key") || "").trim(), [params]);
-  const [key, setKey] = useState(keyFromUrl);
+  const urlKeyNorm = keyFromUrl.toUpperCase();
+  const existingKeyNorm = (existing?.key || "").toUpperCase();
+  const switchingKey = Boolean(urlKeyNorm && existing && urlKeyNorm !== existingKeyNorm);
+
+  const [key, setKey] = useState(keyFromUrl || existing?.key || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceTaken, setDeviceTaken] = useState(false);
 
-  if (isLicensed() && existing) {
+  if (isLicensed() && existing && !switchingKey) {
     return (
       <div className="public-page">
         <PublicHeader />
@@ -67,8 +71,12 @@ export function ActivatePage() {
       <PublicHeader />
       <main className="wrap auth-card" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 480 }}>
         <p className="eyebrow">License</p>
-        <h1>Activate your checklist</h1>
-        <p className="muted">Enter the license key from your purchase email. One license covers one device.</p>
+        <h1>{switchingKey ? "Activate another license" : "Activate your checklist"}</h1>
+        <p className="muted">
+          {switchingKey
+            ? "This device already has a license. Activating a different key replaces it on this device. For a second device, activate that key there instead."
+            : "Enter the license key from your purchase email. One license covers one device."}
+        </p>
         <form onSubmit={(e) => void onSubmit(e)} className="stack" style={{ gap: 14, marginTop: 22 }}>
           <label>
             License key

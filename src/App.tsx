@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { useApp } from "./context/AppContext";
-import { LandingPage } from "./pages/Landing";
 import { HomeV2Page } from "./pages/HomeV2";
 import { CheckoutPage, PricingPage, ThankYouPage } from "./pages/Purchase";
 import { AppSplash } from "./components/AppSplash";
@@ -125,7 +124,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomeV2Page />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
-        <Route path="/classic" element={<LandingPage />} />
+        <Route path="/classic" element={<Navigate to="/" replace />} />
         <Route path="/launch26" element={<Navigate to="/#pricing" replace />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

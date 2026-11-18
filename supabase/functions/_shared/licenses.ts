@@ -75,14 +75,15 @@ export async function sendLicenseEmail(opts: {
     ? "Your second Safety Prep List license."
     : `Your Safety Prep List ${plan} license — ${opts.licenseKey}`;
   const key = escapeHtml(opts.licenseKey);
-  const activate = escapeHtml(`${appUrl}/activate`);
+  const activateUrl = `${appUrl}/activate?key=${encodeURIComponent(opts.licenseKey)}`;
+  const activate = escapeHtml(activateUrl);
   const logo = escapeHtml(`${appUrl}/brand/logo.png`);
   const supportSafe = escapeHtml(support);
   const oneDevice =
-    "No account is required. One license covers one device. Need another device? Buy an additional license, or use Reset devices if you've lost access to this one.";
+    "No account is required. One license covers one device. Need another device? After you activate, you can add a second device license from your license page inside the app, or use Reset devices if you've lost access to this one.";
 
   const intro = opts.additional
-    ? "You purchased an additional Basic license for another device. Enter this key on that device at Activate."
+    ? "You purchased an additional Basic license for another device. Open Activate on that device — your key is included in the link."
     : opts.upgraded
       ? `Your license is now <strong>${escapeHtml(plan)}</strong>. Your key stays the same.`
       : `You purchased <strong>${escapeHtml(plan)}</strong> as a one-time license. Save this key — you will need it to activate on your device.`;
@@ -127,7 +128,7 @@ export async function sendLicenseEmail(opts: {
 Product: ${plan}
 License key: ${opts.licenseKey}
 
-Activate: ${appUrl}/activate
+Activate: ${activateUrl}
 
 ${oneDevice}
 

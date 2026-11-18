@@ -28,26 +28,24 @@ export const DEFAULT_FAQS: HelpFaq[] = [
     answer: "On any item, tap Add note to leave a reminder for yourself — for example, where something is stored or what size to buy.",
   },
   {
-    id: "family",
-    question: "How do I add family members?",
-    answer: "Open Connected Checklists in the menu to invite someone new or connect an existing checklist so you can prepare together.",
+    id: "devices",
+    question: "Can I use it on more than one device?",
+    answer:
+      "One license covers one device. If you've lost that device, use Reset devices. After you activate, you can add a second device license from your license page inside the app.",
+    linkTo: "/license",
+    linkLabel: "Open License",
   },
   {
     id: "offline",
     question: "How do I use my checklist offline?",
     answer:
-      "Open your Account page (tap your profile photo at the top, or Account in the menu). Scroll down to Your data and turn on Offline access. Your checklist will then open on this device even without Wi-Fi or cell service. Turn it on for each phone, tablet, or computer you use.",
-  },
-  {
-    id: "devices",
-    question: "Why am I asked about devices?",
-    answer: "Each login can stay active on a limited number of devices. Remove an old one from My Devices if you need a free slot.",
+      "Turn on Offline access from the guided tour or Home while you’re online. Your checklist then opens on this device even without Wi-Fi or cell service.",
   },
   {
     id: "refund",
     question: "How do I request a refund?",
     answer:
-      "First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Renewals aren’t partially refunded. Open Request a refund, explain why, and include your confirmation number.",
+      "First purchases can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Open Request a refund, explain why, and include your confirmation number.",
     linkTo: "/contact?topic=refund",
     linkLabel: "Request a refund",
   },

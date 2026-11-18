@@ -53,7 +53,7 @@ export function SurvivalVaultModal({
           Close
         </button>
         <div className="modal-intro">
-          <p className="eyebrow">Add-on</p>
+          <p className="eyebrow">Included with Pro</p>
           <h2 id="survival-vault-title">Survival Vault</h2>
           <p>{SURVIVAL_VAULT_DESCRIPTION}</p>
         </div>
@@ -69,7 +69,7 @@ export function SurvivalVaultModal({
         ))}
         <div className="modal-cta">
           <a className="btn btn-primary" href={ctaHref || "#pricing"} onClick={add}>
-            Add at checkout
+            See Pro pricing
           </a>
         </div>
       </div>
