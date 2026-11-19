@@ -41,31 +41,11 @@ const SYSTEMS = [
 ] as const;
 
 const PRO_SYSTEMS = [
-  {
-    title: "Off-Grid Systems",
-    line: "Stay capable when the grid is down — tools, sanitation, and manual household systems.",
-    photo: PHOTO_LIBRARY.offgrid,
-  },
-  {
-    title: "Water Purification",
-    line: "Store, filter, and treat drinking water beyond the bottles in the pantry.",
-    photo: PHOTO_LIBRARY.water,
-  },
-  {
-    title: "Home Battery & Solar",
-    line: "Plan battery capacity, solar input, and the devices that matter overnight.",
-    photo: PHOTO_LIBRARY.power,
-  },
-  {
-    title: "Emergency Cooling",
-    line: "Blackout cooling, shaded rooms, hydration, and safe warmth when HVAC fails.",
-    photo: PHOTO_LIBRARY.cooling,
-  },
-  {
-    title: "Long-Term Food",
-    line: "A pantry built for weeks — staples, rotation, and prep after the first few days.",
-    photo: PHOTO_LIBRARY.food,
-  },
+  { title: "Off-Grid Systems", photo: PHOTO_LIBRARY.offgrid },
+  { title: "Water Purification", photo: PHOTO_LIBRARY.water },
+  { title: "Home Battery & Solar", photo: PHOTO_LIBRARY.power },
+  { title: "Emergency Cooling", photo: PHOTO_LIBRARY.cooling },
+  { title: "Long-Term Food", photo: PHOTO_LIBRARY.food },
 ] as const;
 
 const BASIC_FEATURES = [
@@ -268,28 +248,25 @@ export function HomeV2Page() {
                 you prepare for more situations.
               </p>
             </div>
-            <div className="hv2-systems">
+            <div className="hv2-pro-grid">
               {PRO_SYSTEMS.map((system, index) => (
-                <article
+                <a
                   key={system.title}
-                  className="hv2-system hv2-reveal"
-                  style={{ transitionDelay: `${index * 70}ms` }}
+                  className="hv2-pro-card hv2-reveal"
+                  href="#pricing"
+                  style={{ transitionDelay: `${index * 50}ms` }}
                 >
-                  <div className="hv2-system-photo" style={{ backgroundImage: `url(${system.photo})` }} />
-                  <div className="hv2-system-copy">
-                    <p className="hv2-system-badge">Pro checklist</p>
+                  <div
+                    className="hv2-pro-card-photo"
+                    style={{ backgroundImage: `url(${system.photo})` }}
+                    aria-hidden="true"
+                  />
+                  <div className="hv2-pro-card-copy">
                     <h3>{system.title}</h3>
-                    <p>{system.line}</p>
                   </div>
-                </article>
+                </a>
               ))}
             </div>
-            <p className="hv2-vault-hint">
-              These five are in addition to the Basic checklists above.{" "}
-              <a className="hv2-text-link" href="#pricing">
-                Compare Basic and Pro
-              </a>
-            </p>
           </div>
         </div>
       </section>
