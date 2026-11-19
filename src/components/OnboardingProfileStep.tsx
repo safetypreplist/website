@@ -27,7 +27,6 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   const [locating, setLocating] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -39,6 +38,10 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   }, [localProfile]);
 
   useEffect(() => {
+    if (!locationDenied) {
+      setHits([]);
+      return;
+    }
     const q = query.trim();
     if (q.length < 2 || (location && q === location.place)) {
       setHits([]);
@@ -62,11 +65,10 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, location]);
+  }, [query, location, locationDenied]);
 
   async function onPickPhoto(file: File | null) {
     setError("");
-    setSaved(false);
     if (!file) return;
     try {
       const blob = await compressAvatar(file);
@@ -80,7 +82,6 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   async function allowLocation() {
     setLocating(true);
     setError("");
-    setSaved(false);
     setLocationDenied(false);
     try {
       const position = await getCurrentPosition();
@@ -98,7 +99,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       setHits([]);
     } catch {
       setLocationDenied(true);
-      setError("Location access was declined. Enter your city and state below instead.");
+      setError("");
     } finally {
       setLocating(false);
     }
@@ -108,10 +109,9 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     setLocation(hit);
     setQuery(hit.place);
     setHits([]);
-    setSaved(false);
   }
 
-  async function onSave(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
     setError("");
@@ -124,7 +124,11 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     }
     if (!location) {
       setSaving(false);
-      setError("Choose a location to personalize local safety resources, time, and weather.");
+      setError(
+        locationDenied
+          ? "Enter your city and state to continue."
+          : "Allow location access to personalize safety resources, time, and weather.",
+      );
       return;
     }
     try {
@@ -134,7 +138,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
         avatarDataUrl,
         location,
       });
-      setSaved(true);
+      onContinue();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save your profile.");
     } finally {
@@ -151,43 +155,45 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       aria-modal="true"
       aria-labelledby="onboarding-profile-title"
     >
-      <p className="eyebrow">Get started</p>
-      <h2 id="onboarding-profile-title">Welcome to SafetyPrepList!</h2>
-      <p className="onboarding-copy">Let&apos;s personalize your preparedness checklist.</p>
+      <div className="onboarding-profile-hero">
+        <p className="eyebrow">You&apos;re in</p>
+        <h2 id="onboarding-profile-title">Welcome to SafetyPrepList!</h2>
+        <p className="onboarding-copy">Let&apos;s personalize your preparedness checklist.</p>
+      </div>
 
-      <form className="onboarding-profile-form" onSubmit={onSave}>
-        <div className="account-photo">
-          <ProfileAvatar className="account-photo-mark" name={previewName} avatarUrl={avatarDataUrl} />
-          <div>
-            <button className="btn btn-ghost" type="button" onClick={() => fileRef.current?.click()}>
-              {avatarDataUrl ? "Change photo" : "Upload photo"}
+      <form className="onboarding-profile-form" onSubmit={onSubmit}>
+        <div className="onboarding-profile-photo">
+          <button
+            className="onboarding-profile-avatar-btn"
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            aria-label={avatarDataUrl ? "Change photo" : "Upload photo"}
+          >
+            <ProfileAvatar className="onboarding-profile-avatar" name={previewName} avatarUrl={avatarDataUrl} />
+            <span className="onboarding-profile-avatar-add">{avatarDataUrl ? "Change" : "Add photo"}</span>
+          </button>
+          {avatarDataUrl ? (
+            <button
+              className="onboarding-profile-photo-remove"
+              type="button"
+              onClick={() => setAvatarDataUrl(null)}
+            >
+              Remove
             </button>
-            {avatarDataUrl ? (
-              <button
-                className="btn btn-ghost"
-                type="button"
-                onClick={() => {
-                  setAvatarDataUrl(null);
-                  setSaved(false);
-                }}
-              >
-                Remove photo
-              </button>
-            ) : (
-              <p className="muted">Optional profile picture</p>
-            )}
-            <input
-              ref={fileRef}
-              className="sr-only"
-              type="file"
-              accept="image/*"
-              onChange={(event) => {
-                const file = event.target.files?.[0] || null;
-                event.target.value = "";
-                void onPickPhoto(file);
-              }}
-            />
-          </div>
+          ) : (
+            <p className="muted">Optional</p>
+          )}
+          <input
+            ref={fileRef}
+            className="sr-only"
+            type="file"
+            accept="image/*"
+            onChange={(event) => {
+              const file = event.target.files?.[0] || null;
+              event.target.value = "";
+              void onPickPhoto(file);
+            }}
+          />
         </div>
 
         <div className="profile-name-grid">
@@ -195,10 +201,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
             <span>First name</span>
             <input
               value={firstName}
-              onChange={(event) => {
-                setFirstName(event.target.value);
-                setSaved(false);
-              }}
+              onChange={(event) => setFirstName(event.target.value)}
               placeholder="Jane"
               autoComplete="given-name"
               maxLength={40}
@@ -209,10 +212,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
             <span>Last name</span>
             <input
               value={lastName}
-              onChange={(event) => {
-                setLastName(event.target.value);
-                setSaved(false);
-              }}
+              onChange={(event) => setLastName(event.target.value)}
               placeholder="Doe"
               autoComplete="family-name"
               maxLength={40}
@@ -221,62 +221,75 @@ export function OnboardingProfileStep({ onContinue }: Props) {
           </label>
         </div>
 
-        <div className="onboarding-location-callout">
-          <p>
-            <strong>Allow location access</strong> for the best experience. Location helps personalize local safety
-            resources, time, and weather on this device.
-          </p>
-          <button className="btn btn-ghost" type="button" disabled={locating} onClick={() => void allowLocation()}>
-            {locating ? "Locating…" : "Allow location access"}
-          </button>
-          {locationDenied ? (
-            <p className="muted">No problem — enter your city and state below instead.</p>
+        <div className="onboarding-location-block">
+          {location && !locationDenied ? (
+            <div className="onboarding-location-ready" role="status">
+              <span className="onboarding-location-check" aria-hidden="true">
+                ✓
+              </span>
+              <div>
+                <strong>Location ready</strong>
+                <p>{location.place}</p>
+              </div>
+              <button className="btn btn-ghost" type="button" disabled={locating} onClick={() => void allowLocation()}>
+                {locating ? "Updating…" : "Update"}
+              </button>
+            </div>
           ) : (
-            <p className="muted">If you prefer not to share precise location, you can enter a city and state.</p>
+            <button
+              className="btn onboarding-location-cta"
+              type="button"
+              disabled={locating}
+              onClick={() => void allowLocation()}
+            >
+              {locating ? "Locating…" : "Allow location access"}
+            </button>
           )}
+          {!location && !locationDenied ? (
+            <p className="muted onboarding-location-hint">
+              Powers local safety resources, time, and weather on this device.
+            </p>
+          ) : null}
         </div>
 
-        <div className="account-field">
-          <span>Location</span>
-          <input
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              if (location) setLocation(null);
-              setSaved(false);
-            }}
-            placeholder="City, State"
-            autoComplete="address-level2"
-            required
-          />
-          {searching ? <p className="muted">Searching…</p> : null}
-          {hits.length ? (
-            <ul className="profile-place-hits">
-              {hits.map((hit) => (
-                <li key={`${hit.place}-${hit.lat}-${hit.lon}`}>
-                  <button type="button" onClick={() => pickHit(hit)}>
-                    {hit.place}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {location ? <p className="muted">Using {location.place}.</p> : null}
-        </div>
+        {locationDenied ? (
+          <div className="onboarding-location-fallback">
+            <p className="muted">No problem — enter your city and state instead.</p>
+            <label className="account-field">
+              <span>City, State</span>
+              <input
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  if (location) setLocation(null);
+                }}
+                placeholder="Henderson, NV"
+                autoComplete="address-level2"
+                required
+              />
+            </label>
+            {searching ? <p className="muted">Searching…</p> : null}
+            {hits.length ? (
+              <ul className="profile-place-hits">
+                {hits.map((hit) => (
+                  <li key={`${hit.place}-${hit.lat}-${hit.lon}`}>
+                    <button type="button" onClick={() => pickHit(hit)}>
+                      {hit.place}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {location ? <p className="muted">Using {location.place}.</p> : null}
+          </div>
+        ) : null}
 
         {error ? <p className="form-error">{error}</p> : null}
-        {saved ? <p className="form-success">Profile saved on this device.</p> : null}
 
         <div className="onboarding-actions onboarding-actions-stacked">
-          {!saved ? (
-            <button className="btn btn-primary" type="submit" disabled={saving}>
-              {saving ? "Saving…" : "Save profile"}
-            </button>
-          ) : (
-            <button className="btn btn-primary" type="button" onClick={onContinue}>
-              Continue
-            </button>
-          )}
+          <button className="btn btn-primary" type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Continue"}
+          </button>
         </div>
       </form>
     </div>
