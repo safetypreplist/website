@@ -38,6 +38,7 @@ export function DeactivatePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileBackupOk, setFileBackupOk] = useState(false);
+  const [cloudBackupAck, setCloudBackupAck] = useState(false);
   const [emailMasked, setEmailMasked] = useState<string | null>(null);
 
   const ready = backupPhase === "ready" && Boolean(backupDecision);
@@ -48,8 +49,10 @@ export function DeactivatePage() {
     try {
       await downloadTransferBackupFile();
       setFileBackupOk(true);
+      setCloudBackupAck(false);
       setBackupMethod("file");
     } catch (err) {
+      setFileBackupOk(false);
       setError(err instanceof Error ? err.message : "Could not download a backup file.");
     } finally {
       setBusy(false);
@@ -58,12 +61,22 @@ export function DeactivatePage() {
 
   function openCloudBackup() {
     setBackupMethod("cloud");
+    setFileBackupOk(false);
+    setCloudBackupAck(false);
     const href = isLicensed() ? "/app/transfer?mode=backup" : "/activate";
     window.open(href, "_blank", "noopener,noreferrer");
   }
 
   function continueAfterBackup() {
-    const method: BackupMethod = backupMethod === "file" || backupMethod === "cloud" ? backupMethod : "cloud";
+    const fileOk = backupMethod === "file" && fileBackupOk;
+    const cloudOk = backupMethod === "cloud" && cloudBackupAck;
+    if (!fileOk && !cloudOk) {
+      setError(
+        "Complete a backup first: download a file until you see confirmation, or finish cloud backup in Transfer and check the confirmation box.",
+      );
+      return;
+    }
+    const method: BackupMethod = fileOk ? "file" : "cloud";
     setBackupMethod(method);
     setBackupDecision("backed_up");
     recordBackupDecision("backed_up", method);
@@ -175,8 +188,18 @@ export function DeactivatePage() {
                         Start cloud backup
                       </button>
                       <p className="muted">
-                        Opens Transfer in a new tab. Come back here after the app confirms the backup succeeded.
+                        Opens Transfer in a new tab. Come back here only after that tab confirms the backup succeeded.
                       </p>
+                      {backupMethod === "cloud" ? (
+                        <label className="license-backup-ack">
+                          <input
+                            type="checkbox"
+                            checked={cloudBackupAck}
+                            onChange={(event) => setCloudBackupAck(event.target.checked)}
+                          />
+                          <span>The Transfer tab confirmed my temporary cloud backup was created.</span>
+                        </label>
+                      ) : null}
                     </article>
                     <article>
                       <h3>Free Downloadable Backup</h3>

@@ -17,11 +17,27 @@ Deno.serve(async (req) => {
     const existing = await admin.from("licenses").select("*").eq("stripe_session_id", sessionId).maybeSingle();
     if (existing.data) {
       const row = existing.data as LicenseRow;
+      const payment = await admin
+        .from("license_payments")
+        .select("checkout_product")
+        .eq("stripe_session_id", sessionId)
+        .eq("license_id", row.id)
+        .maybeSingle();
+      const fromPayment = payment.data?.checkout_product;
+      const checkoutProduct =
+        fromPayment === "upgrade_to_pro" ||
+        fromPayment === "basic_additional" ||
+        fromPayment === "basic" ||
+        fromPayment === "pro"
+          ? fromPayment
+          : row.linked_to
+            ? "basic_additional"
+            : row.product;
       return json({
         alreadyProcessed: true,
         licenseKey: row.license_key,
         product: row.product,
-        checkoutProduct: row.linked_to ? "basic_additional" : row.product,
+        checkoutProduct,
         licenseId: row.id,
         email: row.email,
       });

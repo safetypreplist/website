@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { useApp } from "../context/AppContext";
+import { isLicensed } from "../lib/licenseClient";
 import { liveAgentStatus, onLiveAgentChatChange, openLiveAgentChat, type AgentStatus } from "../lib/liveAgent";
 import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
 import { memberQuickAnswers, visitorQuickAnswers } from "../lib/quickAnswers";
@@ -32,7 +33,6 @@ function CloseIcon() {
 export function SupportChat() {
   const { pathname } = useLocation();
   const { hasSurvivalVault } = useApp();
-  const session = null as null;
   const [open, setOpen] = useState(false);
   const [chatting, setChatting] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -47,13 +47,14 @@ export function SupportChat() {
   const inApp = pathname.startsWith("/app");
 
   const answers = useMemo(() => {
-    // Always use public pricing constants so chat matches homepage/checkout even if products lag.
+    // Pricing constants keep chat aligned with homepage/checkout; content comes from supportFaqs.
     const prices = {
       basicCents: BASIC_LICENSE_CENTS,
       proCents: PRO_LICENSE_CENTS,
     };
-    return session ? memberQuickAnswers(prices, hasSurvivalVault) : visitorQuickAnswers(prices);
-  }, [session, hasSurvivalVault]);
+    const licensed = inApp || isLicensed();
+    return licensed ? memberQuickAnswers(prices, hasSurvivalVault) : visitorQuickAnswers(prices);
+  }, [inApp, hasSurvivalVault]);
   const activeAnswer = answers.find((answer) => answer.id === answerId) ?? null;
 
   useEffect(
@@ -230,7 +231,7 @@ export function SupportChat() {
                 {error}
               </p>
             ) : null}
-            <Link className="support-chat-alt" to={session ? "/app/help" : "/contact"} onClick={() => setOpen(false)}>
+            <Link className="support-chat-alt" to={inApp || isLicensed() ? "/app/help" : "/contact"} onClick={() => setOpen(false)}>
               Prefer to write? Send us a message
             </Link>
           </div>

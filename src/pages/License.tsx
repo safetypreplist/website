@@ -72,9 +72,7 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
       setError(null);
       void Promise.all([
         invokeFunction<LicenseStatus>("license-status", { key: trimmed }),
-        invokeFunction<{ payments?: LicensePayment[] }>("license-payments", { key: trimmed }).catch(() => ({
-          payments: [] as LicensePayment[],
-        })),
+        invokeFunction<{ payments?: LicensePayment[] }>("license-payments", { key: trimmed }),
       ])
         .then(([statusData, paymentsData]) => {
           if (!live) return;
@@ -85,12 +83,30 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
           }
           setBusy(false);
         })
-        .catch((err) => {
+        .catch(async (err) => {
           if (!live) return;
-          setStatus(null);
-          setPayments([]);
-          setError(err instanceof Error ? err.message : "Could not load that license.");
-          setBusy(false);
+          // Keep license details visible even if purchase history fails to load.
+          try {
+            const statusData = await invokeFunction<LicenseStatus>("license-status", { key: trimmed });
+            if (!live) return;
+            setStatus(statusData);
+            setPayments([]);
+            setError(
+              err instanceof Error
+                ? `${err.message} Purchase history could not be loaded.`
+                : "Could not load purchase history for that license.",
+            );
+            if (licensedHere && local?.key && statusData.product && statusData.licenseKey === local.key) {
+              setLocalProduct(statusData.product);
+            }
+          } catch (statusErr) {
+            if (!live) return;
+            setStatus(null);
+            setPayments([]);
+            setError(statusErr instanceof Error ? statusErr.message : "Could not load that license.");
+          } finally {
+            if (live) setBusy(false);
+          }
         });
     }, 400);
     return () => {

@@ -142,11 +142,14 @@ export async function downloadTransferBackupFile(payload?: TransferBackupPayload
   const blob = new Blob([transferBackupToJson(data)], { type: "application/json" });
   const stamp = data.exportedAt.slice(0, 10);
   const file = new File([blob], `safety-prep-list-backup-${stamp}.json`, { type: "application/json" });
-  await shareOrDownloadFile(
+  const handoff = await shareOrDownloadFile(
     file,
     "Safety Prep List backup",
     "Save this file somewhere you can open from your new device, then use Transfer / Deactivate → Import a Backup File.",
   );
+  if (handoff === "aborted") {
+    throw new Error("Backup was cancelled before it was saved. Try Download again and keep the file.");
+  }
   return summarizeTransferBackup(data);
 }
 

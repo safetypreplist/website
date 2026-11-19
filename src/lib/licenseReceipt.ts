@@ -68,5 +68,8 @@ export async function downloadLicenseReceiptPdf(payment: LicensePaymentReceipt) 
   const blob = buildTextPdf("Safety Prep List Receipt", lines);
   const stamp = payment.paidAt.slice(0, 10);
   const file = new File([blob], `safety-prep-list-receipt-${stamp}.pdf`, { type: "application/pdf" });
-  await shareOrDownloadFile(file, "Safety Prep List receipt", "Your branded purchase receipt.");
+  const handoff = await shareOrDownloadFile(file, "Safety Prep List receipt", "Your branded purchase receipt.");
+  if (handoff === "aborted") {
+    throw new Error("Receipt download was cancelled. Try Download Receipt PDF again.");
+  }
 }

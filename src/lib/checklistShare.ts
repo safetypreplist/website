@@ -139,7 +139,10 @@ export function sharePayloadToFile(payload: SharePayload): File {
   return new File([blob], `${safe}-share.json`, { type: "application/json" });
 }
 
-export async function shareOrDownloadFile(file: File, title: string, text: string) {
+export type FileHandoffResult = "shared" | "downloaded" | "aborted";
+
+/** Share or download a file. Returns "aborted" if the user cancels the system share sheet. */
+export async function shareOrDownloadFile(file: File, title: string, text: string): Promise<FileHandoffResult> {
   const nav = navigator as Navigator & {
     share?: (data: ShareData) => Promise<void>;
     canShare?: (data: ShareData) => boolean;
@@ -147,9 +150,9 @@ export async function shareOrDownloadFile(file: File, title: string, text: strin
   if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
     try {
       await nav.share({ files: [file], title, text });
-      return;
+      return "shared";
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof DOMException && err.name === "AbortError") return "aborted";
     }
   }
   const url = URL.createObjectURL(file);
@@ -161,6 +164,7 @@ export async function shareOrDownloadFile(file: File, title: string, text: strin
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  return "downloaded";
 }
 
 /**

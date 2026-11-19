@@ -1,3 +1,5 @@
+import { supportFaqsForHelp, type SupportFaq } from "./supportFaqs";
+
 export type HelpFaq = {
   id: string;
   question: string;
@@ -8,61 +10,17 @@ export type HelpFaq = {
 
 export const HELP_FAQS_KEY = "help_faqs";
 
-export const DEFAULT_FAQS: HelpFaq[] = [
-  {
-    id: "pricing",
-    question: "What does my plan cost?",
-    answer:
-      "Basic is $12.99 one time (core checklists, one device). Pro is $24.99 one time and includes additional preparedness checklists. Upgrade Basic to Pro for $12.00 from your license page after you activate.",
-    linkTo: "/app/license",
-    linkLabel: "Open License",
-  },
-  {
-    id: "check",
-    question: "How do I check items off?",
-    answer: "Open a list and tap the circle next to an item. Checked items turn gray and italic so you can see what is already done.",
-  },
-  {
-    id: "notes",
-    question: "How do I add a note?",
-    answer: "On any item, tap Add note to leave a reminder for yourself — for example, where something is stored or what size to buy.",
-  },
-  {
-    id: "devices",
-    question: "Can I use it on more than one device?",
-    answer:
-      "One license covers one device. To move it, open Transfer / Deactivate: back up your checklists, deactivate with your license key, then activate and restore on the new device. After you activate, you can add a second device license from your license page.",
-    linkTo: "/app/transfer",
-    linkLabel: "Transfer / Deactivate",
-  },
-  {
-    id: "offline",
-    question: "How do I use my checklist offline?",
-    answer:
-      "Your checklist is saved on this device, so it opens and updates even without Wi-Fi or cell service. Purchases and transfers still need a connection.",
-  },
-  {
-    id: "recover-key",
-    question: "I lost my license key. How do I recover it?",
-    answer:
-      "Open Recover My License and enter the email from your original purchase. We’ll send a secure link so you can view your key. If that license is still active on another device, deactivate it first, then activate on the device you want to use.",
-    linkTo: "/license-recovery",
-    linkLabel: "Recover My License",
-  },
-  {
-    id: "refund",
-    question: "How do I request a refund?",
-    answer:
-      "First purchases can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Open Request a refund, explain why, and include your confirmation number.",
-    linkTo: "/contact?topic=refund",
-    linkLabel: "Request a refund",
-  },
-  {
-    id: "tour",
-    question: "Can I see the guided tour again?",
-    answer: "Yes. Use Replay the guided tour on this Help page anytime you want a walkthrough of the app.",
-  },
-];
+function toHelpFaq(faq: SupportFaq): HelpFaq {
+  return {
+    id: faq.id,
+    question: faq.question,
+    answer: faq.answer,
+    ...(faq.linkTo && faq.linkLabel ? { linkTo: faq.linkTo, linkLabel: faq.linkLabel } : {}),
+  };
+}
+
+/** Built-in Help FAQs — kept in sync with live support via supportFaqs.ts. */
+export const DEFAULT_FAQS: HelpFaq[] = supportFaqsForHelp().map(toHelpFaq);
 
 export function parseFaqs(value: unknown): HelpFaq[] {
   if (!Array.isArray(value)) return [];
@@ -85,22 +43,13 @@ export function parseFaqs(value: unknown): HelpFaq[] {
     .filter((row): row is HelpFaq => Boolean(row));
 }
 
-/** Saved FAQs plus any built-in question added after the list was last saved. */
+/**
+ * Built-in FAQ ids always use the latest product copy from DEFAULT_FAQS.
+ * Custom admin-added FAQs (unknown ids) are kept after the built-ins.
+ */
 export function withNewDefaults(saved: HelpFaq[]): HelpFaq[] {
   if (!saved.length) return DEFAULT_FAQS;
-  const ids = new Set(saved.map((item) => item.id));
-  const merged = [...saved];
-  DEFAULT_FAQS.forEach((item, index) => {
-    if (ids.has(item.id)) return;
-    const before = DEFAULT_FAQS.slice(0, index).reverse().find((prev) => ids.has(prev.id));
-    const at = before ? merged.findIndex((row) => row.id === before.id) + 1 : 0;
-    merged.splice(at, 0, item);
-    ids.add(item.id);
-  });
-  return merged.map((item) => {
-    if (item.linkTo) return item;
-    const fallback = DEFAULT_FAQS.find((row) => row.id === item.id);
-    if (!fallback?.linkTo || !fallback.linkLabel) return item;
-    return { ...item, linkTo: fallback.linkTo, linkLabel: fallback.linkLabel };
-  });
+  const defaultIds = new Set(DEFAULT_FAQS.map((item) => item.id));
+  const custom = saved.filter((item) => !defaultIds.has(item.id));
+  return [...DEFAULT_FAQS, ...custom];
 }

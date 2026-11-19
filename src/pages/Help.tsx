@@ -65,7 +65,9 @@ export function HelpPage() {
 
       <article className="account-card help-actions">
         <h2>Guided tour</h2>
-        <p className="muted">Walk through checking items, notes, share or print, and your license again.</p>
+        <p className="muted">
+          Walk through checklist progress, notes, contacts, safety resources, profile, and your license again.
+        </p>
         <button className="btn btn-forest" type="button" onClick={() => startOnboardingReplay()}>
           Replay the guided tour
         </button>
