@@ -86,12 +86,24 @@ function formatPlace(json: PlaceJson) {
   return region ? `${city}, ${region}` : city;
 }
 
-async function placeName(lat: number, lon: number) {
+export async function placeName(lat: number, lon: number) {
   const res = await fetch(
     `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
   );
   if (!res.ok) return "Your location";
   return formatPlace((await res.json()) as PlaceJson);
+}
+
+export async function reverseGeocode(lat: number, lon: number): Promise<{ place: string; stateCode: string | null }> {
+  const res = await fetch(
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+  );
+  if (!res.ok) return { place: "Your location", stateCode: null };
+  const json = (await res.json()) as PlaceJson;
+  const stateCode = json.principalSubdivisionCode?.includes("-")
+    ? json.principalSubdivisionCode.split("-")[1] || null
+    : json.principalSubdivisionCode || null;
+  return { place: formatPlace(json), stateCode };
 }
 
 export async function lookupIpLocation(): Promise<{ lat: number; lon: number; place: string }> {
@@ -102,6 +114,46 @@ export async function lookupIpLocation(): Promise<{ lat: number; lon: number; pl
     throw new Error("Location unavailable");
   }
   return { lat: json.latitude, lon: json.longitude, place: formatPlace(json) };
+}
+
+export type DayForecast = {
+  date: string;
+  weekday: string;
+  high: number;
+  low: number;
+  code: number;
+  label: string;
+};
+
+export type WeatherBundle = {
+  current: LocalConditions;
+  days: DayForecast[];
+};
+
+const FORECAST_CACHE_KEY = "spl-local-forecast";
+const FORECAST_CACHE_MS = 20 * 60 * 1000;
+
+type ForecastCache = { at: number; lat: number; lon: number; data: WeatherBundle };
+
+function readForecastCache(lat: number, lon: number): WeatherBundle | null {
+  try {
+    const raw = sessionStorage.getItem(FORECAST_CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw) as ForecastCache;
+    if (Date.now() - cache.at > FORECAST_CACHE_MS) return null;
+    if (Math.abs(cache.lat - lat) > 0.05 || Math.abs(cache.lon - lon) > 0.05) return null;
+    return cache.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeForecastCache(lat: number, lon: number, data: WeatherBundle) {
+  try {
+    sessionStorage.setItem(FORECAST_CACHE_KEY, JSON.stringify({ at: Date.now(), lat, lon, data }));
+  } catch {
+    /* private mode */
+  }
 }
 
 export async function loadLocalConditions(lat: number, lon: number, knownPlace?: string): Promise<LocalConditions> {
@@ -124,6 +176,56 @@ export async function loadLocalConditions(lat: number, lon: number, knownPlace?:
   const label = weatherLabel(code);
   const data = { place, temp, label, code };
   writeCache(lat, lon, data);
+  return data;
+}
+
+export async function loadWeatherBundle(lat: number, lon: number, knownPlace?: string): Promise<WeatherBundle> {
+  const cached = readForecastCache(lat, lon);
+  if (cached) return cached;
+
+  const [place, weatherRes] = await Promise.all([
+    knownPlace ? Promise.resolve(knownPlace) : placeName(lat, lon),
+    fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`,
+    ),
+  ]);
+
+  if (!weatherRes.ok) throw new Error("Weather unavailable");
+  const weather = (await weatherRes.json()) as {
+    current?: { temperature_2m?: number; weather_code?: number };
+    daily?: {
+      time?: string[];
+      weather_code?: number[];
+      temperature_2m_max?: number[];
+      temperature_2m_min?: number[];
+    };
+  };
+
+  const code = weather.current?.weather_code ?? -1;
+  const current: LocalConditions = {
+    place,
+    temp: Math.round(weather.current?.temperature_2m ?? 0),
+    label: weatherLabel(code),
+    code,
+  };
+  writeCache(lat, lon, current);
+
+  const times = weather.daily?.time || [];
+  const days: DayForecast[] = times.map((date, index) => {
+    const dayCode = weather.daily?.weather_code?.[index] ?? -1;
+    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date(`${date}T12:00:00`));
+    return {
+      date,
+      weekday,
+      high: Math.round(weather.daily?.temperature_2m_max?.[index] ?? 0),
+      low: Math.round(weather.daily?.temperature_2m_min?.[index] ?? 0),
+      code: dayCode,
+      label: weatherLabel(dayCode),
+    };
+  });
+
+  const data = { current, days };
+  writeForecastCache(lat, lon, data);
   return data;
 }
 

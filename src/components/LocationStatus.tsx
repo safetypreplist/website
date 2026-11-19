@@ -91,7 +91,7 @@ export function ProfileWeather() {
   );
 }
 
-function WeatherGlyph({ kind }: { kind: WeatherKind }) {
+export function WeatherGlyph({ kind }: { kind: WeatherKind }) {
   const common = {
     viewBox: "0 0 24 24",
     fill: "none",

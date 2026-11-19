@@ -20,6 +20,7 @@ import { DemoPage } from "./pages/Demo";
 import { InstallPage } from "./pages/Install";
 import { NotFoundPage } from "./pages/NotFound";
 import { HelpPage } from "./pages/Help";
+import { ProfilePage } from "./pages/Profile";
 import { AdminPage } from "./pages/Admin";
 import { ContactsPage } from "./pages/Contacts";
 import { DashboardPage, ListsPage } from "./pages/Dashboard";
@@ -264,6 +265,14 @@ export default function App() {
           element={
             <LicensedApp>
               <HelpPage />
+            </LicensedApp>
+          }
+        />
+        <Route
+          path="/app/profile"
+          element={
+            <LicensedApp>
+              <ProfilePage />
             </LicensedApp>
           }
         />

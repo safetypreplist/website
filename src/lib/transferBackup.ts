@@ -12,6 +12,7 @@ import {
   type ImportedChecklist,
 } from "./localStore";
 import { shareOrDownloadFile } from "./checklistShare";
+import { loadLocalProfile, saveLocalProfile, type LocalProfile } from "./localProfile";
 
 const PREFERRED_STATE_KEY = "spl.preferredState.v1";
 const PREP_LANE_KEY = "spl.prep-lane";
@@ -25,6 +26,7 @@ export type TransferBackupPayload = {
   exportedAt: string;
   preferredState: string | null;
   prepLane: string | null;
+  localProfile?: LocalProfile | null;
   progress: ProgressRow[];
   customItems: CustomChecklistItem[];
   contacts: Contact[];
@@ -57,6 +59,7 @@ export async function buildTransferBackup(): Promise<TransferBackupPayload> {
     exportedAt: new Date().toISOString(),
     preferredState: localStorage.getItem(PREFERRED_STATE_KEY),
     prepLane: localStorage.getItem(PREP_LANE_KEY),
+    localProfile: loadLocalProfile(),
     progress: Object.values(progressMap),
     customItems,
     contacts,
@@ -96,10 +99,28 @@ export function parseTransferBackup(raw: unknown): TransferBackupPayload {
     exportedAt: typeof data.exportedAt === "string" ? data.exportedAt : new Date().toISOString(),
     preferredState: typeof data.preferredState === "string" ? data.preferredState : null,
     prepLane: typeof data.prepLane === "string" ? data.prepLane : null,
+    localProfile: parseLocalProfile(data.localProfile),
     progress: data.progress as ProgressRow[],
     customItems: data.customItems as CustomChecklistItem[],
     contacts: data.contacts as Contact[],
     importedLists: Array.isArray(data.importedLists) ? (data.importedLists as ImportedChecklist[]) : [],
+  };
+}
+
+function parseLocalProfile(raw: unknown): LocalProfile | null {
+  if (!isRecord(raw)) return null;
+  const location = isRecord(raw.location)
+    ? {
+        place: typeof raw.location.place === "string" ? raw.location.place : "",
+        lat: typeof raw.location.lat === "number" ? raw.location.lat : NaN,
+        lon: typeof raw.location.lon === "number" ? raw.location.lon : NaN,
+        stateCode: typeof raw.location.stateCode === "string" ? raw.location.stateCode : null,
+      }
+    : null;
+  return {
+    displayName: typeof raw.displayName === "string" ? raw.displayName : "",
+    avatarDataUrl: typeof raw.avatarDataUrl === "string" && raw.avatarDataUrl.startsWith("data:") ? raw.avatarDataUrl : null,
+    location: location && location.place && Number.isFinite(location.lat) && Number.isFinite(location.lon) ? location : null,
   };
 }
 
@@ -155,4 +176,5 @@ export async function restoreTransferBackup(payload: TransferBackupPayload) {
   else localStorage.removeItem(PREFERRED_STATE_KEY);
   if (payload.prepLane) localStorage.setItem(PREP_LANE_KEY, payload.prepLane);
   else localStorage.removeItem(PREP_LANE_KEY);
+  if (payload.localProfile) saveLocalProfile(payload.localProfile);
 }

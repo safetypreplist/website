@@ -39,6 +39,12 @@ import {
   saveProgressRow,
 } from "../lib/localStore";
 import { supabase } from "../lib/supabase";
+import { checklistTitle } from "../lib/identity";
+import {
+  loadLocalProfile,
+  saveLocalProfile as persistLocalProfile,
+  type LocalProfile as DeviceProfile,
+} from "../lib/localProfile";
 
 export type OfflineStatus = {
   pending: number;
@@ -60,8 +66,9 @@ type LocalProfile = {
   preferred_state: string | null;
   role: "customer" | "owner";
   plan: "core" | "full";
-  full_name: null;
-  avatar_url: null;
+  full_name: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
 };
 
 type AppState = {
@@ -107,6 +114,8 @@ type AppState = {
   renameDevice: () => Promise<void>;
   removeDevice: () => Promise<void>;
   setPreferredState: (code: string) => Promise<void>;
+  localProfile: DeviceProfile;
+  saveLocalProfile: (next: DeviceProfile) => Promise<void>;
   updateProfile: () => Promise<void>;
   uploadAvatar: () => Promise<void>;
   switchChecklist: (kind: ViewingContext["kind"]) => Promise<void>;
@@ -130,18 +139,21 @@ const emptyOffline: OfflineStatus = {
   storage: null,
 };
 
-const emptyViewing: ViewingContext = {
-  kind: "personal",
-  checklistId: "local",
-  ownerUserId: "local",
-  publicId: "local",
-  title: "My Checklist",
-  ownerName: "My",
-  avatarUrl: null,
-  permission: "own",
-  isOwn: true,
-  canEdit: true,
-};
+function viewingFromProfile(profile: DeviceProfile): ViewingContext {
+  const name = profile.displayName.trim() || "My";
+  return {
+    kind: "personal",
+    checklistId: "local",
+    ownerUserId: "local",
+    publicId: "local",
+    title: checklistTitle(name),
+    ownerName: name,
+    avatarUrl: profile.avatarDataUrl,
+    permission: "own",
+    isOwn: true,
+    canEdit: true,
+  };
+}
 
 const PREFERRED_STATE_KEY = "spl.preferredState.v1";
 const LOCAL_USER = "local";
@@ -167,7 +179,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<"customer" | "owner">("customer");
   const [sync, setSync] = useState<"idle" | "saving" | "waiting" | "error">("idle");
-  const [viewing, setViewing] = useState<ViewingContext>(emptyViewing);
+  const [localProfile, setLocalProfile] = useState<DeviceProfile>(() => loadLocalProfile());
+  const [viewing, setViewing] = useState<ViewingContext>(() => viewingFromProfile(loadLocalProfile()));
   const [offline, setOffline] = useState<OfflineStatus>(emptyOffline);
   const [preferredState, setPreferredStateValue] = useState<string | null>(() => localStorage.getItem(PREFERRED_STATE_KEY));
   const [licenseProduct, setLicenseProduct] = useState<LicenseProduct | null>(() => getLicense()?.product ?? null);
@@ -380,7 +393,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setViewing((prev) => ({
       ...prev,
       kind,
-      title: "My Checklist",
+      title: checklistTitle(prev.ownerName),
     }));
   }, []);
 
@@ -388,6 +401,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(PREFERRED_STATE_KEY, code);
     setPreferredStateValue(code);
   }, []);
+
+  const saveLocalProfile = useCallback(
+    async (next: DeviceProfile) => {
+      const saved = persistLocalProfile(next);
+      setLocalProfile(saved);
+      setViewing((prev) => ({
+        ...viewingFromProfile(saved),
+        kind: prev.kind,
+      }));
+      if (saved.location?.stateCode) {
+        localStorage.setItem(PREFERRED_STATE_KEY, saved.location.stateCode);
+        setPreferredStateValue(saved.location.stateCode);
+      }
+    },
+    [],
+  );
 
   const value = useMemo<AppState>(
     () => ({
@@ -397,8 +426,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         preferred_state: preferredState,
         role,
         plan: hasSurvivalVault ? "full" : "core",
-        full_name: null,
-        avatar_url: null,
+        full_name: localProfile.displayName || null,
+        display_name: localProfile.displayName || null,
+        avatar_url: localProfile.avatarDataUrl,
       },
       catalog,
       progress,
@@ -446,6 +476,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       renameDevice: async () => undefined,
       removeDevice: async () => undefined,
       setPreferredState,
+      localProfile,
+      saveLocalProfile,
       updateProfile: async () => undefined,
       uploadAvatar: async () => undefined,
       switchChecklist,
@@ -465,6 +497,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       preferredState,
       role,
       hasSurvivalVault,
+      localProfile,
       catalog,
       progress,
       contacts,
@@ -487,6 +520,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addCustomItem,
       removeCustomItem,
       setPreferredState,
+      saveLocalProfile,
       switchChecklist,
     ],
   );

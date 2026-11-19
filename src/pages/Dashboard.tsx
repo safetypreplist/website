@@ -67,16 +67,28 @@ export function DashboardPage() {
 
   return (
     <div className="dash-home">
-      <div className="dash-identity">
-        <span className="dash-avatar">
-          {viewing.avatarUrl ? <img src={viewing.avatarUrl} alt="" /> : <span>{initialsFrom(viewing.ownerName)}</span>}
-        </span>
-        <div>
-          {viewing.isOwn ? <p className="dash-greeting">{greeting(viewing.ownerName)}</p> : null}
-          <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
-          {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
+      {viewing.isOwn ? (
+        <Link className="dash-identity" to="/app/profile" aria-label="Edit profile">
+          <span className="dash-avatar">
+            {viewing.avatarUrl ? <img src={viewing.avatarUrl} alt="" /> : <span>{initialsFrom(viewing.ownerName)}</span>}
+          </span>
+          <div>
+            <p className="dash-greeting">{greeting(viewing.ownerName === "My" ? null : viewing.ownerName)}</p>
+            <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
+            {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
+          </div>
+        </Link>
+      ) : (
+        <div className="dash-identity">
+          <span className="dash-avatar">
+            {viewing.avatarUrl ? <img src={viewing.avatarUrl} alt="" /> : <span>{initialsFrom(viewing.ownerName)}</span>}
+          </span>
+          <div>
+            <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
+            {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="readiness">
         <div className="readiness-photo" aria-hidden="true">
