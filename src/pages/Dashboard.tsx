@@ -169,10 +169,11 @@ function timedSystems(systems: ChecklistSystem[]) {
 function SurvivalVaultCta() {
   const { hasSurvivalVault, profile, switchChecklist } = useApp();
   const entitled = hasPlanAccess(profile);
-  if (!hasSurvivalVault && !entitled) return null;
+  // Keep a stable Survival Vault target for the guided tour even before Pro is unlocked.
+  if (!hasSurvivalVault && !entitled && !isLicensed()) return null;
   return (
     <aside className="vault-list-cta" id="survival-vault" data-onboarding="survival-vault">
-      <p className="eyebrow">Optional add-on</p>
+      <p className="eyebrow">{hasSurvivalVault ? "Included in Pro" : "Optional add-on"}</p>
       <h2>Survival Vault</h2>
       <p className="muted">{VAULT_APP_DESCRIPTION}</p>
       {hasSurvivalVault ? (

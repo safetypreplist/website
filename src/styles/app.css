@@ -8938,7 +8938,16 @@ html.tour-scroll-lock body {
   box-shadow: 0 18px 50px rgba(20, 29, 22, 0.28);
 }
 .onboarding-tour-card.is-placing {
-  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.onboarding-tour-card.is-center {
+  visibility: visible;
+  opacity: 1;
+}
+.onboarding-chrome-target {
+  position: relative !important;
+  z-index: 401 !important;
 }
 .onboarding-tour-arrow {
   position: absolute;

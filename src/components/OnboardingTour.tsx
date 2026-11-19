@@ -12,43 +12,43 @@ export type TourCopy = Pick<Step, "title" | "body">[];
 const DEFAULT_STEPS: Step[] = [
   {
     title: "Start with your checklist",
-    body: "Your readiness plan is organized into simple systems. Open any list to see what to gather and what is already complete.",
+    body: "Your readiness plan is organized into simple systems. This card opens a list so you can see what to gather and what is already complete.",
     selector: '[data-onboarding="checklist-card"]',
     path: "/app",
   },
   {
     title: "Check items off as you go",
-    body: "Tap an item when it is ready. Your progress saves on this device and stays with you offline.",
+    body: "Tap the circle beside an item when it is ready. Your progress saves on this device and stays with you offline.",
     selector: '[data-onboarding="check-item"]',
     path: "/app/lists/grab-go",
   },
   {
     title: "Leave a note for yourself",
-    body: "Add short notes to remember where something is stored, what size to buy, or what still needs attention.",
+    body: "Use Add note to remember where something is stored, what size to buy, or what still needs attention.",
     selector: '[data-onboarding="notes"]',
     path: "/app/lists/grab-go",
   },
   {
-    title: "Share or print",
-    body: "Share a PDF quickly, or print a paper backup when you want one offline.",
+    title: "Share a backup",
+    body: "Share creates a quick PDF or file you can send to yourself or someone helping you prepare.",
     selector: '[data-onboarding="share"]',
     path: "/app/lists/grab-go",
   },
   {
     title: "Print or save a PDF",
-    body: "Use Print for a paper copy or a PDF of this checklist.",
+    body: "Print makes a paper copy or PDF of this checklist for offline use.",
     selector: '[data-onboarding="print"]',
     path: "/app/lists/grab-go",
   },
   {
     title: "Survival Vault / Pro",
-    body: "Pro unlocks Survival Vault checklists. Find Upgrade to Pro or Survival Vault here when it applies to your license.",
+    body: "Pro unlocks Survival Vault checklists. Use Upgrade to Pro or open Survival Vault from here when it applies to your license.",
     selector: '[data-onboarding="survival-vault"]',
     path: "/app",
   },
   {
     title: "Your license",
-    body: "Open License to see your key, devices, or upgrade options.",
+    body: "Open License to see your key, move devices with Transfer My Data, or upgrade options.",
     selector: '[data-onboarding="license"]',
     path: "/app",
   },
@@ -359,10 +359,14 @@ export function OnboardingTour() {
     if (!open || mode !== "tour") return;
     let cancelled = false;
     setSearching(true);
+    setRect(null);
+    setPlacedStep(-1);
     let target: HTMLElement | null = null;
     let pinnedScroll = document.scrollingElement?.scrollTop ?? 0;
     let pinning = false;
     const expectedPath = DEFAULT_STEPS[stepIndex]?.path;
+    const chromeSelector =
+      step.selector.includes('"license"') || step.selector.includes('"survival-vault"') || step.selector.includes('"my-checklist"');
 
     function pinScroll() {
       if (!pinning) return;
@@ -379,7 +383,12 @@ export function OnboardingTour() {
     }
 
     function settleTarget() {
-      if (!target || target.closest(".bottom-nav, .desktop-sidebar")) return;
+      if (!target) return;
+      // Nav chrome stays put; still measure it for the spotlight hole.
+      if (target.closest(".bottom-nav, .desktop-sidebar, .app-top")) {
+        measure();
+        return;
+      }
       const box = target.getBoundingClientRect();
       const pad = spotlightPad(target, box).y;
       const phone = isPhoneTour();
@@ -396,7 +405,7 @@ export function OnboardingTour() {
     }
 
     function ensureClearance() {
-      if (!target || target.closest(".bottom-nav, .desktop-sidebar")) {
+      if (!target || target.closest(".bottom-nav, .desktop-sidebar, .app-top")) {
         measure();
         return;
       }
@@ -419,11 +428,20 @@ export function OnboardingTour() {
     let demoItem: HTMLElement | null = null;
 
     async function locate() {
-      for (let attempt = 0; attempt < 50 && !cancelled; attempt += 1) {
+      if (expectedPath && window.location.pathname !== expectedPath) {
+        navigate(expectedPath);
+      }
+
+      for (let attempt = 0; attempt < 80 && !cancelled; attempt += 1) {
+        if (expectedPath && window.location.pathname !== expectedPath) {
+          await new Promise((resolve) => window.setTimeout(resolve, 100));
+          continue;
+        }
         const found = visibleTarget(step.selector);
         target = found ? highlightRoot(found, step.selector) : null;
         if (target) {
           target.classList.add("onboarding-target-highlight");
+          if (chromeSelector) target.classList.add("onboarding-chrome-target");
           const item = step.selector.includes("check-item") ? target.closest(".check-item") : null;
           if (item instanceof HTMLElement) {
             demoItem = item;
@@ -433,46 +451,25 @@ export function OnboardingTour() {
           await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve(undefined))));
           if (!cancelled) {
             pinnedScroll = document.scrollingElement?.scrollTop ?? 0;
-            pinning = true;
-            document.documentElement.classList.add("tour-scroll-lock");
+            pinning = !target.closest(".bottom-nav, .desktop-sidebar, .app-top");
+            if (pinning) document.documentElement.classList.add("tour-scroll-lock");
             measure();
             window.requestAnimationFrame(() => {
               if (cancelled) return;
               ensureClearance();
             });
             setSearching(false);
+            skipGuard.current = 0;
           }
           return;
         }
-        if (expectedPath && window.location.pathname !== expectedPath) {
-          await new Promise((resolve) => window.setTimeout(resolve, 80));
-          continue;
-        }
-        await new Promise((resolve) => window.setTimeout(resolve, 80));
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
       }
       if (!cancelled) {
-        // Target missing (moved, Pro-only, etc.) — skip instead of centering a blank pop-up.
+        // Keep the step card visible even if the control is missing, so the tour never goes blank.
         setRect(null);
         setSearching(false);
-        skipGuard.current += 1;
-        if (skipGuard.current > DEFAULT_STEPS.length + 2) {
-          completeTour();
-          return;
-        }
-        window.setTimeout(() => {
-          if (cancelled) return;
-          if (stepIndex >= DEFAULT_STEPS.length - 1) {
-            completeTour();
-            return;
-          }
-          const nextIndex = stepIndex + 1;
-          const next = DEFAULT_STEPS[nextIndex];
-          holdStep(nextIndex);
-          setRect(null);
-          setPlacedStep(-1);
-          setStepIndex(nextIndex);
-          if (next?.path && next.path !== window.location.pathname) navigate(next.path);
-        }, 0);
+        setPlacedStep(stepIndex);
       }
     }
 
@@ -482,7 +479,6 @@ export function OnboardingTour() {
     window.addEventListener("scroll", pinScroll, true);
     void locate().then(() => {
       if (cancelled || !target) return;
-      skipGuard.current = 0;
       observer.observe(target);
       const guidance = document.querySelector(".guidance-ack");
       const header = document.querySelector(".app-top");
@@ -498,6 +494,7 @@ export function OnboardingTour() {
       window.removeEventListener("touchmove", blockTourScroll);
       window.removeEventListener("scroll", pinScroll, true);
       target?.classList.remove("onboarding-target-highlight");
+      target?.classList.remove("onboarding-chrome-target");
       demoItem?.classList.remove("tour-check-demo");
       window.removeEventListener("resize", measure);
     };
@@ -703,44 +700,50 @@ export function OnboardingTour() {
                 style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
               />
             </>
-          ) : searching ? (
+          ) : (
             <div className="onboarding-tint onboarding-tint-full" aria-hidden="true" />
-          ) : null}
-          {hole ? (
-            <aside
-              ref={cardRef}
-              className={`onboarding-tour-card place-${tourPlace?.placement ?? "below"}${!searching && placedStep === stepIndex ? "" : " is-placing"}`}
-              style={tourCardStyle}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="tour-title"
-            >
-              {tourPlace ? (
-                <span
-                  className={`onboarding-tour-arrow ${tourPlace.placement}`}
-                  style={tourArrowStyle}
-                  aria-hidden="true"
-                />
-              ) : null}
-              <div className="onboarding-tour-head">
-                <span>{progress}</span>
-                <button type="button" onClick={finish}>
-                  ×
-                </button>
-              </div>
-              <p className="eyebrow">Guided tour</p>
-              <h2 id="tour-title">{step.title}</h2>
-              <p>{step.body}</p>
-              <div className="onboarding-tour-actions">
-                <button className="btn btn-ghost" type="button" onClick={finish}>
-                  Exit tour
-                </button>
-                <button className="btn btn-primary" type="button" onClick={nextTour}>
-                  {stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}
-                </button>
-              </div>
-            </aside>
-          ) : null}
+          )}
+          <aside
+            ref={cardRef}
+            className={`onboarding-tour-card place-${tourPlace?.placement ?? "center"}${hole && !searching && placedStep === stepIndex ? "" : hole ? " is-placing" : " is-center"}`}
+            style={
+              hole
+                ? tourCardStyle
+                : { top: "50%", left: "50%", width: tourWidth, transform: "translate(-50%, -50%)" }
+            }
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tour-title"
+          >
+            {tourPlace && hole ? (
+              <span
+                className={`onboarding-tour-arrow ${tourPlace.placement}`}
+                style={tourArrowStyle}
+                aria-hidden="true"
+              />
+            ) : null}
+            <div className="onboarding-tour-head">
+              <span>{progress}</span>
+              <button type="button" onClick={finish}>
+                ×
+              </button>
+            </div>
+            <p className="eyebrow">Guided tour</p>
+            <h2 id="tour-title">{step.title}</h2>
+            <p>{step.body}</p>
+            {searching && !hole ? <p className="muted">Finding that section…</p> : null}
+            {!searching && !hole ? (
+              <p className="muted">That control is not on this screen right now. Continue to the next stop.</p>
+            ) : null}
+            <div className="onboarding-tour-actions">
+              <button className="btn btn-ghost" type="button" onClick={finish}>
+                Exit tour
+              </button>
+              <button className="btn btn-primary" type="button" onClick={nextTour} disabled={searching && !hole}>
+                {stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}
+              </button>
+            </div>
+          </aside>
         </>
       )}
     </div>
