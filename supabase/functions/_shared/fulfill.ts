@@ -6,6 +6,7 @@ import {
   type LicenseProduct,
   type LicenseRow,
 } from "./licenses.ts";
+import { recordLicensePayment, type CheckoutProduct } from "./payments.ts";
 import { stripeRequest } from "./stripe.ts";
 import { serviceClient } from "./supabase.ts";
 
@@ -45,7 +46,7 @@ function customerEmail(session: StripeSession) {
   return session.customer_details?.email || session.customer_email || null;
 }
 
-function processedRow(row: LicenseRow, checkoutProduct: "basic" | "basic_additional" | "pro" | "upgrade_to_pro"): LicenseFulfillResult {
+function processedRow(row: LicenseRow, checkoutProduct: CheckoutProduct): LicenseFulfillResult {
   return {
     ok: true,
     alreadyProcessed: true,
@@ -55,6 +56,21 @@ function processedRow(row: LicenseRow, checkoutProduct: "basic" | "basic_additio
     licenseId: row.id,
     email: row.email,
   };
+}
+
+async function ensurePayment(
+  admin: Admin,
+  licenseId: string,
+  session: StripeSession,
+  checkoutProduct: CheckoutProduct,
+) {
+  const amountCents = typeof session.amount_total === "number" ? session.amount_total : 0;
+  await recordLicensePayment(admin, {
+    licenseId,
+    stripeSessionId: session.id,
+    checkoutProduct,
+    amountCents,
+  });
 }
 
 export async function retrieveCheckoutSession(sessionId: string) {
@@ -82,10 +98,34 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
   const existing = await admin.from("licenses").select("*").eq("stripe_session_id", session.id).maybeSingle();
   if (existing.data) {
     const row = existing.data as LicenseRow;
-    if (productMeta === "upgrade_to_pro") return processedRow(row, "upgrade_to_pro");
-    if (productMeta === "basic_additional" || row.linked_to) return processedRow(row, "basic_additional");
-    if (row.product === "pro") return processedRow(row, "pro");
-    return processedRow(row, "basic");
+    const checkoutProduct: CheckoutProduct =
+      productMeta === "upgrade_to_pro"
+        ? "upgrade_to_pro"
+        : productMeta === "basic_additional" || row.linked_to
+          ? "basic_additional"
+          : row.product === "pro"
+            ? "pro"
+            : "basic";
+    await ensurePayment(admin, row.id, session, checkoutProduct);
+    return processedRow(row, checkoutProduct);
+  }
+
+  // Upgrade sessions overwrite licenses.stripe_session_id — still find by payment row.
+  const priorPayment = await admin
+    .from("license_payments")
+    .select("license_id, checkout_product")
+    .eq("stripe_session_id", session.id)
+    .maybeSingle();
+  if (priorPayment.data?.license_id) {
+    const { data: paidLicense } = await admin
+      .from("licenses")
+      .select("*")
+      .eq("id", priorPayment.data.license_id)
+      .maybeSingle();
+    if (paidLicense) {
+      const checkoutProduct = (priorPayment.data.checkout_product || productMeta || "basic") as CheckoutProduct;
+      return processedRow(paidLicense as LicenseRow, checkoutProduct);
+    }
   }
 
   const email = customerEmail(session);
@@ -114,6 +154,20 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
       return { ok: false, status: 500, error: "Could not upgrade license." };
     }
     const row = updated.data as LicenseRow;
+    await ensurePayment(admin, row.id, session, "upgrade_to_pro");
+    // Preserve a first-purchase history line. Prefer original amount_cents; if an older
+    // upgrade overwrote it with the $12 upgrade price, fall back to Basic list price.
+    const initialCents =
+      license.amount_cents != null && license.amount_cents !== 1200
+        ? license.amount_cents
+        : 1299;
+    await recordLicensePayment(admin, {
+      licenseId: row.id,
+      stripeSessionId: `legacy:${row.id}:initial`,
+      checkoutProduct: "basic",
+      amountCents: initialCents,
+      paidAt: license.created_at,
+    });
     if (row.email) {
       await sendLicenseEmail({ to: row.email, licenseKey: row.license_key, product: "pro", upgraded: true });
     }
@@ -177,6 +231,20 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
   }
 
   const row = insert.data as LicenseRow;
+  const checkoutProduct: CheckoutProduct = isAdditional ? "basic_additional" : product;
+  await ensurePayment(admin, row.id, session, checkoutProduct);
+
+  // Also attach additional-device purchases to the parent license history when the parent key is known.
+  if (isAdditional) {
+    const parentKey = session.metadata?.license_key || "";
+    if (parentKey) {
+      const parent = await findLicenseByKey(admin, parentKey);
+      if (parent) {
+        await ensurePayment(admin, parent.id, session, "basic_additional");
+      }
+    }
+  }
+
   if (email) {
     await sendLicenseEmail({
       to: email,
@@ -191,7 +259,7 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
     alreadyProcessed: false,
     licenseKey: row.license_key,
     product: row.product,
-    checkoutProduct: isAdditional ? "basic_additional" : product,
+    checkoutProduct,
     licenseId: row.id,
     email: row.email,
   };

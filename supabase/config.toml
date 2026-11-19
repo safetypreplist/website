@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.transfer-backup]
 verify_jwt = false
+
+[functions.license-payments]
+verify_jwt = false

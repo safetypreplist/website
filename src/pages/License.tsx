@@ -9,8 +9,10 @@ import {
   isLicensed,
   setLocalProduct,
 } from "../lib/licenseClient";
+import { downloadLicenseReceiptPdf } from "../lib/licenseReceipt";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { BASIC_ADDITIONAL_CENTS, UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
+import { BASIC_ADDITIONAL_CENTS, BASIC_LICENSE_CENTS, UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
+import { PRO_EXTRA_CHECKLISTS } from "../lib/copy";
 import { invokeFunction } from "../lib/supabase";
 
 type LicenseStatus = {
@@ -19,6 +21,20 @@ type LicenseStatus = {
   purchasedAt: string;
   licenseKey: string;
   devices: Array<{ deviceId: string; activatedAt: string }>;
+};
+
+type LicensePayment = {
+  id: string;
+  stripeSessionId: string;
+  paymentIntentId: string | null;
+  checkoutProduct: string;
+  description: string;
+  amountCents: number;
+  taxCents: number | null;
+  currency: string;
+  paymentMethodSummary: string | null;
+  receiptUrl: string | null;
+  paidAt: string;
 };
 
 function formatDate(iso: string) {
@@ -37,13 +53,16 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
   const [addBusy, setAddBusy] = useState(false);
+  const [receiptBusy, setReceiptBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<LicenseStatus | null>(null);
+  const [payments, setPayments] = useState<LicensePayment[]>([]);
 
   useEffect(() => {
     const trimmed = key.trim();
     if (trimmed.length < 8) {
       setStatus(null);
+      setPayments([]);
       setError(null);
       return;
     }
@@ -51,19 +70,25 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
     const timer = window.setTimeout(() => {
       setBusy(true);
       setError(null);
-      void invokeFunction<LicenseStatus>("license-status", { key: trimmed })
-        .then((data) => {
+      void Promise.all([
+        invokeFunction<LicenseStatus>("license-status", { key: trimmed }),
+        invokeFunction<{ payments?: LicensePayment[] }>("license-payments", { key: trimmed }).catch(() => ({
+          payments: [] as LicensePayment[],
+        })),
+      ])
+        .then(([statusData, paymentsData]) => {
           if (!live) return;
-          setStatus(data);
-          // Keep the local session in sync after Basic → Pro upgrades.
-          if (licensedHere && local?.key && data.product && data.licenseKey === local.key) {
-            setLocalProduct(data.product);
+          setStatus(statusData);
+          setPayments(paymentsData.payments || []);
+          if (licensedHere && local?.key && statusData.product && statusData.licenseKey === local.key) {
+            setLocalProduct(statusData.product);
           }
           setBusy(false);
         })
         .catch((err) => {
           if (!live) return;
           setStatus(null);
+          setPayments([]);
           setError(err instanceof Error ? err.message : "Could not load that license.");
           setBusy(false);
         });
@@ -129,13 +154,35 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
     }
   }
 
+  async function downloadReceipt(payment: LicensePayment) {
+    if (!status) return;
+    setReceiptBusy(payment.id);
+    setError(null);
+    try {
+      await downloadLicenseReceiptPdf({
+        ...payment,
+        licenseKey: status.licenseKey,
+        product: status.product,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not download that receipt.");
+    } finally {
+      setReceiptBusy(null);
+    }
+  }
+
+  const showOffers = Boolean(status && thisDeviceActive);
+  const showUpgrade = Boolean(showOffers && status?.product === "basic");
+  const showAddDevice = Boolean(showOffers);
+  const discountCents = BASIC_LICENSE_CENTS - BASIC_ADDITIONAL_CENTS;
+
   return (
     <div className={embedded ? "license-app" : "license-manage"}>
       <header className={embedded ? "license-app-hero" : "license-manage-hero"}>
         <p className="eyebrow">My license</p>
-        <h1 className={embedded ? "page-title" : undefined}>Your lifetime license</h1>
+        <h1 className={embedded ? "page-title" : undefined}>Your Lifetime License</h1>
         <p className={embedded ? "muted license-app-lead" : "license-manage-lead"}>
-          One license. One device. Details appear below as soon as your key is recognized.
+          One license covers one device. Purchase history and in-app offers appear below once your key is recognized.
         </p>
       </header>
 
@@ -161,14 +208,10 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
         {status ? (
           <div className="license-manage-details" data-onboarding="license-panel">
             <div className="license-manage-plan">
-              <span>{status.product === "pro" ? "Pro" : "Basic"}</span>
-              <strong>{status.amountCents != null ? money(status.amountCents) : "—"} one time</strong>
+              <span>Current plan</span>
+              <strong>{status.product === "pro" ? "PRO" : "BASIC"}</strong>
             </div>
             <dl className="license-manage-facts">
-              <div>
-                <dt>Purchase date</dt>
-                <dd>{formatDate(status.purchasedAt)}</dd>
-              </div>
               <div>
                 <dt>License key</dt>
                 <dd>
@@ -196,30 +239,105 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
                   Activate on this device
                 </button>
               ) : (
-                <Link className="btn btn-primary" to="/app">
-                  Open checklists
+                <Link className="btn btn-ghost" to="/app">
+                  Open My Checklist
                 </Link>
               )}
-              {thisDeviceActive ? (
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  disabled={addBusy}
-                  onClick={() => void addSecondDevice()}
-                  data-onboarding="second-device-offer"
-                >
-                  {addBusy ? "Redirecting…" : `Add a second device · ${money(BASIC_ADDITIONAL_CENTS)}`}
-                </button>
-              ) : null}
-              {status.product === "basic" && thisDeviceActive ? (
-                <button className="btn btn-ghost" type="button" disabled={upgradeBusy} onClick={() => void upgrade()}>
-                  {upgradeBusy ? "Redirecting…" : `Upgrade to Pro · ${money(UPGRADE_TO_PRO_CENTS)}`}
-                </button>
-              ) : null}
             </div>
           </div>
         ) : null}
       </section>
+
+      {status ? (
+        <section className={embedded ? "license-app-card account-card" : "license-manage-card"}>
+          <h2 className="license-section-title">Purchase History</h2>
+          <p className="muted license-section-lead">
+            Verified transactions for this license. Original purchases stay on record when you upgrade.
+          </p>
+          {payments.length === 0 ? (
+            <p className="muted">No purchase records are available yet for this license.</p>
+          ) : (
+            <ul className="license-history-list">
+              {payments.map((payment) => (
+                <li key={payment.id}>
+                  <div>
+                    <p className="license-history-date">{formatDate(payment.paidAt)}</p>
+                    <p className="license-history-desc">
+                      {payment.description} — {money(payment.amountCents)}
+                    </p>
+                  </div>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={receiptBusy === payment.id}
+                    onClick={() => void downloadReceipt(payment)}
+                  >
+                    {receiptBusy === payment.id ? "Preparing…" : "Download Receipt PDF"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
+      {showOffers ? (
+        <div className="license-offer-grid">
+          {showUpgrade ? (
+            <article className={embedded ? "license-app-card account-card license-offer-card" : "license-manage-card license-offer-card"}>
+              <p className="eyebrow">Upgrade</p>
+              <h2>Upgrade to Pro</h2>
+              <p>
+                Keep everything in Basic, plus five additional preparedness checklists for off-grid, water, power,
+                cooling, and long-term food.
+              </p>
+              <ul className="license-offer-list">
+                {PRO_EXTRA_CHECKLISTS.map((item) => (
+                  <li key={item.title}>{item.title}</li>
+                ))}
+              </ul>
+              <p className="license-offer-price">
+                {money(UPGRADE_TO_PRO_CENTS)} <span>one-time upgrade</span>
+              </p>
+              <button
+                className="btn btn-primary btn-block"
+                type="button"
+                disabled={upgradeBusy}
+                onClick={() => void upgrade()}
+              >
+                {upgradeBusy ? "Redirecting…" : "Upgrade to Pro"}
+              </button>
+            </article>
+          ) : null}
+
+          {showAddDevice ? (
+            <article
+              className={embedded ? "license-app-card account-card license-offer-card" : "license-manage-card license-offer-card"}
+              data-onboarding="second-device-offer"
+            >
+              <p className="eyebrow">In-app offer</p>
+              <h2>Add Another Device</h2>
+              <p>
+                Use Safety Prep List on an additional computer, phone, or tablet with its own lifetime Basic license.
+              </p>
+              <p className="license-offer-price">
+                {money(BASIC_ADDITIONAL_CENTS)} <span>one-time in-app offer</span>
+              </p>
+              <p className="muted">
+                Special in-app price — {money(discountCents)} off the regular {money(BASIC_LICENSE_CENTS)} Basic license.
+              </p>
+              <button
+                className="btn btn-primary btn-block"
+                type="button"
+                disabled={addBusy}
+                onClick={() => void addSecondDevice()}
+              >
+                {addBusy ? "Redirecting…" : "Add a Device"}
+              </button>
+            </article>
+          ) : null}
+        </div>
+      ) : null}
 
       <aside className={embedded ? "license-app-aside account-card" : "license-manage-aside"}>
         <p className="eyebrow">Moving devices?</p>
