@@ -55,6 +55,10 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
         .then((data) => {
           if (!live) return;
           setStatus(data);
+          // Keep the local session in sync after Basic → Pro upgrades.
+          if (licensedHere && local?.key && data.product && data.licenseKey === local.key) {
+            setLocalProduct(data.product);
+          }
           setBusy(false);
         })
         .catch((err) => {

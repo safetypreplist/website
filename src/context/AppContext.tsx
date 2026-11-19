@@ -18,7 +18,12 @@ import type {
   ViewingContext,
 } from "../types";
 import { isOnline } from "../lib/offline";
-import { isLicensed, isProLicense } from "../lib/licenseClient";
+import {
+  getLicense,
+  isLicensed,
+  refreshLocalLicenseProduct,
+  type LicenseProduct,
+} from "../lib/licenseClient";
 import { loadCatalog } from "../lib/loadCatalog";
 import {
   deleteContact as deleteLocalContact,
@@ -165,13 +170,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [viewing, setViewing] = useState<ViewingContext>(emptyViewing);
   const [offline, setOffline] = useState<OfflineStatus>(emptyOffline);
   const [preferredState, setPreferredStateValue] = useState<string | null>(() => localStorage.getItem(PREFERRED_STATE_KEY));
+  const [licenseProduct, setLicenseProduct] = useState<LicenseProduct | null>(() => getLicense()?.product ?? null);
 
-  const hasSurvivalVault = isProLicense();
-  const licensed = isLicensed();
+  const hasSurvivalVault = licenseProduct === "pro";
 
   const refreshLocal = useCallback(async () => {
     await ensureLocalStore();
-    if (licensed) {
+    const product = await refreshLocalLicenseProduct();
+    setLicenseProduct(product ?? getLicense()?.product ?? null);
+    const stillLicensed = isLicensed();
+    if (stillLicensed) {
       const bundle = loadCatalog();
       setCatalog({ systems: bundle.systems, sections: bundle.sections, items: bundle.items });
       setSafety(bundle.safety);
@@ -193,7 +201,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       savedAt: new Date().toISOString(),
       preparedAt: prev.preparedAt || new Date().toISOString(),
     }));
-  }, [licensed]);
+  }, []);
 
   useEffect(() => {
     let live = true;

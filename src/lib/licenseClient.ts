@@ -25,6 +25,12 @@ type LicenseStatusResponse = {
   devices: Array<{ deviceId: string; activatedAt: string }>;
 };
 
+function syncStoredProduct(product: LicenseProduct) {
+  const current = readStored();
+  if (!current || current.product === product) return;
+  writeStored({ ...current, product });
+}
+
 function readStored(): StoredLicense | null {
   try {
     const raw = localStorage.getItem(LICENSE_KEY);
@@ -145,6 +151,9 @@ export async function confirmLocalLicenseActive(): Promise<"ok" | "moved" | "inv
   if (typeof navigator !== "undefined" && !navigator.onLine) return "ok";
   try {
     const data = await invokeFunction<LicenseStatusResponse>("license-status", { key: license.key });
+    if (data.product === "basic" || data.product === "pro") {
+      syncStoredProduct(data.product);
+    }
     const deviceId = getDeviceId();
     const activeHere = data.devices.some((row) => row.deviceId === deviceId);
     if (!activeHere) {
@@ -161,6 +170,23 @@ export async function confirmLocalLicenseActive(): Promise<"ok" | "moved" | "inv
     // Network / server errors: keep local access for offline-capable use.
     return "ok";
   }
+}
+
+/** Pull the latest Basic/Pro product from the server into local session storage. */
+export async function refreshLocalLicenseProduct(): Promise<LicenseProduct | null> {
+  const license = readStored();
+  if (!license) return null;
+  if (typeof navigator !== "undefined" && !navigator.onLine) return license.product;
+  try {
+    const data = await invokeFunction<LicenseStatusResponse>("license-status", { key: license.key });
+    if (data.product === "basic" || data.product === "pro") {
+      syncStoredProduct(data.product);
+      return data.product;
+    }
+  } catch {
+    // Keep local product when offline or the status call fails.
+  }
+  return readStored()?.product ?? null;
 }
 
 /** Update local product after a successful Basic → Pro upgrade. */

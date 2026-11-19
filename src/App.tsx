@@ -96,6 +96,9 @@ function RequireLicense({ children }: { children: React.ReactNode }) {
         setActivateMessage("This device is no longer activated. Enter your license key to activate it again.");
         await refreshAccount();
         setRedirectTo("/activate?reason=deactivated");
+      } else {
+        // Sync Basic → Pro upgrades into app state so Pro checklists appear.
+        await refreshAccount();
       }
       setChecking(false);
     })();

@@ -7,7 +7,7 @@ import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { StripeCheckout } from "../components/StripeCheckout";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
-import { activate, isLicensed } from "../lib/licenseClient";
+import { activate, isLicensed, setLocalProduct } from "../lib/licenseClient";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
 import { SCOPE_LINE } from "../lib/copy";
@@ -202,6 +202,13 @@ export function ThankYouPage() {
           setLicenseKey(captured.licenseKey);
           setProduct(captured.product || "");
           setCheckoutProduct(captured.checkoutProduct || captured.product || "");
+          // Upgrade checkout keeps the same key/device — update local product so Pro lists unlock.
+          if (
+            isLicensed() &&
+            (captured.product === "pro" || captured.checkoutProduct === "upgrade_to_pro")
+          ) {
+            setLocalProduct("pro");
+          }
           setBusy(false);
           return;
         }

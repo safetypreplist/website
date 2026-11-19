@@ -146,10 +146,13 @@ export function DashboardPage() {
         ))}
       </div>
       {!isHousehold && hasSurvivalVault ? (
-        <div className="system-list" style={{ marginTop: 18 }}>
-          {proSystems(catalog.systems).map((system) => (
-            <SystemRow key={system.id} slug={system.slug} />
-          ))}
+        <div style={{ marginTop: 28 }}>
+          <p className="dash-section-title">Pro checklists</p>
+          <div className="system-list" style={{ marginTop: 12 }}>
+            {proSystems(catalog.systems).map((system) => (
+              <SystemRow key={system.id} slug={system.slug} />
+            ))}
+          </div>
         </div>
       ) : null}
     </div>
@@ -164,7 +167,15 @@ export const PRO_SLUGS = ["off-grid", "water-purification", "battery-solar", "co
 export const VAULT_SLUGS = PRO_SLUGS;
 
 export function proSystems(systems: ChecklistSystem[]) {
-  return PRO_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
+  const bySlug = PRO_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter(
+    (system): system is ChecklistSystem => Boolean(system),
+  );
+  if (bySlug.length) return bySlug;
+  // Fallback: any active full-tier list if slug catalog differs.
+  return systems
+    .filter((system) => system.access_tier === "full" && system.active !== false)
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order);
 }
 
 /** @deprecated Use proSystems */
@@ -212,10 +223,13 @@ export function ListsPage() {
         ))}
       </div>
       {extraSystems.length ? (
-        <div className="system-list" style={{ marginTop: 18 }}>
-          {extraSystems.map((system) => (
-            <SystemRow key={system.id} slug={system.slug} />
-          ))}
+        <div style={{ marginTop: 28 }}>
+          <p className="dash-section-title">Pro checklists</p>
+          <div className="system-list" style={{ marginTop: 12 }}>
+            {extraSystems.map((system) => (
+              <SystemRow key={system.id} slug={system.slug} />
+            ))}
+          </div>
         </div>
       ) : null}
       {imports.length ? (
