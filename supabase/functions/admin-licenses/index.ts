@@ -1,13 +1,26 @@
 import { json, preflight } from "../_shared/http.ts";
 import { normalizeLicenseKeyLoose } from "../_shared/licenses.ts";
-import { serviceClient } from "../_shared/supabase.ts";
+import { requireUser, serviceClient } from "../_shared/supabase.ts";
 
-function adminAuthorized(req: Request, body: Record<string, unknown>) {
+function secretAuthorized(req: Request, body: Record<string, unknown>) {
   const expected = Deno.env.get("ADMIN_SECRET") || "";
   if (!expected || expected.length < 16) return false;
   const header = req.headers.get("x-admin-secret") || "";
   const fromBody = String(body.adminSecret || "");
   return header === expected || fromBody === expected;
+}
+
+async function ownerAuthorized(req: Request) {
+  const { user } = await requireUser(req);
+  if (!user) return false;
+  const admin = serviceClient();
+  const { data } = await admin.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  return data?.role === "owner";
+}
+
+async function adminAuthorized(req: Request, body: Record<string, unknown>) {
+  if (secretAuthorized(req, body)) return true;
+  return await ownerAuthorized(req);
 }
 
 function logAdmin(action: string, licenseId: string) {
