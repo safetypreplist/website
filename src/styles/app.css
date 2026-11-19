@@ -2934,6 +2934,155 @@ html.has-guidance-ack .app-main {
   text-underline-offset: 3px;
 }
 
+.license-deactivate-shell {
+  width: min(920px, calc(100% - 32px));
+}
+
+.license-deactivate-layout {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+
+.license-deactivate-layout:not(.is-deciding) {
+  justify-items: center;
+}
+
+.license-deactivate-layout:not(.is-deciding) .license-gate-panel {
+  width: min(520px, 100%);
+}
+
+@media (min-width: 900px) {
+  .license-deactivate-layout.is-deciding {
+    grid-template-columns: minmax(300px, 1fr) minmax(280px, 0.95fr);
+  }
+
+  .license-deactivate-layout.is-deciding .license-backup-bubble {
+    order: 2;
+    position: sticky;
+    top: 88px;
+  }
+
+  .license-deactivate-layout.is-deciding .license-gate-panel {
+    order: 1;
+  }
+}
+
+.license-backup-bubble {
+  padding: 22px 20px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(199, 90, 43, 0.35);
+  background:
+    linear-gradient(180deg, #fff8f2 0%, #fff 55%, var(--cream) 100%);
+  box-shadow:
+    0 18px 40px rgba(8, 14, 10, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  color: var(--forest);
+}
+
+.license-backup-kicker {
+  margin: 0 0 8px;
+  font: 700 11px/1.2 var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+}
+
+.license-backup-bubble h2 {
+  margin: 0 0 10px;
+  font-size: clamp(20px, 3vw, 24px);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--forest);
+}
+
+.license-backup-bubble > p {
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.license-backup-ask {
+  font-weight: 650;
+  color: var(--forest) !important;
+}
+
+.license-backup-choices {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.license-backup-options {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 4px;
+}
+
+.license-backup-options article {
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.license-backup-options h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--forest);
+}
+
+.license-backup-options p {
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.license-backup-options .muted {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+}
+
+.license-backup-ack {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--forest);
+}
+
+.license-backup-ack input {
+  margin-top: 3px;
+  flex: none;
+}
+
+.license-gate-panel.is-subdued {
+  opacity: 0.55;
+  filter: saturate(0.85);
+  pointer-events: none;
+  user-select: none;
+}
+
+.license-inline-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--terracotta);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
 .license-transfer-options {
   display: grid;
   gap: 14px;
@@ -3560,6 +3709,14 @@ html.has-guidance-ack .app-main {
   .license-gate-shell {
     width: min(100% - 24px, 520px);
     margin-top: 18px;
+  }
+
+  .license-deactivate-shell {
+    width: min(100% - 24px, 920px);
+  }
+
+  .license-deactivate-layout.is-deciding .license-backup-bubble {
+    order: -1;
   }
 
   .license-gate-panel {

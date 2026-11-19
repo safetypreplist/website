@@ -26,10 +26,20 @@ Deno.serve(async (req) => {
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const key = String(body.key || "");
+    const backupDecision =
+      body.backupDecision === "backed_up" || body.backupDecision === "skipped" ? body.backupDecision : "unknown";
     const { admin, license } = await requireLicenseByKey(key);
 
     // Always return the same shape to avoid key/email enumeration.
     if (!license || !license.email) {
+      console.log(
+        JSON.stringify({
+          event: "license_deactivate_requested",
+          matched: false,
+          backupDecision,
+          at: new Date().toISOString(),
+        }),
+      );
       return json({ ...GENERIC, emailMasked: null });
     }
 
@@ -54,6 +64,16 @@ Deno.serve(async (req) => {
       confirmUrl,
       product: license.product === "pro" ? "Pro" : "Basic",
     });
+
+    console.log(
+      JSON.stringify({
+        event: "license_deactivate_requested",
+        matched: true,
+        licenseId: license.id,
+        backupDecision,
+        at: new Date().toISOString(),
+      }),
+    );
 
     return json({
       ...GENERIC,
