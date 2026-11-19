@@ -3341,6 +3341,138 @@ html.has-guidance-ack .app-main {
   font-size: 14px;
 }
 
+.transfer-step-body-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px 22px;
+  align-items: center;
+}
+
+.transfer-step-copy {
+  min-width: 0;
+}
+
+.transfer-step-copy .transfer-step-label {
+  margin: 0;
+}
+
+.transfer-step-copy h2 {
+  margin: 8px 0 0;
+}
+
+.transfer-step-copy > p {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.45;
+  max-width: 44ch;
+}
+
+.activate-qr-inline {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(20, 29, 22, 0.05);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+
+.activate-qr-inline:hover {
+  border-color: rgba(199, 90, 43, 0.35);
+  box-shadow: 0 10px 24px rgba(20, 29, 22, 0.08);
+}
+
+.activate-qr-inline-label {
+  font: 700 10px/1.2 var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+}
+
+.activate-qr-inline-frame {
+  display: grid;
+  place-items: center;
+  width: 168px;
+  height: 168px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.activate-qr-inline-frame img {
+  display: block;
+  width: 168px;
+  height: 168px;
+}
+
+.activate-qr-inline-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--forest);
+}
+
+.activate-qr-panel {
+  width: min(420px, 100%);
+  text-align: center;
+}
+
+.activate-qr-panel .eyebrow {
+  margin: 4px 0 0;
+}
+
+.activate-qr-panel h2 {
+  margin: 10px 0 0;
+  font-size: clamp(24px, 4vw, 30px);
+  letter-spacing: -0.02em;
+  color: var(--forest);
+}
+
+.activate-qr-lead {
+  margin: 12px auto 0;
+  max-width: 34ch;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.activate-qr-frame {
+  display: grid;
+  place-items: center;
+  margin: 22px auto 0;
+  width: min(300px, 100%);
+  min-height: 280px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(20, 29, 22, 0.06);
+}
+
+.activate-qr-frame img {
+  display: block;
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+}
+
+.activate-qr-hint {
+  margin: 18px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+.activate-qr-hint a {
+  color: var(--forest);
+  font-weight: 600;
+}
+
 .transfer-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3379,6 +3511,15 @@ html.has-guidance-ack .app-main {
 
   .transfer-step-body {
     padding: 16px;
+  }
+
+  .transfer-step-body-split {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .activate-qr-inline {
+    width: 100%;
   }
 
   .transfer-step-index {

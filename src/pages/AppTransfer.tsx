@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { ActivateQrDialog, ActivateQrInline } from "../components/ActivateQrDialog";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { useApp } from "../context/AppContext";
 import { getDeviceId, getLicense, isLicensed } from "../lib/licenseClient";
@@ -32,6 +33,7 @@ export function AppTransferPage() {
   const [backups, setBackups] = useState<CloudBackup[]>([]);
   const [pendingImport, setPendingImport] = useState<TransferBackupPayload | null>(null);
   const [importSummary, setImportSummary] = useState<TransferBackupSummary | null>(null);
+  const [showActivateQr, setShowActivateQr] = useState(false);
 
   async function refreshStatus() {
     if (!license?.key) return;
@@ -172,6 +174,7 @@ export function AppTransferPage() {
   }
 
   const deactivateHref = `/deactivate?key=${encodeURIComponent(license.key)}`;
+  const activateHref = `/activate?key=${encodeURIComponent(license.key)}`;
 
   return (
     <div className="transfer-page">
@@ -243,15 +246,24 @@ export function AppTransferPage() {
           <div className="transfer-step-rail" aria-hidden="true">
             <span className="transfer-step-index">3</span>
           </div>
-          <div className="transfer-step-body">
-            <p className="transfer-step-label">Step 3</p>
-            <h2>Activate on the new device</h2>
-            <p>Open Activate, enter the same license key, then come back here to restore your backup.</p>
-            <div className="transfer-step-actions">
-              <Link className="btn btn-ghost" to="/activate">
-                Open Activate
-              </Link>
+          <div className="transfer-step-body transfer-step-body-split">
+            <div className="transfer-step-copy">
+              <p className="transfer-step-label">Step 3</p>
+              <h2>Activate on the new device</h2>
+              <p>
+                Already on the new device? Open Activate here. Moving to a phone or tablet from this computer? Scan the
+                QR on the right.
+              </p>
+              <div className="transfer-step-actions">
+                <Link className="btn btn-primary" to={activateHref}>
+                  Open Activate on this device
+                </Link>
+                <button className="btn btn-ghost" type="button" onClick={() => setShowActivateQr(true)}>
+                  Scan QR code
+                </button>
+              </div>
             </div>
+            <ActivateQrInline licenseKey={license.key} onExpand={() => setShowActivateQr(true)} />
           </div>
         </li>
 
@@ -290,6 +302,10 @@ export function AppTransferPage() {
       <p className="muted transfer-foot">
         Need license details? <Link to="/app/license">My license</Link>
       </p>
+
+      {showActivateQr ? (
+        <ActivateQrDialog licenseKey={license.key} onClose={() => setShowActivateQr(false)} />
+      ) : null}
 
       {pendingImport && importSummary ? (
         <ConfirmDialog
