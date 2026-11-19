@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Photo } from "../components/Photo";
-import { OfflineSwitch, syncLabel } from "../components/OfflineStatus";
+import { syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
@@ -134,8 +134,6 @@ export function DashboardPage() {
           </div>
         </div>
       )}
-
-      {entitled && !demoMode && !isHousehold ? <OfflineSwitch card /> : null}
 
       {continueSystem && (
         <Link className="continue-card" to={`/app/lists/${continueSystem.slug}`}>

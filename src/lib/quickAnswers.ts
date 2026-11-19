@@ -123,7 +123,7 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       id: "offline",
       question: "How do I use it without internet?",
       answer:
-        "Turn on Offline access on Home while you’re connected. Then your checklist opens and saves on this device without Wi-Fi or service. Purchases still need a connection.",
+        "Your checklist is saved on this device, so it opens and updates without Wi-Fi or service. Purchases and transfers still need a connection.",
       topic: "support",
       link: { to: "/install", label: "Add the app icon" },
     },

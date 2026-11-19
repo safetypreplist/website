@@ -39,7 +39,7 @@ export const DEFAULT_FAQS: HelpFaq[] = [
     id: "offline",
     question: "How do I use my checklist offline?",
     answer:
-      "Turn on Offline access from the guided tour or Home while you’re online. Your checklist then opens on this device even without Wi-Fi or cell service.",
+      "Your checklist is saved on this device, so it opens and updates even without Wi-Fi or cell service. Purchases and transfers still need a connection.",
   },
   {
     id: "refund",

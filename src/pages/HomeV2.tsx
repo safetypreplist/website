@@ -10,6 +10,14 @@ import {
 } from "../lib/pricing";
 import "../styles/home-v2.css";
 
+const HERO_BENEFITS = [
+  "Ready-to-Use Emergency Checklists",
+  "Up to 9 Digital Checklists with Pro",
+  "Works Offline After Activation",
+  "Add Your Own Notes & Details",
+  "One-Time Purchase. No Subscription.",
+] as const;
+
 const SYSTEMS = [
   {
     title: "Grab-and-Go Bag",
@@ -30,6 +38,34 @@ const SYSTEMS = [
     title: "Home Resilience",
     line: "Supplies and systems that keep you steady when staying put is the plan.",
     photo: PHOTO_LIBRARY.home,
+  },
+] as const;
+
+const PRO_SYSTEMS = [
+  {
+    title: "Off-Grid Systems",
+    line: "Stay capable when the grid is down — tools, sanitation, and manual household systems.",
+    photo: PHOTO_LIBRARY.offgrid,
+  },
+  {
+    title: "Water Purification",
+    line: "Store, filter, and treat drinking water beyond the bottles in the pantry.",
+    photo: PHOTO_LIBRARY.water,
+  },
+  {
+    title: "Home Battery & Solar",
+    line: "Plan battery capacity, solar input, and the devices that matter overnight.",
+    photo: PHOTO_LIBRARY.power,
+  },
+  {
+    title: "Emergency Cooling",
+    line: "Blackout cooling, shaded rooms, hydration, and safe warmth when HVAC fails.",
+    photo: PHOTO_LIBRARY.cooling,
+  },
+  {
+    title: "Long-Term Food",
+    line: "A pantry built for weeks — staples, rotation, and prep after the first few days.",
+    photo: PHOTO_LIBRARY.food,
   },
 ] as const;
 
@@ -154,11 +190,12 @@ export function HomeV2Page() {
           <p className="hv2-hero-price">One-time purchase, lifetime access on one device.</p>
         </div>
         <div className="hv2-strip" aria-label="At a glance">
-          <p>Works offline after activation</p>
-          <span aria-hidden="true" />
-          <p>Personalize your checklist</p>
-          <span aria-hidden="true" />
-          <p>Print or PDF</p>
+          {HERO_BENEFITS.map((benefit, index) => (
+            <span key={benefit} className="hv2-strip-item">
+              {index > 0 ? <span className="hv2-strip-dot" aria-hidden="true" /> : null}
+              <p>{benefit}</p>
+            </span>
+          ))}
         </div>
       </section>
 
@@ -222,19 +259,49 @@ export function HomeV2Page() {
               </article>
             ))}
           </div>
-          <p className="hv2-vault-hint hv2-reveal">
-            Want to go further? Pro includes everything in Basic, plus additional checklists and preparedness resources.{" "}
-            <a className="hv2-text-link" href="#pricing">
-              See what’s included.
-            </a>
-          </p>
+
+          <div className="hv2-pro-promo hv2-reveal">
+            <div className="hv2-section-head hv2-pro-promo-head">
+              <p className="hv2-eyebrow">Pro add-ons</p>
+              <h2>Want to Go Further?</h2>
+              <p>
+                Upgrade to Pro and get everything included in Basic, plus five additional preparedness checklists to help
+                you prepare for more situations.
+              </p>
+            </div>
+            <div className="hv2-systems">
+              {PRO_SYSTEMS.map((system, index) => (
+                <article
+                  key={system.title}
+                  className="hv2-system hv2-reveal"
+                  style={{ transitionDelay: `${index * 70}ms` }}
+                >
+                  <div className="hv2-system-photo" style={{ backgroundImage: `url(${system.photo})` }} />
+                  <div className="hv2-system-copy">
+                    <p className="hv2-system-badge">Pro checklist</p>
+                    <h3>{system.title}</h3>
+                    <p>{system.line}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <p className="hv2-vault-hint">
+              These five are in addition to the Basic checklists above.{" "}
+              <a className="hv2-text-link" href="#pricing">
+                Compare Basic and Pro
+              </a>
+            </p>
+          </div>
         </div>
       </section>
 
       <section className="hv2-section hv2-product">
         <div className="hv2-wrap hv2-product-grid hv2-reveal">
           <div className="hv2-product-copy">
-            <h2>Works anywhere, no Wi-Fi needed.</h2>
+            <h2>
+              Works Anywhere.
+              <span className="hv2-heading-accent">No Wi-Fi Needed.</span>
+            </h2>
             <p>
               Your checklists live on your device, so they’re there when the power is out, the signal is gone, or you’re
               somewhere with no connection at all. Add notes, keep track of what you have, and stay organized without
@@ -248,6 +315,11 @@ export function HomeV2Page() {
             <p className="hv2-product-note">
               Wi-Fi is needed once, to activate. After that, go fully offline.
             </p>
+            <div className="hv2-product-actions">
+              <Link className="hv2-btn hv2-btn-ghost" to="/demo">
+                See Demo
+              </Link>
+            </div>
           </div>
           <div className="hv2-devices" aria-hidden="false">
             <div className="hv2-device hv2-device-tablet">
@@ -348,7 +420,7 @@ export function HomeV2Page() {
         <div className="hv2-close-shade" aria-hidden="true" />
         <div className="hv2-close-inner hv2-reveal">
           <h2>Hope for the best. Prepare for the rest.</h2>
-          <p>One license. One device. Lifetime access.</p>
+          <p>One-time purchase, lifetime access.</p>
           <Link className="hv2-btn hv2-btn-primary" to="/checkout?product=basic">
             Get started for {basicPrice}
           </Link>

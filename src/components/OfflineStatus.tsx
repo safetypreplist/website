@@ -39,7 +39,7 @@ function ConnectionNotice({ offline, online }: { offline: OfflineStatus; online:
             ? "Your changes sync automatically."
             : offline.savedAt
               ? "No internet right now. Your checklist still works, and changes save on this device."
-              : "This device hasn’t saved your checklist yet. Reconnect, then turn on Offline access on Home."}
+              : "This device hasn’t saved your checklist yet. Reconnect to refresh it."}
         </span>
       </div>
       <button type="button" aria-label="Close" onClick={() => setNotice(null)}>×</button>
@@ -112,76 +112,5 @@ export function AppStatusBanners() {
         </p>
       ) : null}
     </>
-  );
-}
-
-const REFRESH_AFTER_MS = 12 * 60 * 60 * 1000;
-const MIN_SPIN_MS = 1800;
-
-/** One switch: on saves every checklist this login can open onto this device. */
-export function OfflineSwitch({ card = false }: { card?: boolean }) {
-  const { offline, online, prepareOffline, turnOffOffline, demoMode } = useApp();
-  const [busy, setBusy] = useState(false);
-  const [justOn, setJustOn] = useState(false);
-  const [error, setError] = useState("");
-  const on = Boolean(offline.preparedAt);
-  const refreshed = useRef(false);
-
-  useEffect(() => {
-    if (refreshed.current || !offline.preparedAt || !online || demoMode) return;
-    if (Date.now() - Date.parse(offline.preparedAt) < REFRESH_AFTER_MS) return;
-    refreshed.current = true;
-    void prepareOffline().catch(() => undefined);
-  }, [offline.preparedAt, online, demoMode, prepareOffline]);
-
-  async function toggle() {
-    setError("");
-    if (on) {
-      setJustOn(false);
-      await turnOffOffline();
-      return;
-    }
-    setBusy(true);
-    try {
-      await Promise.all([prepareOffline(), new Promise((resolve) => window.setTimeout(resolve, MIN_SPIN_MS))]);
-      setJustOn(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not turn on offline access. Try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const message = busy
-    ? "Getting your checklist ready…"
-    : on
-      ? justOn
-        ? "You’re ready. If your Wi-Fi goes down, your checklist still works on this device."
-        : "On. Your checklist works on this device even without internet."
-      : !online
-        ? "Connect to the internet to turn this on."
-        : "Use your checklist even when Wi-Fi or cell service is down.";
-
-  return (
-    <div className={`offline-switch${card ? " is-card" : ""}${on ? " is-on" : ""}${justOn ? " just-on" : ""}`}>
-      <div className="offline-switch-text">
-        <b id="offline-switch-label">Offline access</b>
-        <span role="status">{message}</span>
-        {offline.storage?.low ? <span className="offline-switch-warn">This device is almost out of storage.</span> : null}
-        {error ? <span className="form-error">{error}</span> : null}
-      </div>
-      <button
-        type="button"
-        role="switch"
-        className={`switch${busy ? " is-busy" : ""}`}
-        aria-checked={on || busy}
-        aria-labelledby="offline-switch-label"
-        aria-busy={busy}
-        disabled={busy || demoMode || (!on && !online)}
-        onClick={() => void toggle()}
-      >
-        <span className="switch-knob" aria-hidden="true" />
-      </button>
-    </div>
   );
 }

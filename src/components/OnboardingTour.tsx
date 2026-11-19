@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { firstNameOf } from "../lib/identity";
 import { AppIconRow } from "./InstallSteps";
-import { OfflineSwitch } from "./OfflineStatus";
 import { supabase } from "../lib/supabase";
 
 type Step = { title: string; body: string; selector: string; path: string };
@@ -634,12 +633,13 @@ export function OnboardingTour() {
           <div className="onboarding-offline-head">
             <div>
               <p className="eyebrow">Use it anywhere</p>
-              <h2 id="onboarding-offline-title">Your checklist, even without internet</h2>
-              <p className="onboarding-copy">Turn on offline access so your checklist still opens if Wi-Fi or cell service goes down.</p>
+              <h2 id="onboarding-offline-title">Put it on your Home Screen</h2>
+              <p className="onboarding-copy">
+                Your checklist is already saved on this device. Add the app icon so you can open it in one tap.
+              </p>
             </div>
           </div>
           <div className="onboarding-options">
-            <OfflineSwitch />
             <AppIconRow />
           </div>
           <div className="onboarding-actions">
