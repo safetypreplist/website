@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { loadWeatherBundle, weatherKind, type WeatherBundle } from "../lib/weather";
+import { locationDisplayLabel } from "../lib/localProfile";
+import {
+  formatWeatherUpdatedAt,
+  loadWeatherBundle,
+  weatherKind,
+  type WeatherBundle,
+} from "../lib/weather";
 import { WeatherGlyph } from "./LocationStatus";
 
 type Mode = "day" | "week";
@@ -12,6 +18,7 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
   const [bundle, setBundle] = useState<WeatherBundle | null>(null);
   const [mode, setMode] = useState<Mode>("day");
   const [error, setError] = useState("");
+  const place = locationDisplayLabel(location) || location?.place || "";
 
   useEffect(() => {
     if (!location) {
@@ -21,26 +28,28 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
     }
     let cancelled = false;
     setError("");
-    void loadWeatherBundle(location.lat, location.lon, location.place)
+    void loadWeatherBundle(location.lat, location.lon, place)
       .then((next) => {
         if (!cancelled) setBundle(next);
       })
       .catch(() => {
         if (!cancelled) {
           setBundle(null);
-          setError("Weather unavailable right now.");
+          setError("Weather unavailable right now. Your checklists still work offline.");
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [location]);
+  }, [location, place]);
 
   if (!location) {
     return (
       <aside className={`sidebar-weather is-off${compact ? " is-compact" : ""}`}>
+        <p className="sidebar-weather-title">Today&apos;s Weather</p>
         <p className="sidebar-weather-empty">
-          Set your location to see the forecast here.
+          Location helps provide accurate local time, weather, and safety resources. Your checklists stay available
+          either way.
         </p>
         <Link className="sidebar-weather-link" to="/app/profile">
           Set location
@@ -55,13 +64,13 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
   return (
     <aside className={`sidebar-weather${compact ? " is-compact" : ""}`}>
       <div className="sidebar-weather-head">
-        <p className="sidebar-weather-place">{location.place}</p>
+        <p className="sidebar-weather-title">Today&apos;s Weather</p>
         <Link className="sidebar-weather-link" to="/app/profile">
           Edit
         </Link>
       </div>
 
-      {error ? <p className="sidebar-weather-empty">{error}</p> : null}
+      {error && !bundle ? <p className="sidebar-weather-empty">{error}</p> : null}
 
       {!error && !bundle ? <p className="sidebar-weather-empty">Updating weather…</p> : null}
 
@@ -76,9 +85,13 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
               <span>
                 High {today.high}° · Low {today.low}°
               </span>
-            ) : (
-              <span>Today</span>
-            )}
+            ) : null}
+            <span className="sidebar-weather-place">{place}</span>
+            {bundle?.updatedAt ? (
+              <span className={`sidebar-weather-updated${bundle.stale ? " is-stale" : ""}`}>
+                {formatWeatherUpdatedAt(bundle.updatedAt, Boolean(bundle.stale))}
+              </span>
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -42,10 +42,13 @@ export function weatherKind(code: number): WeatherKind {
   return "cloud";
 }
 
-const CACHE_KEY = "spl-local-conditions";
-const CACHE_MS = 15 * 60 * 1000;
+const CONDITIONS_CACHE_KEY = "spl.localConditions.v1";
+const FORECAST_CACHE_KEY = "spl.localForecast.v1";
+const TIMEZONE_KEY = "spl.localTimezone.v1";
+const FRESH_MS = 20 * 60 * 1000;
 
-type Cache = { at: number; lat: number; lon: number; data: LocalConditions };
+type ConditionsCache = { at: number; lat: number; lon: number; data: LocalConditions };
+type ForecastCache = { at: number; lat: number; lon: number; data: WeatherBundle };
 
 type PlaceJson = {
   city?: string;
@@ -55,25 +58,8 @@ type PlaceJson = {
   longitude?: number;
 };
 
-function readCache(lat: number, lon: number): LocalConditions | null {
-  try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const cache = JSON.parse(raw) as Cache;
-    if (Date.now() - cache.at > CACHE_MS) return null;
-    if (Math.abs(cache.lat - lat) > 0.05 || Math.abs(cache.lon - lon) > 0.05) return null;
-    return cache.data;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(lat: number, lon: number, data: LocalConditions) {
-  try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), lat, lon, data }));
-  } catch {
-    /* private mode */
-  }
+function near(a: number, b: number) {
+  return Math.abs(a - b) <= 0.05;
 }
 
 function weatherLabel(code: number) {
@@ -84,6 +70,76 @@ function formatPlace(json: PlaceJson) {
   const city = json.city || json.locality || "Your location";
   const region = json.principalSubdivisionCode?.split("-")[1];
   return region ? `${city}, ${region}` : city;
+}
+
+function readJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function writeJson(key: string, value: unknown) {
+  const raw = JSON.stringify(value);
+  try {
+    localStorage.setItem(key, raw);
+  } catch {
+    try {
+      sessionStorage.setItem(key, raw);
+    } catch {
+      /* private mode */
+    }
+  }
+}
+
+export function saveLocalTimezone(timeZone: string | null | undefined) {
+  if (!timeZone) return;
+  try {
+    localStorage.setItem(TIMEZONE_KEY, timeZone);
+  } catch {
+    /* private mode */
+  }
+}
+
+export function loadLocalTimezone(): string | null {
+  try {
+    return localStorage.getItem(TIMEZONE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function readConditionsCache(lat: number, lon: number): ConditionsCache | null {
+  const cache = readJson<ConditionsCache>(CONDITIONS_CACHE_KEY);
+  if (!cache || !near(cache.lat, lat) || !near(cache.lon, lon)) return null;
+  return cache;
+}
+
+function writeConditionsCache(lat: number, lon: number, data: LocalConditions) {
+  writeJson(CONDITIONS_CACHE_KEY, { at: Date.now(), lat, lon, data } satisfies ConditionsCache);
+}
+
+function normalizeBundle(data: WeatherBundle): WeatherBundle {
+  return {
+    current: data.current,
+    days: Array.isArray(data.days) ? data.days : [],
+    timezone: data.timezone || null,
+    updatedAt: data.updatedAt || new Date().toISOString(),
+    stale: data.stale,
+  };
+}
+
+function readForecastCache(lat: number, lon: number): ForecastCache | null {
+  const cache = readJson<ForecastCache>(FORECAST_CACHE_KEY);
+  if (!cache?.data?.current || !near(cache.lat, lat) || !near(cache.lon, lon)) return null;
+  return { ...cache, data: normalizeBundle(cache.data) };
+}
+
+function writeForecastCache(lat: number, lon: number, data: WeatherBundle) {
+  writeJson(FORECAST_CACHE_KEY, { at: Date.now(), lat, lon, data } satisfies ForecastCache);
 }
 
 export async function placeName(lat: number, lon: number) {
@@ -128,105 +184,122 @@ export type DayForecast = {
 export type WeatherBundle = {
   current: LocalConditions;
   days: DayForecast[];
+  timezone: string | null;
+  updatedAt: string;
+  stale?: boolean;
 };
 
-const FORECAST_CACHE_KEY = "spl-local-forecast";
-const FORECAST_CACHE_MS = 20 * 60 * 1000;
-
-type ForecastCache = { at: number; lat: number; lon: number; data: WeatherBundle };
-
-function readForecastCache(lat: number, lon: number): WeatherBundle | null {
+export function formatWeatherUpdatedAt(iso: string, stale = false) {
   try {
-    const raw = sessionStorage.getItem(FORECAST_CACHE_KEY);
-    if (!raw) return null;
-    const cache = JSON.parse(raw) as ForecastCache;
-    if (Date.now() - cache.at > FORECAST_CACHE_MS) return null;
-    if (Math.abs(cache.lat - lat) > 0.05 || Math.abs(cache.lon - lon) > 0.05) return null;
-    return cache.data;
+    const stamp = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(iso));
+    return stale ? `Previously updated ${stamp}` : `Updated ${stamp}`;
   } catch {
-    return null;
-  }
-}
-
-function writeForecastCache(lat: number, lon: number, data: WeatherBundle) {
-  try {
-    sessionStorage.setItem(FORECAST_CACHE_KEY, JSON.stringify({ at: Date.now(), lat, lon, data }));
-  } catch {
-    /* private mode */
+    return stale ? "Previously updated" : "Updated just now";
   }
 }
 
 export async function loadLocalConditions(lat: number, lon: number, knownPlace?: string): Promise<LocalConditions> {
-  const cached = readCache(lat, lon);
-  if (cached) return cached;
+  const cached = readConditionsCache(lat, lon);
+  if (cached && Date.now() - cached.at < FRESH_MS) return cached.data;
 
-  const [place, weatherRes] = await Promise.all([
-    knownPlace ? Promise.resolve(knownPlace) : placeName(lat, lon),
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`,
-    ),
-  ]);
+  try {
+    const [place, weatherRes] = await Promise.all([
+      knownPlace ? Promise.resolve(knownPlace) : placeName(lat, lon),
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`,
+      ),
+    ]);
 
-  if (!weatherRes.ok) throw new Error("Weather unavailable");
-  const weather = (await weatherRes.json()) as {
-    current?: { temperature_2m?: number; weather_code?: number };
-  };
-  const temp = Math.round(weather.current?.temperature_2m ?? 0);
-  const code = weather.current?.weather_code ?? -1;
-  const label = weatherLabel(code);
-  const data = { place, temp, label, code };
-  writeCache(lat, lon, data);
-  return data;
+    if (!weatherRes.ok) throw new Error("Weather unavailable");
+    const weather = (await weatherRes.json()) as {
+      timezone?: string;
+      current?: { temperature_2m?: number; weather_code?: number };
+    };
+    saveLocalTimezone(weather.timezone);
+    const temp = Math.round(weather.current?.temperature_2m ?? 0);
+    const code = weather.current?.weather_code ?? -1;
+    const data = { place, temp, label: weatherLabel(code), code };
+    writeConditionsCache(lat, lon, data);
+    return data;
+  } catch (err) {
+    if (cached) return cached.data;
+    throw err;
+  }
 }
 
 export async function loadWeatherBundle(lat: number, lon: number, knownPlace?: string): Promise<WeatherBundle> {
   const cached = readForecastCache(lat, lon);
-  if (cached) return cached;
+  const fresh = cached && Date.now() - cached.at < FRESH_MS;
 
-  const [place, weatherRes] = await Promise.all([
-    knownPlace ? Promise.resolve(knownPlace) : placeName(lat, lon),
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`,
-    ),
-  ]);
+  if (!navigator.onLine && cached) {
+    return { ...cached.data, stale: true };
+  }
+  if (fresh && cached) {
+    return { ...cached.data, stale: false };
+  }
 
-  if (!weatherRes.ok) throw new Error("Weather unavailable");
-  const weather = (await weatherRes.json()) as {
-    current?: { temperature_2m?: number; weather_code?: number };
-    daily?: {
-      time?: string[];
-      weather_code?: number[];
-      temperature_2m_max?: number[];
-      temperature_2m_min?: number[];
+  try {
+    const [place, weatherRes] = await Promise.all([
+      knownPlace ? Promise.resolve(knownPlace) : placeName(lat, lon),
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`,
+      ),
+    ]);
+
+    if (!weatherRes.ok) throw new Error("Weather unavailable");
+    const weather = (await weatherRes.json()) as {
+      timezone?: string;
+      current?: { temperature_2m?: number; weather_code?: number };
+      daily?: {
+        time?: string[];
+        weather_code?: number[];
+        temperature_2m_max?: number[];
+        temperature_2m_min?: number[];
+      };
     };
-  };
 
-  const code = weather.current?.weather_code ?? -1;
-  const current: LocalConditions = {
-    place,
-    temp: Math.round(weather.current?.temperature_2m ?? 0),
-    label: weatherLabel(code),
-    code,
-  };
-  writeCache(lat, lon, current);
+    const timezone = weather.timezone || null;
+    saveLocalTimezone(timezone);
 
-  const times = weather.daily?.time || [];
-  const days: DayForecast[] = times.map((date, index) => {
-    const dayCode = weather.daily?.weather_code?.[index] ?? -1;
-    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date(`${date}T12:00:00`));
-    return {
-      date,
-      weekday,
-      high: Math.round(weather.daily?.temperature_2m_max?.[index] ?? 0),
-      low: Math.round(weather.daily?.temperature_2m_min?.[index] ?? 0),
-      code: dayCode,
-      label: weatherLabel(dayCode),
+    const code = weather.current?.weather_code ?? -1;
+    const current: LocalConditions = {
+      place,
+      temp: Math.round(weather.current?.temperature_2m ?? 0),
+      label: weatherLabel(code),
+      code,
     };
-  });
+    writeConditionsCache(lat, lon, current);
 
-  const data = { current, days };
-  writeForecastCache(lat, lon, data);
-  return data;
+    const times = weather.daily?.time || [];
+    const days: DayForecast[] = times.map((date, index) => {
+      const dayCode = weather.daily?.weather_code?.[index] ?? -1;
+      const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date(`${date}T12:00:00`));
+      return {
+        date,
+        weekday,
+        high: Math.round(weather.daily?.temperature_2m_max?.[index] ?? 0),
+        low: Math.round(weather.daily?.temperature_2m_min?.[index] ?? 0),
+        code: dayCode,
+        label: weatherLabel(dayCode),
+      };
+    });
+
+    const data: WeatherBundle = {
+      current,
+      days,
+      timezone,
+      updatedAt: new Date().toISOString(),
+      stale: false,
+    };
+    writeForecastCache(lat, lon, data);
+    return data;
+  } catch (err) {
+    if (cached) return { ...cached.data, stale: true };
+    throw err;
+  }
 }
 
 export function getCurrentPosition(): Promise<GeolocationPosition> {

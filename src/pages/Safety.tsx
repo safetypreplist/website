@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { SAFETY_CATEGORY_LABELS, US_STATES } from "../lib/format";
+import { locationDisplayLabel } from "../lib/localProfile";
 import type { SafetyContact } from "../types";
 
 type Pane = "state" | "national";
 
 export function SafetyPage() {
-  const { safety, profile, setPreferredState } = useApp();
-  const [state, setState] = useState(profile?.preferred_state || "");
-  const [pane, setPane] = useState<Pane>(profile?.preferred_state ? "state" : "national");
+  const { safety, profile, setPreferredState, localProfile } = useApp();
+  const profileState = localProfile.location?.stateCode || profile?.preferred_state || "";
+  const [state, setState] = useState(profileState);
+  const [pane, setPane] = useState<Pane>(profileState ? "state" : "national");
+  const placeLabel = locationDisplayLabel(localProfile.location);
 
   useEffect(() => {
-    if (!profile?.preferred_state) return;
-    setState(profile.preferred_state);
+    if (!profileState) return;
+    setState(profileState);
     setPane("state");
-  }, [profile?.preferred_state]);
+  }, [profileState]);
 
   const national = useMemo(() => safety.filter((s) => !s.state), [safety]);
   const local = useMemo(() => safety.filter((s) => s.state === state), [safety, state]);
@@ -30,9 +34,24 @@ export function SafetyPage() {
     <div className="safety-page">
       <h1 className="page-title">Safety Resources</h1>
       <p className="muted safety-lead">
-        National emergency numbers are always available. Choose your state for additional local resources.
+        National emergency numbers are always available. Local resources follow your saved profile location when
+        available.
       </p>
       <p className="muted safety-lead">Tap a number to call.</p>
+
+      {!localProfile.location ? (
+        <aside className="safety-location-note" role="note">
+          <p>
+            Location helps provide accurate local time, weather, and safety resources. Your checklists stay available
+            without it.
+          </p>
+          <Link className="btn btn-ghost" to="/app/profile">
+            Set location in Profile
+          </Link>
+        </aside>
+      ) : placeLabel ? (
+        <p className="muted safety-location-line">Using {placeLabel} from your profile.</p>
+      ) : null}
 
       <label className="state-picker">
         <span>Select your state</span>

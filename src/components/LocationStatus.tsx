@@ -1,39 +1,84 @@
 import { useEffect, useState } from "react";
+import { useApp } from "../context/AppContext";
 import {
   getCurrentPosition,
   loadLocalConditions,
+  loadLocalTimezone,
+  loadWeatherBundle,
   lookupIpLocation,
   weatherKind,
   type LocalConditions,
   type WeatherKind,
 } from "../lib/weather";
 
-function clockParts(now: Date) {
-  const parts = new Intl.DateTimeFormat("en-US", {
+function clockParts(now: Date, timeZone?: string | null) {
+  const options: Intl.DateTimeFormatOptions = {
     weekday: "short",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
     timeZoneName: "short",
-  }).formatToParts(now);
+  };
+  if (timeZone) options.timeZone = timeZone;
 
-  const grab = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || "";
-  const date = `${grab("weekday")}, ${grab("month")} ${grab("day")}`;
-  const time = `${grab("hour")}:${grab("minute")} ${grab("dayPeriod")}`.replace(/\s+/g, " ").trim();
-  const zone = grab("timeZoneName");
-  return { date, time, zone };
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", options).formatToParts(now);
+    const grab = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || "";
+    const date = `${grab("weekday")}, ${grab("month")} ${grab("day")}`;
+    const time = `${grab("hour")}:${grab("minute")} ${grab("dayPeriod")}`.replace(/\s+/g, " ").trim();
+    const zone = grab("timeZoneName");
+    return { date, time, zone };
+  } catch {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    }).formatToParts(now);
+    const grab = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || "";
+    return {
+      date: `${grab("weekday")}, ${grab("month")} ${grab("day")}`,
+      time: `${grab("hour")}:${grab("minute")} ${grab("dayPeriod")}`.replace(/\s+/g, " ").trim(),
+      zone: grab("timeZoneName"),
+    };
+  }
 }
 
 export function HeaderClock() {
+  const { localProfile } = useApp();
   const [now, setNow] = useState(() => new Date());
+  const [timeZone, setTimeZone] = useState<string | null>(() => loadLocalTimezone());
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 15_000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const { date, time, zone } = clockParts(now);
+  useEffect(() => {
+    const location = localProfile.location;
+    if (!location) {
+      setTimeZone(loadLocalTimezone());
+      return;
+    }
+    let cancelled = false;
+    void loadWeatherBundle(location.lat, location.lon, location.place)
+      .then((bundle) => {
+        if (cancelled) return;
+        if (bundle.timezone) setTimeZone(bundle.timezone);
+        else setTimeZone(loadLocalTimezone());
+      })
+      .catch(() => {
+        if (!cancelled) setTimeZone(loadLocalTimezone());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [localProfile.location]);
+
+  const { date, time, zone } = clockParts(now, timeZone);
 
   return (
     <p className="app-clock">

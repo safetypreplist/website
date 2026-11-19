@@ -4539,13 +4539,21 @@ html.has-guidance-ack .app-main {
 
 .sidebar-weather {
   margin-top: auto;
-  padding-top: 14px;
+  padding: 14px 0 4px;
   border-top: 1px solid rgba(244, 240, 229, 0.14);
   flex: none;
 }
 
 .sidebar-weather.is-off {
   border-top: 1px solid rgba(244, 240, 229, 0.14);
+}
+
+.sidebar-weather-title {
+  margin: 0;
+  font: 700 11px/1.2 var(--font-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244, 240, 229, 0.62);
 }
 
 .sidebar-weather-head {
@@ -4557,11 +4565,21 @@ html.has-guidance-ack .app-main {
 }
 
 .sidebar-weather-place {
-  margin: 0;
+  margin: 4px 0 0;
   font-size: 12px;
   font-weight: 650;
   color: rgba(244, 240, 229, 0.72);
   overflow-wrap: anywhere;
+}
+
+.sidebar-weather-updated {
+  margin-top: 4px !important;
+  font-size: 11px !important;
+  color: rgba(244, 240, 229, 0.55) !important;
+}
+
+.sidebar-weather-updated.is-stale {
+  color: rgba(224, 176, 137, 0.9) !important;
 }
 
 .sidebar-weather-link {
@@ -6181,6 +6199,28 @@ html.has-guidance-ack .app-main {
 
 .safety-lead {
   margin: -8px 0 16px;
+}
+
+.safety-location-note {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(63, 93, 69, 0.16);
+  border-radius: 12px;
+  background: rgba(233, 239, 223, 0.55);
+}
+
+.safety-location-note p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.safety-location-line {
+  margin: -4px 0 14px;
 }
 
 .safety-tabs {
