@@ -3149,25 +3149,69 @@ html.has-guidance-ack .app-main {
   background: rgba(244, 240, 229, 0.12);
 }
 
-.transfer-page {
-  max-width: 760px;
+.license-app {
+  max-width: 720px;
+  display: grid;
+  gap: 18px;
   padding-bottom: 28px;
 }
 
-.transfer-hero {
-  margin-bottom: 8px;
+.license-app-hero .page-title {
+  margin: 8px 0 0;
 }
 
-.transfer-hero h1 {
+.license-app-lead {
+  margin: 12px 0 0;
+  max-width: 48ch;
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+
+.license-app-card {
+  padding: 24px 22px 22px;
+  display: grid;
+  gap: 0;
+}
+
+.license-app-card .field {
+  margin: 0;
+}
+
+.license-app-aside {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 20px 22px;
+}
+
+.license-app-aside .eyebrow {
+  margin: 0;
+}
+
+.license-app-aside p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.45;
+  max-width: 48ch;
+}
+
+.transfer-page {
+  max-width: 760px;
+  padding-bottom: 36px;
+}
+
+.transfer-hero {
+  margin-bottom: 4px;
+}
+
+.transfer-hero .page-title {
   margin: 8px 0 0;
-  font-size: clamp(28px, 4vw, 36px);
-  letter-spacing: -0.03em;
-  color: var(--forest);
 }
 
 .transfer-hero .muted {
   margin: 12px 0 0;
-  max-width: 48ch;
+  max-width: 52ch;
   font-size: 15.5px;
   line-height: 1.5;
 }
@@ -3194,26 +3238,48 @@ html.has-guidance-ack .app-main {
 
 .transfer-steps {
   list-style: none;
-  margin: 28px 0 0;
+  margin: 26px 0 0;
   padding: 0;
   display: grid;
-  gap: 14px;
-  counter-reset: none;
+  gap: 0;
 }
 
 .transfer-step {
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 44px 1fr;
   gap: 16px;
-  padding: 20px 20px 18px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, #fff 0%, rgba(244, 240, 229, 0.55) 100%);
-  box-shadow: 0 10px 28px rgba(20, 29, 22, 0.05);
+  padding: 0 0 22px;
+}
+
+.transfer-step:last-child {
+  padding-bottom: 0;
+}
+
+.transfer-step-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.transfer-step-rail::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  bottom: -22px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(30, 42, 31, 0.22), rgba(30, 42, 31, 0.06));
+}
+
+.transfer-step:last-child .transfer-step-rail::before {
+  display: none;
 }
 
 .transfer-step-index {
+  position: relative;
+  z-index: 1;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -3226,9 +3292,26 @@ html.has-guidance-ack .app-main {
   box-shadow: 0 8px 18px rgba(20, 29, 22, 0.18);
 }
 
+.transfer-step-body {
+  padding: 18px 20px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, #fff 0%, rgba(244, 240, 229, 0.72) 100%);
+  box-shadow: 0 12px 30px rgba(20, 29, 22, 0.05);
+}
+
+.transfer-step-label {
+  margin: 0;
+  font: 700 11px/1.2 var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+}
+
 .transfer-step-body h2 {
-  margin: 4px 0 0;
-  font-size: 18px;
+  margin: 8px 0 0;
+  font-size: 19px;
   letter-spacing: -0.02em;
   color: var(--forest);
 }
@@ -3254,7 +3337,7 @@ html.has-guidance-ack .app-main {
 }
 
 .transfer-foot {
-  margin: 22px 2px 0;
+  margin: 24px 2px 0;
   font-size: 14px;
 }
 
@@ -3289,8 +3372,19 @@ html.has-guidance-ack .app-main {
   }
 
   .transfer-step {
+    grid-template-columns: 36px 1fr;
     gap: 12px;
+    padding-bottom: 18px;
+  }
+
+  .transfer-step-body {
     padding: 16px;
+  }
+
+  .transfer-step-index {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
   }
 }
 

@@ -87,7 +87,7 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       question: "What did I pay?",
       answer: `Your license is a one-time purchase. Basic is ${money(BASIC_LICENSE_CENTS)}; Pro is ${money(PRO_LICENSE_CENTS)}. Upgrade Basic to Pro for ${money(UPGRADE_TO_PRO_CENTS)}. Manage your key on the license page.`,
       topic: "support",
-      link: { to: "/license", label: "Open License" },
+      link: { to: "/app/license", label: "Open License" },
     },
     {
       id: "cancel",
@@ -95,7 +95,7 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       answer:
         "Licenses are one-time — there is no subscription to cancel. If you need help with a refund, use the contact form within the refund window.",
       topic: "support",
-      link: { to: "/license", label: "Manage license" },
+      link: { to: "/app/license", label: "Manage license" },
     },
     {
       id: "refund",
@@ -109,7 +109,7 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       question: "How do I get the Survival Vault?",
       answer: `Upgrade to Pro for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key). Pro unlocks ${VAULT_LISTS}.`,
       topic: "support",
-      link: { to: "/license", label: "Open License" },
+      link: { to: "/app/license", label: "Open License" },
     },
     {
       id: "devices",

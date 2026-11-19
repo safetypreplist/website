@@ -291,7 +291,7 @@ export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string
     noPlan
       ? "/#pricing"
       : system.access_tier === "full" && !hasSurvivalVault
-        ? "/license"
+        ? "/app/license"
         : `/app/lists/${system.slug}`;
 
   return (

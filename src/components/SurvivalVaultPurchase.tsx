@@ -13,7 +13,7 @@ export function SurvivalVaultPurchase() {
 
   async function upgrade() {
     if (!license?.key) {
-      window.location.assign("/license");
+      window.location.assign("/app/license");
       return;
     }
     setBusy(true);
@@ -42,7 +42,7 @@ export function SurvivalVaultPurchase() {
         {busy ? "Redirecting…" : `Upgrade to Pro — ${money(UPGRADE_TO_PRO_CENTS)}`}
       </button>
       <p className="muted" style={{ marginTop: 12 }}>
-        Or manage your key on the <Link to="/license">license page</Link>.
+        Or manage your key on the <Link to="/app/license">license page</Link>.
       </p>
     </div>
   );

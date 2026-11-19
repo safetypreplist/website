@@ -162,7 +162,7 @@ export function AppTransferPage() {
     return (
       <div className="transfer-page">
         <p className="eyebrow">Transfer / Deactivate</p>
-        <h1>Activate this device first</h1>
+        <h1 className="page-title">Activate this device first</h1>
         <p className="muted">Activate your license, then use this page to back up data or move to a new device.</p>
         <Link className="btn btn-primary" to="/activate">
           Activate
@@ -177,9 +177,9 @@ export function AppTransferPage() {
     <div className="transfer-page">
       <header className="transfer-hero">
         <p className="eyebrow">Transfer / Deactivate</p>
-        <h1>Move your license safely</h1>
+        <h1 className="page-title">Move your license safely</h1>
         <p className="muted">
-          Follow the steps in order. Back up first, deactivate next, then activate and restore on the new device.
+          Follow these four steps in order. Back up first, deactivate next, then activate and restore on the new device.
         </p>
       </header>
 
@@ -201,8 +201,11 @@ export function AppTransferPage() {
 
       <ol className="transfer-steps">
         <li id="step-backup" className="transfer-step">
-          <div className="transfer-step-index">1</div>
+          <div className="transfer-step-rail" aria-hidden="true">
+            <span className="transfer-step-index">1</span>
+          </div>
           <div className="transfer-step-body">
+            <p className="transfer-step-label">Step 1</p>
             <h2>Back up your checklists</h2>
             <p>Save notes, checked items, and custom entries before you free the license.</p>
             <div className="transfer-step-actions">
@@ -221,8 +224,11 @@ export function AppTransferPage() {
         </li>
 
         <li className="transfer-step">
-          <div className="transfer-step-index">2</div>
+          <div className="transfer-step-rail" aria-hidden="true">
+            <span className="transfer-step-index">2</span>
+          </div>
           <div className="transfer-step-body">
+            <p className="transfer-step-label">Step 2</p>
             <h2>Deactivate this license</h2>
             <p>Confirm by email to free the license so it can activate on your new device.</p>
             <div className="transfer-step-actions">
@@ -234,8 +240,11 @@ export function AppTransferPage() {
         </li>
 
         <li className="transfer-step">
-          <div className="transfer-step-index">3</div>
+          <div className="transfer-step-rail" aria-hidden="true">
+            <span className="transfer-step-index">3</span>
+          </div>
           <div className="transfer-step-body">
+            <p className="transfer-step-label">Step 3</p>
             <h2>Activate on the new device</h2>
             <p>Open Activate, enter the same license key, then come back here to restore your backup.</p>
             <div className="transfer-step-actions">
@@ -247,8 +256,11 @@ export function AppTransferPage() {
         </li>
 
         <li className="transfer-step">
-          <div className="transfer-step-index">4</div>
+          <div className="transfer-step-rail" aria-hidden="true">
+            <span className="transfer-step-index">4</span>
+          </div>
           <div className="transfer-step-body">
+            <p className="transfer-step-label">Step 4</p>
             <h2>Restore your data</h2>
             <p>Import from cloud or from the backup file you saved in step 1.</p>
             <div className="transfer-step-actions">
@@ -276,7 +288,7 @@ export function AppTransferPage() {
       </ol>
 
       <p className="muted transfer-foot">
-        Need license details? <Link to="/license">My license</Link>
+        Need license details? <Link to="/app/license">My license</Link>
       </p>
 
       {pendingImport && importSummary ? (

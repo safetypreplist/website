@@ -30,7 +30,7 @@ import { ActivatePage } from "./pages/Activate";
 import { DeactivatePage } from "./pages/Deactivate";
 import { TransferPage } from "./pages/Transfer";
 import { AppTransferPage } from "./pages/AppTransfer";
-import { LicensePage } from "./pages/License";
+import { AppLicensePage, LicensePage } from "./pages/License";
 import { ImportChecklistPage } from "./pages/ImportChecklist";
 import { ImportedListPage } from "./pages/ImportedList";
 import { AdminLoginPage } from "./pages/AdminLogin";
@@ -193,6 +193,14 @@ export default function App() {
         <Route path="/support" element={<Navigate to="/contact" replace />} />
         <Route path="/refunds" element={<Navigate to="/terms#refunds" replace />} />
         <Route path="/app/reset-devices" element={<Navigate to="/app/transfer" replace />} />
+        <Route
+          path="/app/license"
+          element={
+            <LicensedApp>
+              <AppLicensePage />
+            </LicensedApp>
+          }
+        />
         <Route
           path="/app/transfer"
           element={
