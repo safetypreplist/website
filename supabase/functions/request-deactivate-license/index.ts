@@ -28,6 +28,12 @@ Deno.serve(async (req) => {
     const key = String(body.key || "");
     const backupDecision =
       body.backupDecision === "backed_up" || body.backupDecision === "skipped" ? body.backupDecision : "unknown";
+    const backupMethod =
+      body.backupMethod === "cloud" ||
+        body.backupMethod === "file" ||
+        body.backupMethod === "none"
+        ? body.backupMethod
+        : "unknown";
     const { admin, license } = await requireLicenseByKey(key);
 
     // Always return the same shape to avoid key/email enumeration.
@@ -37,6 +43,7 @@ Deno.serve(async (req) => {
           event: "license_deactivate_requested",
           matched: false,
           backupDecision,
+          backupMethod,
           at: new Date().toISOString(),
         }),
       );
@@ -51,6 +58,8 @@ Deno.serve(async (req) => {
       token_hash: tokenHash,
       expires_at: expiresAt,
       request_ip: clientIp(req),
+      backup_decision: backupDecision,
+      backup_method: backupMethod,
     });
     if (inserted.error) {
       console.error(inserted.error);
@@ -71,6 +80,7 @@ Deno.serve(async (req) => {
         matched: true,
         licenseId: license.id,
         backupDecision,
+        backupMethod,
         at: new Date().toISOString(),
       }),
     );

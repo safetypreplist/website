@@ -6,6 +6,7 @@ import { SAFETY_CATEGORY_LABELS, US_STATES, money } from "../lib/format";
 import { COPY_KEY, DEFAULT_STEPS, DEFAULT_VIDEO_URL, VIDEO_CACHE_KEY, loadCopy, startOnboardingPreview, type TourCopy } from "../components/OnboardingTour";
 import { AdminAccounts } from "../components/AdminAccounts";
 import { AdminLicenses } from "../components/AdminLicenses";
+import { AdminTransfers } from "../components/AdminTransfers";
 import { AdminRefunds } from "../components/AdminRefunds";
 import { usePendingRefunds } from "../lib/refunds";
 import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, withNewDefaults, type HelpFaq } from "../lib/help";
@@ -25,6 +26,7 @@ import {
 
 type AdminTab =
   | "licenses"
+  | "transfers"
   | "accounts"
   | "refunds"
   | "discounts"
@@ -79,6 +81,11 @@ export function AdminPage() {
         <aside className="admin-rail" aria-label="Admin sections">
           <p className="admin-rail-label">Workspace</p>
           <AdminNavButton active={tab === "licenses"} label="Licenses" onClick={() => setTab("licenses")} />
+          <AdminNavButton
+            active={tab === "transfers"}
+            label="License Transfers & Backup Activity"
+            onClick={() => setTab("transfers")}
+          />
           <AdminNavButton active={tab === "accounts"} label="Accounts & access" onClick={() => setTab("accounts")} />
           <AdminNavButton active={tab === "refunds"} label="Refund requests" badge={pendingRefunds} onClick={() => setTab("refunds")} />
           <AdminNavButton active={tab === "discounts"} label="Discount codes" onClick={() => setTab("discounts")} />
@@ -105,6 +112,7 @@ export function AdminPage() {
             </button>
           ) : null}
           {tab === "licenses" && <AdminLicenses onSaved={setMessage} />}
+          {tab === "transfers" && <AdminTransfers onSaved={setMessage} />}
           {tab === "accounts" && <AdminAccounts />}
           {tab === "refunds" && <AdminRefunds onPendingChange={setPendingRefunds} />}
           {tab === "discounts" && <DiscountManager onSaved={setMessage} />}

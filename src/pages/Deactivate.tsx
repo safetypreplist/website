@@ -9,15 +9,16 @@ import { downloadTransferBackupFile } from "../lib/transferBackup";
 
 type BackupPhase = "ask" | "help" | "skip_ack" | "ready";
 type BackupDecision = "backed_up" | "skipped";
+type BackupMethod = "cloud" | "file" | "none";
 type FlowStep = "deactivate" | "check_email";
 
 const BACKUP_DECISION_KEY = "spl.deactivateBackupDecision.v1";
 
-function recordBackupDecision(decision: BackupDecision) {
+function recordBackupDecision(decision: BackupDecision, method: BackupMethod) {
   try {
     localStorage.setItem(
       BACKUP_DECISION_KEY,
-      JSON.stringify({ decision, at: new Date().toISOString() }),
+      JSON.stringify({ decision, method, at: new Date().toISOString() }),
     );
   } catch {
     /* private mode */
@@ -30,6 +31,7 @@ export function DeactivatePage() {
   const keyFromUrl = useMemo(() => (params.get("key") || "").trim(), [params]);
   const [backupPhase, setBackupPhase] = useState<BackupPhase>("ask");
   const [backupDecision, setBackupDecision] = useState<BackupDecision | null>(null);
+  const [backupMethod, setBackupMethod] = useState<BackupMethod | null>(null);
   const [skipAck, setSkipAck] = useState(false);
   const [flowStep, setFlowStep] = useState<FlowStep>("deactivate");
   const [key, setKey] = useState(keyFromUrl || local?.key || "");
@@ -46,6 +48,7 @@ export function DeactivatePage() {
     try {
       await downloadTransferBackupFile();
       setFileBackupOk(true);
+      setBackupMethod("file");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not download a backup file.");
     } finally {
@@ -54,13 +57,16 @@ export function DeactivatePage() {
   }
 
   function openCloudBackup() {
+    setBackupMethod("cloud");
     const href = isLicensed() ? "/app/transfer?mode=backup" : "/activate";
     window.open(href, "_blank", "noopener,noreferrer");
   }
 
   function continueAfterBackup() {
+    const method: BackupMethod = backupMethod === "file" || backupMethod === "cloud" ? backupMethod : "cloud";
+    setBackupMethod(method);
     setBackupDecision("backed_up");
-    recordBackupDecision("backed_up");
+    recordBackupDecision("backed_up", method);
     setError(null);
     setBackupPhase("ready");
   }
@@ -70,8 +76,9 @@ export function DeactivatePage() {
       setError("Please confirm you understand your data may not transfer.");
       return;
     }
+    setBackupMethod("none");
     setBackupDecision("skipped");
-    recordBackupDecision("skipped");
+    recordBackupDecision("skipped", "none");
     setError(null);
     setBackupPhase("ready");
   }
@@ -88,7 +95,11 @@ export function DeactivatePage() {
     try {
       const data = await invokeFunction<{ ok?: boolean; emailMasked?: string | null; message?: string }>(
         "request-deactivate-license",
-        { key: key.trim(), backupDecision },
+        {
+          key: key.trim(),
+          backupDecision,
+          backupMethod: backupMethod || (backupDecision === "skipped" ? "none" : "unknown"),
+        },
       );
       setEmailMasked(data.emailMasked || null);
       setFlowStep("check_email");
@@ -291,6 +302,7 @@ export function DeactivatePage() {
                       onClick={() => {
                         setBackupPhase("help");
                         setBackupDecision(null);
+                        setBackupMethod(null);
                         setFlowStep("deactivate");
                       }}
                     >
@@ -337,6 +349,7 @@ export function DeactivatePage() {
                       onClick={() => {
                         setBackupPhase("ask");
                         setBackupDecision(null);
+                        setBackupMethod(null);
                         setSkipAck(false);
                         setFileBackupOk(false);
                         setError(null);
