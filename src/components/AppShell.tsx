@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { HeaderClock } from "./LocationStatus";
+import { ProfileAvatar } from "./ProfileAvatar";
 import { SidebarWeather } from "./SidebarWeather";
 import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
@@ -13,7 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const pro = hasSurvivalVault || isProLicense();
-  const avatar = localProfile.avatarDataUrl;
+  const profileName = localProfile.displayName || null;
 
   return (
     <div className={`app-shell${isAdminRoute ? " admin-console-shell" : ""}`}>
@@ -27,11 +28,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="app-top-end">
           <HeaderClock />
-          {avatar ? (
-            <NavLink className="header-avatar" to="/app/profile" aria-label="Profile">
-              <img src={avatar} alt="" />
-            </NavLink>
-          ) : null}
+          <NavLink className="header-avatar" to="/app/profile" aria-label="Profile">
+            <ProfileAvatar
+              className="header-avatar-face"
+              name={profileName}
+              avatarUrl={localProfile.avatarDataUrl}
+            />
+          </NavLink>
         </div>
       </header>
       <nav className="desktop-sidebar" aria-label="Main">
@@ -47,9 +50,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink to="/app/safety" className={({ isActive }) => (isActive ? "active" : "")}>
           Safety Resources
         </NavLink>
-        <NavLink to="/app/profile" className={({ isActive }) => (isActive ? "active" : "")}>
-          Profile
-        </NavLink>
         {!pro ? (
           <Link className="nav-upgrade" data-onboarding="upgrade-pro" to="/app/license">
             Upgrade to Pro
@@ -64,6 +64,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </NavLink>
         <NavLink to="/app/help" className={({ isActive }) => (isActive ? "active" : "")}>
           Help
+        </NavLink>
+        <NavLink to="/app/profile" className={({ isActive }) => (isActive ? "active" : "")}>
+          Profile
         </NavLink>
         {!isAdminRoute ? <SidebarWeather /> : null}
       </nav>

@@ -1,14 +1,15 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { ProfileAvatar } from "../components/ProfileAvatar";
 import { useApp } from "../context/AppContext";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
-import { searchPlaces, type GeocodeHit, type LocalProfileLocation } from "../lib/localProfile";
+import { composeDisplayName, searchPlaces, type GeocodeHit, type LocalProfileLocation } from "../lib/localProfile";
 import { getCurrentPosition, reverseGeocode } from "../lib/weather";
-import { initialsFrom } from "../lib/identity";
 
 export function ProfilePage() {
   const { localProfile, saveLocalProfile } = useApp();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [displayName, setDisplayName] = useState(localProfile.displayName);
+  const [firstName, setFirstName] = useState(localProfile.firstName);
+  const [lastName, setLastName] = useState(localProfile.lastName);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(localProfile.avatarDataUrl);
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
   const [query, setQuery] = useState(localProfile.location?.place || "");
@@ -20,7 +21,8 @@ export function ProfilePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setDisplayName(localProfile.displayName);
+    setFirstName(localProfile.firstName);
+    setLastName(localProfile.lastName);
     setAvatarDataUrl(localProfile.avatarDataUrl);
     setLocation(localProfile.location);
     setQuery(localProfile.location?.place || "");
@@ -96,20 +98,27 @@ export function ProfilePage() {
     setHits([]);
   }
 
-  function clearLocation() {
-    setLocation(null);
-    setQuery("");
-    setHits([]);
-  }
-
   async function onSave(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
     setError("");
     setMessage("");
+    const first = firstName.trim();
+    const last = lastName.trim();
+    if (!first || !last) {
+      setSaving(false);
+      setError("First name and last name are required.");
+      return;
+    }
+    if (!location) {
+      setSaving(false);
+      setError("Choose a location so weather and local resources know where you are.");
+      return;
+    }
     try {
       await saveLocalProfile({
-        displayName,
+        firstName: first,
+        lastName: last,
         avatarDataUrl,
         location,
       });
@@ -121,23 +130,20 @@ export function ProfilePage() {
     }
   }
 
-  const mark = avatarDataUrl ? (
-    <img src={avatarDataUrl} alt="" />
-  ) : (
-    <span>{initialsFrom(displayName || "SP")}</span>
-  );
+  const previewName = composeDisplayName(firstName, lastName) || "Your name";
 
   return (
     <div className="account-page profile-page">
       <p className="eyebrow">Profile</p>
       <h1 className="page-title">Your profile</h1>
       <p className="muted help-lead">
-        Name, photo, and location stay on this device. Your photo shows in the top right, and location powers the sidebar weather.
+        Your name, location, and optional photo stay on this device. The same avatar appears beside My Checklist, in the
+        top-right corner, and on your homepage.
       </p>
 
       <form className="account-card" onSubmit={onSave}>
         <div className="account-photo">
-          <span className="account-photo-mark">{mark}</span>
+          <ProfileAvatar className="account-photo-mark" name={previewName} avatarUrl={avatarDataUrl} />
           <div>
             <button className="btn btn-ghost" type="button" onClick={() => fileRef.current?.click()}>
               {avatarDataUrl ? "Change photo" : "Upload photo"}
@@ -154,7 +160,7 @@ export function ProfilePage() {
                 Remove photo
               </button>
             ) : (
-              <p className="muted">Optional. Without a photo, the top-right circle stays hidden.</p>
+              <p className="muted">Optional. Without a photo, colored initials are used everywhere.</p>
             )}
             <input
               ref={fileRef}
@@ -170,16 +176,30 @@ export function ProfilePage() {
           </div>
         </div>
 
-        <label className="account-field">
-          <span>Display name</span>
-          <input
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder="Your name"
-            autoComplete="name"
-            maxLength={80}
-          />
-        </label>
+        <div className="profile-name-grid">
+          <label className="account-field">
+            <span>First name</span>
+            <input
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              placeholder="Jane"
+              autoComplete="given-name"
+              maxLength={40}
+              required
+            />
+          </label>
+          <label className="account-field">
+            <span>Last name</span>
+            <input
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              placeholder="Doe"
+              autoComplete="family-name"
+              maxLength={40}
+              required
+            />
+          </label>
+        </div>
 
         <div className="account-field">
           <span>Location</span>
@@ -191,6 +211,7 @@ export function ProfilePage() {
             }}
             placeholder="City or town"
             autoComplete="address-level2"
+            required
           />
           {searching ? <p className="muted">Searching…</p> : null}
           {hits.length ? (
@@ -209,7 +230,15 @@ export function ProfilePage() {
               {locating ? "Locating…" : "Use current location"}
             </button>
             {location || query ? (
-              <button className="btn btn-ghost" type="button" onClick={clearLocation}>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={() => {
+                  setLocation(null);
+                  setQuery("");
+                  setHits([]);
+                }}
+              >
                 Clear location
               </button>
             ) : null}

@@ -117,8 +117,21 @@ function parseLocalProfile(raw: unknown): LocalProfile | null {
         stateCode: typeof raw.location.stateCode === "string" ? raw.location.stateCode : null,
       }
     : null;
+  const legacyName = typeof raw.displayName === "string" ? raw.displayName.trim() : "";
+  const parts = legacyName.split(/\s+/).filter(Boolean);
+  const firstName =
+    typeof raw.firstName === "string" && raw.firstName.trim()
+      ? raw.firstName.trim()
+      : parts[0] || "";
+  const lastName =
+    typeof raw.lastName === "string" && raw.lastName.trim()
+      ? raw.lastName.trim()
+      : parts.slice(1).join(" ");
+  const displayName = [firstName, lastName].filter(Boolean).join(" ").trim() || legacyName;
   return {
-    displayName: typeof raw.displayName === "string" ? raw.displayName : "",
+    firstName,
+    lastName,
+    displayName,
     avatarDataUrl: typeof raw.avatarDataUrl === "string" && raw.avatarDataUrl.startsWith("data:") ? raw.avatarDataUrl : null,
     location: location && location.place && Number.isFinite(location.lat) && Number.isFinite(location.lon) ? location : null,
   };

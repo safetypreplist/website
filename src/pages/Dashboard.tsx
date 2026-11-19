@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Photo } from "../components/Photo";
+import { ProfileAvatar } from "../components/ProfileAvatar";
 import { syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
-import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
 import { SCOPE_LINE } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
@@ -69,9 +69,7 @@ export function DashboardPage() {
     <div className="dash-home">
       {viewing.isOwn ? (
         <Link className="dash-identity" to="/app/profile" aria-label="Edit profile">
-          <span className="dash-avatar">
-            {viewing.avatarUrl ? <img src={viewing.avatarUrl} alt="" /> : <span>{initialsFrom(viewing.ownerName)}</span>}
-          </span>
+          <ProfileAvatar className="dash-avatar" name={viewing.ownerName === "My" ? null : viewing.ownerName} avatarUrl={viewing.avatarUrl} />
           <div>
             <p className="dash-greeting">{greeting(viewing.ownerName === "My" ? null : viewing.ownerName)}</p>
             <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
@@ -80,9 +78,7 @@ export function DashboardPage() {
         </Link>
       ) : (
         <div className="dash-identity">
-          <span className="dash-avatar">
-            {viewing.avatarUrl ? <img src={viewing.avatarUrl} alt="" /> : <span>{initialsFrom(viewing.ownerName)}</span>}
-          </span>
+          <ProfileAvatar className="dash-avatar" name={viewing.ownerName === "My" ? null : viewing.ownerName} avatarUrl={viewing.avatarUrl} />
           <div>
             <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
             {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
@@ -226,7 +222,14 @@ export function ListsPage() {
 
   return (
     <div>
-      <h1 className="page-title">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
+      <div className="lists-identity">
+        <ProfileAvatar
+          className="switcher-avatar"
+          name={viewing.ownerName === "My" ? null : viewing.ownerName}
+          avatarUrl={viewing.avatarUrl}
+        />
+        <h1 className="page-title">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
+      </div>
       <div className="system-list">
         {startSystems.map((system) => (
           <SystemRow key={system.id} slug={system.slug} />

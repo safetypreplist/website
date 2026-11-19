@@ -44,6 +44,7 @@ import {
   loadLocalProfile,
   saveLocalProfile as persistLocalProfile,
   type LocalProfile as DeviceProfile,
+  type LocalProfileInput,
 } from "../lib/localProfile";
 
 export type OfflineStatus = {
@@ -115,7 +116,7 @@ type AppState = {
   removeDevice: () => Promise<void>;
   setPreferredState: (code: string) => Promise<void>;
   localProfile: DeviceProfile;
-  saveLocalProfile: (next: DeviceProfile) => Promise<void>;
+  saveLocalProfile: (next: LocalProfileInput) => Promise<void>;
   updateProfile: () => Promise<void>;
   uploadAvatar: () => Promise<void>;
   switchChecklist: (kind: ViewingContext["kind"]) => Promise<void>;
@@ -403,7 +404,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveLocalProfile = useCallback(
-    async (next: DeviceProfile) => {
+    async (next: LocalProfileInput) => {
       const saved = persistLocalProfile(next);
       setLocalProfile(saved);
       setViewing((prev) => ({
@@ -426,6 +427,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         preferred_state: preferredState,
         role,
         plan: hasSurvivalVault ? "full" : "core",
+        first_name: localProfile.firstName || null,
+        last_name: localProfile.lastName || null,
         full_name: localProfile.displayName || null,
         display_name: localProfile.displayName || null,
         avatar_url: localProfile.avatarDataUrl,
