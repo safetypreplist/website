@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { firstNameOf } from "../lib/identity";
+import { isLocalProfileComplete } from "../lib/localProfile";
 import { AppIconRow } from "./InstallSteps";
+import { OnboardingProfileStep } from "./OnboardingProfileStep";
 import { supabase } from "../lib/supabase";
 
 type Step = { title: string; body: string; selector: string; path: string };
@@ -266,13 +267,15 @@ function releaseHold() {
   sessionStorage.removeItem(HOLD_KEY);
 }
 
+type OnboardingMode = "profile" | "welcome" | "offline" | "choice" | "tour" | "done";
+
 export function OnboardingTour() {
-  const { profile } = useApp();
+  const { profile, localProfile } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const storageKey = profile ? "spl.onboarding.v1.local" : "";
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"welcome" | "offline" | "choice" | "tour" | "done">("welcome");
+  const [mode, setMode] = useState<OnboardingMode>("profile");
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [cardSize, setCardSize] = useState({ w: 340, h: 236 });
@@ -283,6 +286,8 @@ export function OnboardingTour() {
   const [videoUrl, setVideoUrl] = useState(loadCachedVideo);
   const holdingTour = useRef(false);
   const skipGuard = useRef(0);
+  const openRef = useRef(false);
+  openRef.current = open;
   const step = { ...(DEFAULT_STEPS[stepIndex] ?? DEFAULT_STEPS[0]), ...copy[stepIndex] };
   const video = onboardingVideoSrc(videoUrl);
 
@@ -330,14 +335,28 @@ export function OnboardingTour() {
         return;
       }
       if (previewActive()) {
-        setMode("welcome");
+        setMode(isLocalProfileComplete(localProfile) ? "welcome" : "profile");
         setStepIndex(0);
         setRect(null);
         setOpen(true);
         return;
       }
       if (holdingTour.current) return;
-      setOpen(localStorage.getItem(storageKey) !== "done");
+      // Keep an in-progress profile → Continue step from jumping ahead when localProfile updates.
+      if (openRef.current) return;
+      const tourDone = localStorage.getItem(storageKey) === "done";
+      const needsProfile = !isLocalProfileComplete(localProfile);
+      if (needsProfile) {
+        setMode("profile");
+        setOpen(true);
+        return;
+      }
+      if (!tourDone) {
+        setMode("welcome");
+        setOpen(true);
+        return;
+      }
+      setOpen(false);
     }
     syncOpen();
     window.addEventListener(PREVIEW_EVENT, syncOpen);
@@ -346,7 +365,7 @@ export function OnboardingTour() {
       window.removeEventListener(PREVIEW_EVENT, syncOpen);
       window.removeEventListener(REPLAY_EVENT, syncOpen);
     };
-  }, [profile, storageKey, navigate]);
+  }, [profile, storageKey, navigate, localProfile]);
 
   useEffect(() => {
     if (!open || mode !== "tour") return;
@@ -516,7 +535,7 @@ export function OnboardingTour() {
   }, [open, mode, navigate, storageKey]);
 
   const progress = useMemo(() => `${stepIndex + 1} of ${DEFAULT_STEPS.length}`, [stepIndex]);
-  const firstName = firstNameOf(profile?.full_name || "there");
+  const fullName = localProfile.displayName.trim() || profile?.full_name?.trim() || "";
   if (!open || !profile) return null;
 
   function finish() {
@@ -526,6 +545,14 @@ export function OnboardingTour() {
     if (storageKey) localStorage.setItem(storageKey, "done");
     setOpen(false);
     if (location.pathname !== "/app") navigate("/app");
+  }
+  function continueAfterProfile() {
+    const tourDone = storageKey ? localStorage.getItem(storageKey) === "done" : false;
+    if (tourDone && !previewActive()) {
+      finish();
+      return;
+    }
+    setMode("welcome");
   }
   function completeTour() {
     holdingTour.current = false;
@@ -578,10 +605,12 @@ export function OnboardingTour() {
 
   return (
     <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
-      {mode === "welcome" ? (
+      {mode === "profile" ? (
+        <OnboardingProfileStep onContinue={continueAfterProfile} />
+      ) : mode === "welcome" ? (
         <div className="onboarding-welcome-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
           <p className="eyebrow">Your checklist is ready</p>
-          <h2 id="onboarding-title">{firstName ? `Welcome, ${firstName}` : "Welcome"}</h2>
+          <h2 id="onboarding-title">{fullName ? `Welcome, ${fullName}` : "Welcome"}</h2>
           <div className="onboarding-video">
             {video?.type === "video" ? (
               <video
@@ -608,7 +637,11 @@ export function OnboardingTour() {
             )}
           </div>
           <p className="onboarding-copy onboarding-welcome-intro">
-            <strong>{firstName ? `Congratulations, ${firstName}!` : "Congratulations!"}</strong> Your Safety Prep List license is ready. Your preparation journey starts here. We’re glad to have you with us!
+            <strong>
+              {fullName
+                ? `Congratulations, ${fullName}! Welcome to your SafetyPrepList preparedness journey.`
+                : "Congratulations! Welcome to your SafetyPrepList preparedness journey."}
+            </strong>{" "}
             Feel free to watch the introduction video and take the guided tour so you can get familiar with your new
             checklist.
           </p>

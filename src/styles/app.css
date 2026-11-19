@@ -10146,6 +10146,37 @@ html.tour-scroll-lock body {
 .onboarding-welcome-card > .eyebrow + h2 {
   margin-bottom: 16px;
 }
+.onboarding-profile-card {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(92vh, 900px);
+  overflow: auto;
+  text-align: left;
+}
+.onboarding-profile-card > .onboarding-copy {
+  margin: 0 0 18px;
+  max-width: 40ch;
+}
+.onboarding-profile-form {
+  display: grid;
+  gap: 16px;
+}
+.onboarding-location-callout {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(63, 93, 69, 0.18);
+  border-radius: 12px;
+  background: rgba(233, 239, 223, 0.55);
+}
+.onboarding-location-callout p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.onboarding-location-callout strong {
+  color: var(--forest);
+}
 .onboarding-welcome-card .onboarding-actions-stacked {
   margin-top: 20px;
 }

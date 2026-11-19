@@ -28,6 +28,10 @@ export function composeDisplayName(firstName: string, lastName: string) {
   return [firstName.trim(), lastName.trim()].filter(Boolean).join(" ").trim();
 }
 
+export function isLocalProfileComplete(profile: Pick<LocalProfile, "firstName" | "lastName" | "location">) {
+  return Boolean(profile.firstName.trim() && profile.lastName.trim() && profile.location?.place);
+}
+
 function splitLegacyDisplayName(displayName: string) {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return { firstName: "", lastName: "" };
