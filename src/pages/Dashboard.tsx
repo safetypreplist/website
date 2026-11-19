@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Photo } from "../components/Photo";
 import { ProfileAvatar } from "../components/ProfileAvatar";
-import { syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
-import { greeting, percent } from "../lib/format";
+import { greetingPhrase, percent } from "../lib/format";
+import { locationDisplayLabel } from "../lib/localProfile";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { SCOPE_LINE } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 import { isLicensed } from "../lib/licenseClient";
@@ -35,13 +34,10 @@ export function DashboardPage() {
     profile,
     catalog,
     progress,
-    sync,
-    online,
     customItems,
     viewing,
     hasSurvivalVault,
-    offline,
-    demoMode,
+    localProfile,
   } = useApp();
   const entitled = hasPlanAccess(profile);
   const personalSystems = catalog.systems.filter((s) => s.access_tier === "core");
@@ -64,6 +60,8 @@ export function DashboardPage() {
       ? [...startSystems, ...proSystems(catalog.systems)]
       : startSystems;
   const continueSystem = entitled ? findContinueSystem(continueLists, catalog, customItems, progress) : null;
+  const checklistHeading = viewing.title === "Survival Vault" ? "My Checklist" : viewing.title;
+  const placeLabel = locationDisplayLabel(localProfile.location);
 
   return (
     <div className="dash-home">
@@ -71,17 +69,15 @@ export function DashboardPage() {
         <Link className="dash-identity" to="/app/profile" aria-label="Edit profile">
           <ProfileAvatar className="dash-avatar" name={viewing.ownerName === "My" ? null : viewing.ownerName} avatarUrl={viewing.avatarUrl} />
           <div>
-            <p className="dash-greeting">{greeting(viewing.ownerName === "My" ? null : viewing.ownerName)}</p>
-            <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
-            {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
+            <p className="eyebrow dash-greeting">{greetingPhrase()}</p>
+            <h1 className="dash-heading">{checklistHeading}</h1>
           </div>
         </Link>
       ) : (
         <div className="dash-identity">
           <ProfileAvatar className="dash-avatar" name={viewing.ownerName === "My" ? null : viewing.ownerName} avatarUrl={viewing.avatarUrl} />
           <div>
-            <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
-            {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
+            <h1 className="dash-heading">{checklistHeading}</h1>
           </div>
         </div>
       )}
@@ -92,9 +88,7 @@ export function DashboardPage() {
         </div>
         <div className="readiness-head">
           <div className="eyebrow">Checklist Progress</div>
-          <p className={`sync-pill ${offline.pending > 0 ? "wait" : ""}`}>
-            {demoMode ? "Synced" : sync === "saving" && online ? "Saving…" : syncLabel(offline, online)}
-          </p>
+          {placeLabel ? <p className="readiness-place">{placeLabel}</p> : null}
         </div>
         <div className="readiness-meter">
           <svg className="ring" viewBox="0 0 120 120">
@@ -145,7 +139,6 @@ export function DashboardPage() {
         </Link>
       )}
 
-      {!isHousehold ? <p className="dash-scope">{SCOPE_LINE}</p> : null}
       <div className="system-list">
         {(isHousehold ? systems : startSystems).map((system) => (
           <SystemRow key={system.id} slug={system.slug} />

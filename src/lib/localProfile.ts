@@ -32,6 +32,14 @@ export function isLocalProfileComplete(profile: Pick<LocalProfile, "firstName" |
   return Boolean(profile.firstName.trim() && profile.lastName.trim() && profile.location?.place);
 }
 
+/** Compact place label for dashboard chrome, e.g. "Henderson, NV". */
+export function locationDisplayLabel(location?: LocalProfileLocation | null) {
+  if (!location?.place) return "";
+  const city = location.place.split(",")[0]?.trim() || location.place.trim();
+  if (location.stateCode) return `${city}, ${location.stateCode}`;
+  return location.place.trim();
+}
+
 function splitLegacyDisplayName(displayName: string) {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return { firstName: "", lastName: "" };

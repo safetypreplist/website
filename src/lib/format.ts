@@ -8,9 +8,17 @@ export function money(cents: number, currency = "USD") {
   }).format(cents / 100);
 }
 
-export function greeting(name?: string | null) {
+/** Time-of-day greeting only (no name). */
+export function greetingPhrase() {
   const hour = new Date().getHours();
-  const hello = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+/** @deprecated Prefer greetingPhrase() + checklist title. */
+export function greeting(name?: string | null) {
+  const hello = greetingPhrase();
   const first = name?.trim().split(/\s+/)[0];
   return first ? `${hello}, ${first}.` : `${hello}.`;
 }
