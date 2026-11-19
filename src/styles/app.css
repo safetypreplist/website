@@ -3149,6 +3149,29 @@ html.has-guidance-ack .app-main {
   background: rgba(244, 240, 229, 0.12);
 }
 
+.license-recovery-aside {
+  margin-top: 4px;
+}
+
+.license-recovery-list {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 18px;
+  width: 100%;
+}
+
+.license-recovery-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px 0 4px;
+  border-top: 1px solid rgba(30, 42, 31, 0.1);
+}
+
+.license-recovery-card:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .license-app {
   max-width: 720px;
   display: grid;

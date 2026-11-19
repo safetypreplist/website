@@ -224,10 +224,23 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
       <aside className={embedded ? "license-app-aside account-card" : "license-manage-aside"}>
         <p className="eyebrow">Moving devices?</p>
         <p>Back up your checklists, then deactivate this license and activate on your new device.</p>
-        <Link className={embedded ? "btn btn-forest" : "btn btn-ghost"} to="/app/transfer">
+        <Link className={embedded ? "btn btn-forest" : "btn btn-ghost"} to={embedded ? "/app/transfer" : "/deactivate"}>
           Transfer / Deactivate
         </Link>
       </aside>
+
+      {!embedded ? (
+        <aside className="license-manage-aside license-recovery-aside">
+          <p className="eyebrow">Forgot your license key?</p>
+          <p>
+            Need help recovering your license? You can securely retrieve your license using the email associated with
+            your original purchase.
+          </p>
+          <Link className="btn btn-primary" to="/license-recovery">
+            Recover My License
+          </Link>
+        </aside>
+      ) : null}
     </div>
   );
 }

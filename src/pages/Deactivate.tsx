@@ -218,6 +218,8 @@ export function DeactivatePage() {
         <p className="muted license-gate-foot">
           <Link to="/transfer">Transfer / Deactivate</Link>
           {" · "}
+          <Link to="/license-recovery">Forgot your key?</Link>
+          {" · "}
           <Link to="/activate">Back to Activate</Link>
         </p>
       </main>

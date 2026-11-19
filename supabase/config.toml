@@ -63,5 +63,11 @@ verify_jwt = false
 [functions.confirm-deactivate-license]
 verify_jwt = false
 
+[functions.request-license-recovery]
+verify_jwt = false
+
+[functions.confirm-license-recovery]
+verify_jwt = false
+
 [functions.transfer-backup]
 verify_jwt = false

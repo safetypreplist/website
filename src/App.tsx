@@ -31,6 +31,7 @@ import { DeactivatePage } from "./pages/Deactivate";
 import { TransferPage } from "./pages/Transfer";
 import { AppTransferPage } from "./pages/AppTransfer";
 import { AppLicensePage, LicensePage } from "./pages/License";
+import { LicenseRecoveryPage } from "./pages/LicenseRecovery";
 import { ImportChecklistPage } from "./pages/ImportChecklist";
 import { ImportedListPage } from "./pages/ImportedList";
 import { AdminLoginPage } from "./pages/AdminLogin";
@@ -187,6 +188,7 @@ export default function App() {
         <Route path="/deactivate" element={<DeactivatePage />} />
         <Route path="/transfer" element={<TransferPage />} />
         <Route path="/license" element={<LicensePage />} />
+        <Route path="/license-recovery" element={<LicenseRecoveryPage />} />
         <Route path="/import" element={<ImportChecklistPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />

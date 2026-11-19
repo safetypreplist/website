@@ -4,8 +4,17 @@ import { serviceClient } from "./supabase.ts";
 
 export const TRANSFER_TTL_MS = 48 * 60 * 60 * 1000;
 export const DEACTIVATE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+export const RECOVERY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 export const MAX_BACKUP_BYTES = 1_500_000;
 export const MAX_BACKUPS_PER_DAY = 3;
+
+export function normalizeEmail(raw: string) {
+  return String(raw || "").trim().toLowerCase().slice(0, 254);
+}
+
+export function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export function maskEmail(email: string | null | undefined) {
   const raw = String(email || "").trim().toLowerCase();
@@ -118,6 +127,55 @@ export async function sendDeactivateConfirmEmail(opts: {
   return await sendEmail({
     to: opts.to,
     subject: "Confirm Safety Prep List license deactivation",
+    html,
+    text,
+  });
+}
+
+export async function sendLicenseRecoveryEmail(opts: {
+  to: string;
+  recoverUrl: string;
+}) {
+  if (!emailConfigured() || !opts.to) return { skipped: true as const };
+  const support = Deno.env.get("SUPPORT_EMAIL") || "info@safetypreplist.com";
+  const appUrl = (Deno.env.get("APP_URL") || "https://safetypreplist.com").replace(/\/+$/, "");
+  const logo = escapeHtml(`${appUrl}/brand/logo.png`);
+  const recover = escapeHtml(opts.recoverUrl);
+  const html = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#F4F0E5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F4F0E5;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellspacing="0" cellpadding="0" style="max-width:560px;width:100%;background:#FBF8F1;border:1px solid #E6E2D6;border-radius:14px;">
+          <tr>
+            <td style="padding:32px;font-family:Arial,Helvetica,sans-serif;color:#1E2A1F;">
+              <p style="margin:0 0 18px;"><img src="${logo}" width="64" alt="Safety Prep List" style="display:inline-block;width:64px;height:auto;border:0;"></p>
+              <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#556B2F;font-weight:bold;">Safety Prep List</p>
+              <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;">Recover your license key</h1>
+              <p style="margin:0 0 18px;font-size:16px;line-height:1.55;">
+                Someone requested license recovery for this email. If that was you, open the secure link below to view your license key.
+                This link works once and expires in 24 hours.
+              </p>
+              <p style="margin:22px 0;text-align:center;">
+                <a href="${recover}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">View my license key</a>
+              </p>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#4D5348;">
+                Your license may still be activated on another device. After you recover your key, you can deactivate the existing activation, then activate on the device you want to use.
+              </p>
+              <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#556B2F;">Questions? ${escapeHtml(support)}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  const text = `Recover your Safety Prep List license key\n\nOpen this secure link once to view your key:\n${opts.recoverUrl}\n\nThis link expires in 24 hours. If you did not request this, ignore this email.`;
+  return await sendEmail({
+    to: opts.to,
+    subject: "Recover your Safety Prep List license key",
     html,
     text,
   });

@@ -128,6 +128,14 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       link: { to: "/install", label: "Add the app icon" },
     },
     {
+      id: "recover-key",
+      question: "I lost my license key. How do I get it back?",
+      answer:
+        "Open Recover My License and enter the email from your purchase. We’ll send a secure link to view your key. If it’s still active on another device, deactivate first, then activate on this one.",
+      topic: "support",
+      link: { to: "/license-recovery", label: "Recover My License" },
+    },
+    {
       id: "checking",
       question: "How do I check items off or add notes?",
       answer:

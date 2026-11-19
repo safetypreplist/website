@@ -107,6 +107,7 @@ const OPEN_PATHS = [
   "/deactivate",
   "/transfer",
   "/license",
+  "/license-recovery",
   "/import",
   "/privacy",
   "/terms",

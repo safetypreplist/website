@@ -67,6 +67,11 @@ const EXACT: Record<string, Meta> = {
     description: "View your Safety Prep List license, devices, and upgrade options.",
     index: true,
   },
+  "/license-recovery": {
+    title: "Recover Your License — Safety Prep List",
+    description: "Securely recover your Safety Prep List license key using your purchase email.",
+    index: false,
+  },
   "/import": {
     title: "Import Shared Checklist — Safety Prep List",
     description: "Open a shared Safety Prep List checklist and save your own copy.",

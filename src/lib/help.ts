@@ -42,6 +42,14 @@ export const DEFAULT_FAQS: HelpFaq[] = [
       "Your checklist is saved on this device, so it opens and updates even without Wi-Fi or cell service. Purchases and transfers still need a connection.",
   },
   {
+    id: "recover-key",
+    question: "I lost my license key. How do I recover it?",
+    answer:
+      "Open Recover My License and enter the email from your original purchase. We’ll send a secure link so you can view your key. If that license is still active on another device, deactivate it first, then activate on the device you want to use.",
+    linkTo: "/license-recovery",
+    linkLabel: "Recover My License",
+  },
+  {
     id: "refund",
     question: "How do I request a refund?",
     answer:
