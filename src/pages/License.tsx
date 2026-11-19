@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
@@ -9,6 +9,7 @@ import {
   isLicensed,
   setLocalProduct,
 } from "../lib/licenseClient";
+import { PHOTO_LIBRARY } from "../lib/photos";
 import { BASIC_ADDITIONAL_CENTS, UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
 import { invokeFunction } from "../lib/supabase";
 
@@ -39,33 +40,35 @@ export function LicensePage() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<LicenseStatus | null>(null);
 
-  async function lookup(e?: FormEvent) {
-    e?.preventDefault();
-    setBusy(true);
-    setError(null);
-    setStatus(null);
-    try {
-      const data = await invokeFunction<LicenseStatus>("license-status", { key: key.trim() });
-      setStatus(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not look up that license.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   useEffect(() => {
-    if (!local?.key) return;
+    const trimmed = key.trim();
+    if (trimmed.length < 8) {
+      setStatus(null);
+      setError(null);
+      return;
+    }
     let live = true;
-    void invokeFunction<LicenseStatus>("license-status", { key: local.key })
-      .then((data) => {
-        if (live) setStatus(data);
-      })
-      .catch(() => undefined);
+    const timer = window.setTimeout(() => {
+      setBusy(true);
+      setError(null);
+      void invokeFunction<LicenseStatus>("license-status", { key: trimmed })
+        .then((data) => {
+          if (!live) return;
+          setStatus(data);
+          setBusy(false);
+        })
+        .catch((err) => {
+          if (!live) return;
+          setStatus(null);
+          setError(err instanceof Error ? err.message : "Could not load that license.");
+          setBusy(false);
+        });
+    }, 400);
     return () => {
       live = false;
+      window.clearTimeout(timer);
     };
-  }, [local?.key]);
+  }, [key]);
 
   const thisDeviceActive =
     Boolean(licensedHere && local?.key && status?.licenseKey === local.key) &&
@@ -123,93 +126,111 @@ export function LicensePage() {
   }
 
   return (
-    <div className="public-page">
+    <div className="checkout-stage license-gate">
+      <div
+        className="checkout-bg license-gate-bg"
+        style={{ backgroundImage: `url(${PHOTO_LIBRARY.landscape})` }}
+        aria-hidden="true"
+      />
       <PublicHeader />
-      <main className="wrap auth-card" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 560 }}>
-        <p className="eyebrow">License</p>
-        <h1>Your license</h1>
-        <p className="muted">One license, one device. Look up a key to see what you purchased and which device is active.</p>
-        <form onSubmit={(e) => void lookup(e)} className="stack" style={{ gap: 14, marginTop: 22 }}>
-          <label>
-            License key
+      <main className="license-manage">
+        <header className="license-manage-hero">
+          <p className="eyebrow">My license</p>
+          <h1>Your lifetime license</h1>
+          <p className="license-manage-lead">
+            One license. One device. Details appear below as soon as your key is recognized.
+          </p>
+        </header>
+
+        <section className="license-manage-card">
+          <label className="field">
+            <span>License key</span>
             <input
+              className="license-key-input"
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder="SPL-XXXX-XXXX-XXXX-XXXX"
               autoComplete="off"
               spellCheck={false}
-              required
             />
           </label>
-          <button className="btn btn-primary" type="submit" disabled={busy || !key.trim()}>
-            {busy ? "Looking up…" : "Look up"}
-          </button>
-        </form>
+          {busy && !status ? <p className="muted license-manage-status">Loading license details…</p> : null}
+          {error ? (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          ) : null}
 
-        {error ? (
-          <p className="form-error" role="alert" style={{ marginTop: 16 }}>
-            {error}
-          </p>
-        ) : null}
+          {status ? (
+            <div className="license-manage-details" data-onboarding="license-panel">
+              <div className="license-manage-plan">
+                <span>{status.product === "pro" ? "Pro" : "Basic"}</span>
+                <strong>{status.amountCents != null ? money(status.amountCents) : "—"} one time</strong>
+              </div>
+              <dl className="license-manage-facts">
+                <div>
+                  <dt>Purchase date</dt>
+                  <dd>{formatDate(status.purchasedAt)}</dd>
+                </div>
+                <div>
+                  <dt>License key</dt>
+                  <dd>
+                    <code>{status.licenseKey}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Device</dt>
+                  <dd>
+                    {status.devices.length === 0
+                      ? "No device activated yet"
+                      : status.devices.map((device) => (
+                          <span key={device.deviceId} className="license-manage-device">
+                            {device.deviceId.slice(0, 8)}… · {formatDate(device.activatedAt)}
+                            {device.deviceId === deviceId ? " · this device" : ""}
+                          </span>
+                        ))}
+                  </dd>
+                </div>
+              </dl>
 
-        {status ? (
-          <div className="panel" style={{ marginTop: 28 }} data-onboarding="license-panel">
-            <p className="eyebrow">{status.product === "pro" ? "Pro" : "Basic"}</p>
-            <p>
-              <strong>Paid:</strong> {status.amountCents != null ? money(status.amountCents) : "—"} one time
-            </p>
-            <p>
-              <strong>Purchase date:</strong> {formatDate(status.purchasedAt)}
-            </p>
-            <p>
-              <strong>Key:</strong> <code>{status.licenseKey}</code>
-            </p>
-            <p className="muted" style={{ marginTop: 12 }}>
-              One license, one device.
-            </p>
-            <h3 style={{ marginTop: 18, marginBottom: 8 }}>Activated devices</h3>
-            {status.devices.length === 0 ? (
-              <p className="muted">No device activated yet.</p>
-            ) : (
-              <ul>
-                {status.devices.map((device) => (
-                  <li key={device.deviceId}>
-                    <code>{device.deviceId.slice(0, 8)}…</code> · {formatDate(device.activatedAt)}
-                    {device.deviceId === deviceId ? " · this device" : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="stack" style={{ gap: 10, marginTop: 18 }}>
-              {!thisDeviceActive ? (
-                <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateHere()}>
-                  Activate on this device
-                </button>
-              ) : null}
-              {thisDeviceActive ? (
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  disabled={addBusy}
-                  onClick={() => void addSecondDevice()}
-                  data-onboarding="second-device-offer"
-                >
-                  {addBusy ? "Redirecting…" : `Add a second device license, ${money(BASIC_ADDITIONAL_CENTS)}.`}
-                </button>
-              ) : null}
-              {status.product === "basic" && thisDeviceActive ? (
-                <button className="btn btn-ghost" type="button" disabled={upgradeBusy} onClick={() => void upgrade()}>
-                  {upgradeBusy ? "Redirecting…" : `Upgrade to Pro — ${money(UPGRADE_TO_PRO_CENTS)}`}
-                </button>
-              ) : null}
-              <Link to="/app/transfer">Transfer My Data</Link>
-              <Link to={status.licenseKey ? `/deactivate?key=${encodeURIComponent(status.licenseKey)}` : "/deactivate"}>
-                Deactivate &amp; transfer
-              </Link>
-              <Link to="/app/reset-devices">Reset devices</Link>
+              <div className="license-manage-actions">
+                {!thisDeviceActive ? (
+                  <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void activateHere()}>
+                    Activate on this device
+                  </button>
+                ) : (
+                  <Link className="btn btn-primary" to="/app">
+                    Open checklists
+                  </Link>
+                )}
+                {thisDeviceActive ? (
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={addBusy}
+                    onClick={() => void addSecondDevice()}
+                    data-onboarding="second-device-offer"
+                  >
+                    {addBusy ? "Redirecting…" : `Add a second device · ${money(BASIC_ADDITIONAL_CENTS)}`}
+                  </button>
+                ) : null}
+                {status.product === "basic" && thisDeviceActive ? (
+                  <button className="btn btn-ghost" type="button" disabled={upgradeBusy} onClick={() => void upgrade()}>
+                    {upgradeBusy ? "Redirecting…" : `Upgrade to Pro · ${money(UPGRADE_TO_PRO_CENTS)}`}
+                  </button>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </section>
+
+        <aside className="license-manage-aside">
+          <p className="eyebrow">Moving devices?</p>
+          <p>Back up your checklists, then deactivate this license and activate on your new device.</p>
+          <Link className="btn btn-ghost" to="/app/transfer">
+            Transfer / Deactivate
+          </Link>
+        </aside>
       </main>
       <PublicFooter />
     </div>

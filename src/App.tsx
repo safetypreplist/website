@@ -31,7 +31,6 @@ import { DeactivatePage } from "./pages/Deactivate";
 import { TransferPage } from "./pages/Transfer";
 import { AppTransferPage } from "./pages/AppTransfer";
 import { LicensePage } from "./pages/License";
-import { ResetDevicesPage } from "./pages/ResetDevices";
 import { ImportChecklistPage } from "./pages/ImportChecklist";
 import { ImportedListPage } from "./pages/ImportedList";
 import { AdminLoginPage } from "./pages/AdminLogin";
@@ -193,7 +192,7 @@ export default function App() {
         <Route path="/demo" element={<DemoPage />} />
         <Route path="/support" element={<Navigate to="/contact" replace />} />
         <Route path="/refunds" element={<Navigate to="/terms#refunds" replace />} />
-        <Route path="/app/reset-devices" element={<ResetDevicesPage />} />
+        <Route path="/app/reset-devices" element={<Navigate to="/app/transfer" replace />} />
         <Route
           path="/app/transfer"
           element={

@@ -111,7 +111,7 @@ export async function downloadTransferBackupFile(payload?: TransferBackupPayload
   await shareOrDownloadFile(
     file,
     "Safety Prep List backup",
-    "Save this file somewhere you can open from your new device, then use Transfer My Data → Import a Backup File.",
+    "Save this file somewhere you can open from your new device, then use Transfer / Deactivate → Import a Backup File.",
   );
   return summarizeTransferBackup(data);
 }

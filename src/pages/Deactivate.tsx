@@ -95,7 +95,7 @@ export function DeactivatePage() {
                     Back Up to SafetyPrepList Cloud
                   </button>
                   <p className="muted" style={{ marginTop: 8 }}>
-                    Opens Transfer My Data in a new tab. Come back here after the app confirms the backup succeeded.
+                    Opens Transfer / Deactivate in a new tab. Come back here after the app confirms the backup succeeded.
                   </p>
                 </article>
                 <article>
@@ -216,7 +216,7 @@ export function DeactivatePage() {
         </section>
 
         <p className="muted license-gate-foot">
-          Lost the purchase email? <Link to="/app/reset-devices">Reset devices</Link>
+          <Link to="/transfer">Transfer / Deactivate</Link>
           {" · "}
           <Link to="/activate">Back to Activate</Link>
         </p>

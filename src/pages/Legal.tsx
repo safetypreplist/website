@@ -86,7 +86,7 @@ export function TermsPage() {
       <p>
         Access is sold as a one-time lifetime license (Basic or Pro), not a subscription. One license covers one device.
         You may purchase an additional Basic license for a second device from the license page after you activate, or use
-        Reset devices if you have lost access to the device that holds your key. Pro includes Survival Vault checklists;
+        Transfer / Deactivate to free the license and move it to a new device. Pro includes Survival Vault checklists;
         Basic holders may upgrade to Pro for the price shown at checkout (same license key).
       </p>
       <p>
@@ -214,7 +214,7 @@ export function PrivacyPage() {
         </li>
         <li>
           Device activation: a device identifier for the device where you activate a license, so one license stays tied
-          to one device unless you reset devices or buy an additional license.
+          to one device unless you deactivate and transfer it or buy an additional license.
         </li>
         <li>Checklist data stored on your device and synced as needed: checkmarks, short notes, custom items, and emergency contacts you add.</li>
         <li>Email-list signups for the free Emergency Documents Checklist (name and email).</li>

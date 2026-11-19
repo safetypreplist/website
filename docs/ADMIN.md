@@ -56,7 +56,7 @@ Do not invent phone numbers. Seed data includes Ready.gov, SAMHSA/988, Poison.or
 
 ## Devices
 
-Each license covers one device. Need another device? Buy an additional Basic license ($9.99). Reset devices (email + key) clears the active device so you can activate on a replacement phone. The raw device id never leaves the device except as needed for activation.
+Each license covers one device. Need another device? Buy an additional Basic license ($9.99). Use Transfer / Deactivate to back up data, free the license by email confirmation, then activate on a replacement phone. The raw device id never leaves the device except as needed for activation.
 
 - `register_device` enforces the limit on the server, and every checklist save checks that the device is registered. An unregistered device can still open what it already has saved, but its changes stay queued on the device with an explanation until a slot is free.
 - Removing a device (`remove_device`, migration `0038_device_sessions.sql`) signs out only that device's session. The customer's other devices stay signed in. If the removed device had changes waiting to sync, they stay on it and sync after the customer signs in there again.

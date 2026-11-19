@@ -32,7 +32,6 @@ export function AppTransferPage() {
   const [backups, setBackups] = useState<CloudBackup[]>([]);
   const [pendingImport, setPendingImport] = useState<TransferBackupPayload | null>(null);
   const [importSummary, setImportSummary] = useState<TransferBackupSummary | null>(null);
-  const [hasLocal, setHasLocal] = useState(false);
 
   async function refreshStatus() {
     if (!license?.key) return;
@@ -48,14 +47,12 @@ export function AppTransferPage() {
   }
 
   useEffect(() => {
-    void hasLocalPersonalData().then(setHasLocal);
     void refreshStatus();
   }, [license?.key]);
 
   useEffect(() => {
     if (mode === "backup" && isLicensed()) {
-      const el = document.getElementById("cloud-backup");
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("step-backup")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [mode]);
 
@@ -77,9 +74,7 @@ export function AppTransferPage() {
       });
       if (!data.backup) throw new Error("Cloud backup did not confirm successfully.");
       setCloudOk(true);
-      setMessage(
-        `Cloud backup saved. It stays available until ${new Date(data.backup.expiresAt).toLocaleString()}.`,
-      );
+      setMessage(`Cloud backup confirmed. Available until ${new Date(data.backup.expiresAt).toLocaleString()}.`);
       await refreshStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create a cloud backup.");
@@ -94,7 +89,7 @@ export function AppTransferPage() {
     try {
       const summary = await downloadTransferBackupFile();
       setMessage(
-        `Backup file ready (${summary.progressCount} checklist items, ${summary.customCount} custom entries, ${summary.contactCount} contacts).`,
+        `Backup file downloaded (${summary.progressCount} items, ${summary.customCount} custom entries, ${summary.contactCount} contacts).`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not download a backup file.");
@@ -116,11 +111,8 @@ export function AppTransferPage() {
       });
       const payload = parseTransferBackup(data.payload);
       setImportSummary(summarizeTransferBackup(payload));
-      if (await hasLocalPersonalData()) {
-        setPendingImport(payload);
-      } else {
-        await applyImport(payload);
-      }
+      if (await hasLocalPersonalData()) setPendingImport(payload);
+      else await applyImport(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not import from cloud.");
     } finally {
@@ -139,11 +131,8 @@ export function AppTransferPage() {
       const text = await file.text();
       const payload = parseTransferBackup(text);
       setImportSummary(summarizeTransferBackup(payload));
-      if (await hasLocalPersonalData()) {
-        setPendingImport(payload);
-      } else {
-        await applyImport(payload);
-      }
+      if (await hasLocalPersonalData()) setPendingImport(payload);
+      else await applyImport(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not read that backup file.");
     } finally {
@@ -157,11 +146,10 @@ export function AppTransferPage() {
     try {
       await restoreTransferBackup(payload);
       await refreshAccount();
-      setHasLocal(true);
       setPendingImport(null);
       const summary = summarizeTransferBackup(payload);
       setMessage(
-        `Import complete: ${summary.progressCount} checklist items, ${summary.customCount} custom entries, ${summary.contactCount} contacts.`,
+        `Import complete: ${summary.progressCount} items, ${summary.customCount} custom entries, ${summary.contactCount} contacts.`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not restore that backup.");
@@ -172,10 +160,10 @@ export function AppTransferPage() {
 
   if (!isLicensed() || !license) {
     return (
-      <div className="wrap" style={{ padding: "32px 16px" }}>
-        <p className="eyebrow">Transfer My Data</p>
-        <h1>Activate first</h1>
-        <p className="muted">Activate your license on this device, then return here to back up or restore personal data.</p>
+      <div className="transfer-page">
+        <p className="eyebrow">Transfer / Deactivate</p>
+        <h1>Activate this device first</h1>
+        <p className="muted">Activate your license, then use this page to back up data or move to a new device.</p>
         <Link className="btn btn-primary" to="/activate">
           Activate
         </Link>
@@ -183,80 +171,112 @@ export function AppTransferPage() {
     );
   }
 
+  const deactivateHref = `/deactivate?key=${encodeURIComponent(license.key)}`;
+
   return (
     <div className="transfer-page">
-      <p className="eyebrow">License</p>
-      <h1>Transfer My Data</h1>
-      <p className="muted">
-        Back up personalized checklists before you move devices, or restore them after you activate on a new device.
-        License activation stays separate from data transfer. Cloud backups expire after 48 hours.
-      </p>
+      <header className="transfer-hero">
+        <p className="eyebrow">Transfer / Deactivate</p>
+        <h1>Move your license safely</h1>
+        <p className="muted">
+          Follow the steps in order. Back up first, deactivate next, then activate and restore on the new device.
+        </p>
+      </header>
 
       {message ? (
-        <p className="panel" role="status" style={{ marginTop: 16 }}>
+        <p className="transfer-banner is-success" role="status">
           {message}
         </p>
       ) : null}
       {error ? (
-        <p className="form-error" role="alert" style={{ marginTop: 16 }}>
+        <p className="transfer-banner is-error" role="alert">
           {error}
         </p>
       ) : null}
       {cloudOk ? (
-        <p className="panel" role="status" style={{ marginTop: 12 }}>
+        <p className="transfer-banner is-success" role="status">
           Cloud backup confirmed successfully.
         </p>
       ) : null}
 
-      <div className="transfer-grid">
-        <section id="cloud-backup" className="panel">
-          <h2>Back Up to SafetyPrepList Cloud</h2>
-          <p className="muted">Temporary private backup tied to this license. Available for 48 hours.</p>
-          <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void backupToCloud()}>
-            {busy ? "Working…" : "Back Up to SafetyPrepList Cloud"}
-          </button>
-          {backups[0] ? (
-            <p className="muted" style={{ marginTop: 10 }}>
-              Latest cloud backup expires {new Date(backups[0].expiresAt).toLocaleString()}.
+      <ol className="transfer-steps">
+        <li id="step-backup" className="transfer-step">
+          <div className="transfer-step-index">1</div>
+          <div className="transfer-step-body">
+            <h2>Back up your checklists</h2>
+            <p>Save notes, checked items, and custom entries before you free the license.</p>
+            <div className="transfer-step-actions">
+              <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void backupToCloud()}>
+                {busy ? "Working…" : "Back Up to SafetyPrepList Cloud"}
+              </button>
+              <button className="btn btn-ghost" type="button" disabled={busy} onClick={() => void exportFile()}>
+                Download My Backup File
+              </button>
+            </div>
+            <p className="muted">
+              Cloud backups expire after 48 hours.
+              {backups[0] ? ` Latest expires ${new Date(backups[0].expiresAt).toLocaleString()}.` : ""}
             </p>
-          ) : (
-            <p className="muted" style={{ marginTop: 10 }}>
-              No active cloud backup on file.
-            </p>
-          )}
-        </section>
+          </div>
+        </li>
 
-        <section className="panel">
-          <h2>Import from SafetyPrepList Cloud</h2>
-          <p className="muted">Restores the latest unexpired backup for this license onto this device.</p>
-          <button className="btn btn-ghost" type="button" disabled={busy || !backups[0]} onClick={() => void importFromCloud()}>
-            Import from SafetyPrepList Cloud
-          </button>
-        </section>
+        <li className="transfer-step">
+          <div className="transfer-step-index">2</div>
+          <div className="transfer-step-body">
+            <h2>Deactivate this license</h2>
+            <p>Confirm by email to free the license so it can activate on your new device.</p>
+            <div className="transfer-step-actions">
+              <Link className="btn btn-primary" to={deactivateHref}>
+                Continue to Deactivate
+              </Link>
+            </div>
+          </div>
+        </li>
 
-        <section className="panel">
-          <h2>Export a Backup File</h2>
-          <p className="muted">Download a JSON file you can move yourself (AirDrop, email, drive, USB).</p>
-          <button className="btn btn-ghost" type="button" disabled={busy} onClick={() => void exportFile()}>
-            Export a Backup File
-          </button>
-        </section>
+        <li className="transfer-step">
+          <div className="transfer-step-index">3</div>
+          <div className="transfer-step-body">
+            <h2>Activate on the new device</h2>
+            <p>Open Activate, enter the same license key, then come back here to restore your backup.</p>
+            <div className="transfer-step-actions">
+              <Link className="btn btn-ghost" to="/activate">
+                Open Activate
+              </Link>
+            </div>
+          </div>
+        </li>
 
-        <section className="panel">
-          <h2>Import a Backup File</h2>
-          <p className="muted">Choose a Safety Prep List backup file saved from another device.</p>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => void onFileSelected(e)} />
-          <button className="btn btn-ghost" type="button" disabled={busy} onClick={() => fileRef.current?.click()}>
-            Import a Backup File
-          </button>
-        </section>
-      </div>
+        <li className="transfer-step">
+          <div className="transfer-step-index">4</div>
+          <div className="transfer-step-body">
+            <h2>Restore your data</h2>
+            <p>Import from cloud or from the backup file you saved in step 1.</p>
+            <div className="transfer-step-actions">
+              <button
+                className="btn btn-primary"
+                type="button"
+                disabled={busy || !backups[0]}
+                onClick={() => void importFromCloud()}
+              >
+                Import from SafetyPrepList Cloud
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={(e) => void onFileSelected(e)}
+              />
+              <button className="btn btn-ghost" type="button" disabled={busy} onClick={() => fileRef.current?.click()}>
+                Import a Backup File
+              </button>
+            </div>
+          </div>
+        </li>
+      </ol>
 
-      <p className="muted" style={{ marginTop: 18 }}>
-        {hasLocal
-          ? "This device currently has personalized checklist data."
-          : "This device does not have personalized checklist data yet."}{" "}
-        Need to free the license? <Link to="/deactivate">Deactivate &amp; transfer</Link>
+      <p className="muted transfer-foot">
+        Need license details? <Link to="/license">My license</Link>
       </p>
 
       {pendingImport && importSummary ? (

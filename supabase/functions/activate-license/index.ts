@@ -4,7 +4,7 @@ import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 
 const DEVICE_TAKEN =
-  "This license is active on another device. Deactivate it there first, or use Reset devices if you no longer have it.";
+  "This license is active on another device. Deactivate & transfer it first, then activate on this device.";
 
 Deno.serve(async (req) => {
   const opt = preflight(req);

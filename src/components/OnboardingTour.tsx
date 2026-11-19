@@ -48,7 +48,7 @@ const DEFAULT_STEPS: Step[] = [
   },
   {
     title: "Your license",
-    body: "Open License to see your key, move devices with Transfer My Data, or upgrade options.",
+    body: "Open License to see your key, move devices with Transfer / Deactivate, or upgrade options.",
     selector: '[data-onboarding="license"]',
     path: "/app",
   },

@@ -151,8 +151,6 @@ export function ActivatePage() {
               {deviceTaken ? (
                 <p className="muted" style={{ marginTop: 10 }}>
                   <Link to={transferHref}>Deactivate &amp; transfer</Link>
-                  {" · "}
-                  <Link to="/app/reset-devices">Reset devices</Link>
                 </p>
               ) : null}
             </div>
@@ -170,7 +168,7 @@ export function ActivatePage() {
         </p>
 
       <p className="muted license-gate-foot">
-        Lost the old device? <Link to="/app/reset-devices">Reset devices</Link>
+        <Link to="/transfer">Transfer / Deactivate</Link>
         {" · "}
         <Link to="/license">License details</Link>
         {" · "}

@@ -64,7 +64,7 @@ const EXACT: Record<string, Meta> = {
   },
   "/license": {
     title: "Your License — Safety Prep List",
-    description: "Look up your Safety Prep List license, devices, and upgrade options.",
+    description: "View your Safety Prep List license, devices, and upgrade options.",
     index: true,
   },
   "/import": {
@@ -89,8 +89,7 @@ const PREFIX: Array<[string, Meta]> = [
   ["/app/contacts", { title: "Contacts — Safety Prep List", description: "Safety contacts for your household.", index: false }],
   ["/app/safety", { title: "Safety Resources — Safety Prep List", description: "Official emergency-management websites.", index: false }],
   ["/app/help", { title: "Help — Safety Prep List", description: "Help for Safety Prep List.", index: false }],
-  ["/app/reset-devices", { title: "Reset Devices — Safety Prep List", description: "Clear activated devices for your license.", index: false }],
-  ["/app/transfer", { title: "Transfer My Data — Safety Prep List", description: "Back up or restore personalized checklist data.", index: false }],
+  ["/app/transfer", { title: "Transfer / Deactivate — Safety Prep List", description: "Back up, deactivate, and restore personalized checklist data.", index: false }],
   ["/app/survival", { title: "Survival Vault — Safety Prep List", description: "Survival Vault checklists.", index: false }],
   ["/app", { title: "My Checklist — Safety Prep List", description: "Your Safety Prep List dashboard.", index: false }],
 ];

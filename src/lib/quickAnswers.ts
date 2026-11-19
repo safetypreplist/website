@@ -73,9 +73,9 @@ export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
       id: "activate",
       question: "I can’t activate my license",
       answer:
-        "Open Activate and enter your license key exactly as emailed. If it is still active on another device, use Deactivate & transfer with the same key. If you lost that device, use Reset devices with your email and key.",
+        "Open Activate and enter your license key exactly as emailed. If it is still active on another device, use Transfer / Deactivate with the same key, then activate on this device.",
       topic: "support",
-      link: { to: "/deactivate", label: "Deactivate & transfer" },
+      link: { to: "/transfer", label: "Transfer / Deactivate" },
     },
   ];
 }
@@ -115,9 +115,9 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       id: "devices",
       question: "Why am I asked about devices?",
       answer:
-        "One license covers one device. Use Deactivate & transfer with your license key to move it, or Reset devices if you lost the old device. A second device license is available from your license page after you activate.",
+        "One license covers one device. Use Transfer / Deactivate with your license key to back up, free the license, then activate and restore on the new device. A second device license is available from your license page after you activate.",
       topic: "support",
-      link: { to: "/deactivate", label: "Deactivate & transfer" },
+      link: { to: "/app/transfer", label: "Transfer / Deactivate" },
     },
     {
       id: "offline",

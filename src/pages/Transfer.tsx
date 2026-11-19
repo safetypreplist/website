@@ -114,7 +114,7 @@ export function TransferPage() {
                 </li>
                 <li>Activate your license on the new device.</li>
                 <li>
-                  Open <strong>Transfer My Data</strong> (under License in the app).
+                  Open <strong>Transfer / Deactivate</strong> (under License in the app).
                 </li>
                 <li>Import from SafetyPrepList Cloud or import your backup file.</li>
               </ol>
@@ -128,7 +128,7 @@ export function TransferPage() {
                     Activate on this device
                   </Link>
                   <Link className="btn btn-ghost" to="/app/transfer">
-                    Transfer My Data
+                    Transfer / Deactivate
                   </Link>
                 </div>
               ) : (
