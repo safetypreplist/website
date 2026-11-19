@@ -8930,7 +8930,7 @@ a.dash-identity:hover .dash-heading {
 .admin-workspace .admin-lead, .admin-workspace .admin-section-heading .muted { font-size: 14px; line-height: 1.55; }
 .onboarding-layer { position: fixed; inset: 0; z-index: 120; pointer-events: none; }.onboarding-welcome-card, .onboarding-tour-card { pointer-events: auto; background: var(--paper); color: var(--ink); box-shadow: 0 22px 65px rgba(20,29,22,.28); }.onboarding-welcome-card { position: absolute; top: 50%; left: 50%; width: min(560px, calc(100vw - 32px)); padding: 22px; border-radius: 18px; transform: translate(-50%, -50%); }.onboarding-video { display: grid; place-items: center; min-height: 176px; margin-bottom: 22px; border-radius: 12px; background: linear-gradient(135deg, var(--forest), #40543c); color: var(--paper); text-align: center; }.onboarding-video span:not(.onboarding-play), .onboarding-video small { display: block; }.onboarding-video span:not(.onboarding-play) { margin-top: 10px; font-size: 15px; font-weight: 700; }.onboarding-video small { margin-top: 5px; color: rgba(244,240,229,.65); font-size: 11px; }.onboarding-play { display: grid; place-items: center; width: 48px; height: 48px; padding-left: 3px; border-radius: 50%; background: var(--terracotta); color: var(--paper); }.onboarding-welcome-card h2, .onboarding-tour-card h2 { margin: 7px 0 9px; font-size: clamp(24px, 4vw, 32px); line-height: 1.1; }.onboarding-copy { color: var(--ink-soft); font-size: 14px; line-height: 1.65; }.onboarding-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; margin-top: 22px; }.onboarding-skip { display: block; margin: 15px auto 0; color: var(--ink-faint); font-size: 11px; text-decoration: underline; }.onboarding-scrim { position: absolute; inset: 0; pointer-events: auto; background: rgba(20,29,22,.62); }.onboarding-spotlight { position: fixed; z-index: 1; pointer-events: none; border: 2px solid var(--terracotta-light); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(20,29,22,.62), 0 0 0 5px rgba(199,90,43,.22); transition: all 180ms ease; }.onboarding-tour-card { position: fixed; z-index: 2; top: 24px; right: 24px; width: min(350px, calc(100vw - 32px)); padding: 22px; border-radius: 15px; }.onboarding-tour-card.above { top: auto; bottom: 24px; }.onboarding-tour-card p:not(.eyebrow) { color: var(--ink-soft); font-size: 14px; line-height: 1.6; }.onboarding-tour-head { display: flex; justify-content: space-between; color: var(--moss); font-size: 11px; font-weight: 700; }.onboarding-tour-head button { color: var(--ink-faint); font-size: 22px; line-height: 1; }.onboarding-tour-actions { display: flex; justify-content: space-between; gap: 9px; margin-top: 21px; }.onboarding-tour-actions .btn { font-size: 12px; }.onboarding-welcome-card .eyebrow, .onboarding-tour-card .eyebrow { color: var(--moss); }
 @keyframes onboarding-pulse { from { box-shadow: 0 0 0 0 rgba(199,90,43,.4); } to { box-shadow: 0 0 0 9px rgba(199,90,43,0); } }
-@media (max-width: 620px) { .onboarding-welcome-card { padding: 16px; }.onboarding-video { min-height: 135px; }.onboarding-actions { flex-direction: column-reverse; }.onboarding-actions .btn { width: 100%; }.onboarding-tour-card { top: auto; right: 16px; bottom: 16px; left: 16px; width: auto; }.onboarding-tour-card.above { top: auto; bottom: 16px; } }
+@media (max-width: 620px) { .onboarding-welcome-card { padding: 16px; }.onboarding-video { min-height: 135px; }.onboarding-actions { flex-direction: column-reverse; }.onboarding-actions .btn { width: 100%; } }
 /* Onboarding refinement */
 .onboarding-welcome-card { background: #fffdf7; box-shadow: 0 24px 70px rgba(20,29,22,.25); }
 .onboarding-video { min-height: 255px; background: linear-gradient(145deg, #263b2a, #4d6043); overflow: hidden; }
@@ -9120,8 +9120,8 @@ html.tour-scroll-lock body {
   border-radius: 14px;
 }
 .onboarding-target-highlight {
-  position: static !important;
-  z-index: auto !important;
+  position: relative !important;
+  z-index: 125 !important;
 }
 
 
@@ -9951,6 +9951,10 @@ html.tour-scroll-lock body {
     font-size: 14px;
   }
 
+  .onboarding-tour-actions .btn-primary {
+    grid-column: 1 / -1;
+  }
+
   .onboarding-layer.tour-mode .onboarding-spotlight {
     animation: onboarding-glow 2.4s ease-in-out infinite;
   }
@@ -10043,19 +10047,35 @@ html.tour-scroll-lock body {
 }
 
 .onboarding-tour-card {
+  top: 0;
+  left: 0;
   right: auto;
   bottom: auto;
   border: 1px solid rgba(199, 90, 43, 0.16);
   background: #fffdf7;
   box-shadow: 0 18px 50px rgba(20, 29, 22, 0.28);
-}
-.onboarding-tour-card.is-placing {
   opacity: 0;
   pointer-events: none;
+  transform: none;
+  transition: opacity 140ms ease;
 }
-.onboarding-tour-card.is-center {
-  visibility: visible;
+.onboarding-tour-card.is-ready {
   opacity: 1;
+  pointer-events: auto;
+}
+.onboarding-tour-card.is-fallback {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%);
+}
+.onboarding-tour-actions {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.onboarding-tour-actions .btn-primary {
+  justify-self: end;
 }
 .onboarding-chrome-target {
   position: relative !important;

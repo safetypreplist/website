@@ -133,7 +133,7 @@ export function ProfilePage() {
   const previewName = composeDisplayName(firstName, lastName) || "Your name";
 
   return (
-    <div className="account-page profile-page">
+    <div className="account-page profile-page" data-onboarding="profile">
       <p className="eyebrow">Profile</p>
       <h1 className="page-title">Your profile</h1>
       <p className="muted help-lead">

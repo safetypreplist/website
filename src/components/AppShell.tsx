@@ -44,10 +44,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink data-onboarding="my-checklist" to="/app/lists" className={({ isActive }) => (isActive ? "active" : "")}>
           My Checklist
         </NavLink>
-        <NavLink to="/app/contacts" className={({ isActive }) => (isActive ? "active" : "")}>
+        <NavLink data-onboarding="contacts" to="/app/contacts" className={({ isActive }) => (isActive ? "active" : "")}>
           Emergency Contacts
         </NavLink>
-        <NavLink to="/app/safety" className={({ isActive }) => (isActive ? "active" : "")}>
+        <NavLink data-onboarding="safety" to="/app/safety" className={({ isActive }) => (isActive ? "active" : "")}>
           Safety Resources
         </NavLink>
         {!pro ? (
@@ -79,15 +79,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <HomeIcon />
           Home
         </NavLink>
-        <NavLink to="/app/lists">
+        <NavLink data-onboarding="my-checklist" to="/app/lists">
           <ListIcon />
           Checklist
         </NavLink>
-        <NavLink to="/app/contacts">
+        <NavLink data-onboarding="contacts" to="/app/contacts">
           <PeopleIcon />
           Contacts
         </NavLink>
-        <NavLink to="/app/safety">
+        <NavLink data-onboarding="safety" to="/app/safety">
           <ShieldIcon />
           Safety
         </NavLink>

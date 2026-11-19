@@ -11,8 +11,14 @@ export type TourCopy = Pick<Step, "title" | "body">[];
 
 const DEFAULT_STEPS: Step[] = [
   {
+    title: "Checklist progress",
+    body: "This ring shows how far you have checked off items across your readiness lists.",
+    selector: '[data-onboarding="progress"]',
+    path: "/app",
+  },
+  {
     title: "Start with your checklist",
-    body: "Your readiness plan is organized into simple systems. This card opens a list so you can see what to gather and what is already complete.",
+    body: "Your readiness plan is organized into simple systems. Open a card to see what to gather and what is already complete.",
     selector: '[data-onboarding="checklist-card"]',
     path: "/app",
   },
@@ -29,20 +35,32 @@ const DEFAULT_STEPS: Step[] = [
     path: "/app/lists/grab-go",
   },
   {
-    title: "Share a backup",
-    body: "Share creates a quick PDF or file you can send to yourself or someone helping you prepare.",
+    title: "Share or print",
+    body: "Share creates a quick PDF or file for yourself or a helper. Print makes a paper copy for offline use.",
     selector: '[data-onboarding="share"]',
     path: "/app/lists/grab-go",
   },
   {
-    title: "Print or save a PDF",
-    body: "Print makes a paper copy or PDF of this checklist for offline use.",
-    selector: '[data-onboarding="print"]',
-    path: "/app/lists/grab-go",
+    title: "Emergency Contacts",
+    body: "Keep family and household numbers here so they are easy to find in a hurry.",
+    selector: '[data-onboarding="contacts"]',
+    path: "/app",
+  },
+  {
+    title: "Safety Resources",
+    body: "National and local emergency resources follow your saved location when you set one in Profile.",
+    selector: '[data-onboarding="safety"]',
+    path: "/app",
+  },
+  {
+    title: "Your profile",
+    body: "Update your name, photo, and location here. Location powers local time, weather, and safety resources.",
+    selector: '[data-onboarding="profile"]',
+    path: "/app/profile",
   },
   {
     title: "Your license",
-    body: "Open License to see your key, move devices with Transfer / Deactivate, or upgrade options.",
+    body: "Open License to see your key, move devices with Transfer / Deactivate, or review upgrade options.",
     selector: '[data-onboarding="license"]',
     path: "/app",
   },
@@ -56,6 +74,15 @@ const PREVIEW_EVENT = "spl:preview-onboarding";
 const REPLAY_KEY = "spl.onboarding.replay";
 const REPLAY_EVENT = "spl:replay-onboarding";
 const HOLD_KEY = "spl.onboarding.active";
+const ESTIMATED_CARD_H = 236;
+const TOUR_GAP = 18;
+
+type Placement = "below" | "above" | "right" | "left";
+type TourFrame = {
+  hole: { top: number; left: number; width: number; height: number };
+  card: { top: number; left: number; width: number; placement: Placement };
+  fallback?: boolean;
+};
 
 function loadCopy(): TourCopy {
   try {
@@ -126,10 +153,22 @@ function replayActive() {
   return sessionStorage.getItem(REPLAY_KEY) === "1";
 }
 
+function waitFrames(count = 2) {
+  return new Promise<void>((resolve) => {
+    let left = count;
+    const tick = () => {
+      left -= 1;
+      if (left <= 0) resolve();
+      else window.requestAnimationFrame(tick);
+    };
+    window.requestAnimationFrame(tick);
+  });
+}
+
 function visibleTarget(selector: string) {
   return ([...document.querySelectorAll(selector)] as HTMLElement[]).find((node) => {
     const style = getComputedStyle(node);
-    if (style.display === "none" || style.visibility === "hidden") return false;
+    if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return false;
     const box = node.getBoundingClientRect();
     return box.width > 8 && box.height > 8;
   }) ?? null;
@@ -148,22 +187,22 @@ function highlightRoot(node: HTMLElement, selector: string) {
     const row = node.closest(".check-item")?.querySelector(".check-row");
     if (row instanceof HTMLElement) return row;
   }
+  if (selector.includes("progress")) {
+    const readiness = node.closest(".readiness");
+    if (readiness instanceof HTMLElement) return readiness;
+  }
   return node;
 }
 
 function spotlightPad(target: HTMLElement, box: DOMRect) {
   const phone = isPhoneTour();
-  if (target.closest(".system-card")) return { x: 8, y: 3 };
+  if (target.closest(".readiness")) return { x: 10, y: 10 };
+  if (target.closest(".system-card")) return { x: 8, y: 4 };
   if (target.classList.contains("check-row")) return { x: 6, y: 3 };
-  const inList = Boolean(target.closest(".list-group"));
-  if (inList && box.height < 110) return { x: 16, y: 4 };
-  if (box.height < 80) return { x: phone ? 16 : 20, y: phone ? 12 : 14 };
-  return { x: phone ? 18 : 28, y: phone ? 18 : 28 };
+  if (target.closest(".desktop-sidebar, .bottom-nav")) return { x: 6, y: 4 };
+  if (box.height < 80) return { x: phone ? 12 : 16, y: phone ? 10 : 12 };
+  return { x: phone ? 14 : 20, y: phone ? 14 : 18 };
 }
-
-const TOUR_GAP = 22;
-const TOUR_FEATHER = 42;
-const TOUR_FEATHER_REACH = TOUR_FEATHER + 24;
 
 function chromeBottom() {
   const header = document.querySelector(".app-top")?.getBoundingClientRect().bottom ?? 0;
@@ -171,24 +210,9 @@ function chromeBottom() {
   return Math.max(header, guidance);
 }
 
-function scrollToNow(top: number) {
-  const scroller = document.scrollingElement || document.documentElement;
-  const root = document.documentElement;
-  const previous = root.style.scrollBehavior;
-  root.style.scrollBehavior = "auto";
-  scroller.scrollTop = top;
-  root.style.scrollBehavior = previous;
-}
-
-function blockTourScroll(event: Event) {
-  const node = event.target;
-  if (node instanceof Node && document.querySelector(".onboarding-tour-card")?.contains(node)) return;
-  event.preventDefault();
-}
-
-function cardWidthFor(hole: DOMRect) {
+function cardWidthFor(hole: { width: number }) {
   const viewport = window.innerWidth;
-  if (viewport < 900) return Math.min(hole.width > 260 ? viewport - 28 : 320, viewport - 28);
+  if (viewport < 900) return Math.min(Math.max(280, hole.width > 240 ? viewport - 28 : 320), viewport - 28);
   return Math.min(360, viewport - 32);
 }
 
@@ -197,23 +221,24 @@ function placeTourCard(hole: DOMRect, cardW: number, cardH: number) {
   const viewportH = window.innerHeight;
   const phone = viewportW < 900;
   const margin = 14;
-  const topReserve = Math.max(phone ? 78 : 16, chromeBottom() + 10);
-  const bottomReserve = phone ? 86 : 16;
+  const topReserve = Math.max(phone ? 72 : 16, chromeBottom() + 8);
+  const bottomReserve = phone ? 90 : 16;
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), Math.max(min, max));
-  const alignedLeft = hole.width > cardW + 24
-    ? clamp(hole.left + 12, margin, viewportW - margin - cardW)
-    : clamp(hole.left + hole.width / 2 - cardW / 2, margin, viewportW - margin - cardW);
+  const alignedLeft =
+    hole.width > cardW + 24
+      ? clamp(hole.left + 12, margin, viewportW - margin - cardW)
+      : clamp(hole.left + hole.width / 2 - cardW / 2, margin, viewportW - margin - cardW);
 
-  const options = [
-    { placement: "below" as const, top: hole.bottom + TOUR_GAP, left: alignedLeft },
-    { placement: "above" as const, top: hole.top - TOUR_GAP - cardH, left: alignedLeft },
+  const options: Array<{ placement: Placement; top: number; left: number }> = [
+    { placement: "below", top: hole.bottom + TOUR_GAP, left: alignedLeft },
+    { placement: "above", top: hole.top - TOUR_GAP - cardH, left: alignedLeft },
     {
-      placement: "right" as const,
+      placement: "right",
       top: clamp(hole.top + hole.height / 2 - cardH / 2, topReserve, viewportH - bottomReserve - cardH),
       left: hole.right + TOUR_GAP,
     },
     {
-      placement: "left" as const,
+      placement: "left",
       top: clamp(hole.top + hole.height / 2 - cardH / 2, topReserve, viewportH - bottomReserve - cardH),
       left: hole.left - TOUR_GAP - cardW,
     },
@@ -235,8 +260,15 @@ function placeTourCard(hole: DOMRect, cardW: number, cardH: number) {
     );
   }
 
-  const rail = !phone && hole.width < 280 && hole.left < 280;
-  const order = rail ? ["right", "left", "below", "above"] : ["below", "above", "right", "left"];
+  const inSidebar = hole.left < 240 && hole.width < 280;
+  const order: Placement[] = phone
+    ? hole.top > viewportH * 0.45
+      ? ["above", "below", "left", "right"]
+      : ["below", "above", "left", "right"]
+    : inSidebar
+      ? ["right", "below", "above", "left"]
+      : ["below", "above", "right", "left"];
+
   for (const placement of order) {
     const option = options.find((item) => item.placement === placement);
     if (option && fits(option)) return option;
@@ -244,12 +276,33 @@ function placeTourCard(hole: DOMRect, cardW: number, cardH: number) {
 
   const below = options[0];
   const above = options[1];
-  const aboveFits = above.top >= topReserve - 1;
-  const chosen = aboveFits && hole.top > viewportH * 0.55 ? above : below;
+  const chosen = above.top >= topReserve - 1 && hole.top > viewportH * 0.55 ? above : below;
   return {
     ...chosen,
+    top: clamp(chosen.top, topReserve, Math.max(topReserve, viewportH - bottomReserve - cardH)),
     left: clamp(chosen.left, margin, viewportW - margin - cardW),
   };
+}
+
+function measureHole(target: HTMLElement) {
+  const box = target.getBoundingClientRect();
+  const pad = spotlightPad(target, box);
+  return new DOMRect(box.left - pad.x, box.top - pad.y, box.width + pad.x * 2, box.height + pad.y * 2);
+}
+
+function scrollTargetIntoView(target: HTMLElement) {
+  if (target.closest(".bottom-nav, .desktop-sidebar, .app-top")) return;
+  const box = target.getBoundingClientRect();
+  const topEdge = chromeBottom() + 16;
+  const bottomEdge = window.innerHeight - (isPhoneTour() ? 110 : 24) - ESTIMATED_CARD_H - TOUR_GAP;
+  if (box.top >= topEdge && box.bottom <= bottomEdge) return;
+  const scroller = document.scrollingElement || document.documentElement;
+  const desiredTop = box.top - (topEdge + Math.max(24, (bottomEdge - topEdge - box.height) / 2));
+  const root = document.documentElement;
+  const previous = root.style.scrollBehavior;
+  root.style.scrollBehavior = "auto";
+  scroller.scrollTop += desiredTop;
+  root.style.scrollBehavior = previous;
 }
 
 function readHeldStep() {
@@ -267,6 +320,12 @@ function releaseHold() {
   sessionStorage.removeItem(HOLD_KEY);
 }
 
+function blockTourScroll(event: Event) {
+  const node = event.target;
+  if (node instanceof Node && document.querySelector(".onboarding-tour-card")?.contains(node)) return;
+  event.preventDefault();
+}
+
 type OnboardingMode = "profile" | "welcome" | "offline" | "choice" | "tour" | "done";
 
 export function OnboardingTour() {
@@ -277,15 +336,13 @@ export function OnboardingTour() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<OnboardingMode>("profile");
   const [stepIndex, setStepIndex] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const [cardSize, setCardSize] = useState({ w: 340, h: 236 });
-  const [placedStep, setPlacedStep] = useState(-1);
+  const [frame, setFrame] = useState<TourFrame | null>(null);
+  const [cardReady, setCardReady] = useState(false);
   const [searching, setSearching] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const [copy, setCopy] = useState<TourCopy>(loadCopy);
   const [videoUrl, setVideoUrl] = useState(loadCachedVideo);
   const holdingTour = useRef(false);
-  const skipGuard = useRef(0);
   const openRef = useRef(false);
   openRef.current = open;
   const step = { ...(DEFAULT_STEPS[stepIndex] ?? DEFAULT_STEPS[0]), ...copy[stepIndex] };
@@ -320,8 +377,8 @@ export function OnboardingTour() {
         holdStep(0);
         setMode("tour");
         setStepIndex(0);
-        setRect(null);
-        setPlacedStep(-1);
+        setFrame(null);
+        setCardReady(false);
         setOpen(true);
         navigate(DEFAULT_STEPS[0].path);
         return;
@@ -337,12 +394,11 @@ export function OnboardingTour() {
       if (previewActive()) {
         setMode(isLocalProfileComplete(localProfile) ? "welcome" : "profile");
         setStepIndex(0);
-        setRect(null);
+        setFrame(null);
         setOpen(true);
         return;
       }
       if (holdingTour.current) return;
-      // Keep an in-progress profile → Continue step from jumping ahead when localProfile updates.
       if (openRef.current) return;
       const tourDone = localStorage.getItem(storageKey) === "done";
       const needsProfile = !isLocalProfileComplete(localProfile);
@@ -370,74 +426,40 @@ export function OnboardingTour() {
   useEffect(() => {
     if (!open || mode !== "tour") return;
     let cancelled = false;
-    setSearching(true);
-    setRect(null);
-    setPlacedStep(-1);
     let target: HTMLElement | null = null;
-    let pinnedScroll = document.scrollingElement?.scrollTop ?? 0;
-    let pinning = false;
+    let demoItem: HTMLElement | null = null;
     const expectedPath = DEFAULT_STEPS[stepIndex]?.path;
     const chromeSelector =
-      step.selector.includes('"license"') || step.selector.includes('"upgrade-pro"') || step.selector.includes('"my-checklist"');
+      step.selector.includes('"license"') ||
+      step.selector.includes('"upgrade-pro"') ||
+      step.selector.includes('"my-checklist"') ||
+      step.selector.includes('"contacts"') ||
+      step.selector.includes('"safety"') ||
+      step.selector.includes('"profile"');
 
-    function pinScroll() {
-      if (!pinning) return;
-      const scroller = document.scrollingElement;
-      if (!scroller || Math.abs(scroller.scrollTop - pinnedScroll) <= 1) return;
-      scrollToNow(pinnedScroll);
+    setSearching(true);
+    setCardReady(false);
+    setFrame(null);
+
+    function publishFrame(nextTarget: HTMLElement, cardH = ESTIMATED_CARD_H) {
+      const holeRect = measureHole(nextTarget);
+      const width = cardWidthFor(holeRect);
+      const placed = placeTourCard(holeRect, width, cardH);
+      setFrame({
+        hole: {
+          top: holeRect.top,
+          left: holeRect.left,
+          width: holeRect.width,
+          height: holeRect.height,
+        },
+        card: {
+          top: placed.top,
+          left: placed.left,
+          width,
+          placement: placed.placement,
+        },
+      });
     }
-
-    function measure() {
-      if (!target) return;
-      const box = target.getBoundingClientRect();
-      const pad = spotlightPad(target, box);
-      setRect(new DOMRect(box.left - pad.x, box.top - pad.y, box.width + pad.x * 2, box.height + pad.y * 2));
-    }
-
-    function settleTarget() {
-      if (!target) return;
-      // Nav chrome stays put; still measure it for the spotlight hole.
-      if (target.closest(".bottom-nav, .desktop-sidebar, .app-top")) {
-        measure();
-        return;
-      }
-      const box = target.getBoundingClientRect();
-      const pad = spotlightPad(target, box).y;
-      const phone = isPhoneTour();
-      const tab = phone ? 84 : 20;
-      const guidance = document.querySelector(".guidance-ack");
-      const noteRoom = phone ? 240 : 270;
-      const floor = chromeBottom() + (guidance ? TOUR_FEATHER_REACH + pad + 8 : 10);
-      const maxTop = window.innerHeight - tab - noteRoom - TOUR_GAP - box.height - pad;
-      const top = Math.max(chromeBottom() + 6, Math.min(floor, maxTop));
-      const delta = box.top - top;
-      if (Math.abs(delta) <= 2) return;
-      const scroller = document.scrollingElement || document.documentElement;
-      scrollToNow(scroller.scrollTop + delta);
-    }
-
-    function ensureClearance() {
-      if (!target || target.closest(".bottom-nav, .desktop-sidebar, .app-top")) {
-        measure();
-        return;
-      }
-      const guidance = document.querySelector(".guidance-ack");
-      if (!guidance) {
-        measure();
-        return;
-      }
-      const pad = spotlightPad(target, target.getBoundingClientRect()).y;
-      const floor = guidance.getBoundingClientRect().bottom + TOUR_FEATHER_REACH + pad + 8;
-      if (target.getBoundingClientRect().top < floor - 4) {
-        pinning = false;
-        settleTarget();
-        pinnedScroll = document.scrollingElement?.scrollTop ?? pinnedScroll;
-        pinning = true;
-      }
-      measure();
-    }
-
-    let demoItem: HTMLElement | null = null;
 
     async function locate() {
       if (expectedPath && window.location.pathname !== expectedPath) {
@@ -446,82 +468,96 @@ export function OnboardingTour() {
 
       for (let attempt = 0; attempt < 80 && !cancelled; attempt += 1) {
         if (expectedPath && window.location.pathname !== expectedPath) {
-          await new Promise((resolve) => window.setTimeout(resolve, 100));
+          await new Promise((resolve) => window.setTimeout(resolve, 80));
           continue;
         }
         const found = visibleTarget(step.selector);
         target = found ? highlightRoot(found, step.selector) : null;
-        if (target) {
-          target.classList.add("onboarding-target-highlight");
-          if (chromeSelector) target.classList.add("onboarding-chrome-target");
-          const item = step.selector.includes("check-item") ? target.closest(".check-item") : null;
-          if (item instanceof HTMLElement) {
-            demoItem = item;
-            item.classList.add("tour-check-demo");
-          }
-          settleTarget();
-          await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve(undefined))));
-          if (!cancelled) {
-            pinnedScroll = document.scrollingElement?.scrollTop ?? 0;
-            pinning = !target.closest(".bottom-nav, .desktop-sidebar, .app-top");
-            if (pinning) document.documentElement.classList.add("tour-scroll-lock");
-            measure();
-            window.requestAnimationFrame(() => {
-              if (cancelled) return;
-              ensureClearance();
-            });
-            setSearching(false);
-            skipGuard.current = 0;
-          }
-          return;
+        if (!target) {
+          await new Promise((resolve) => window.setTimeout(resolve, 80));
+          continue;
         }
-        await new Promise((resolve) => window.setTimeout(resolve, 100));
-      }
-      if (!cancelled) {
-        // Keep the step card visible even if the control is missing, so the tour never goes blank.
-        setRect(null);
+
+        target.classList.add("onboarding-target-highlight");
+        if (chromeSelector) target.classList.add("onboarding-chrome-target");
+        const item = step.selector.includes("check-item") ? target.closest(".check-item") : null;
+        if (item instanceof HTMLElement) {
+          demoItem = item;
+          item.classList.add("tour-check-demo");
+        }
+
+        scrollTargetIntoView(target);
+        await waitFrames(2);
+        if (cancelled || !target) return;
+        publishFrame(target, ESTIMATED_CARD_H);
         setSearching(false);
-        setPlacedStep(stepIndex);
+        return;
+      }
+
+      if (!cancelled) {
+        setFrame({
+          hole: { top: 0, left: 0, width: 0, height: 0 },
+          card: {
+            top: 0,
+            left: 0,
+            width: Math.min(360, window.innerWidth - 32),
+            placement: "below",
+          },
+          fallback: true,
+        });
+        setSearching(false);
       }
     }
 
-    const observer = new ResizeObserver(() => ensureClearance());
+    function remeasure() {
+      if (!target || cancelled) return;
+      publishFrame(target, cardRef.current?.offsetHeight || ESTIMATED_CARD_H);
+    }
+
+    void locate();
+    window.addEventListener("resize", remeasure);
     window.addEventListener("wheel", blockTourScroll, { passive: false });
     window.addEventListener("touchmove", blockTourScroll, { passive: false });
-    window.addEventListener("scroll", pinScroll, true);
-    void locate().then(() => {
-      if (cancelled || !target) return;
-      observer.observe(target);
-      const guidance = document.querySelector(".guidance-ack");
-      const header = document.querySelector(".app-top");
-      if (guidance) observer.observe(guidance);
-      if (header) observer.observe(header);
-    });
-    window.addEventListener("resize", measure);
+
     return () => {
       cancelled = true;
-      observer.disconnect();
-      document.documentElement.classList.remove("tour-scroll-lock");
+      window.removeEventListener("resize", remeasure);
       window.removeEventListener("wheel", blockTourScroll);
       window.removeEventListener("touchmove", blockTourScroll);
-      window.removeEventListener("scroll", pinScroll, true);
       target?.classList.remove("onboarding-target-highlight");
       target?.classList.remove("onboarding-chrome-target");
       demoItem?.classList.remove("tour-check-demo");
-      window.removeEventListener("resize", measure);
     };
   }, [open, mode, step.selector, stepIndex, location.pathname, navigate]);
 
   useLayoutEffect(() => {
-    if (mode !== "tour" || searching || !cardRef.current) return;
-    const box = cardRef.current.getBoundingClientRect();
-    setCardSize((current) => (
-      Math.abs(current.w - box.width) < 2 && Math.abs(current.h - box.height) < 2
-        ? current
-        : { w: Math.round(box.width), h: Math.round(box.height) }
-    ));
-    setPlacedStep(stepIndex);
-  }, [mode, stepIndex, rect, searching, step.title, step.body]);
+    if (mode !== "tour" || !frame || frame.fallback || !cardRef.current) {
+      if (frame && !searching) setCardReady(true);
+      return;
+    }
+    const measured = Math.round(cardRef.current.getBoundingClientRect().height);
+    if (measured > 40 && Math.abs(measured - ESTIMATED_CARD_H) > 12) {
+      const holeRect = new DOMRect(frame.hole.left, frame.hole.top, frame.hole.width, frame.hole.height);
+      const placed = placeTourCard(holeRect, frame.card.width, measured);
+      if (
+        Math.abs(placed.top - frame.card.top) > 2 ||
+        Math.abs(placed.left - frame.card.left) > 2 ||
+        placed.placement !== frame.card.placement
+      ) {
+        setFrame({
+          ...frame,
+          card: {
+            top: placed.top,
+            left: placed.left,
+            width: frame.card.width,
+            placement: placed.placement,
+          },
+        });
+        return;
+      }
+    }
+    setCardReady(true);
+  }, [mode, frame, searching, step.title, step.body]);
 
   useEffect(() => {
     if (!open || mode !== "done") return;
@@ -558,50 +594,79 @@ export function OnboardingTour() {
     holdingTour.current = false;
     releaseHold();
     setMode("done");
-    setRect(null);
+    setFrame(null);
+    setCardReady(false);
   }
   function startTour() {
     holdingTour.current = true;
-    skipGuard.current = 0;
     holdStep(0);
-    setRect(null);
+    setFrame(null);
+    setCardReady(false);
     setMode("tour");
     setStepIndex(0);
-    setPlacedStep(-1);
     navigate(DEFAULT_STEPS[0].path);
   }
+  function goToStep(nextIndex: number) {
+    const next = DEFAULT_STEPS[nextIndex];
+    if (!next) return;
+    holdStep(nextIndex);
+    setCardReady(false);
+    setFrame(null);
+    setStepIndex(nextIndex);
+    if (next.path !== location.pathname) navigate(next.path);
+  }
   function nextTour() {
-    skipGuard.current = 0;
     if (stepIndex >= DEFAULT_STEPS.length - 1) {
       completeTour();
       return;
     }
-    const nextIndex = stepIndex + 1;
-    const next = DEFAULT_STEPS[nextIndex];
-    holdStep(nextIndex);
-    setRect(null);
-    setPlacedStep(-1);
-    setStepIndex(nextIndex);
-    if (next?.path && next.path !== location.pathname) navigate(next.path);
+    goToStep(stepIndex + 1);
+  }
+  function backTour() {
+    if (stepIndex <= 0) return;
+    goToStep(stepIndex - 1);
   }
 
-  const tightSpot = step.selector.includes("checklist-card");
+  const tightSpot = step.selector.includes("checklist-card") || step.selector.includes("progress");
   const lineSpot = step.selector.includes("check-item");
-  const spotFeather = tightSpot ? 4 : lineSpot ? 6 : TOUR_FEATHER;
-  const spotBlur = tightSpot ? 3 : lineSpot ? 2 : 18;
-  const hole = rect
-    ? { top: rect.top, left: rect.left, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height }
-    : null;
-  const tourWidth = rect ? cardWidthFor(rect) : Math.min(360, typeof window === "undefined" ? 360 : window.innerWidth - 32);
-  const tourPlace = rect ? placeTourCard(rect, tourWidth, cardSize.h) : null;
-  const tourCardStyle = tourPlace
-    ? { top: tourPlace.top, left: tourPlace.left, width: tourWidth }
-    : { top: "50%", left: "50%", width: tourWidth, transform: "translate(-50%, -50%)" };
-  const tourArrowStyle = tourPlace && rect
-    ? tourPlace.placement === "below" || tourPlace.placement === "above"
-      ? { left: Math.min(Math.max(rect.left + rect.width / 2 - tourPlace.left - 8, 22), tourWidth - 40) }
-      : { top: Math.min(Math.max(rect.top + rect.height / 2 - tourPlace.top - 8, 22), Math.max(22, cardSize.h - 40)) }
+  const spotFeather = tightSpot ? 4 : lineSpot ? 6 : 18;
+  const spotBlur = tightSpot ? 3 : lineSpot ? 2 : 14;
+  const hole =
+    frame && !frame.fallback && frame.hole.width > 0
+      ? {
+          top: frame.hole.top,
+          left: frame.hole.left,
+          right: frame.hole.left + frame.hole.width,
+          bottom: frame.hole.top + frame.hole.height,
+          width: frame.hole.width,
+          height: frame.hole.height,
+        }
+      : null;
+  const tourCardStyle = frame
+    ? frame.fallback
+      ? { width: frame.card.width }
+      : {
+          top: frame.card.top,
+          left: frame.card.left,
+          width: frame.card.width,
+        }
     : undefined;
+  const tourArrowStyle =
+    frame && hole && !frame.fallback
+      ? frame.card.placement === "below" || frame.card.placement === "above"
+        ? {
+            left: Math.min(
+              Math.max(hole.left + hole.width / 2 - frame.card.left - 8, 22),
+              frame.card.width - 40,
+            ),
+          }
+        : {
+            top: Math.min(
+              Math.max(hole.top + hole.height / 2 - frame.card.top - 8, 22),
+              Math.max(22, ESTIMATED_CARD_H - 40),
+            ),
+          }
+      : undefined;
 
   return (
     <div className={`onboarding-layer ${mode === "tour" ? "tour-mode" : "welcome-mode"}`}>
@@ -630,7 +695,9 @@ export function OnboardingTour() {
               />
             ) : (
               <>
-                <span className="onboarding-play" aria-hidden="true">▶</span>
+                <span className="onboarding-play" aria-hidden="true">
+                  ▶
+                </span>
                 <span>Welcome video</span>
                 <small>Your intro video will play here</small>
               </>
@@ -646,7 +713,9 @@ export function OnboardingTour() {
             checklist.
           </p>
           <div className="onboarding-actions onboarding-actions-stacked">
-            <button className="btn btn-primary" type="button" onClick={() => setMode("offline")}>Continue onboarding</button>
+            <button className="btn btn-primary" type="button" onClick={() => setMode("offline")}>
+              Continue onboarding
+            </button>
           </div>
         </div>
       ) : mode === "offline" ? (
@@ -676,24 +745,38 @@ export function OnboardingTour() {
             <AppIconRow />
           </div>
           <div className="onboarding-actions">
-            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>Continue</button>
+            <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>
+              Continue
+            </button>
           </div>
         </div>
       ) : mode === "choice" ? (
-        <div className="onboarding-welcome-card onboarding-choice-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-choice-title">
+        <div
+          className="onboarding-welcome-card onboarding-choice-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="onboarding-choice-title"
+        >
           <p className="eyebrow">Getting started</p>
           <h2 id="onboarding-choice-title">Would you like a guided tour?</h2>
           <p className="onboarding-copy">
-            We can show you where to check items off, leave notes, share or print, and find your license. It only takes a minute.
+            We can show you checklist progress, notes, contacts, safety resources, profile, and your license. It only
+            takes a minute.
           </p>
           <div className="onboarding-actions">
-            <button className="btn btn-ghost" type="button" onClick={finish}>Skip and explore on my own</button>
-            <button className="btn btn-primary" type="button" onClick={startTour}>Take the guided tour</button>
+            <button className="btn btn-ghost" type="button" onClick={finish}>
+              Skip and explore on my own
+            </button>
+            <button className="btn btn-primary" type="button" onClick={startTour}>
+              Take the guided tour
+            </button>
           </div>
         </div>
       ) : mode === "done" ? (
         <div className="onboarding-done-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-done-title">
-          <span className="onboarding-done-check" aria-hidden="true">✓</span>
+          <span className="onboarding-done-check" aria-hidden="true">
+            ✓
+          </span>
           <h2 id="onboarding-done-title">You’re all set.</h2>
           <div className="onboarding-loader" aria-hidden="true" />
           <p className="onboarding-copy">Loading your checklist…</p>
@@ -714,7 +797,7 @@ export function OnboardingTour() {
                       y={hole.top - spotFeather}
                       width={hole.width + spotFeather * 2}
                       height={hole.height + spotFeather * 2}
-                      rx={tightSpot ? 16 : 36}
+                      rx={tightSpot ? 16 : 28}
                       fill="black"
                       filter="url(#tour-feather)"
                     />
@@ -730,47 +813,46 @@ export function OnboardingTour() {
           ) : (
             <div className="onboarding-tint onboarding-tint-full" aria-hidden="true" />
           )}
-          <aside
-            ref={cardRef}
-            className={`onboarding-tour-card place-${tourPlace?.placement ?? "center"}${hole && !searching && placedStep === stepIndex ? "" : hole ? " is-placing" : " is-center"}`}
-            style={
-              hole
-                ? tourCardStyle
-                : { top: "50%", left: "50%", width: tourWidth, transform: "translate(-50%, -50%)" }
-            }
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="tour-title"
-          >
-            {tourPlace && hole ? (
-              <span
-                className={`onboarding-tour-arrow ${tourPlace.placement}`}
-                style={tourArrowStyle}
-                aria-hidden="true"
-              />
-            ) : null}
-            <div className="onboarding-tour-head">
-              <span>{progress}</span>
-              <button type="button" onClick={finish}>
-                ×
-              </button>
-            </div>
-            <p className="eyebrow">Guided tour</p>
-            <h2 id="tour-title">{step.title}</h2>
-            <p>{step.body}</p>
-            {searching && !hole ? <p className="muted">Finding that section…</p> : null}
-            {!searching && !hole ? (
-              <p className="muted">That control is not on this screen right now. Continue to the next stop.</p>
-            ) : null}
-            <div className="onboarding-tour-actions">
-              <button className="btn btn-ghost" type="button" onClick={finish}>
-                Exit tour
-              </button>
-              <button className="btn btn-primary" type="button" onClick={nextTour} disabled={searching && !hole}>
-                {stepIndex === DEFAULT_STEPS.length - 1 ? "Finish tour" : "Next"}
-              </button>
-            </div>
-          </aside>
+          {frame ? (
+            <aside
+              ref={cardRef}
+              className={`onboarding-tour-card place-${frame.card.placement}${cardReady ? " is-ready" : ""}${
+                frame.fallback ? " is-fallback" : ""
+              }`}
+              style={tourCardStyle}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tour-title"
+            >
+              {hole && !frame.fallback ? (
+                <span className={`onboarding-tour-arrow ${frame.card.placement}`} style={tourArrowStyle} aria-hidden="true" />
+              ) : null}
+              <div className="onboarding-tour-head">
+                <span>{progress}</span>
+                <button type="button" onClick={finish} aria-label="Skip tour">
+                  ×
+                </button>
+              </div>
+              <p className="eyebrow">Guided tour</p>
+              <h2 id="tour-title">{step.title}</h2>
+              <p>{step.body}</p>
+              {searching ? <p className="muted">Finding that section…</p> : null}
+              {frame.fallback ? (
+                <p className="muted">That control is not on this screen right now. Continue to the next stop.</p>
+              ) : null}
+              <div className="onboarding-tour-actions">
+                <button className="btn btn-ghost" type="button" onClick={finish}>
+                  Skip
+                </button>
+                <button className="btn btn-ghost" type="button" onClick={backTour} disabled={stepIndex === 0 || searching}>
+                  Back
+                </button>
+                <button className="btn btn-primary" type="button" onClick={nextTour} disabled={searching && !frame}>
+                  {stepIndex === DEFAULT_STEPS.length - 1 ? "Finish" : "Next"}
+                </button>
+              </div>
+            </aside>
+          ) : null}
         </>
       )}
     </div>

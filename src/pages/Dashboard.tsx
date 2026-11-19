@@ -82,7 +82,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="readiness">
+      <div className="readiness" data-onboarding="progress">
         <div className="readiness-photo" aria-hidden="true">
           <img src={PHOTO_LIBRARY.landscape} alt="" />
         </div>
