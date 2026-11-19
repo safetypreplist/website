@@ -10256,20 +10256,54 @@ html.tour-scroll-lock body {
 }
 .onboarding-profile-form {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   text-align: left;
 }
 .onboarding-profile-form .account-field {
   margin-bottom: 0;
 }
-.onboarding-profile-photo {
+.onboarding-profile-layout {
   display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.onboarding-profile-fields {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.onboarding-profile-step {
+  display: grid;
+  gap: 10px;
+}
+.onboarding-profile-step-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--forest);
+  font: 700 12px/1.2 var(--font-label, inherit);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.onboarding-profile-step-label span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(199, 90, 43, 0.12);
+  color: var(--terracotta);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.onboarding-profile-step-photo {
   justify-items: center;
-  gap: 6px;
-  margin: 0 0 2px;
+  text-align: center;
+  padding-top: 2px;
 }
 .onboarding-profile-avatar-btn {
-  position: relative;
   display: grid;
   place-items: center;
   padding: 0;
@@ -10278,8 +10312,8 @@ html.tour-scroll-lock body {
   cursor: pointer;
 }
 .onboarding-profile-avatar {
-  width: 84px;
-  height: 84px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   overflow: hidden;
   display: grid;
@@ -10288,27 +10322,25 @@ html.tour-scroll-lock body {
   font-weight: 700;
   box-shadow:
     0 0 0 3px #fffdf8,
-    0 0 0 5px rgba(199, 90, 43, 0.35),
-    0 10px 24px rgba(20, 29, 22, 0.16);
+    0 0 0 5px rgba(199, 90, 43, 0.28),
+    0 10px 22px rgba(20, 29, 22, 0.14);
 }
 .onboarding-profile-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.onboarding-profile-avatar-add {
-  position: absolute;
-  left: 50%;
-  bottom: -2px;
-  transform: translateX(-50%);
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--forest);
-  color: var(--cream);
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(20, 29, 22, 0.2);
+.onboarding-profile-photo-action {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--forest);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }
 .onboarding-profile-photo-remove {
   padding: 0;
@@ -10320,10 +10352,6 @@ html.tour-scroll-lock body {
   text-decoration: underline;
   cursor: pointer;
 }
-.onboarding-profile-photo .muted {
-  margin: 0;
-  font-size: 12px;
-}
 .onboarding-location-block {
   display: grid;
   gap: 8px;
@@ -10331,17 +10359,19 @@ html.tour-scroll-lock body {
 .onboarding-location-cta {
   width: 100%;
   min-height: 46px;
-  background: var(--forest);
-  color: var(--cream);
-  box-shadow: 0 10px 22px rgba(20, 40, 28, 0.18);
+  justify-content: center;
+  background: #fff;
+  border: 1.5px solid var(--line-strong);
+  color: var(--forest);
+  box-shadow: none;
 }
 .onboarding-location-cta:hover:not(:disabled) {
-  background: #1a2a1f;
-  color: var(--cream);
+  background: #fff;
+  border-color: rgba(30, 42, 31, 0.28);
+  color: var(--forest);
 }
 .onboarding-location-hint {
   margin: 0;
-  text-align: center;
   font-size: 12.5px;
   line-height: 1.4;
 }
@@ -10445,6 +10475,28 @@ html.tour-scroll-lock body {
     width: min(100vw - 20px, 640px);
     padding: 22px 18px 18px;
     border-radius: 18px;
+  }
+  .onboarding-profile-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .onboarding-profile-step-photo {
+    justify-items: start;
+    text-align: left;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: center;
+  }
+  .onboarding-profile-step-photo .onboarding-profile-step-label {
+    grid-column: 1 / -1;
+  }
+  .onboarding-profile-step-photo .onboarding-profile-avatar-btn {
+    grid-row: 2 / span 2;
+  }
+  .onboarding-profile-step-photo .onboarding-profile-photo-action,
+  .onboarding-profile-step-photo .onboarding-profile-photo-remove {
+    justify-self: start;
   }
   .onboarding-location-ready {
     grid-template-columns: auto minmax(0, 1fr);
