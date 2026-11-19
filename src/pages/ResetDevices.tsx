@@ -70,7 +70,9 @@ export function ResetDevicesPage() {
           </p>
         ) : null}
         <p className="muted" style={{ marginTop: 18 }}>
-          <Link to="/activate">Activate a license</Link>
+          Still have the old device? <Link to="/deactivate">Deactivate &amp; transfer</Link>
+          {" · "}
+          <Link to="/activate">Activate</Link>
           {" · "}
           <Link to="/license">License details</Link>
         </p>

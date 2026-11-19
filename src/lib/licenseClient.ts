@@ -100,14 +100,39 @@ export async function activate(key: string): Promise<StoredLicense> {
   return stored;
 }
 
-export async function deactivate() {
+export async function deactivate(options?: { key?: string; deviceId?: string }) {
   const license = readStored();
-  if (!license) return;
-  await invokeFunction("deactivate-license", {
-    key: license.key,
-    deviceId: getDeviceId(),
-  });
-  writeStored(null);
+  const key = (options?.key || license?.key || "").trim();
+  const deviceId = (options?.deviceId || getDeviceId()).trim();
+  if (!key || !deviceId) throw new Error("License key and device are required to deactivate.");
+  await invokeFunction("deactivate-license", { key, deviceId });
+  if (license && license.key.toUpperCase() === key.toUpperCase()) {
+    writeStored(null);
+  }
+}
+
+type LicenseDevicesResponse = {
+  licenseKey: string;
+  devices: Array<{ deviceId: string; activatedAt: string }>;
+};
+
+/** Release every active device for a license key so it can be activated elsewhere. */
+export async function releaseLicenseDevices(key: string): Promise<{ released: number; licenseKey: string }> {
+  const trimmed = key.trim();
+  if (!trimmed) throw new Error("Enter your license key.");
+  const data = await invokeFunction<LicenseDevicesResponse>("license-status", { key: trimmed });
+  const devices = data.devices || [];
+  for (const device of devices) {
+    await invokeFunction("deactivate-license", {
+      key: data.licenseKey || trimmed,
+      deviceId: device.deviceId,
+    });
+  }
+  const local = readStored();
+  if (local && local.key.toUpperCase() === (data.licenseKey || trimmed).toUpperCase()) {
+    writeStored(null);
+  }
+  return { released: devices.length, licenseKey: data.licenseKey || trimmed.toUpperCase() };
 }
 
 /**

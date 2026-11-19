@@ -57,6 +57,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink data-onboarding="license" to="/license" className={({ isActive }) => (isActive ? "active" : "")}>
           My license
         </NavLink>
+        <NavLink to="/app/transfer" className={({ isActive }) => (isActive ? "active" : "")}>
+          Transfer My Data
+        </NavLink>
         <NavLink to="/app/reset-devices" className={({ isActive }) => (isActive ? "active" : "")}>
           Reset devices
         </NavLink>

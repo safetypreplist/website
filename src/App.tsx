@@ -27,10 +27,14 @@ import { HouseholdPage } from "./pages/Survival";
 import { SafetyPage } from "./pages/Safety";
 import { SystemPage } from "./pages/System";
 import { ActivatePage } from "./pages/Activate";
+import { DeactivatePage } from "./pages/Deactivate";
+import { TransferPage } from "./pages/Transfer";
+import { AppTransferPage } from "./pages/AppTransfer";
 import { LicensePage } from "./pages/License";
 import { ResetDevicesPage } from "./pages/ResetDevices";
 import { ImportChecklistPage } from "./pages/ImportChecklist";
 import { ImportedListPage } from "./pages/ImportedList";
+import { AdminLoginPage } from "./pages/AdminLogin";
 
 function isInsideSystem(pathname: string) {
   return pathname === "/app" || pathname.startsWith("/app/") || pathname === "/admin" || pathname.startsWith("/admin/");
@@ -115,6 +119,21 @@ function LicensedApp({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RequireOwner({ children }: { children: React.ReactNode }) {
+  const { loading, profile } = useApp();
+  if (loading) return <AppSplash />;
+  if (profile?.role !== "owner") return <Navigate to="/admin-login" replace />;
+  return <>{children}</>;
+}
+
+function OwnerApp({ children }: { children: React.ReactNode }) {
+  return (
+    <RequireOwner>
+      <AppShell>{children}</AppShell>
+    </RequireOwner>
+  );
+}
+
 export default function App() {
   const { profile, loading } = useApp();
   const location = useLocation();
@@ -163,6 +182,8 @@ export default function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/activate" element={<ActivatePage />} />
+        <Route path="/deactivate" element={<DeactivatePage />} />
+        <Route path="/transfer" element={<TransferPage />} />
         <Route path="/license" element={<LicensePage />} />
         <Route path="/import" element={<ImportChecklistPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
@@ -173,6 +194,14 @@ export default function App() {
         <Route path="/support" element={<Navigate to="/contact" replace />} />
         <Route path="/refunds" element={<Navigate to="/terms#refunds" replace />} />
         <Route path="/app/reset-devices" element={<ResetDevicesPage />} />
+        <Route
+          path="/app/transfer"
+          element={
+            <LicensedApp>
+              <AppTransferPage />
+            </LicensedApp>
+          }
+        />
         <Route
           path="/app"
           element={
@@ -240,12 +269,13 @@ export default function App() {
             </LicensedApp>
           }
         />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route
           path="/admin"
           element={
-            <LicensedApp>
+            <OwnerApp>
               <AdminPage />
-            </LicensedApp>
+            </OwnerApp>
           }
         />
         <Route path="/signin" element={<Navigate to="/activate" replace />} />

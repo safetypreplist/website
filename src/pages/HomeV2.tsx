@@ -335,8 +335,8 @@ export function HomeV2Page() {
             </article>
           </div>
           <p className="muted" style={{ marginTop: 22, textAlign: "center", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
-            Your license works on one device at a time. To move it, deactivate it on the old device, then activate it on
-            the new one.
+            Your license works on one device at a time. To move it,{" "}
+            <Link to="/deactivate">deactivate &amp; transfer</Link>, then activate on the new device.
           </p>
         </div>
       </section>

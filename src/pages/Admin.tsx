@@ -7,7 +7,6 @@ import { COPY_KEY, DEFAULT_STEPS, DEFAULT_VIDEO_URL, VIDEO_CACHE_KEY, loadCopy, 
 import { AdminAccounts } from "../components/AdminAccounts";
 import { AdminLicenses } from "../components/AdminLicenses";
 import { AdminRefunds } from "../components/AdminRefunds";
-import { isLicensed } from "../lib/licenseClient";
 import { usePendingRefunds } from "../lib/refunds";
 import { DEFAULT_FAQS, HELP_FAQS_KEY, parseFaqs, withNewDefaults, type HelpFaq } from "../lib/help";
 import { DEMO_PREVIEW_EMAIL, demoPreviewPassword } from "../lib/demo";
@@ -52,15 +51,20 @@ type Discount = {
 };
 
 export function AdminPage() {
+  const navigate = useNavigate();
   const { profile, catalog, safety, refreshAccount, signOut } = useApp();
-  const licensed = isLicensed();
   const isOwner = profile?.role === "owner";
   const [tab, setTab] = useState<AdminTab>("licenses");
   const [message, setMessage] = useState("");
   const [pendingRefunds, setPendingRefunds] = usePendingRefunds(isOwner);
 
-  if (!licensed && !isOwner) return <Navigate to="/activate" replace />;
+  if (!isOwner) return <Navigate to="/admin-login" replace />;
   if (!profile) return <p className="wrap" style={{ padding: 40 }}>Loading owner console…</p>;
+
+  async function logOut() {
+    await signOut();
+    navigate("/admin-login", { replace: true });
+  }
 
   return (
     <div className="admin-workspace">
@@ -75,21 +79,17 @@ export function AdminPage() {
         <aside className="admin-rail" aria-label="Admin sections">
           <p className="admin-rail-label">Workspace</p>
           <AdminNavButton active={tab === "licenses"} label="Licenses" onClick={() => setTab("licenses")} />
-          {isOwner ? (
-            <>
-              <AdminNavButton active={tab === "accounts"} label="Accounts & access" onClick={() => setTab("accounts")} />
-              <AdminNavButton active={tab === "refunds"} label="Refund requests" badge={pendingRefunds} onClick={() => setTab("refunds")} />
-              <AdminNavButton active={tab === "discounts"} label="Discount codes" onClick={() => setTab("discounts")} />
-              <p className="admin-rail-label admin-rail-label-spaced">Manage content</p>
-              <AdminNavButton active={tab === "content"} label="Checklist & resources" onClick={() => setTab("content")} />
-              <AdminNavButton active={tab === "onboarding"} label="Onboarding" onClick={() => setTab("onboarding")} />
-              <AdminNavButton active={tab === "faqs"} label="FAQs" onClick={() => setTab("faqs")} />
-              <p className="admin-rail-label admin-rail-label-spaced">Site</p>
-              <AdminNavButton active={tab === "analytics"} label="Analytics" onClick={() => setTab("analytics")} />
-              <AdminNavButton active={tab === "comingSoon"} label="Maintenance Mode" onClick={() => setTab("comingSoon")} />
-              <AdminNavButton active={false} label="Log out" onClick={() => void signOut()} />
-            </>
-          ) : null}
+          <AdminNavButton active={tab === "accounts"} label="Accounts & access" onClick={() => setTab("accounts")} />
+          <AdminNavButton active={tab === "refunds"} label="Refund requests" badge={pendingRefunds} onClick={() => setTab("refunds")} />
+          <AdminNavButton active={tab === "discounts"} label="Discount codes" onClick={() => setTab("discounts")} />
+          <p className="admin-rail-label admin-rail-label-spaced">Manage content</p>
+          <AdminNavButton active={tab === "content"} label="Checklist & resources" onClick={() => setTab("content")} />
+          <AdminNavButton active={tab === "onboarding"} label="Onboarding" onClick={() => setTab("onboarding")} />
+          <AdminNavButton active={tab === "faqs"} label="FAQs" onClick={() => setTab("faqs")} />
+          <p className="admin-rail-label admin-rail-label-spaced">Site</p>
+          <AdminNavButton active={tab === "analytics"} label="Analytics" onClick={() => setTab("analytics")} />
+          <AdminNavButton active={tab === "comingSoon"} label="Maintenance Mode" onClick={() => setTab("comingSoon")} />
+          <AdminNavButton active={false} label="Log out" onClick={() => void logOut()} />
         </aside>
         <section className="admin-content">
           {message && (
@@ -98,21 +98,21 @@ export function AdminPage() {
               <button type="button" onClick={() => setMessage("")} aria-label="Dismiss">×</button>
             </div>
           )}
-          {isOwner && pendingRefunds > 0 && tab !== "refunds" ? (
+          {pendingRefunds > 0 && tab !== "refunds" ? (
             <button className="admin-refund-alert" type="button" onClick={() => setTab("refunds")}>
               <b>{pendingRefunds}</b>
               {pendingRefunds === 1 ? "refund request is" : "refund requests are"} waiting for you. Review now →
             </button>
           ) : null}
           {tab === "licenses" && <AdminLicenses onSaved={setMessage} />}
-          {isOwner && tab === "accounts" && <AdminAccounts />}
-          {isOwner && tab === "refunds" && <AdminRefunds onPendingChange={setPendingRefunds} />}
-          {isOwner && tab === "discounts" && <DiscountManager onSaved={setMessage} />}
-          {isOwner && tab === "content" && <ContentTools catalog={catalog} safety={safety} refreshAccount={refreshAccount} onSaved={setMessage} />}
-          {isOwner && tab === "onboarding" && <OnboardingSettings onSaved={setMessage} />}
-          {isOwner && tab === "faqs" && <FaqSettings onSaved={setMessage} />}
-          {isOwner && tab === "analytics" && <AnalyticsDesk />}
-          {isOwner && tab === "comingSoon" && <ComingSoonSettings onSaved={setMessage} />}
+          {tab === "accounts" && <AdminAccounts />}
+          {tab === "refunds" && <AdminRefunds onPendingChange={setPendingRefunds} />}
+          {tab === "discounts" && <DiscountManager onSaved={setMessage} />}
+          {tab === "content" && <ContentTools catalog={catalog} safety={safety} refreshAccount={refreshAccount} onSaved={setMessage} />}
+          {tab === "onboarding" && <OnboardingSettings onSaved={setMessage} />}
+          {tab === "faqs" && <FaqSettings onSaved={setMessage} />}
+          {tab === "analytics" && <AnalyticsDesk />}
+          {tab === "comingSoon" && <ComingSoonSettings onSaved={setMessage} />}
         </section>
       </div>
     </div>

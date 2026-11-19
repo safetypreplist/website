@@ -72,9 +72,10 @@ export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
     {
       id: "activate",
       question: "I can’t activate my license",
-      answer: "Open Activate, enter your license key exactly as emailed, and try again. If this device was replaced, use Reset devices with your email and key.",
+      answer:
+        "Open Activate and enter your license key exactly as emailed. If it is still active on another device, use Deactivate & transfer with the same key. If you lost that device, use Reset devices with your email and key.",
       topic: "support",
-      link: { to: "/app/reset-devices", label: "Reset devices" },
+      link: { to: "/deactivate", label: "Deactivate & transfer" },
     },
   ];
 }
@@ -114,9 +115,9 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       id: "devices",
       question: "Why am I asked about devices?",
       answer:
-        "One license covers one device. If you've lost that device, use Reset devices. A second device license is available from your license page after you activate.",
+        "One license covers one device. Use Deactivate & transfer with your license key to move it, or Reset devices if you lost the old device. A second device license is available from your license page after you activate.",
       topic: "support",
-      link: { to: "/license", label: "View devices" },
+      link: { to: "/deactivate", label: "Deactivate & transfer" },
     },
     {
       id: "offline",

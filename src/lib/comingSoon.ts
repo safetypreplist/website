@@ -104,6 +104,8 @@ export function useComingSoon() {
 /** Pages anyone may reach while Maintenance Mode is on, so owners and existing members can still sign in. */
 const OPEN_PATHS = [
   "/activate",
+  "/deactivate",
+  "/transfer",
   "/license",
   "/import",
   "/privacy",
@@ -111,6 +113,7 @@ const OPEN_PATHS = [
   "/classic",
   "/app",
   "/admin",
+  "/admin-login",
   "/thank-you",
   "/checkout",
 ];

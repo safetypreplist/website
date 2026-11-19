@@ -31,9 +31,9 @@ export const DEFAULT_FAQS: HelpFaq[] = [
     id: "devices",
     question: "Can I use it on more than one device?",
     answer:
-      "One license covers one device. If you've lost that device, use Reset devices. After you activate, you can add a second device license from your license page inside the app.",
-    linkTo: "/license",
-    linkLabel: "Open License",
+      "One license covers one device. To move it, use Deactivate & transfer with your license key, then activate on the new device. If you've lost the old device, use Reset devices. After you activate, you can add a second device license from your license page.",
+    linkTo: "/deactivate",
+    linkLabel: "Deactivate & transfer",
   },
   {
     id: "offline",

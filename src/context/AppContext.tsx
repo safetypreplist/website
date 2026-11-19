@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { Session, User } from "@supabase/supabase-js";
 import type {
   ChecklistItem,
   ChecklistSection,
@@ -32,6 +33,7 @@ import {
   saveProgressMany,
   saveProgressRow,
 } from "../lib/localStore";
+import { supabase } from "../lib/supabase";
 
 export type OfflineStatus = {
   pending: number;
@@ -58,8 +60,8 @@ type LocalProfile = {
 };
 
 type AppState = {
-  session: null;
-  user: null;
+  session: Session | null;
+  user: User | null;
   profile: LocalProfile;
   catalog: Catalog;
   progress: Record<string, ProgressRow>;
@@ -90,7 +92,7 @@ type AppState = {
   saveProgress: (itemId: string, checked: boolean, note: string) => Promise<void>;
   saveProgressMany: (updates: { itemId: string; checked: boolean; note: string }[]) => Promise<void>;
   refreshAccount: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ role: null }>;
+  signIn: (email: string, password: string) => Promise<{ role: "customer" | "owner" | null }>;
   changePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
   addContact: (name: string, phone: string, label: string) => Promise<void>;
@@ -143,6 +145,11 @@ function clipNote(note: string) {
   return note.slice(0, 100);
 }
 
+async function fetchProfileRole(userId: string): Promise<"customer" | "owner"> {
+  const { data } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  return data?.role === "owner" ? "owner" : "customer";
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [catalog, setCatalog] = useState<Catalog>({ systems: [], sections: [], items: [] });
   const [progress, setProgress] = useState<Record<string, ProgressRow>>({});
@@ -151,6 +158,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [safety, setSafety] = useState<SafetyContact[]>([]);
   const [online, setOnline] = useState(isOnline());
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<"customer" | "owner">("customer");
   const [sync, setSync] = useState<"idle" | "saving" | "waiting" | "error">("idle");
   const [viewing, setViewing] = useState<ViewingContext>(emptyViewing);
   const [offline, setOffline] = useState<OfflineStatus>(emptyOffline);
@@ -204,6 +214,70 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("offline", off);
     };
   }, [refreshLocal]);
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!live) return;
+      const next = data.session ?? null;
+      setSession(next);
+      if (next?.user?.id) {
+        const nextRole = await fetchProfileRole(next.user.id);
+        if (live) setRole(nextRole);
+      } else {
+        setRole("customer");
+      }
+      if (live) setAuthReady(true);
+    })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      if (next?.user?.id) {
+        void fetchProfileRole(next.user.id).then((nextRole) => {
+          if (live) setRole(nextRole);
+        });
+      } else {
+        setRole("customer");
+      }
+    });
+
+    return () => {
+      live = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) throw error;
+    const userId = data.user?.id;
+    if (!userId) return { role: null as "customer" | "owner" | null };
+    const nextRole = await fetchProfileRole(userId);
+    setSession(data.session);
+    setRole(nextRole);
+    if (nextRole !== "owner") {
+      await supabase.auth.signOut({ scope: "local" });
+      setSession(null);
+      setRole("customer");
+      throw new Error("This login is for administrators only.");
+    }
+    return { role: nextRole };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut({ scope: "local" });
+    setSession(null);
+    setRole("customer");
+  }, []);
+
+  const changePassword = useCallback(async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  }, []);
 
   const saveProgress = useCallback(async (itemId: string, checked: boolean, note: string) => {
     const now = new Date().toISOString();
@@ -309,11 +383,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<AppState>(
     () => ({
-      session: null,
-      user: null,
+      session,
+      user: session?.user ?? null,
       profile: {
         preferred_state: preferredState,
-        role: "customer",
+        role,
         plan: hasSurvivalVault ? "full" : "core",
         full_name: null,
         avatar_url: null,
@@ -329,7 +403,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deviceLimitReached: false,
       sync,
       online,
-      loading,
+      loading: loading || !authReady,
       demoMode: false,
       viewing,
       myChecklist: null,
@@ -354,9 +428,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveProgress,
       saveProgressMany: saveProgressManyFn,
       refreshAccount: refreshLocal,
-      signIn: async () => ({ role: null }),
-      changePassword: async () => undefined,
-      signOut: async () => undefined,
+      signIn,
+      changePassword,
+      signOut,
       addContact,
       removeContact,
       addCustomItem,
@@ -379,7 +453,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       cancelInvitation: async () => undefined,
     }),
     [
+      session,
       preferredState,
+      role,
       hasSurvivalVault,
       catalog,
       progress,
@@ -389,11 +465,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sync,
       online,
       loading,
+      authReady,
       viewing,
       offline,
       saveProgress,
       saveProgressManyFn,
       refreshLocal,
+      signIn,
+      changePassword,
+      signOut,
       addContact,
       removeContact,
       addCustomItem,

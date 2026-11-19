@@ -41,7 +41,7 @@ export function ComingSoonPage({
         ) : null}
       </div>
       <footer className="coming-soon-footer">
-        <Link className="coming-soon-admin" to="/activate">
+        <Link className="coming-soon-admin" to="/admin-login">
           Administrator login
         </Link>
         <p>

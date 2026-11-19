@@ -1,10 +1,27 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { BrandMark } from "../components/Brand";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { activate, getLicense, isLicensed, takeActivateMessage } from "../lib/licenseClient";
+import { PHOTO_LIBRARY } from "../lib/photos";
 
 const DEVICE_TAKEN =
-  "This license is active on another device. Deactivate it there first, or use Reset devices if you no longer have it.";
+  "This license is active on another device. Deactivate it first, then activate here.";
+
+function GateShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="checkout-stage license-gate">
+      <div
+        className="checkout-bg license-gate-bg"
+        style={{ backgroundImage: `url(${PHOTO_LIBRARY.landscape})` }}
+        aria-hidden="true"
+      />
+      <PublicHeader />
+      <main className="license-gate-shell">{children}</main>
+      <PublicFooter />
+    </div>
+  );
+}
 
 export function ActivatePage() {
   const navigate = useNavigate();
@@ -31,39 +48,11 @@ export function ActivatePage() {
     if (reason === "deactivated") {
       setNotice("This device is no longer activated. Enter your license key to activate it again.");
     } else if (reason === "moved") {
-      setNotice("This license is active on another device. Enter the license key here to move it to this device.");
+      setNotice("This license was moved. Enter your license key here to activate this device.");
+    } else if (reason === "released") {
+      setNotice("The previous device is free. Enter your license key to activate this one.");
     }
   }, [reason]);
-
-  if (isLicensed() && existing && !switchingKey) {
-    return (
-      <div className="public-page">
-        <PublicHeader />
-        <main className="wrap auth-card" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 480 }}>
-          <p className="eyebrow">Already activated</p>
-          <h1>This device has a license</h1>
-          <p className="muted">One license covers one device. This device is ready to use.</p>
-          <div className="panel" style={{ marginTop: 18 }}>
-            <p>
-              <strong>Product:</strong> {existing.product === "pro" ? "Pro" : "Basic"}
-            </p>
-            <p>
-              <strong>Key:</strong> <code>{existing.key}</code>
-            </p>
-          </div>
-          <div className="toolbar" style={{ gap: 10, marginTop: 18 }}>
-            <Link className="btn btn-primary" to="/app">
-              Open checklists
-            </Link>
-            <Link className="btn btn-ghost" to="/license">
-              License details
-            </Link>
-          </div>
-        </main>
-        <PublicFooter />
-      </div>
-    );
-  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -81,26 +70,73 @@ export function ActivatePage() {
     }
   }
 
+  const transferHref = key.trim() ? `/deactivate?key=${encodeURIComponent(key.trim())}` : "/deactivate";
+
+  if (isLicensed() && existing && !switchingKey) {
+    return (
+      <GateShell>
+        <section className="license-gate-panel">
+          <BrandMark className="brand-mark license-gate-mark" />
+          <p className="eyebrow">Ready on this device</p>
+          <h1>Your license is active</h1>
+          <p className="license-gate-lead">
+            One license. One device. Lifetime access — ready offline whenever you need it.
+          </p>
+          <div className="license-gate-status">
+            <div>
+              <span>Plan</span>
+              <strong>{existing.product === "pro" ? "Pro" : "Basic"}</strong>
+            </div>
+            <div>
+              <span>License key</span>
+              <code>{existing.key}</code>
+            </div>
+          </div>
+          <div className="license-gate-actions">
+            <Link className="btn btn-primary" to="/app">
+              Open checklists
+            </Link>
+            <Link className="btn btn-ghost" to="/license">
+              License details
+            </Link>
+          </div>
+        </section>
+          <aside className="license-transfer-card">
+            <div>
+              <p className="eyebrow">Already have a license?</p>
+              <p>Need to deactivate it? Back up your data, then confirm deactivation by email.</p>
+            </div>
+            <Link className="btn btn-ghost" to="/deactivate">
+              Need to deactivate it? Click here
+            </Link>
+          </aside>
+      </GateShell>
+    );
+  }
+
   return (
-    <div className="public-page">
-      <PublicHeader />
-      <main className="wrap auth-card" style={{ paddingTop: 48, paddingBottom: 64, maxWidth: 480 }}>
-        <p className="eyebrow">License</p>
-        <h1>{switchingKey ? "Activate another license" : "Activate your checklist"}</h1>
-        <p className="muted">
+    <GateShell>
+      <section className="license-gate-panel">
+        <BrandMark className="brand-mark license-gate-mark" />
+        <p className="eyebrow">Lifetime license</p>
+        <h1>{switchingKey ? "Activate another license" : "Activate your license"}</h1>
+        <p className="license-gate-lead">
           {switchingKey
-            ? "This device already has a license. Activating a different key replaces it on this device. For a second device, activate that key there instead."
-            : "Enter the license key from your purchase email. One license covers one device."}
+            ? "This device already has a license. Activating a different key replaces it here."
+            : "Enter the key from your purchase email to unlock Safety Prep List on this device."}
         </p>
+
         {notice ? (
-          <p className="panel" role="status" style={{ marginTop: 16 }}>
+          <p className="license-gate-notice" role="status">
             {notice}
           </p>
         ) : null}
-        <form onSubmit={(e) => void onSubmit(e)} className="stack" style={{ gap: 14, marginTop: 22 }}>
-          <label>
-            License key
+
+        <form onSubmit={(e) => void onSubmit(e)} className="license-gate-form">
+          <label className="field">
+            <span>Activation code</span>
             <input
+              className="license-key-input"
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder="SPL-XXXX-XXXX-XXXX-XXXX"
@@ -114,22 +150,32 @@ export function ActivatePage() {
               <p className="form-error">{deviceTaken ? DEVICE_TAKEN : error}</p>
               {deviceTaken ? (
                 <p className="muted" style={{ marginTop: 10 }}>
+                  <Link to={transferHref}>Deactivate &amp; transfer</Link>
+                  {" · "}
                   <Link to="/app/reset-devices">Reset devices</Link>
                 </p>
               ) : null}
             </div>
           ) : null}
-          <button className="btn btn-primary" type="submit" disabled={busy || !key.trim()}>
-            {busy ? "Activating…" : "Activate"}
+          <button className="btn btn-primary btn-block" type="submit" disabled={busy || !key.trim()}>
+            {busy ? "Activating…" : "Activate on this device"}
           </button>
         </form>
-        <p className="muted" style={{ marginTop: 18 }}>
-          Lost access to your device? <Link to="/app/reset-devices">Reset devices</Link>
-          {" · "}
-          <Link to="/license">License details</Link>
+
+        <p className="license-gate-assurance">Works offline after activation · Printable on any screen</p>
+      </section>
+
+        <p className="license-deactivate-link">
+          <Link to={transferHref}>Already have a license? Need to deactivate it? Click here.</Link>
         </p>
-      </main>
-      <PublicFooter />
-    </div>
+
+      <p className="muted license-gate-foot">
+        Lost the old device? <Link to="/app/reset-devices">Reset devices</Link>
+        {" · "}
+        <Link to="/license">License details</Link>
+        {" · "}
+        <Link to="/#pricing">Buy a license</Link>
+      </p>
+    </GateShell>
   );
 }
