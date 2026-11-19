@@ -12,10 +12,9 @@ import "../styles/home-v2.css";
 
 const HERO_BENEFITS = [
   "Ready-to-Use Emergency Checklists",
-  "Up to 9 Digital Checklists with Pro",
   "Works Offline After Activation",
-  "Add Your Own Notes & Details",
-  "One-Time Purchase. No Subscription.",
+  "Add Notes & Details",
+  "One-Time Purchase. Lifetime Access",
 ] as const;
 
 const SYSTEMS = [
