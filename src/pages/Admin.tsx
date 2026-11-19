@@ -193,7 +193,7 @@ function DiscountManager({ onSaved }: { onSaved: (message: string) => void }) {
         <div>
           <p className="eyebrow">Checkout</p>
           <h2>Discount codes</h2>
-          <p className="muted">These codes are checked on the server before Stripe charges. They apply to the subscription, not Survival Vault.</p>
+          <p className="muted">These codes are checked on the server before Stripe charges.</p>
         </div>
         <button className="btn btn-primary" type="button" onClick={() => setShowForm(true)}>+ Create code</button>
       </div>
@@ -306,7 +306,7 @@ function DiscountForm({ onClose, onSaved }: { onClose: () => void; onSaved: (cod
         <button className="drawer-close" type="button" onClick={onClose}>×</button>
         <p className="eyebrow">New checkout offer</p>
         <h2>Create a discount code</h2>
-        <p className="muted">Stripe will charge the discounted subscription amount. Survival Vault stays full price.</p>
+        <p className="muted">Stripe will charge the discounted amount.</p>
         <label className="field"><span>Code</span><input required value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="READY15" /></label>
         <div className="admin-form-grid">
           <label className="field">

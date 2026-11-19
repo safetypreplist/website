@@ -86,8 +86,8 @@ export function TermsPage() {
       <p>
         Access is sold as a one-time lifetime license (Basic or Pro), not a subscription. One license covers one device.
         You may purchase an additional Basic license for a second device from the license page after you activate, or use
-        Transfer / Deactivate to free the license and move it to a new device. Pro includes Survival Vault checklists;
-        Basic holders may upgrade to Pro for the price shown at checkout (same license key).
+        Transfer / Deactivate to free the license and move it to a new device. Pro includes additional preparedness
+        checklists; Basic holders may upgrade to Pro for the price shown at checkout (same license key).
       </p>
       <p>
         You are responsible for keeping your license key private and for activity on devices where you activate it. No
@@ -114,9 +114,9 @@ export function TermsPage() {
         record when the print window is opened from a checklist page. While you are still eligible for a refund, the app
         asks you to confirm before printing.
       </p>
-      <h3>Survival Vault / Pro</h3>
+      <h3>Pro upgrades</h3>
       <p>
-        Survival Vault checklists are included with Pro (or after a Basic-to-Pro upgrade). Refund requests follow the same
+        Additional Pro checklists are included with Pro (or after a Basic-to-Pro upgrade). Refund requests follow the same
         3-day, not-printed first-purchase rule.
       </p>
 

@@ -372,7 +372,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setViewing((prev) => ({
       ...prev,
       kind,
-      title: kind === "household" ? "Survival Vault" : "My Checklist",
+      title: "My Checklist",
     }));
   }, []);
 

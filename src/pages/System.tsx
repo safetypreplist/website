@@ -2,7 +2,6 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ItemTip } from "../components/ItemTip";
-import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { useApp } from "../context/AppContext";
 import {
   ITEM_LIMIT_ERROR,
@@ -12,7 +11,7 @@ import {
 } from "../lib/customItems";
 import { formatDateTime } from "../lib/format";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { OFFICIAL_GUIDANCE_DISCLAIMER, VAULT_APP_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
+import { OFFICIAL_GUIDANCE_DISCLAIMER, PRO_LICENSE_DESCRIPTION, quickStartIntro, quickStartMinutes } from "../lib/copy";
 import {
   isExtendedItem,
   isPrimaryItem,
@@ -251,10 +250,12 @@ export function SystemPage() {
   if (system.access_tier === "full" && !hasSurvivalVault) {
     return (
       <div className="locked-panel">
-        <p className="eyebrow">Survival Vault</p>
-        <h2>Want to go beyond the basics?</h2>
-        <p className="muted">{VAULT_APP_DESCRIPTION}</p>
-        <SurvivalVaultPurchase />
+        <p className="eyebrow">Pro</p>
+        <h2>This checklist is included with Pro</h2>
+        <p className="muted">{PRO_LICENSE_DESCRIPTION}</p>
+        <Link className="btn btn-primary" to="/app/license">
+          Upgrade to Pro
+        </Link>
       </div>
     );
   }
@@ -478,7 +479,7 @@ export function SystemPage() {
         ) : null}
         <div>
           {qsMinutes == null && system.time_label && system.time_label !== "MORE" ? (
-            <p className="time-label">{system.time_label === "FULL" ? "Survival Vault" : system.time_label}</p>
+            <p className="time-label">{system.time_label === "FULL" ? "Pro" : system.time_label}</p>
           ) : null}
           <h1>{system.title}</h1>
           {system.description ? <p className="list-lead">{system.description}</p> : null}

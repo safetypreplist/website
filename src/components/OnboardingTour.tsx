@@ -41,12 +41,6 @@ const DEFAULT_STEPS: Step[] = [
     path: "/app/lists/grab-go",
   },
   {
-    title: "Survival Vault / Pro",
-    body: "Pro unlocks Survival Vault checklists. Use Upgrade to Pro or open Survival Vault from here when it applies to your license.",
-    selector: '[data-onboarding="survival-vault"]',
-    path: "/app",
-  },
-  {
     title: "Your license",
     body: "Open License to see your key, move devices with Transfer / Deactivate, or upgrade options.",
     selector: '[data-onboarding="license"]',
@@ -366,7 +360,7 @@ export function OnboardingTour() {
     let pinning = false;
     const expectedPath = DEFAULT_STEPS[stepIndex]?.path;
     const chromeSelector =
-      step.selector.includes('"license"') || step.selector.includes('"survival-vault"') || step.selector.includes('"my-checklist"');
+      step.selector.includes('"license"') || step.selector.includes('"upgrade-pro"') || step.selector.includes('"my-checklist"');
 
     function pinScroll() {
       if (!pinning) return;

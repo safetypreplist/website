@@ -58,7 +58,7 @@ export function ContactPage() {
           <h1>{heading}</h1>
           {topic === "refund" && !sent ? (
             <p className="muted">
-              First purchases, including the Survival Vault, can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Tell us why you want a refund and include your confirmation number.
+              First purchases can be refunded within 3 days as long as no checklist has been printed or saved as a PDF. Tell us why you want a refund and include your confirmation number.
             </p>
           ) : null}
           {sent ? (

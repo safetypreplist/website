@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { BrandMark } from "../components/Brand";
 import { PublicFooter } from "../components/PublicChrome";
-import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
@@ -79,7 +78,6 @@ export function HomeV2Page() {
   const root = useReveal();
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [vaultOpen, setVaultOpen] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const basicPrice = money(BASIC_LICENSE_CENTS);
   const proPrice = money(PRO_LICENSE_CENTS);
@@ -226,9 +224,9 @@ export function HomeV2Page() {
           </div>
           <p className="hv2-vault-hint hv2-reveal">
             Want to go further? Pro includes everything in Basic, plus additional checklists and preparedness resources.{" "}
-            <button type="button" className="hv2-text-link" onClick={() => setVaultOpen(true)}>
+            <a className="hv2-text-link" href="#pricing">
               See what’s included.
-            </button>
+            </a>
           </p>
         </div>
       </section>
@@ -359,7 +357,6 @@ export function HomeV2Page() {
 
       <PublicFooter howHref="#how" includedHref="#included" pricingHref="#pricing" />
 
-      {vaultOpen ? <SurvivalVaultModal onClose={() => setVaultOpen(false)} ctaHref="#pricing" /> : null}
     </div>
   );
 }

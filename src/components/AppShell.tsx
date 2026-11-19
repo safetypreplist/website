@@ -10,7 +10,6 @@ import { isProLicense } from "../lib/licenseClient";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { hasSurvivalVault } = useApp();
   const location = useLocation();
-  const vaultActive = location.pathname.startsWith("/app/survival");
   const isAdminRoute = location.pathname.startsWith("/admin");
   const pro = hasSurvivalVault || isProLicense();
 
@@ -44,15 +43,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink to="/app/safety" className={({ isActive }) => (isActive ? "active" : "")}>
           Safety Resources
         </NavLink>
-        {pro ? (
-          <NavLink data-onboarding="survival-vault" to="/app/survival" className={vaultActive ? "active" : ""}>
-            Survival Vault
-          </NavLink>
-        ) : (
-          <Link className="nav-upgrade" data-onboarding="survival-vault" to="/app/license">
+        {!pro ? (
+          <Link className="nav-upgrade" data-onboarding="upgrade-pro" to="/app/license">
             Upgrade to Pro
           </Link>
-        )}
+        ) : null}
         <p className="sidebar-label">License</p>
         <NavLink data-onboarding="license" to="/app/license" className={({ isActive }) => (isActive ? "active" : "")}>
           My license

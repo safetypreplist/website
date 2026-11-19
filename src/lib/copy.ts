@@ -18,9 +18,6 @@ export const CORE_MESSAGE = "Start small. Prepare practically. Build over time."
 export const MORE_TIME_LINE =
   "You've handled the essentials. Now build a stronger preparedness system.";
 
-export const VAULT_APP_DESCRIPTION =
-  "Pro unlocks Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food. Upgrade from Basic for $12.00 — same license key, same device.";
-
 export const BASIC_LICENSE_DESCRIPTION =
   "One-time purchase, lifetime access to the core checklists: Grab-and-Go Bag, Ready Duffel Bag, Vehicle or Suitcase Prep, and Home Resilience. Works offline on one device.";
 
@@ -30,7 +27,8 @@ export const PRO_LICENSE_DESCRIPTION =
 export const ONE_LICENSE_ONE_DEVICE_LINE =
   "One license covers one device.";
 
-export const VAULT_CHECKLISTS = [
+/** Extra checklists included with Pro (not a separate product). */
+export const PRO_EXTRA_CHECKLISTS = [
   {
     title: "Off-Grid Systems",
     line: "Stay capable when the grid is down.",
@@ -57,6 +55,9 @@ export const VAULT_CHECKLISTS = [
     detail: "Staples, rotation, preservation, and manual food prep for the stretch after the first few days.",
   },
 ] as const;
+
+/** @deprecated Use PRO_EXTRA_CHECKLISTS */
+export const VAULT_CHECKLISTS = PRO_EXTRA_CHECKLISTS;
 
 export const COMPLETION_STANDARD =
   "Checked means available, accessible, compatible, current, known, and practiced. Buying an item is not enough.";

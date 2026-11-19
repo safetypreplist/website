@@ -19,7 +19,6 @@ import {
   IconFood,
   MarkImg,
 } from "../components/Icons";
-import { SurvivalVaultModal } from "../components/SurvivalVaultModal";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import { PHOTO_LIBRARY } from "../lib/photos";
@@ -31,10 +30,9 @@ import {
   FAMILY_MIN_SEATS,
   MAX_CHECKLIST_QUANTITY,
   PUBLIC_ACCESS,
-  SURVIVAL_VAULT_CENTS,
   checkoutBreakdown,
 } from "../lib/pricing";
-import { HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT, VAULT_CHECKLISTS } from "../lib/copy";
+import { HERO_TAGLINE_LEAD, HERO_TAGLINE_REST, SCOPE_SUPPORT, PRO_EXTRA_CHECKLISTS } from "../lib/copy";
 import { INCLUDED_CUSTOM_PER_SECTION } from "../lib/customItems";
 import { useApp } from "../context/AppContext";
 
@@ -95,20 +93,15 @@ export function LandingPage() {
   const addingChecklists = false;
   const minFamilyQty = FAMILY_MIN_SEATS;
   const annualCents = ANNUAL_CENTS;
-  const vaultCents = SURVIVAL_VAULT_CENTS;
   const [familyQty, setFamilyQty] = useState(FAMILY_MIN_SEATS);
-  const [vaultOpen, setVaultOpen] = useState(false);
   const family = checkoutBreakdown(familyQty, PUBLIC_ACCESS, false);
 
   useEffect(() => {
     const scrollToHash = () => {
       const id = window.location.hash.replace("#", "");
-      if (id === "full-system") {
-        setVaultOpen(true);
-        return;
-      }
       if (!id) return;
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const target = id === "full-system" || id === "survival-vault" ? "pro-checklists" : id;
+      document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     const timer = window.setTimeout(scrollToHash, 50);
     window.addEventListener("hashchange", scrollToHash);
@@ -145,7 +138,7 @@ export function LandingPage() {
               <p className="hero-price-meta">Per checklist · No monthly subscription</p>
             </div>
             <a className="btn btn-primary" href="#pricing">Get Safety Prep List</a>
-            <p className="hero-price-note">Survival Vault add-on {money(vaultCents)}/year, optional</p>
+            <p className="hero-price-note">Pro adds more preparedness checklists</p>
           </div>
         </div>
         <HeroSlider />
@@ -219,10 +212,10 @@ export function LandingPage() {
           </div>
           <div className="vault-included">
             <p className="vault-included-lead">
-              <b>Survival Vault.</b> For an extra $10/year, you also unlock these checklists.
+              <b>Pro.</b> Includes these additional preparedness checklists.
             </p>
             <ul className="vault-included-grid">
-              {VAULT_CHECKLISTS.map((item) => {
+              {PRO_EXTRA_CHECKLISTS.map((item) => {
                 const Icon = vaultIcons[item.title];
                 return (
                   <li key={item.title}>
@@ -265,7 +258,7 @@ export function LandingPage() {
               </span>
               <span className="step-num">Step 2</span>
               <h3>Pay once for the year</h3>
-              <p>Secure checkout. Survival Vault add-on $10/year.</p>
+              <p>Secure checkout. Upgrade to Pro anytime for more checklists.</p>
             </li>
             <li>
               <span className="how-icon">
@@ -351,29 +344,21 @@ export function LandingPage() {
               ))}
             </ul>
           </div>
-          <aside className="vault-cta-strip" id="survival-vault">
+          <aside className="vault-cta-strip" id="pro-checklists">
             <div>
-              <p className="eyebrow">Add-on</p>
-              <h3>
-                Survival Vault · {money(vaultCents)} <small>/ year</small>
-              </h3>
+              <p className="eyebrow">Pro</p>
+              <h3>Additional preparedness checklists</h3>
               <p>
-                For an extra {money(vaultCents)}/year: Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.
+                Pro includes Off-Grid Systems, Water Purification, Home Battery &amp; Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.
               </p>
             </div>
-            <button className="btn btn-primary" type="button" onClick={() => setVaultOpen(true)}>
-              See details
-            </button>
+            <a className="btn btn-primary" href="#pricing">
+              See pricing
+            </a>
           </aside>
         </div>
       </section>
 
-      {vaultOpen ? (
-        <SurvivalVaultModal
-          ctaHref="#pricing"
-          onClose={() => setVaultOpen(false)}
-        />
-      ) : null}
 
       <PublicFooter />
     </div>

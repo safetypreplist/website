@@ -23,7 +23,6 @@ import { HelpPage } from "./pages/Help";
 import { AdminPage } from "./pages/Admin";
 import { ContactsPage } from "./pages/Contacts";
 import { DashboardPage, ListsPage } from "./pages/Dashboard";
-import { HouseholdPage } from "./pages/Survival";
 import { SafetyPage } from "./pages/Safety";
 import { SystemPage } from "./pages/System";
 import { ActivatePage } from "./pages/Activate";
@@ -265,17 +264,10 @@ export default function App() {
             </LicensedApp>
           }
         />
-        <Route path="/app/household" element={<Navigate to="/app/survival" replace />} />
-        <Route path="/app/vault" element={<Navigate to="/app/survival" replace />} />
-        <Route path="/app/survival/videos" element={<Navigate to="/app/survival" replace />} />
-        <Route
-          path="/app/survival"
-          element={
-            <LicensedApp>
-              <HouseholdPage />
-            </LicensedApp>
-          }
-        />
+        <Route path="/app/household" element={<Navigate to="/app/lists" replace />} />
+        <Route path="/app/vault" element={<Navigate to="/app/lists" replace />} />
+        <Route path="/app/survival" element={<Navigate to="/app/lists" replace />} />
+        <Route path="/app/survival/videos" element={<Navigate to="/app/lists" replace />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route
           path="/admin"

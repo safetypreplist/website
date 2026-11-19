@@ -175,7 +175,7 @@ export function DemoPage() {
             </ul>
             <p>
               Add your own items, keep notes, print a paper backup, and use your checklists offline on one device. Basic
-              is $12.99 one time; Pro is $24.99 one time and includes Survival Vault.
+              is $12.99 one time; Pro is $24.99 one time and includes additional preparedness checklists.
             </p>
             <div className="demo-actions">
               <a className="btn btn-primary" href="/#pricing">

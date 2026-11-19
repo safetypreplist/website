@@ -91,7 +91,6 @@ const PREFIX: Array<[string, Meta]> = [
   ["/app/help", { title: "Help — Safety Prep List", description: "Help for Safety Prep List.", index: false }],
   ["/app/license", { title: "My License — Safety Prep List", description: "View your Safety Prep List license, devices, and upgrade options.", index: false }],
   ["/app/transfer", { title: "Transfer / Deactivate — Safety Prep List", description: "Back up, deactivate, and restore personalized checklist data.", index: false }],
-  ["/app/survival", { title: "Survival Vault — Safety Prep List", description: "Survival Vault checklists.", index: false }],
   ["/app", { title: "My Checklist — Safety Prep List", description: "Your Safety Prep List dashboard.", index: false }],
 ];
 

@@ -24,7 +24,7 @@ export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
     {
       id: "cost",
       question: "How much does it cost?",
-      answer: `Basic is ${money(BASIC_LICENSE_CENTS)} one time (core checklists, one device). Pro is ${money(PRO_LICENSE_CENTS)} one time and includes Survival Vault. One license covers one device. Checkout is secure with Stripe.`,
+      answer: `Basic is ${money(BASIC_LICENSE_CENTS)} one time (core checklists, one device). Pro is ${money(PRO_LICENSE_CENTS)} one time and includes additional preparedness checklists. One license covers one device. Checkout is secure with Stripe.`,
       topic: "sales",
       link: { to: "/#pricing", label: "See plans" },
     },
@@ -38,13 +38,13 @@ export function visitorQuickAnswers(_prices: Prices = {}): QuickAnswer[] {
     {
       id: "included",
       question: "What checklists are included?",
-      answer: `Basic includes the ${CHECKLISTS}. Pro adds Survival Vault. Check items off on the device you activate, add notes, add up to 5 of your own items per section, and print any list.`,
+      answer: `Basic includes the ${CHECKLISTS}. Pro adds ${VAULT_LISTS}. Check items off on the device you activate, add notes, add up to 5 of your own items per section, and print any list.`,
       topic: "sales",
     },
     {
-      id: "vault",
-      question: "What’s in the Survival Vault?",
-      answer: `Pro includes ${VAULT_LISTS}. Buy Pro for ${money(PRO_LICENSE_CENTS)}, or upgrade from Basic for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key).`,
+      id: "pro",
+      question: "What’s included with Pro?",
+      answer: `Pro includes everything in Basic, plus ${VAULT_LISTS}. Buy Pro for ${money(PRO_LICENSE_CENTS)}, or upgrade from Basic for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key).`,
       topic: "sales",
     },
     {
@@ -105,8 +105,8 @@ export function memberQuickAnswers(_prices: Prices = {}, hasVault: boolean): Qui
       link: { to: "/contact?topic=refund", label: "Request a refund" },
     },
     {
-      id: "vault",
-      question: "How do I get the Survival Vault?",
+      id: "pro",
+      question: "How do I upgrade to Pro?",
       answer: `Upgrade to Pro for ${money(UPGRADE_TO_PRO_CENTS)} on the license page (same key). Pro unlocks ${VAULT_LISTS}.`,
       topic: "support",
       link: { to: "/app/license", label: "Open License" },

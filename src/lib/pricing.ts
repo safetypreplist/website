@@ -8,9 +8,9 @@ export const UPGRADE_TO_PRO_CENTS = 1200;
 export const MONTHLY_CENTS = 799;
 export const ANNUAL_MONTHLY_EQUIVALENT_CENTS = 250;
 export const ANNUAL_CENTS = 3000;
-/** @deprecated Pro is a one-time license; Survival Vault is included in Pro. */
+/** @deprecated Legacy add-on pricing — Pro is a one-time license now. */
 export const SURVIVAL_VAULT_CENTS = 1000;
-export const SURVIVAL_VAULT_NAME = "Survival Vault";
+export const SURVIVAL_VAULT_NAME = "Pro checklists";
 export const SURVIVAL_VAULT_DESCRIPTION =
   "Pro unlocks Off-Grid Systems, Water Purification, Home Battery & Solar, Emergency Cooling / Heat Resilience, and Long-Term Food.";
 export const FAMILY_MIN_SEATS = 2;

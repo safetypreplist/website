@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { SurvivalVaultPurchase } from "../components/SurvivalVaultPurchase";
 import { Photo } from "../components/Photo";
 import { OfflineSwitch, syncLabel } from "../components/OfflineStatus";
 import { useApp } from "../context/AppContext";
 import { greeting, percent } from "../lib/format";
 import { initialsFrom } from "../lib/identity";
 import { PHOTO_LIBRARY, SYSTEM_PHOTOS } from "../lib/photos";
-import { SCOPE_LINE, VAULT_APP_DESCRIPTION } from "../lib/copy";
+import { SCOPE_LINE } from "../lib/copy";
 import { isTimedSystem, readPrepLane, trackedItems } from "../lib/listProgress";
 import type { ChecklistSystem, CustomChecklistItem } from "../types";
 import { isLicensed } from "../lib/licenseClient";
@@ -62,7 +61,7 @@ export function DashboardPage() {
   const continueLists = isHousehold
     ? systems
     : hasSurvivalVault
-      ? [...startSystems, ...vaultSystems(catalog.systems)]
+      ? [...startSystems, ...proSystems(catalog.systems)]
       : startSystems;
   const continueSystem = entitled ? findContinueSystem(continueLists, catalog, customItems, progress) : null;
 
@@ -74,7 +73,7 @@ export function DashboardPage() {
         </span>
         <div>
           {viewing.isOwn ? <p className="dash-greeting">{greeting(viewing.ownerName)}</p> : null}
-          <h1 className="dash-heading">{isHousehold ? "Survival Vault" : viewing.title}</h1>
+          <h1 className="dash-heading">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
           {viewing.publicId ? <p className="checklist-id-line">{viewing.publicId}</p> : null}
         </div>
       </div>
@@ -140,64 +139,49 @@ export function DashboardPage() {
         </Link>
       )}
 
-      {isHousehold ? <p className="dash-section-title">Survival Vault</p> : null}
-      {!isHousehold ? (
-        <p className="dash-scope">{SCOPE_LINE}</p>
-      ) : null}
+      {!isHousehold ? <p className="dash-scope">{SCOPE_LINE}</p> : null}
       <div className="system-list">
         {(isHousehold ? systems : startSystems).map((system) => (
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
-      {viewing.isOwn && !isHousehold ? <SurvivalVaultCta /> : null}
+      {!isHousehold && hasSurvivalVault ? (
+        <div className="system-list" style={{ marginTop: 18 }}>
+          {proSystems(catalog.systems).map((system) => (
+            <SystemRow key={system.id} slug={system.slug} />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 const TIMED_SLUGS = ["grab-go", "ready-bag", "vehicle-suitcase", "home-resilience"];
 
-export const VAULT_SLUGS = ["off-grid", "water-purification", "battery-solar", "cooling-heat", "long-term-food"];
+export const PRO_SLUGS = ["off-grid", "water-purification", "battery-solar", "cooling-heat", "long-term-food"];
 
+/** @deprecated Use PRO_SLUGS */
+export const VAULT_SLUGS = PRO_SLUGS;
+
+export function proSystems(systems: ChecklistSystem[]) {
+  return PRO_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
+}
+
+/** @deprecated Use proSystems */
 export function vaultSystems(systems: ChecklistSystem[]) {
-  return VAULT_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
+  return proSystems(systems);
 }
 
 function timedSystems(systems: ChecklistSystem[]) {
   return TIMED_SLUGS.map((slug) => systems.find((system) => system.slug === slug)).filter((system): system is ChecklistSystem => Boolean(system));
 }
 
-function SurvivalVaultCta() {
-  const { hasSurvivalVault, profile, switchChecklist } = useApp();
-  const entitled = hasPlanAccess(profile);
-  // Keep a stable Survival Vault target for the guided tour even before Pro is unlocked.
-  if (!hasSurvivalVault && !entitled && !isLicensed()) return null;
-  return (
-    <aside className="vault-list-cta" id="survival-vault" data-onboarding="survival-vault">
-      <p className="eyebrow">{hasSurvivalVault ? "Included in Pro" : "Optional add-on"}</p>
-      <h2>Survival Vault</h2>
-      <p className="muted">{VAULT_APP_DESCRIPTION}</p>
-      {hasSurvivalVault ? (
-        <Link
-          className="btn btn-primary"
-          to="/app/survival"
-          onClick={() => {
-            void switchChecklist("household");
-          }}
-        >
-          Open Survival Vault
-        </Link>
-      ) : (
-        <SurvivalVaultPurchase />
-      )}
-    </aside>
-  );
-}
-
 export function ListsPage() {
-  const { catalog, viewing } = useApp();
+  const { catalog, viewing, hasSurvivalVault } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const startSystems = timedSystems(catalog.systems);
+  const extraSystems = hasSurvivalVault ? proSystems(catalog.systems) : [];
   const [imports, setImports] = useState<ImportedChecklist[]>([]);
 
   useEffect(() => {
@@ -207,9 +191,7 @@ export function ListsPage() {
       navigate(`/import?import=${encodeURIComponent(shared)}`, { replace: true });
       return;
     }
-    if (location.hash !== "#survival-vault") return;
-    document.getElementById("survival-vault")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [location.hash, location.search, navigate]);
+  }, [location.search, navigate]);
 
   useEffect(() => {
     let live = true;
@@ -223,12 +205,19 @@ export function ListsPage() {
 
   return (
     <div>
-      <h1 className="page-title">{viewing.title}</h1>
+      <h1 className="page-title">{viewing.title === "Survival Vault" ? "My Checklist" : viewing.title}</h1>
       <div className="system-list">
         {startSystems.map((system) => (
           <SystemRow key={system.id} slug={system.slug} />
         ))}
       </div>
+      {extraSystems.length ? (
+        <div className="system-list" style={{ marginTop: 18 }}>
+          {extraSystems.map((system) => (
+            <SystemRow key={system.id} slug={system.slug} />
+          ))}
+        </div>
+      ) : null}
       {imports.length ? (
         <div style={{ marginTop: 28 }}>
           <h2 className="page-title" style={{ fontSize: 22 }}>
@@ -250,7 +239,6 @@ export function ListsPage() {
           </div>
         </div>
       ) : null}
-      {viewing.isOwn ? <SurvivalVaultCta /> : null}
     </div>
   );
 }
@@ -278,7 +266,7 @@ function findContinueSystem(
 }
 
 export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string; line: string; detail: string } }) {
-  const { catalog, progress, profile, customItems, hasSurvivalVault, viewing, switchChecklist } = useApp();
+  const { catalog, progress, profile, customItems, hasSurvivalVault, viewing } = useApp();
   const system = catalog.systems.find((s) => s.slug === slug);
   if (!system) return null;
   const lane = readPrepLane();
@@ -321,16 +309,10 @@ export function SystemRow({ slug, copy }: { slug: string; copy?: { title: string
         <div className="bar">
           <span style={{ width: `${pct}%` }} />
         </div>
-        <Link
-          className={`btn ${locked ? "btn-forest" : "btn-moss"}`}
-          to={to}
-          onClick={() => {
-            if (system.access_tier === "full" && hasSurvivalVault) void switchChecklist("household");
-          }}
-        >
+        <Link className={`btn ${locked ? "btn-forest" : "btn-moss"}`} to={to}>
           {locked
             ? system.access_tier === "full"
-              ? "Available with Survival Vault"
+              ? "Available with Pro"
               : "Unlock"
             : viewing.canEdit
               ? "Open list"
