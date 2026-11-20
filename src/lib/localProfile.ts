@@ -173,3 +173,75 @@ export async function searchPlaces(query: string): Promise<GeocodeHit[]> {
       };
     });
 }
+
+export function normalizeZipCode(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length >= 5) return digits.slice(0, 5);
+  return "";
+}
+
+/** Resolve a US ZIP to city/state coordinates for profile location. */
+export async function lookupZipCode(zipInput: string): Promise<GeocodeHit> {
+  const zip = normalizeZipCode(zipInput);
+  if (!/^\d{5}$/.test(zip)) throw new Error("Enter a valid 5-digit ZIP code.");
+
+  try {
+    const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (zipRes.ok) {
+      const json = (await zipRes.json()) as {
+        places?: Array<{
+          "place name"?: string;
+          state?: string;
+          "state abbreviation"?: string;
+          latitude?: string;
+          longitude?: string;
+        }>;
+      };
+      const place = json.places?.[0];
+      const lat = place?.latitude ? Number(place.latitude) : NaN;
+      const lon = place?.longitude ? Number(place.longitude) : NaN;
+      if (place?.["place name"] && Number.isFinite(lat) && Number.isFinite(lon)) {
+        const stateCode = place["state abbreviation"] || null;
+        return {
+          place: stateCode ? `${place["place name"]}, ${stateCode}` : place["place name"],
+          lat,
+          lon,
+          stateCode,
+        };
+      }
+    }
+  } catch {
+    /* fall through to Open-Meteo */
+  }
+
+  const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+  url.searchParams.set("name", zip);
+  url.searchParams.set("count", "1");
+  url.searchParams.set("language", "en");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("countryCode", "US");
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error("Could not find that ZIP code.");
+  const json = (await res.json()) as {
+    results?: Array<{
+      name?: string;
+      admin1?: string;
+      admin1_code?: string;
+      latitude?: number;
+      longitude?: number;
+    }>;
+  };
+  const row = json.results?.[0];
+  if (!row || typeof row.latitude !== "number" || typeof row.longitude !== "number" || !row.name) {
+    throw new Error("Could not find that ZIP code.");
+  }
+  const stateCode = row.admin1_code?.includes("-")
+    ? row.admin1_code.split("-")[1] || null
+    : row.admin1_code || null;
+  return {
+    place: [row.name, stateCode || row.admin1].filter(Boolean).join(", "),
+    lat: row.latitude,
+    lon: row.longitude,
+    stateCode,
+  };
+}

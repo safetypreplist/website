@@ -3,7 +3,7 @@ import { ProfileAvatar } from "../components/ProfileAvatar";
 import { useApp } from "../context/AppContext";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
 import { composeDisplayName, searchPlaces, type GeocodeHit, type LocalProfileLocation } from "../lib/localProfile";
-import { getCurrentPosition, reverseGeocode } from "../lib/weather";
+import { getCurrentPosition, lookupIpLocation, reverseGeocode } from "../lib/weather";
 
 export function ProfilePage() {
   const { localProfile, saveLocalProfile } = useApp();
@@ -72,21 +72,36 @@ export function ProfilePage() {
     setError("");
     setMessage("");
     try {
-      const position = await getCurrentPosition();
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const geo = await reverseGeocode(lat, lon);
+      try {
+        const position = await getCurrentPosition();
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const geo = await reverseGeocode(lat, lon);
+        const next: LocalProfileLocation = {
+          place: geo.place,
+          lat,
+          lon,
+          stateCode: geo.stateCode,
+        };
+        setLocation(next);
+        setQuery(geo.place);
+        setHits([]);
+        return;
+      } catch {
+        /* fall through to network estimate */
+      }
+      const ip = await lookupIpLocation();
       const next: LocalProfileLocation = {
-        place: geo.place,
-        lat,
-        lon,
-        stateCode: geo.stateCode,
+        place: ip.place,
+        lat: ip.lat,
+        lon: ip.lon,
+        stateCode: ip.stateCode,
       };
       setLocation(next);
-      setQuery(geo.place);
+      setQuery(ip.place);
       setHits([]);
     } catch {
-      setError("Could not read your current location. Search for a city instead.");
+      setError("Could not read your current location. Search for a city or ZIP instead.");
     } finally {
       setLocating(false);
     }

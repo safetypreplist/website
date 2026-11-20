@@ -4,12 +4,12 @@ import { useApp } from "../context/AppContext";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
 import {
   composeDisplayName,
-  searchPlaces,
+  lookupZipCode,
+  normalizeZipCode,
   splitFullName,
-  type GeocodeHit,
   type LocalProfileLocation,
 } from "../lib/localProfile";
-import { getCurrentPosition, reverseGeocode } from "../lib/weather";
+import { getCurrentPosition, lookupIpLocation, reverseGeocode } from "../lib/weather";
 
 type Props = {
   onContinue: () => void;
@@ -21,9 +21,8 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   const [fullName, setFullName] = useState(composeDisplayName(localProfile.firstName, localProfile.lastName));
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(localProfile.avatarDataUrl);
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
-  const [query, setQuery] = useState(localProfile.location?.place || "");
-  const [hits, setHits] = useState<GeocodeHit[]>([]);
-  const [searching, setSearching] = useState(false);
+  const [zip, setZip] = useState("");
+  const [lookingUpZip, setLookingUpZip] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationDenied, setLocationDenied] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,38 +32,38 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     setFullName(composeDisplayName(localProfile.firstName, localProfile.lastName));
     setAvatarDataUrl(localProfile.avatarDataUrl);
     setLocation(localProfile.location);
-    setQuery(localProfile.location?.place || "");
   }, [localProfile]);
 
   useEffect(() => {
-    if (!locationDenied) {
-      setHits([]);
-      return;
-    }
-    const q = query.trim();
-    if (q.length < 2 || (location && q === location.place)) {
-      setHits([]);
+    if (!locationDenied) return;
+    const code = normalizeZipCode(zip);
+    if (code.length !== 5) {
+      setLookingUpZip(false);
       return;
     }
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      setSearching(true);
-      void searchPlaces(q)
-        .then((next) => {
-          if (!cancelled) setHits(next);
+      setLookingUpZip(true);
+      setError("");
+      void lookupZipCode(code)
+        .then((hit) => {
+          if (cancelled) return;
+          setLocation(hit);
         })
-        .catch(() => {
-          if (!cancelled) setHits([]);
+        .catch((err) => {
+          if (cancelled) return;
+          setLocation(null);
+          setError(err instanceof Error ? err.message : "Could not find that ZIP code.");
         })
         .finally(() => {
-          if (!cancelled) setSearching(false);
+          if (!cancelled) setLookingUpZip(false);
         });
     }, 280);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, location, locationDenied]);
+  }, [zip, locationDenied]);
 
   async function onPickPhoto(file: File | null) {
     setError("");
@@ -83,31 +82,40 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     setError("");
     setLocationDenied(false);
     try {
-      const position = await getCurrentPosition();
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const geo = await reverseGeocode(lat, lon);
-      const next: LocalProfileLocation = {
-        place: geo.place,
-        lat,
-        lon,
-        stateCode: geo.stateCode,
-      };
-      setLocation(next);
-      setQuery(geo.place);
-      setHits([]);
-    } catch {
-      setLocationDenied(true);
-      setError("");
+      try {
+        const position = await getCurrentPosition();
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const geo = await reverseGeocode(lat, lon);
+        setLocation({
+          place: geo.place,
+          lat,
+          lon,
+          stateCode: geo.stateCode,
+        });
+        setZip("");
+        return;
+      } catch {
+        /* fall through to network/IP estimate */
+      }
+
+      try {
+        const ip = await lookupIpLocation();
+        setLocation({
+          place: ip.place,
+          lat: ip.lat,
+          lon: ip.lon,
+          stateCode: ip.stateCode,
+        });
+        setZip("");
+      } catch {
+        setLocationDenied(true);
+        setLocation(null);
+        setError("");
+      }
     } finally {
       setLocating(false);
     }
-  }
-
-  function pickHit(hit: GeocodeHit) {
-    setLocation(hit);
-    setQuery(hit.place);
-    setHits([]);
   }
 
   async function onSubmit(event: FormEvent) {
@@ -120,11 +128,27 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       setError("Enter your full name to continue.");
       return;
     }
-    if (!location) {
+
+    let nextLocation = location;
+    if (!nextLocation && locationDenied) {
+      const code = normalizeZipCode(zip);
+      if (code.length === 5) {
+        try {
+          nextLocation = await lookupZipCode(code);
+          setLocation(nextLocation);
+        } catch (err) {
+          setSaving(false);
+          setError(err instanceof Error ? err.message : "Enter a valid ZIP code to continue.");
+          return;
+        }
+      }
+    }
+
+    if (!nextLocation) {
       setSaving(false);
       setError(
         locationDenied
-          ? "Enter your city and state to continue."
+          ? "Enter your ZIP code to continue."
           : "Allow location access to personalize safety resources, time, and weather.",
       );
       return;
@@ -134,7 +158,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
         firstName,
         lastName,
         avatarDataUrl,
-        location,
+        location: nextLocation,
       });
       onContinue();
     } catch (err) {
@@ -259,32 +283,24 @@ export function OnboardingProfileStep({ onContinue }: Props) {
 
             {locationDenied ? (
               <div className="onboarding-location-fallback">
-                <p className="muted">No problem — enter your city and state instead.</p>
+                <p className="muted">No problem — enter your ZIP code instead.</p>
                 <label className="account-field">
-                  <span className="sr-only">City, State</span>
+                  <span className="sr-only">ZIP code</span>
                   <input
-                    value={query}
+                    value={zip}
                     onChange={(event) => {
-                      setQuery(event.target.value);
-                      if (location) setLocation(null);
+                      const next = event.target.value.replace(/[^\d-]/g, "").slice(0, 10);
+                      setZip(next);
+                      setLocation(null);
+                      setError("");
                     }}
-                    placeholder="City, State"
-                    autoComplete="address-level2"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    placeholder="ZIP code"
                     required
                   />
                 </label>
-                {searching ? <p className="muted">Searching…</p> : null}
-                {hits.length ? (
-                  <ul className="profile-place-hits">
-                    {hits.map((hit) => (
-                      <li key={`${hit.place}-${hit.lat}-${hit.lon}`}>
-                        <button type="button" onClick={() => pickHit(hit)}>
-                          {hit.place}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+                {lookingUpZip ? <p className="muted">Looking up ZIP…</p> : null}
                 {location ? <p className="muted">Using {location.place}.</p> : null}
               </div>
             ) : null}
@@ -294,7 +310,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
         {error ? <p className="form-error">{error}</p> : null}
 
         <div className="onboarding-actions onboarding-actions-stacked">
-          <button className="btn btn-primary" type="submit" disabled={saving}>
+          <button className="btn btn-primary" type="submit" disabled={saving || locating || lookingUpZip}>
             {saving ? "Saving…" : "Continue"}
           </button>
         </div>

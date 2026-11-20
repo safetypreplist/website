@@ -67,10 +67,21 @@ function weatherLabel(code: number) {
 }
 
 function formatPlace(json: PlaceJson) {
-  const city = json.city || json.locality || "Your location";
-  const region = json.principalSubdivisionCode?.split("-")[1];
+  const city = json.locality || json.city || "Your location";
+  const region = json.principalSubdivisionCode?.includes("-")
+    ? json.principalSubdivisionCode.split("-")[1]
+    : json.principalSubdivisionCode || undefined;
   return region ? `${city}, ${region}` : city;
 }
+
+function stateCodeFrom(json: PlaceJson) {
+  if (!json.principalSubdivisionCode) return null;
+  return json.principalSubdivisionCode.includes("-")
+    ? json.principalSubdivisionCode.split("-")[1] || null
+    : json.principalSubdivisionCode;
+}
+
+const REVERSE_GEOCODE_URL = "https://api-bdc.io/data/reverse-geocode-client";
 
 function readJson<T>(key: string): T | null {
   try {
@@ -143,33 +154,49 @@ function writeForecastCache(lat: number, lon: number, data: WeatherBundle) {
 }
 
 export async function placeName(lat: number, lon: number) {
-  const res = await fetch(
-    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
-  );
-  if (!res.ok) return "Your location";
-  return formatPlace((await res.json()) as PlaceJson);
+  try {
+    const geo = await reverseGeocode(lat, lon);
+    return geo.place;
+  } catch {
+    return "Your location";
+  }
 }
 
 export async function reverseGeocode(lat: number, lon: number): Promise<{ place: string; stateCode: string | null }> {
-  const res = await fetch(
-    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
-  );
-  if (!res.ok) return { place: "Your location", stateCode: null };
-  const json = (await res.json()) as PlaceJson;
-  const stateCode = json.principalSubdivisionCode?.includes("-")
-    ? json.principalSubdivisionCode.split("-")[1] || null
-    : json.principalSubdivisionCode || null;
-  return { place: formatPlace(json), stateCode };
+  try {
+    const url = new URL(REVERSE_GEOCODE_URL);
+    url.searchParams.set("latitude", String(lat));
+    url.searchParams.set("longitude", String(lon));
+    url.searchParams.set("localityLanguage", "en");
+    const res = await fetch(url.toString());
+    if (!res.ok) return { place: "Your location", stateCode: null };
+    const json = (await res.json()) as PlaceJson;
+    return { place: formatPlace(json), stateCode: stateCodeFrom(json) };
+  } catch {
+    return { place: "Your location", stateCode: null };
+  }
 }
 
-export async function lookupIpLocation(): Promise<{ lat: number; lon: number; place: string }> {
-  const res = await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en");
+export async function lookupIpLocation(): Promise<{
+  lat: number;
+  lon: number;
+  place: string;
+  stateCode: string | null;
+}> {
+  const url = new URL(REVERSE_GEOCODE_URL);
+  url.searchParams.set("localityLanguage", "en");
+  const res = await fetch(url.toString());
   if (!res.ok) throw new Error("Location unavailable");
   const json = (await res.json()) as PlaceJson;
   if (typeof json.latitude !== "number" || typeof json.longitude !== "number") {
     throw new Error("Location unavailable");
   }
-  return { lat: json.latitude, lon: json.longitude, place: formatPlace(json) };
+  return {
+    lat: json.latitude,
+    lon: json.longitude,
+    place: formatPlace(json),
+    stateCode: stateCodeFrom(json),
+  };
 }
 
 export type DayForecast = {
@@ -308,10 +335,28 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
       reject(new Error("Location is not available"));
       return;
     }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: false,
-      timeout: 8000,
-      maximumAge: 30 * 60 * 1000,
-    });
+
+    const request = (options: PositionOptions) =>
+      new Promise<GeolocationPosition>((innerResolve, innerReject) => {
+        navigator.geolocation.getCurrentPosition(innerResolve, innerReject, options);
+      });
+
+    void request({
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 5 * 60 * 1000,
+    })
+      .then(resolve)
+      .catch((err: GeolocationPositionError) => {
+        if (err?.code === 1) {
+          reject(err);
+          return;
+        }
+        void request({
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 30 * 60 * 1000,
+        }).then(resolve, reject);
+      });
   });
 }
