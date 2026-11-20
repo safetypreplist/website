@@ -55,9 +55,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             Upgrade to Pro
           </Link>
         ) : null}
-        <p className="sidebar-label">License</p>
         <NavLink data-onboarding="license" to="/app/license" className={({ isActive }) => (isActive ? "active" : "")}>
-          My license
+          License
         </NavLink>
         <NavLink to="/app/transfer" className={({ isActive }) => (isActive ? "active" : "")}>
           Transfer / Deactivate

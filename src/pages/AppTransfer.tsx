@@ -300,7 +300,7 @@ export function AppTransferPage() {
       </ol>
 
       <p className="muted transfer-foot">
-        Need license details? <Link to="/app/license">My license</Link>
+        Need license details? <Link to="/app/license">License</Link>
       </p>
 
       {showActivateQr ? (

@@ -35,7 +35,7 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
       .catch(() => {
         if (!cancelled) {
           setBundle(null);
-          setError("Weather unavailable right now. Your checklists still work offline.");
+          setError("Weather unavailable right now.");
         }
       });
     return () => {
@@ -46,10 +46,8 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
   if (!location) {
     return (
       <aside className={`sidebar-weather is-off${compact ? " is-compact" : ""}`}>
-        <p className="sidebar-weather-title">Today&apos;s Weather</p>
         <p className="sidebar-weather-empty">
-          Location helps provide accurate local time, weather, and safety resources. Your checklists stay available
-          either way.
+          Add a location for local weather.
         </p>
         <Link className="sidebar-weather-link" to="/app/profile">
           Set location
@@ -63,36 +61,31 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
 
   return (
     <aside className={`sidebar-weather${compact ? " is-compact" : ""}`}>
-      <div className="sidebar-weather-head">
-        <p className="sidebar-weather-title">Today&apos;s Weather</p>
-        <Link className="sidebar-weather-link" to="/app/profile">
-          Edit
-        </Link>
-      </div>
-
       {error && !bundle ? <p className="sidebar-weather-empty">{error}</p> : null}
-
-      {!error && !bundle ? <p className="sidebar-weather-empty">Updating weather…</p> : null}
+      {!error && !bundle ? <p className="sidebar-weather-empty">Updating…</p> : null}
 
       {current && mode === "day" ? (
-        <div className="sidebar-weather-row">
-          <WeatherGlyph kind={weatherKind(current.code)} />
-          <div className="sidebar-weather-copy">
-            <strong>
-              {current.temp}° · {current.label}
-            </strong>
-            {today ? (
-              <span>
-                High {today.high}° · Low {today.low}°
-              </span>
-            ) : null}
+        <div className="sidebar-weather-day">
+          <div className="sidebar-weather-primary">
+            <WeatherGlyph kind={weatherKind(current.code)} />
+            <div className="sidebar-weather-tempblock">
+              <strong className="sidebar-weather-temp">{current.temp}°</strong>
+              <span className="sidebar-weather-condition">{current.label}</span>
+            </div>
+          </div>
+          <div className="sidebar-weather-meta">
             <span className="sidebar-weather-place">{place}</span>
-            {bundle?.updatedAt ? (
-              <span className={`sidebar-weather-updated${bundle.stale ? " is-stale" : ""}`}>
-                {formatWeatherUpdatedAt(bundle.updatedAt, Boolean(bundle.stale))}
+            {today ? (
+              <span className="sidebar-weather-range">
+                H {today.high}° · L {today.low}°
               </span>
             ) : null}
           </div>
+          {bundle?.updatedAt ? (
+            <span className={`sidebar-weather-updated${bundle.stale ? " is-stale" : ""}`}>
+              {formatWeatherUpdatedAt(bundle.updatedAt, Boolean(bundle.stale))}
+            </span>
+          ) : null}
         </div>
       ) : null}
 
@@ -111,25 +104,30 @@ export function SidebarWeather({ compact = false }: { compact?: boolean }) {
       ) : null}
 
       {bundle ? (
-        <div className="sidebar-weather-toggles" role="tablist" aria-label="Weather view">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "day"}
-            className={`weather-toggle${mode === "day" ? " is-active" : ""}`}
-            onClick={() => setMode("day")}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "week"}
-            className={`weather-toggle${mode === "week" ? " is-active" : ""}`}
-            onClick={() => setMode("week")}
-          >
-            Week
-          </button>
+        <div className="sidebar-weather-foot">
+          <div className="sidebar-weather-toggles" role="tablist" aria-label="Weather view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "day"}
+              className={`weather-toggle${mode === "day" ? " is-active" : ""}`}
+              onClick={() => setMode("day")}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "week"}
+              className={`weather-toggle${mode === "week" ? " is-active" : ""}`}
+              onClick={() => setMode("week")}
+            >
+              Week
+            </button>
+          </div>
+          <Link className="sidebar-weather-link" to="/app/profile">
+            Edit
+          </Link>
         </div>
       ) : null}
     </aside>

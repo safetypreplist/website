@@ -195,7 +195,7 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
   return (
     <div className={embedded ? "license-app" : "license-manage"}>
       <header className={embedded ? "license-app-hero" : "license-manage-hero"}>
-        <p className="eyebrow">My license</p>
+        <p className="eyebrow">License</p>
         <h1 className={embedded ? "page-title" : undefined}>Your Lifetime License</h1>
         <p className={embedded ? "muted license-app-lead" : "license-manage-lead"}>
           One license covers one device. Purchase history and in-app offers appear below once your key is recognized.
