@@ -9,6 +9,12 @@ import {
   splitFullName,
   type LocalProfileLocation,
 } from "../lib/localProfile";
+import {
+  getCurrentPosition,
+  isGeolocationPermissionDenied,
+  lookupIpLocation,
+  reverseGeocode,
+} from "../lib/weather";
 
 type Props = {
   onContinue: () => void;
@@ -22,6 +28,8 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
   const [zip, setZip] = useState("");
   const [lookingUpZip, setLookingUpZip] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [needsZip, setNeedsZip] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,6 +40,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   }, [localProfile]);
 
   useEffect(() => {
+    if (!needsZip) return;
     const code = normalizeZipCode(zip);
     if (code.length !== 5) {
       setLookingUpZip(false);
@@ -59,7 +68,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [zip]);
+  }, [zip, needsZip]);
 
   async function onPickPhoto(file: File | null) {
     setError("");
@@ -70,6 +79,50 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       setAvatarDataUrl(dataUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not use that photo.");
+    }
+  }
+
+  async function allowLocation() {
+    setLocating(true);
+    setError("");
+    setNeedsZip(false);
+    try {
+      const position = await getCurrentPosition();
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const geo = await reverseGeocode(lat, lon);
+      setLocation({
+        place: geo.place,
+        lat,
+        lon,
+        stateCode: geo.stateCode,
+      });
+      setZip("");
+    } catch (err) {
+      if (!isGeolocationPermissionDenied(err)) {
+        try {
+          const ip = await lookupIpLocation();
+          setLocation({
+            place: ip.place,
+            lat: ip.lat,
+            lon: ip.lon,
+            stateCode: ip.stateCode,
+          });
+          setZip("");
+          return;
+        } catch {
+          /* show ZIP fallback below */
+        }
+      }
+      setNeedsZip(true);
+      setLocation(null);
+      setError(
+        isGeolocationPermissionDenied(err)
+          ? "Location permission was blocked for this site. Enter your ZIP code, or turn location back on in your browser settings and try again."
+          : "Could not get your location. Enter your ZIP code instead.",
+      );
+    } finally {
+      setLocating(false);
     }
   }
 
@@ -85,21 +138,27 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     }
 
     let nextLocation = location;
-    const code = normalizeZipCode(zip);
-    if (!nextLocation && code.length === 5) {
-      try {
-        nextLocation = await lookupZipCode(code);
-        setLocation(nextLocation);
-      } catch (err) {
-        setSaving(false);
-        setError(err instanceof Error ? err.message : "Enter a valid ZIP code to continue.");
-        return;
+    if (!nextLocation && needsZip) {
+      const code = normalizeZipCode(zip);
+      if (code.length === 5) {
+        try {
+          nextLocation = await lookupZipCode(code);
+          setLocation(nextLocation);
+        } catch (err) {
+          setSaving(false);
+          setError(err instanceof Error ? err.message : "Enter a valid ZIP code to continue.");
+          return;
+        }
       }
     }
 
     if (!nextLocation) {
       setSaving(false);
-      setError("Enter your ZIP code to continue.");
+      setError(
+        needsZip
+          ? "Enter your ZIP code to continue."
+          : "Allow location access to personalize safety resources, time, and weather.",
+      );
       return;
     }
 
@@ -194,32 +253,71 @@ export function OnboardingProfileStep({ onContinue }: Props) {
               />
             </label>
 
-            <label className="account-field">
-              <span>ZIP code</span>
-              <input
-                value={zip}
-                onChange={(event) => {
-                  const next = event.target.value.replace(/[^\d-]/g, "").slice(0, 10);
-                  setZip(next);
-                  setLocation(null);
-                  setError("");
-                }}
-                inputMode="numeric"
-                autoComplete="postal-code"
-                required
-              />
-              {lookingUpZip ? <p className="muted onboarding-location-hint">Looking up ZIP…</p> : null}
-              {location && !lookingUpZip ? (
-                <p className="muted onboarding-location-hint">Using {location.place}.</p>
+            <div className="onboarding-location-block">
+              <span className="onboarding-profile-field-label">Location</span>
+              {location && !needsZip ? (
+                <div className="onboarding-location-ready" role="status">
+                  <span className="onboarding-location-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  <div>
+                    <strong>Location ready</strong>
+                    <p>{location.place}</p>
+                  </div>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={locating}
+                    onClick={() => void allowLocation()}
+                  >
+                    {locating ? "Updating…" : "Update"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="btn btn-ghost onboarding-location-cta"
+                  type="button"
+                  disabled={locating}
+                  onClick={() => void allowLocation()}
+                >
+                  {locating ? "Locating…" : "Allow location access"}
+                </button>
+              )}
+              {!location && !needsZip ? (
+                <p className="muted onboarding-location-hint">
+                  Powers local safety resources, time, and weather on this device.
+                </p>
               ) : null}
-            </label>
+            </div>
+
+            {needsZip ? (
+              <label className="account-field">
+                <span>ZIP code</span>
+                <input
+                  value={zip}
+                  onChange={(event) => {
+                    const next = event.target.value.replace(/[^\d-]/g, "").slice(0, 10);
+                    setZip(next);
+                    setLocation(null);
+                    setError("");
+                  }}
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  required
+                />
+                {lookingUpZip ? <p className="muted onboarding-location-hint">Looking up ZIP…</p> : null}
+                {location && !lookingUpZip ? (
+                  <p className="muted onboarding-location-hint">Using {location.place}.</p>
+                ) : null}
+              </label>
+            ) : null}
           </div>
         </div>
 
         {error ? <p className="form-error">{error}</p> : null}
 
         <div className="onboarding-actions onboarding-actions-stacked">
-          <button className="btn btn-primary" type="submit" disabled={saving || lookingUpZip}>
+          <button className="btn btn-primary" type="submit" disabled={saving || locating || lookingUpZip}>
             {saving ? "Saving…" : "Continue"}
           </button>
         </div>
