@@ -329,34 +329,24 @@ export async function loadWeatherBundle(lat: number, lon: number, knownPlace?: s
   }
 }
 
+function isGeolocationPermissionDenied(err: unknown) {
+  return Boolean(err && typeof err === "object" && "code" in err && (err as GeolocationPositionError).code === 1);
+}
+
 export function getCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Location is not available"));
       return;
     }
-
-    const request = (options: PositionOptions) =>
-      new Promise<GeolocationPosition>((innerResolve, innerReject) => {
-        navigator.geolocation.getCurrentPosition(innerResolve, innerReject, options);
-      });
-
-    void request({
-      enableHighAccuracy: true,
-      timeout: 12000,
-      maximumAge: 5 * 60 * 1000,
-    })
-      .then(resolve)
-      .catch((err: GeolocationPositionError) => {
-        if (err?.code === 1) {
-          reject(err);
-          return;
-        }
-        void request({
-          enableHighAccuracy: false,
-          timeout: 15000,
-          maximumAge: 30 * 60 * 1000,
-        }).then(resolve, reject);
-      });
+    // Keep this call simple so the browser permission prompt shows reliably.
+    // Use a long timeout so the request does not expire while the user decides.
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: false,
+      timeout: 60000,
+      maximumAge: 60 * 1000,
+    });
   });
 }
+
+export { isGeolocationPermissionDenied };

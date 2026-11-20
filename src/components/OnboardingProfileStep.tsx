@@ -9,7 +9,12 @@ import {
   splitFullName,
   type LocalProfileLocation,
 } from "../lib/localProfile";
-import { getCurrentPosition, lookupIpLocation, reverseGeocode } from "../lib/weather";
+import {
+  getCurrentPosition,
+  isGeolocationPermissionDenied,
+  lookupIpLocation,
+  reverseGeocode,
+} from "../lib/weather";
 
 type Props = {
   onContinue: () => void;
@@ -82,37 +87,40 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     setError("");
     setLocationDenied(false);
     try {
-      try {
-        const position = await getCurrentPosition();
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const geo = await reverseGeocode(lat, lon);
-        setLocation({
-          place: geo.place,
-          lat,
-          lon,
-          stateCode: geo.stateCode,
-        });
-        setZip("");
-        return;
-      } catch {
-        /* fall through to network/IP estimate */
+      const position = await getCurrentPosition();
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const geo = await reverseGeocode(lat, lon);
+      setLocation({
+        place: geo.place,
+        lat,
+        lon,
+        stateCode: geo.stateCode,
+      });
+      setZip("");
+    } catch (err) {
+      if (!isGeolocationPermissionDenied(err)) {
+        try {
+          const ip = await lookupIpLocation();
+          setLocation({
+            place: ip.place,
+            lat: ip.lat,
+            lon: ip.lon,
+            stateCode: ip.stateCode,
+          });
+          setZip("");
+          return;
+        } catch {
+          /* show ZIP fallback below */
+        }
       }
-
-      try {
-        const ip = await lookupIpLocation();
-        setLocation({
-          place: ip.place,
-          lat: ip.lat,
-          lon: ip.lon,
-          stateCode: ip.stateCode,
-        });
-        setZip("");
-      } catch {
-        setLocationDenied(true);
-        setLocation(null);
-        setError("");
-      }
+      setLocationDenied(true);
+      setLocation(null);
+      setError(
+        isGeolocationPermissionDenied(err)
+          ? "Location permission was blocked for this site. Enter your ZIP code, or turn location back on in your browser settings and try again."
+          : "",
+      );
     } finally {
       setLocating(false);
     }
