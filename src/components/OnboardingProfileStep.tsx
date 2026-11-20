@@ -168,7 +168,16 @@ export function OnboardingProfileStep({ onContinue }: Props) {
               onClick={() => fileRef.current?.click()}
               aria-label={avatarDataUrl ? "Change photo" : "Add photo"}
             >
-              <ProfileAvatar className="onboarding-profile-avatar" name={previewName} avatarUrl={avatarDataUrl} />
+              {avatarDataUrl ? (
+                <ProfileAvatar className="onboarding-profile-avatar" name={previewName} avatarUrl={avatarDataUrl} />
+              ) : (
+                <span className="onboarding-profile-avatar onboarding-profile-avatar-empty" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4.5 8.5h2.2l1.1-2h8.4l1.1 2H19.5A1.5 1.5 0 0 1 21 10v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5V10a1.5 1.5 0 0 1 1.5-1.5Z" />
+                    <circle cx="12" cy="14" r="3.25" />
+                  </svg>
+                </span>
+              )}
             </button>
             <button
               className="onboarding-profile-photo-action"

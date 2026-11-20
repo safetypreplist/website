@@ -10325,6 +10325,14 @@ html.tour-scroll-lock body {
   border: 2px solid rgba(156, 67, 32, 0.22);
   box-shadow: 0 8px 18px rgba(20, 29, 22, 0.1);
 }
+.onboarding-profile-avatar-empty {
+  background: rgba(255, 253, 248, 0.95);
+  color: rgba(30, 42, 31, 0.42);
+}
+.onboarding-profile-avatar-empty svg {
+  width: 30px;
+  height: 30px;
+}
 .onboarding-profile-avatar img {
   width: 100%;
   height: 100%;
