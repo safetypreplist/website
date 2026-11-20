@@ -10250,9 +10250,11 @@ html.tour-scroll-lock body {
 .onboarding-profile-card > .onboarding-copy,
 .onboarding-profile-hero .onboarding-copy {
   margin: 0 auto;
-  max-width: 34ch;
+  width: max-content;
+  max-width: 100%;
   font-size: 15px;
   line-height: 1.45;
+  white-space: nowrap;
 }
 .onboarding-profile-form {
   display: grid;
@@ -10273,33 +10275,10 @@ html.tour-scroll-lock body {
   gap: 16px;
   min-width: 0;
 }
-.onboarding-profile-step {
-  display: grid;
-  gap: 10px;
-}
-.onboarding-profile-step-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: var(--forest);
-  font: 700 12px/1.2 var(--font-label, inherit);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.onboarding-profile-step-label span {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(199, 90, 43, 0.12);
-  color: var(--terracotta);
-  font-size: 11px;
-  letter-spacing: 0;
-}
 .onboarding-profile-step-photo {
+  display: grid;
   justify-items: center;
+  gap: 8px;
   text-align: center;
   padding-top: 2px;
 }
@@ -10480,23 +10459,13 @@ html.tour-scroll-lock body {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+  .onboarding-profile-hero .onboarding-copy {
+    white-space: normal;
+    width: auto;
+  }
   .onboarding-profile-step-photo {
-    justify-items: start;
-    text-align: left;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 14px;
-    align-items: center;
-  }
-  .onboarding-profile-step-photo .onboarding-profile-step-label {
-    grid-column: 1 / -1;
-  }
-  .onboarding-profile-step-photo .onboarding-profile-avatar-btn {
-    grid-row: 2 / span 2;
-  }
-  .onboarding-profile-step-photo .onboarding-profile-photo-action,
-  .onboarding-profile-step-photo .onboarding-profile-photo-remove {
-    justify-self: start;
+    justify-items: center;
+    text-align: center;
   }
   .onboarding-location-ready {
     grid-template-columns: auto minmax(0, 1fr);

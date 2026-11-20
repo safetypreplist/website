@@ -163,10 +163,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
 
       <form className="onboarding-profile-form" onSubmit={onSubmit}>
         <div className="onboarding-profile-layout">
-          <section className="onboarding-profile-step onboarding-profile-step-photo" aria-labelledby="onboarding-step-photo">
-            <p className="onboarding-profile-step-label" id="onboarding-step-photo">
-              <span>1</span> Photo
-            </p>
+          <div className="onboarding-profile-step-photo">
             <button
               className="onboarding-profile-avatar-btn"
               type="button"
@@ -202,111 +199,101 @@ export function OnboardingProfileStep({ onContinue }: Props) {
                 void onPickPhoto(file);
               }}
             />
-          </section>
+          </div>
 
           <div className="onboarding-profile-fields">
-            <section className="onboarding-profile-step" aria-labelledby="onboarding-step-name">
-              <p className="onboarding-profile-step-label" id="onboarding-step-name">
-                <span>2</span> Your name
-              </p>
-              <div className="profile-name-grid">
-                <label className="account-field">
-                  <span>First name</span>
-                  <input
-                    value={firstName}
-                    onChange={(event) => setFirstName(event.target.value)}
-                    placeholder="Jane"
-                    autoComplete="given-name"
-                    maxLength={40}
-                    required
-                  />
-                </label>
-                <label className="account-field">
-                  <span>Last name</span>
-                  <input
-                    value={lastName}
-                    onChange={(event) => setLastName(event.target.value)}
-                    placeholder="Doe"
-                    autoComplete="family-name"
-                    maxLength={40}
-                    required
-                  />
-                </label>
-              </div>
-            </section>
+            <div className="profile-name-grid">
+              <label className="account-field">
+                <span className="sr-only">First name</span>
+                <input
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  placeholder="First name"
+                  autoComplete="given-name"
+                  maxLength={40}
+                  required
+                />
+              </label>
+              <label className="account-field">
+                <span className="sr-only">Last name</span>
+                <input
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  placeholder="Last name"
+                  autoComplete="family-name"
+                  maxLength={40}
+                  required
+                />
+              </label>
+            </div>
 
-            <section className="onboarding-profile-step" aria-labelledby="onboarding-step-location">
-              <p className="onboarding-profile-step-label" id="onboarding-step-location">
-                <span>3</span> Location
-              </p>
-              <div className="onboarding-location-block">
-                {location && !locationDenied ? (
-                  <div className="onboarding-location-ready" role="status">
-                    <span className="onboarding-location-check" aria-hidden="true">
-                      ✓
-                    </span>
-                    <div>
-                      <strong>Location ready</strong>
-                      <p>{location.place}</p>
-                    </div>
-                    <button
-                      className="btn btn-ghost"
-                      type="button"
-                      disabled={locating}
-                      onClick={() => void allowLocation()}
-                    >
-                      {locating ? "Updating…" : "Update"}
-                    </button>
+            <div className="onboarding-location-block">
+              {location && !locationDenied ? (
+                <div className="onboarding-location-ready" role="status">
+                  <span className="onboarding-location-check" aria-hidden="true">
+                    ✓
+                  </span>
+                  <div>
+                    <strong>Location ready</strong>
+                    <p>{location.place}</p>
                   </div>
-                ) : (
                   <button
-                    className="btn btn-ghost onboarding-location-cta"
+                    className="btn btn-ghost"
                     type="button"
                     disabled={locating}
                     onClick={() => void allowLocation()}
                   >
-                    {locating ? "Locating…" : "Allow location access"}
+                    {locating ? "Updating…" : "Update"}
                   </button>
-                )}
-                {!location && !locationDenied ? (
-                  <p className="muted onboarding-location-hint">
-                    Powers local safety resources, time, and weather on this device.
-                  </p>
-                ) : null}
-              </div>
-
-              {locationDenied ? (
-                <div className="onboarding-location-fallback">
-                  <p className="muted">No problem — enter your city and state instead.</p>
-                  <label className="account-field">
-                    <span>City, State</span>
-                    <input
-                      value={query}
-                      onChange={(event) => {
-                        setQuery(event.target.value);
-                        if (location) setLocation(null);
-                      }}
-                      placeholder="Henderson, NV"
-                      autoComplete="address-level2"
-                      required
-                    />
-                  </label>
-                  {searching ? <p className="muted">Searching…</p> : null}
-                  {hits.length ? (
-                    <ul className="profile-place-hits">
-                      {hits.map((hit) => (
-                        <li key={`${hit.place}-${hit.lat}-${hit.lon}`}>
-                          <button type="button" onClick={() => pickHit(hit)}>
-                            {hit.place}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {location ? <p className="muted">Using {location.place}.</p> : null}
                 </div>
+              ) : (
+                <button
+                  className="btn btn-ghost onboarding-location-cta"
+                  type="button"
+                  disabled={locating}
+                  onClick={() => void allowLocation()}
+                >
+                  {locating ? "Locating…" : "Allow location access"}
+                </button>
+              )}
+              {!location && !locationDenied ? (
+                <p className="muted onboarding-location-hint">
+                  Powers local safety resources, time, and weather on this device.
+                </p>
               ) : null}
-            </section>
+            </div>
+
+            {locationDenied ? (
+              <div className="onboarding-location-fallback">
+                <p className="muted">No problem — enter your city and state instead.</p>
+                <label className="account-field">
+                  <span className="sr-only">City, State</span>
+                  <input
+                    value={query}
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      if (location) setLocation(null);
+                    }}
+                    placeholder="City, State"
+                    autoComplete="address-level2"
+                    required
+                  />
+                </label>
+                {searching ? <p className="muted">Searching…</p> : null}
+                {hits.length ? (
+                  <ul className="profile-place-hits">
+                    {hits.map((hit) => (
+                      <li key={`${hit.place}-${hit.lat}-${hit.lon}`}>
+                        <button type="button" onClick={() => pickHit(hit)}>
+                          {hit.place}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {location ? <p className="muted">Using {location.place}.</p> : null}
+              </div>
+            ) : null}
           </div>
         </div>
 
