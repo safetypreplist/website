@@ -10221,58 +10221,82 @@ html.tour-scroll-lock body {
   width: min(640px, calc(100vw - 28px));
   max-height: none;
   overflow: visible;
-  padding: 28px 32px 24px;
-  border-radius: 22px;
+  padding: 30px 34px 26px;
+  border-radius: 20px;
   text-align: center;
-  background:
-    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(199, 90, 43, 0.12), transparent 58%),
-    linear-gradient(180deg, #fffdf8 0%, #f7f2e6 100%);
+  background: #fffdf8;
   border: 1px solid rgba(30, 42, 31, 0.08);
-  box-shadow:
-    0 28px 70px rgba(20, 29, 22, 0.28),
-    0 0 0 1px rgba(255, 253, 247, 0.5) inset;
+  box-shadow: 0 22px 56px rgba(20, 29, 22, 0.22);
 }
 .onboarding-profile-hero {
-  margin: 0 auto 28px;
+  margin: 0 auto 26px;
   max-width: 34rem;
 }
 .onboarding-profile-hero .eyebrow {
   justify-content: center;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--terracotta);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  font-size: 11px;
 }
 .onboarding-profile-hero h2 {
-  margin: 0 0 8px;
-  font-size: clamp(26px, 4vw, 34px);
-  line-height: 1.12;
+  margin: 0 0 6px;
+  font-size: clamp(25px, 3.6vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 .onboarding-profile-card > .onboarding-copy,
 .onboarding-profile-hero .onboarding-copy {
   margin: 0 auto;
   width: max-content;
   max-width: 100%;
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.45;
+  color: var(--ink-soft);
   white-space: nowrap;
 }
 .onboarding-profile-form {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   text-align: left;
 }
 .onboarding-profile-form .account-field {
   margin-bottom: 0;
+  gap: 7px;
+}
+.onboarding-profile-form .account-field > span,
+.onboarding-profile-field-label {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--forest);
+}
+.onboarding-profile-form .account-field input {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1.5px solid rgba(30, 42, 31, 0.14);
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(20, 29, 22, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.onboarding-profile-form .account-field input:focus-visible {
+  outline: none;
+  border-color: rgba(156, 67, 32, 0.45);
+  box-shadow: 0 0 0 3px rgba(156, 67, 32, 0.12);
 }
 .onboarding-profile-layout {
   display: grid;
-  grid-template-columns: 132px minmax(0, 1fr);
-  gap: 22px;
-  align-items: start;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 18px 18px 18px 16px;
+  border-radius: 16px;
+  background: rgba(247, 242, 230, 0.55);
+  border: 1px solid rgba(30, 42, 31, 0.06);
 }
 .onboarding-profile-fields {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
 }
 .onboarding-profile-step-photo {
@@ -10280,7 +10304,6 @@ html.tour-scroll-lock body {
   justify-items: center;
   gap: 8px;
   text-align: center;
-  padding-top: 2px;
 }
 .onboarding-profile-avatar-btn {
   display: grid;
@@ -10291,18 +10314,16 @@ html.tour-scroll-lock body {
   cursor: pointer;
 }
 .onboarding-profile-avatar {
-  width: 88px;
-  height: 88px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   overflow: hidden;
   display: grid;
   place-items: center;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  box-shadow:
-    0 0 0 3px #fffdf8,
-    0 0 0 5px rgba(199, 90, 43, 0.28),
-    0 10px 22px rgba(20, 29, 22, 0.14);
+  border: 2px solid rgba(156, 67, 32, 0.22);
+  box-shadow: 0 8px 18px rgba(20, 29, 22, 0.1);
 }
 .onboarding-profile-avatar img {
   width: 100%;
@@ -10313,13 +10334,14 @@ html.tour-scroll-lock body {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--forest);
+  color: var(--ink-soft);
   font: inherit;
-  font-size: 13px;
-  font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
+}
+.onboarding-profile-photo-action:hover {
+  color: var(--forest);
 }
 .onboarding-profile-photo-remove {
   padding: 0;
@@ -10328,82 +10350,87 @@ html.tour-scroll-lock body {
   color: var(--ink-faint);
   font: inherit;
   font-size: 12px;
-  text-decoration: underline;
   cursor: pointer;
+}
+.onboarding-profile-photo-remove:hover {
+  color: var(--ink-soft);
 }
 .onboarding-profile-field-label {
   display: block;
-  font-size: var(--text-label);
-  font-weight: 600;
-  color: var(--forest);
 }
 .onboarding-location-block {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 .onboarding-location-cta {
   width: 100%;
-  min-height: 46px;
+  min-height: 44px;
   justify-content: center;
+  border-radius: 11px;
   background: #fff;
-  border: 1.5px solid var(--line-strong);
+  border: 1.5px solid rgba(30, 42, 31, 0.14);
   color: var(--forest);
-  box-shadow: none;
+  font-weight: 650;
+  box-shadow: 0 1px 0 rgba(20, 29, 22, 0.03);
 }
 .onboarding-location-cta:hover:not(:disabled) {
   background: #fff;
   border-color: rgba(30, 42, 31, 0.28);
   color: var(--forest);
+  transform: none;
 }
 .onboarding-location-hint {
   margin: 0;
-  font-size: 12.5px;
+  padding: 0 2px;
+  font-size: 12px;
   line-height: 1.4;
+  color: var(--ink-faint);
 }
 .onboarding-location-ready {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(63, 93, 69, 0.22);
-  background: rgba(233, 239, 223, 0.7);
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid rgba(63, 93, 69, 0.18);
+  background: rgba(233, 239, 223, 0.65);
 }
 .onboarding-location-check {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: var(--moss);
   color: var(--cream);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
 }
 .onboarding-location-ready strong {
   display: block;
   color: var(--forest);
-  font-size: 13px;
+  font-size: 12.5px;
 }
 .onboarding-location-ready p {
-  margin: 2px 0 0;
+  margin: 1px 0 0;
   color: var(--ink-soft);
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.3;
 }
 .onboarding-location-ready .btn {
   min-height: 0;
-  padding: 6px 10px;
+  padding: 5px 9px;
   font-size: 12px;
 }
 .onboarding-location-fallback {
   display: grid;
   gap: 8px;
   padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(199, 90, 43, 0.18);
-  background: rgba(255, 243, 237, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(199, 90, 43, 0.16);
+  background: rgba(255, 243, 237, 0.55);
 }
 .onboarding-location-fallback > .muted {
   margin: 0;
@@ -10413,7 +10440,7 @@ html.tour-scroll-lock body {
   margin-top: 20px;
 }
 .onboarding-profile-card .onboarding-actions-stacked {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 .onboarding-welcome-card .onboarding-actions-stacked .btn {
   min-width: 200px;
@@ -10421,6 +10448,8 @@ html.tour-scroll-lock body {
 .onboarding-profile-card .onboarding-actions-stacked .btn {
   width: 100%;
   min-width: 0;
+  min-height: 46px;
+  border-radius: 11px;
 }
 .onboarding-welcome-card .onboarding-video {
   margin-bottom: 18px;
@@ -10458,12 +10487,14 @@ html.tour-scroll-lock body {
   }
   .onboarding-profile-card {
     width: min(100vw - 20px, 640px);
-    padding: 22px 18px 18px;
+    padding: 22px 16px 18px;
     border-radius: 18px;
   }
   .onboarding-profile-layout {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 14px;
+    padding: 16px;
+    justify-items: stretch;
   }
   .onboarding-profile-hero .onboarding-copy {
     white-space: normal;
