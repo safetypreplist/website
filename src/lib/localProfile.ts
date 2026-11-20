@@ -29,7 +29,7 @@ export function composeDisplayName(firstName: string, lastName: string) {
 }
 
 export function isLocalProfileComplete(profile: Pick<LocalProfile, "firstName" | "lastName" | "location">) {
-  return Boolean(profile.firstName.trim() && profile.lastName.trim() && profile.location?.place);
+  return Boolean(composeDisplayName(profile.firstName, profile.lastName) && profile.location?.place);
 }
 
 /** Compact place label for dashboard chrome, e.g. "Henderson, NV". */
@@ -40,11 +40,15 @@ export function locationDisplayLabel(location?: LocalProfileLocation | null) {
   return location.place.trim();
 }
 
-function splitLegacyDisplayName(displayName: string) {
+export function splitFullName(displayName: string) {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return { firstName: "", lastName: "" };
   if (parts.length === 1) return { firstName: parts[0], lastName: "" };
   return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
+function splitLegacyDisplayName(displayName: string) {
+  return splitFullName(displayName);
 }
 
 function normalizeLocation(raw: unknown): LocalProfileLocation | null {

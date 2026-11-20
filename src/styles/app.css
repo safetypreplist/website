@@ -10331,6 +10331,12 @@ html.tour-scroll-lock body {
   text-decoration: underline;
   cursor: pointer;
 }
+.onboarding-profile-field-label {
+  display: block;
+  font-size: var(--text-label);
+  font-weight: 600;
+  color: var(--forest);
+}
 .onboarding-location-block {
   display: grid;
   gap: 8px;

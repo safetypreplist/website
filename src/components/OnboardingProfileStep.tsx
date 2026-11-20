@@ -5,6 +5,7 @@ import { blobToDataUrl, compressAvatar } from "../lib/avatar";
 import {
   composeDisplayName,
   searchPlaces,
+  splitFullName,
   type GeocodeHit,
   type LocalProfileLocation,
 } from "../lib/localProfile";
@@ -17,8 +18,7 @@ type Props = {
 export function OnboardingProfileStep({ onContinue }: Props) {
   const { localProfile, saveLocalProfile } = useApp();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [firstName, setFirstName] = useState(localProfile.firstName);
-  const [lastName, setLastName] = useState(localProfile.lastName);
+  const [fullName, setFullName] = useState(composeDisplayName(localProfile.firstName, localProfile.lastName));
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(localProfile.avatarDataUrl);
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
   const [query, setQuery] = useState(localProfile.location?.place || "");
@@ -30,8 +30,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setFirstName(localProfile.firstName);
-    setLastName(localProfile.lastName);
+    setFullName(composeDisplayName(localProfile.firstName, localProfile.lastName));
     setAvatarDataUrl(localProfile.avatarDataUrl);
     setLocation(localProfile.location);
     setQuery(localProfile.location?.place || "");
@@ -115,11 +114,10 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     event.preventDefault();
     setSaving(true);
     setError("");
-    const first = firstName.trim();
-    const last = lastName.trim();
-    if (!first || !last) {
+    const { firstName, lastName } = splitFullName(fullName);
+    if (!composeDisplayName(firstName, lastName)) {
       setSaving(false);
-      setError("First name and last name are required.");
+      setError("Enter your full name to continue.");
       return;
     }
     if (!location) {
@@ -133,8 +131,8 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     }
     try {
       await saveLocalProfile({
-        firstName: first,
-        lastName: last,
+        firstName,
+        lastName,
         avatarDataUrl,
         location,
       });
@@ -146,7 +144,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
     }
   }
 
-  const previewName = composeDisplayName(firstName, lastName) || "Your name";
+  const previewName = fullName.trim() || "Your name";
 
   return (
     <div
@@ -202,32 +200,20 @@ export function OnboardingProfileStep({ onContinue }: Props) {
           </div>
 
           <div className="onboarding-profile-fields">
-            <div className="profile-name-grid">
-              <label className="account-field">
-                <span className="sr-only">First name</span>
-                <input
-                  value={firstName}
-                  onChange={(event) => setFirstName(event.target.value)}
-                  placeholder="First name"
-                  autoComplete="given-name"
-                  maxLength={40}
-                  required
-                />
-              </label>
-              <label className="account-field">
-                <span className="sr-only">Last name</span>
-                <input
-                  value={lastName}
-                  onChange={(event) => setLastName(event.target.value)}
-                  placeholder="Last name"
-                  autoComplete="family-name"
-                  maxLength={40}
-                  required
-                />
-              </label>
-            </div>
+            <label className="account-field">
+              <span>What&apos;s your name</span>
+              <input
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                placeholder="Full name"
+                autoComplete="name"
+                maxLength={80}
+                required
+              />
+            </label>
 
             <div className="onboarding-location-block">
+              <span className="onboarding-profile-field-label">What&apos;s your location</span>
               {location && !locationDenied ? (
                 <div className="onboarding-location-ready" role="status">
                   <span className="onboarding-location-check" aria-hidden="true">
