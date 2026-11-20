@@ -201,11 +201,10 @@ export function OnboardingProfileStep({ onContinue }: Props) {
 
           <div className="onboarding-profile-fields">
             <label className="account-field">
-              <span>What&apos;s your name</span>
+              <span>What&apos;s your name?</span>
               <input
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
-                placeholder="Full name"
                 autoComplete="name"
                 maxLength={80}
                 required
@@ -213,7 +212,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
             </label>
 
             <div className="onboarding-location-block">
-              <span className="onboarding-profile-field-label">What&apos;s your location</span>
+              <span className="onboarding-profile-field-label">What&apos;s your location?</span>
               {location && !locationDenied ? (
                 <div className="onboarding-location-ready" role="status">
                   <span className="onboarding-location-check" aria-hidden="true">
