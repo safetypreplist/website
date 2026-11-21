@@ -3,102 +3,47 @@
     {
       "slug": "grab-go",
       "title": "5-Minute Grab-and-Go Bag",
-      "item_count": 31
+      "item_count": 42
     },
     {
       "slug": "ready-bag",
       "title": "15-Minute Ready Duffel",
-      "item_count": 115
+      "item_count": 84
     },
     {
       "slug": "vehicle-suitcase",
       "title": "20-Minute Vehicle OR Suitcase Prep",
-      "item_count": 65
+      "item_count": 62
     },
     {
       "slug": "home-resilience",
       "title": "60-Minute Home Resilience",
-      "item_count": 62
+      "item_count": 72
     },
     {
       "slug": "off-grid",
-      "title": "Rural, Off-Grid & Remote Property",
-      "item_count": 13
+      "title": "Off-Grid Systems",
+      "item_count": 16
     },
     {
       "slug": "water-purification",
-      "title": "Water Storage, Purification & Collection",
-      "item_count": 18
-    },
-    {
-      "slug": "cooling-heat",
-      "title": "Cooling, Heat & Weather Resilience",
-      "item_count": 17
+      "title": "Water Purification",
+      "item_count": 25
     },
     {
       "slug": "battery-solar",
-      "title": "Generator, Battery, Solar & Fuel Safety",
-      "item_count": 21
+      "title": "Home Battery & Solar",
+      "item_count": 30
+    },
+    {
+      "slug": "cooling-heat",
+      "title": "Emergency Cooling / Heat Resilience",
+      "item_count": 26
     },
     {
       "slug": "long-term-food",
-      "title": "Food, Cooking & Long-Term Supplies",
-      "item_count": 17
-    },
-    {
-      "slug": "medical-continuity",
-      "title": "Medical Continuity & Accessibility",
-      "item_count": 7
-    },
-    {
-      "slug": "sanitation",
-      "title": "Sanitation & Contamination Control",
-      "item_count": 8
-    },
-    {
-      "slug": "wildfire",
-      "title": "Wildfire & Smoke",
-      "item_count": 7
-    },
-    {
-      "slug": "flood",
-      "title": "Flood & Flash Flood",
-      "item_count": 6
-    },
-    {
-      "slug": "earthquake",
-      "title": "Earthquake",
-      "item_count": 6
-    },
-    {
-      "slug": "tornado",
-      "title": "Tornado & Severe Wind",
-      "item_count": 5
-    },
-    {
-      "slug": "hazmat",
-      "title": "Hazardous Materials & Chemical Release",
-      "item_count": 5
-    },
-    {
-      "slug": "public-health",
-      "title": "Public Health",
-      "item_count": 5
-    },
-    {
-      "slug": "urban",
-      "title": "Urban, Apartment & Shared Building",
-      "item_count": 6
-    },
-    {
-      "slug": "care-circle",
-      "title": "Children, Seniors, Pets & Caregivers",
-      "item_count": 6
-    },
-    {
-      "slug": "documents-recovery",
-      "title": "Documents, Finances, Privacy & Recovery",
-      "item_count": 7
+      "title": "Long-Term Food",
+      "item_count": 27
     }
   ]
 }

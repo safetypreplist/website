@@ -1,0 +1,3124 @@
+{
+  "source_pdf": "/Users/jazz/Desktop/JDW Builds/My Companies/SafetyPrepList/Folders/Official Build/FINAL_SafetyPrepList-Master-Checklist.pdf",
+  "checklists": 9,
+  "sections": 46,
+  "items": 384,
+  "systems": [
+    {
+      "slug": "grab-go",
+      "title": "5-Minute Grab-and-Go Bag",
+      "time_label": "05 MIN",
+      "illustration_key": "backpack",
+      "access_tier": "core",
+      "sort_order": 10,
+      "description": "A compact bag kept where it can be accessed when leaving. It is designed to move with you, not to replace other household supplies. Tailor contents and carrying arrangements to each person\u2019s needs.",
+      "sections": [
+        {
+          "slug": "communication",
+          "title": "Communication & Light",
+          "intro": "Keep essential devices charged and reachable.",
+          "items": [
+            {
+              "key": "grab.communication.phone",
+              "text": "Cell phone for each adult and older child who carries one",
+              "description": "Have a charged cell phone and essential contacts available offline when possible.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.communication.powerbank",
+              "text": "Correct charging cable",
+              "description": "Bring the charging cable compatible with each essential device.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.communication.bank",
+              "text": "Compact power bank",
+              "description": "Bring a compatible power bank; consult the manufacturer about safe storage and care.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.survival.flashlight",
+              "text": "Small flashlight or headlamp",
+              "description": "Bring a reliable flashlight or headlamp and compatible backup power.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.communication.whistle",
+              "text": "Whistle",
+              "description": "Attach it where it can be reached without unpacking the bag.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.communication.compact-battery-hand-crank-radio",
+              "text": "Compact battery or hand-crank radio, if space allows",
+              "description": "Bring a radio that receives local weather and emergency broadcasts; consult the manufacturer for operating information.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "financial-id",
+          "title": "Identification, Contacts & Money",
+          "intro": "One compact set per person or household as appropriate.",
+          "items": [
+            {
+              "key": "grab.financial.wallet-id",
+              "text": "Government photo ID",
+              "description": "Bring identification or a protected copy, as appropriate for the circumstances.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.access.keys",
+              "text": "Household keys",
+              "description": "Bring the household keys needed for the planned destination.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.financial.cards",
+              "text": "Payment card",
+              "description": "Bring a payment card and keep the issuer\u2019s lost-card contact information accessible.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.financial.cash",
+              "text": "Small emergency cash in small bills",
+              "description": "Bring an affordable emergency cash reserve in small bills, based on household needs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.contact-list",
+              "text": "Emergency contact card",
+              "description": "Include household members, out-of-area contact, care providers, school and veterinarian as applicable.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.medical.med-card",
+              "text": "Critical medical information card",
+              "description": "Keep allergies, essential conditions, medication names, healthcare contacts and communication needs for reference by responders and care providers.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "personal-needs",
+          "title": "Bag & Immediate Personal Needs",
+          "intro": "Keep the bag accessible and suited to household needs.",
+          "items": [
+            {
+              "key": "grab.personal-needs.grab-go-backpack",
+              "text": "Grab-and-go backpack",
+              "description": "Have an accessible bag suited to the intended carrier and household needs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.medical.prescriptions",
+              "text": "Essential prescription medication",
+              "description": "Bring essential prescription medication. Discuss emergency supplies, prescription access and storage with the prescriber and pharmacist.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.survival.water",
+              "text": "Water bottle",
+              "description": "Bring a portable water container and consider household needs, travel plans and current official guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.personal-needs.high-energy-ready-eat-snack",
+              "text": "High-energy, ready-to-eat snack",
+              "description": "Choose familiar, shelf-stable food that meets allergies and dietary needs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.survival.n95",
+              "text": "NIOSH-approved particulate respirator, if appropriate",
+              "description": "If appropriate, bring a NIOSH-approved particulate respirator selected for the hazard and fit. It does not protect against gases or vapors.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.survival.sanitizer",
+              "text": "Hand sanitizer and tissues",
+              "description": "Bring hand sanitizer and tissues; consult public-health guidance about appropriate use.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.medical.glasses",
+              "text": "Spare glasses or contact lens supplies",
+              "description": "Bring spare glasses or contact lens supplies appropriate to the user.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.personal-needs.hearing-aid-batteries-charging-case",
+              "text": "Hearing-aid batteries or charging case",
+              "description": "Bring hearing-aid batteries, charging case or other required accessories.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.personal-needs.small-first-aid-pouch",
+              "text": "Small first-aid pouch",
+              "description": "Bring a first-aid pouch suited to household needs. Take a recognized first-aid course; this checklist does not teach procedures.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.medical.device-accessories",
+              "text": "Essential medical-device accessories",
+              "description": "Bring essential medical-device accessories already used by the person.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.access.mobility-aids",
+              "text": "Mobility or communication aid",
+              "description": "Bring essential mobility or communication aids and discuss backup needs with the equipment provider.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.personal.hygiene",
+              "text": "Personal hygiene or menstrual supplies",
+              "description": "Pack the products the person actually uses.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.layer",
+              "text": "Seasonal protective layer",
+              "description": "Choose weather-appropriate clothing, hat, gloves or rain protection for local hazards.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.personal.goggles",
+              "text": "Protective goggles, if appropriate",
+              "description": "Bring protective goggles where smoke, dust, or debris is likely. A respirator does not protect the eyes.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "documents",
+          "title": "Documents & Copies",
+          "intro": "Use copies and secure digital access where possible.",
+          "items": [
+            {
+              "key": "grab.documents.passport",
+              "text": "Copies of vital documents",
+              "description": "Include only what is needed to establish identity, family relationships, residence or insurance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.insurance-cards",
+              "text": "Insurance and policy contact information",
+              "description": "Include insurer names, policy references and claims phone numbers; avoid carrying unnecessary account credentials.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.pouch",
+              "text": "Waterproof document pouch",
+              "description": "Protect paper copies and the contact/medical cards from rain and spills.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.digital",
+              "text": "Secure digital document access",
+              "description": "Have secure digital access to essential documents; consult the service provider about secure offline access.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.map",
+              "text": "Paper map of the local area",
+              "description": "Bring a paper map showing relevant local destinations and official evacuation information.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.note",
+              "text": "Pencil and waterproof note card",
+              "description": "For messages, instructions and contact details.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.blanket",
+              "text": "Compact emergency blanket",
+              "description": "A lightweight backup layer; not a substitute for suitable clothing or shelter.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.alarm",
+              "text": "Small personal alarm, if useful",
+              "description": "Choose a device the user can operate and hear.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.tape",
+              "text": "Small roll of duct tape",
+              "description": "Bring duct tape for ordinary household organization or non-structural needs; consult qualified professionals for repairs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "grab.documents.multitool",
+              "text": "Compact multitool, if lawful and practical",
+              "description": "Keep it accessible and appropriate for the destination and transport rules.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "household-addons",
+          "title": "Household-specific Add-ons",
+          "intro": "Add only the modules that apply; do not assume needs from a skipped profile question.",
+          "items": [
+            {
+              "key": "grab.addons.infant",
+              "text": "Infant and toddler mini-kit, if needed",
+              "description": "Diapers, wipes, diaper cream, feeding supplies, safe formula or food, extra water, spare clothes and comfort item.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "grab.addons.child",
+              "text": "Child comfort and identification kit, if needed",
+              "description": "Current photo, caregiver contacts, small activity, comfort item and reunification information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "grab.household-addons.pet-mini-kit",
+              "text": "Pet mini-kit, if needed",
+              "description": "Leash or harness, ID, collapsible bowl, a small food supply, waste bags and a current photo.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "grab.household-addons.senior-care-support-mini-kit",
+              "text": "Senior or care-support mini-kit, if needed",
+              "description": "Medication list, glasses, hearing supplies, mobility accessories, caregiver contacts and simple written instructions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "grab.addons.disability",
+              "text": "Disability and accessibility supplies, if needed",
+              "description": "Communication aids, accessible formats, spare batteries, repair items and backup assistive-device plan.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "grab.household-addons.temperature-sensitive-medication",
+              "text": "Temperature-sensitive medication plan, if needed",
+              "description": "For temperature-sensitive medication, discuss approved storage and transport with the clinician, pharmacist or medication manufacturer.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ready-bag",
+      "title": "15-Minute Ready Duffel",
+      "time_label": "15 MIN",
+      "illustration_key": "duffel",
+      "access_tier": "core",
+      "sort_order": 20,
+      "description": "A larger portable kit for time away from home. Consider the needs of every household member, including infants, older adults, people with disabilities, medically dependent people and pets. Contents and quantities depend on individual circumstances and current official guidance.",
+      "sections": [
+        {
+          "slug": "documents",
+          "title": "Documents & Household Records",
+          "intro": "Keep originals protected at home; carry copies or secure digital versions.",
+          "items": [
+            {
+              "key": "ready.documents.passport",
+              "text": "Current passport or travel-document copies",
+              "description": "Bring current travel-document copies appropriate to household needs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.state-id",
+              "text": "Photo ID copies",
+              "description": "Bring protected copies of photo identification.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.birth-certs",
+              "text": "Birth, adoption, custody or guardianship records, if relevant",
+              "description": "Carry copies needed to establish relationships or authorize care.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.marriage",
+              "text": "Marriage, divorce or name-change records, if relevant",
+              "description": "Include only when needed for identity or legal matters.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.lease-deed-proof-residence-copy",
+              "text": "Lease, deed or proof-of-residence copy",
+              "description": "Include landlord or property contact details where useful.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.vehicle-titles",
+              "text": "Vehicle registration and insurance copies",
+              "description": "Keep current copies in a protected pouch.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.legal",
+              "text": "Will, power of attorney and advance-directive information",
+              "description": "Carry copies or a concise location/contact record; protect sensitive documents.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.medical-summary-medication-list",
+              "text": "Medical summary and medication list",
+              "description": "Include relevant health information, allergies, medication names, prescription details and healthcare contacts for reference by care providers.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.vaccinations",
+              "text": "Vaccination and health records, when needed",
+              "description": "Include records needed for school, shelter, travel or ongoing care; include pet vaccination records in the pet module.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.health-auto-home-other-relevant",
+              "text": "Health, auto, home and other relevant insurance details",
+              "description": "Include policy identifiers and claims numbers.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.bank",
+              "text": "Bank and card issuer emergency contact numbers",
+              "description": "Keep bank and card issuer emergency contacts accessible; protect account information and credentials.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.emergency-sheet",
+              "text": "Emergency contact sheet",
+              "description": "Include family, out-of-area contact, school, employer, care providers, pharmacy and veterinarian as applicable.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.usb",
+              "text": "Encrypted backup drive, optional",
+              "description": "Use encryption and test access. Do not store an unprotected copy of passwords or identity documents.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.cloud",
+              "text": "Account recovery instructions, optional",
+              "description": "Store recovery instructions securely, not plain-text passwords or exposed recovery codes.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.documents.cash",
+              "text": "Household cash reserve",
+              "description": "Have an affordable household cash reserve in small bills, based on household needs.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "clothing",
+          "title": "Clothing & Weather Protection",
+          "intro": "Pack practical layers suited to climate, forecast, household needs and travel circumstances.",
+          "items": [
+            {
+              "key": "ready.extra-clothing.additional-underwear-and-socks",
+              "text": "Underwear and socks",
+              "description": "Choose clothing and socks based on household needs, expected conditions, travel plans and access to replacement items.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.tees",
+              "text": "Shirts and base layers",
+              "description": "Choose quick-drying, comfortable fabrics.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.durable-pants-shorts",
+              "text": "Durable pants and optional shorts",
+              "description": "Adjust for climate, mobility and personal needs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.warm-shirt",
+              "text": "Warm layer",
+              "description": "A fleece, sweater or equivalent appropriate to expected temperatures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.jacket",
+              "text": "Weather-resistant outer layer",
+              "description": "Wind and rain protection suited to the local climate.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.rain",
+              "text": "Rain poncho or lightweight rain jacket",
+              "description": "Choose clothing that permits safe walking and use of mobility aids.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.hat-sun-protection",
+              "text": "Hat and sun protection",
+              "description": "Include shade for high sun exposure and warmth for cold conditions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.gloves",
+              "text": "Gloves",
+              "description": "Choose work, warmth or protective gloves for the actual hazard.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.clothing.broken-in-closed-toe-walking",
+              "text": "Broken-in closed-toe walking shoes",
+              "description": "Avoid relying on new footwear during evacuation.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.extra-clothing.extra-base-layer",
+              "text": "Sleepwear or extra base layer",
+              "description": "Choose warm, comfortable items.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "hygiene",
+          "title": "Hygiene & Sanitation",
+          "intro": "Pack hygiene and sanitation supplies based on household size, personal needs and travel circumstances.",
+          "items": [
+            {
+              "key": "ready.hygiene.toothbrush",
+              "text": "Toothbrushes and toothpaste",
+              "description": "One set per person.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.dental-floss-interdental-supplies",
+              "text": "Dental floss or interdental supplies",
+              "description": "Include if regularly used.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.soap-body-cleanser",
+              "text": "Soap or body cleanser",
+              "description": "A small, leak-resistant container or bar.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.shampoo",
+              "text": "Shampoo, if needed",
+              "description": "Travel size or solid bar.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.wipes",
+              "text": "Wet wipes",
+              "description": "Bring wet wipes suited to household needs; follow local waste-disposal guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.sanitizer",
+              "text": "Hand sanitizer",
+              "description": "Bring hand sanitizer and consult current public-health guidance about appropriate use.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.tp",
+              "text": "Toilet paper",
+              "description": "Bring toilet paper suited to household needs and travel circumstances.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.feminine",
+              "text": "Personal hygiene and menstrual supplies",
+              "description": "Use familiar products.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.waste-bags",
+              "text": "Waste bags and sealable bags",
+              "description": "For diapers, soiled clothing and waste containment.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.incontinence-supplies",
+              "text": "Incontinence supplies, if needed",
+              "description": "Include pads, briefs, skin-care products and disposal bags.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.razor-grooming-items",
+              "text": "Razor or grooming items, if needed",
+              "description": "Pack only what is useful.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.nails",
+              "text": "Nail clippers and small mirror, optional",
+              "description": "Keep sharp items safely covered.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.portable-toilet-waste-system-likely",
+              "text": "Portable toilet or waste system, if likely to be needed",
+              "description": "Bring a portable toilet or waste system if needed; consult local public-health authorities about compatible supplies and disposal.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "medical",
+          "title": "Medical & Accessibility",
+          "intro": "Customize with the person\u2019s clinician, pharmacist or equipment provider.",
+          "items": [
+            {
+              "key": "ready.medical.first-aid-kit",
+              "text": "First-aid kit",
+              "description": "Bring a first-aid kit suited to household needs. Take a recognized first-aid course; this checklist does not teach procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.prescriptions",
+              "text": "Personal prescription medication",
+              "description": "Bring personal prescription medication. Discuss emergency supplies, refill options and storage with the prescriber and pharmacist.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.extra-medical.copies-of-prescriptions",
+              "text": "Medication list and copies of prescriptions",
+              "description": "Bring a medication list and prescription information; discuss medication questions with qualified healthcare professionals.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.over-counter-medicines-used-by",
+              "text": "Over-the-counter medicines used by the household",
+              "description": "Keep a list of household over-the-counter products and discuss individual suitability with a pharmacist or healthcare provider.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.comms.batteries",
+              "text": "Thermometer and spare batteries",
+              "description": "Bring a reliable thermometer and compatible batteries; consult the manufacturer for product information.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.medical.gloves",
+              "text": "Disposable gloves",
+              "description": "Select protective supplies based on household needs and guidance from qualified health or safety professionals.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.blister-care-foot-care-supplies",
+              "text": "Blister care and foot-care supplies",
+              "description": "Moleskin or suitable dressings, especially if walking is possible.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.devices",
+              "text": "Personal medical equipment",
+              "description": "Include glucose meter, blood-pressure monitor or other devices actually used.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.medical.device-batteries-chargers-consumables",
+              "text": "Device batteries, chargers and consumables",
+              "description": "Bring required device batteries, chargers and consumables; consult the equipment manufacturer and healthcare provider about compatibility and backup needs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.refrigerated-medication-transport",
+              "text": "Refrigerated medication transport plan",
+              "description": "For refrigerated medication, ask the medication manufacturer, pharmacist or prescriber about approved transport, storage and temperature requirements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.hearing-vision-communication-supplies",
+              "text": "Hearing, vision and communication supplies",
+              "description": "Spare glasses, hearing-aid batteries, communication boards or device accessories.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.medical.mobility-device-support",
+              "text": "Mobility-device support",
+              "description": "Bring mobility-device accessories and identify backup options with the equipment provider; consult qualified service professionals about repairs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.medical-alert-identification",
+              "text": "Medical alert identification",
+              "description": "Wear or carry current medical alert information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.caregiver-instructions-backup-contacts",
+              "text": "Caregiver instructions and backup contacts",
+              "description": "Include routines, transfer needs, communication preferences and essential support instructions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.tourniquet",
+              "text": "Prescribed emergency medical equipment and training information",
+              "description": "Bring prescribed emergency medical equipment. Ask a qualified healthcare professional whether a tourniquet is appropriate for your household. Take a recognized first-aid course; this checklist does not teach medical procedures.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "communications",
+          "title": "Communication & Navigation",
+          "intro": "Prepare for weak cellular service and depleted batteries.",
+          "items": [
+            {
+              "key": "ready.comms.noaa",
+              "text": "Battery or hand-crank NOAA weather radio",
+              "description": "Bring a battery or hand-crank weather radio that receives local alerts; consult the manufacturer for operating information.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.comms.amfm",
+              "text": "AM/FM radio, if separate",
+              "description": "Avoid unnecessary duplication if one radio covers both functions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.comms.powerbanks",
+              "text": "Charged power banks",
+              "description": "Bring compatible power banks; review product specifications and manufacturer guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.comms.cables",
+              "text": "Charging cables and wall/vehicle adapters",
+              "description": "Pack only connectors used by the household.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.communications.spare-batteries",
+              "text": "Spare batteries",
+              "description": "Match actual device types and store safely.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.comms.maps",
+              "text": "Paper map and marked routes",
+              "description": "Bring a paper map with official evacuation information and relevant destinations.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.communications.compass-someone-knows-how-use",
+              "text": "Compass, if someone knows how to use it",
+              "description": "Bring a compass if appropriate; consult recognized navigation training resources if needed.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.comms.whistle",
+              "text": "Whistles or other signaling devices",
+              "description": "One per person where practical.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.communications.written-reunification",
+              "text": "Written reunification plan",
+              "description": "Identify who contacts whom, meeting points and an out-of-area contact.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "food-water",
+          "title": "Food & Water",
+          "intro": "Consider household water needs, travel circumstances and available storage; consult current official guidance.",
+          "items": [
+            {
+              "key": "ready.food.water",
+              "text": "Drinking water for the first leg of travel",
+              "description": "Bring drinking water based on household needs, travel circumstances and available storage.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.food-water.household-specific-supply-ready-eat",
+              "text": "Household-specific supply of ready-to-eat food",
+              "description": "Bring familiar, shelf-stable food based on household needs, dietary requirements, travel plans and storage.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.food-water.household-specific-food-planning",
+              "text": "Household-specific food planning",
+              "description": "Consider household food needs, medical needs, allergies and dietary requirements; consult qualified professionals for individualized nutrition questions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.food-water.allergy-safe-special-diet-foods",
+              "text": "Allergy-safe and special-diet foods",
+              "description": "Keep clearly labeled and separate where cross-contact is a concern.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.food.baby",
+              "text": "Infant feeding supplies, if needed",
+              "description": "Bring infant feeding supplies if needed; follow product instructions and ask the child\u2019s healthcare professional about safe preparation and storage.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.food.opener",
+              "text": "Manual can opener",
+              "description": "Needed if canned food is included.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.food.pet",
+              "text": "Pet food and feeding supplies, if needed",
+              "description": "Bring pet food and feeding supplies suited to each animal; consult a veterinarian about special diets or medical needs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.medical.electrolytes",
+              "text": "Electrolyte solution or packets, if appropriate",
+              "description": "Bring electrolyte products only when appropriate; ask a healthcare provider or pharmacist about individual suitability.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "shelter-tools",
+          "title": "Cooking, Shelter & Practical Gear",
+          "intro": "Never run a generator, grill, camp stove, or charcoal indoors, in a garage, or in any enclosed space.",
+          "items": [
+            {
+              "key": "ready.food.purification",
+              "text": "Water treatment resource information",
+              "description": "Keep current CDC and EPA drinking-water guidance and relevant product information available. Do not use this checklist for water-treatment procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.shelter-tools.portable-cooking-equipment",
+              "text": "Portable cooking equipment information, optional",
+              "description": "For portable cooking equipment, consult the manufacturer, local fire authority and official fire-safety guidance about suitability and restrictions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.food.matches",
+              "text": "Waterproof lighter or matches, optional",
+              "description": "Store safely and follow local fire restrictions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.food.mess-kit",
+              "text": "Pot, cup, bowl and utensils",
+              "description": "Choose durable, easy-to-clean items.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.shelter.headlamp",
+              "text": "Headlamp or flashlight with spare power",
+              "description": "Bring a headlamp or flashlight with compatible backup power; consult the manufacturer about care.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.shelter.sleeping-bag",
+              "text": "Sleeping bag or warm blanket per person",
+              "description": "Select a temperature rating suitable for expected conditions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.extra-shelter-sleep.sleeping-pad",
+              "text": "Sleeping pad, if needed",
+              "description": "Improves comfort and insulation from the ground.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.shelter-tools.tarp-cordage",
+              "text": "Tarp and cordage",
+              "description": "Use for temporary weather protection; do not block exits or create hazards.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.sunscreen",
+              "text": "Sunscreen and SPF lip balm",
+              "description": "Choose sun-protection products appropriate to individual needs and review product labeling and current public-health guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.hygiene.insect",
+              "text": "Insect repellent",
+              "description": "If bringing insect repellent, choose a registered product appropriate for the user and follow its label.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.shelter-tools.respirator-hazard",
+              "text": "Respirator appropriate to the hazard",
+              "description": "If appropriate, bring a NIOSH-approved particulate respirator selected for the hazard and fit. It does not protect against gases or vapors.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "ready.shelter-tools.notepad-pencil-marker-repair-tape",
+              "text": "Notepad, pencil, marker and repair tape",
+              "description": "For messages, labels and temporary non-structural repairs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.extra-repair-practical.heavy-duty-trash-bags",
+              "text": "Heavy-duty trash bags and zip bags",
+              "description": "For wet clothing, waste and keeping supplies dry.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "ready.shelter.goggles",
+              "text": "Protective goggles, if appropriate",
+              "description": "Bring protective goggles where smoke, dust, or debris is likely. A respirator does not protect the eyes. \u25a0 General preparedness information only. Not medical, legal, or emergency-response advice. Follow official guidance and qualified professionals. 20-Minute Vehicle OR Suitcase Prep Two distinct paths: roadside readiness or evacuation continuity | BASIC PLAN Choose the path that matches your situation. Vehicle supplies stay secured in the vehicle; suitcase supplies are portable and travel with the household. Do not treat the two paths as one combined packing task.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "vehicle-suitcase",
+      "title": "20-Minute Vehicle OR Suitcase Prep",
+      "time_label": "20 MIN",
+      "illustration_key": "suv",
+      "access_tier": "core",
+      "sort_order": 30,
+      "description": "Choose the path that matches your situation. Vehicle supplies stay secured in the vehicle; suitcase supplies are portable and travel with the household. Do not treat the two paths as one combined packing task.",
+      "sections": [
+        {
+          "slug": "vehicle-repair",
+          "title": "Vehicle Safety & Recovery",
+          "intro": "Review vehicle preparedness needs and keep manufacturer information and qualified roadside-assistance contacts available.",
+          "items": [
+            {
+              "key": "vehicle.safety.jumper-cables",
+              "text": "Jumper cables or tested jump starter",
+              "description": "Bring jumper cables or a tested jump starter if appropriate. Do not use this checklist for jump-start procedures; consult the vehicle manufacturer or qualified roadside assistance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.tire-inflator",
+              "text": "Tire inflator and tire-pressure gauge",
+              "description": "Bring a tire inflator or pressure gauge if appropriate. Consult the vehicle manufacturer or qualified roadside assistance; this checklist does not provide tire-service procedures.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.spare-tire",
+              "text": "Tire repair kit or spare tire plan",
+              "description": "Have a spare-tire or tire-repair plan. Consult the vehicle manufacturer and qualified roadside assistance about repair limitations; do not use this checklist for tire-change procedures.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.tool-kit",
+              "text": "Basic vehicle tools",
+              "description": "Bring only vehicle-compatible tools. Consult the vehicle manufacturer or qualified service professional before attempting repairs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.roadside",
+              "text": "Roadside recovery assistance plan",
+              "description": "Keep qualified roadside-assistance contact information available. Do not attempt improvised towing or vehicle recovery.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.fuses",
+              "text": "Spare fuses, if user-serviceable",
+              "description": "For replacement fuses or other vehicle parts, consult the manufacturer or a qualified service provider.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.vehicle-repair.roadside-assistance",
+              "text": "Roadside-assistance information",
+              "description": "Keep membership details and phone number on paper and on the phone.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.maintenance",
+              "text": "Vehicle maintenance check",
+              "description": "Keep vehicle maintenance information available and arrange service with a qualified automotive professional.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.ev-plan",
+              "text": "EV charging plan, if applicable",
+              "description": "Identify EV charging resources and consult the vehicle manufacturer about compatible charging equipment and travel planning.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.safety.traction",
+              "text": "Traction aids, chains or shovel, where climate requires",
+              "description": "Consult the vehicle manufacturer or qualified roadside professional about suitable seasonal traction or recovery equipment.",
+              "quick_start": true,
+              "active": true
+            }
+          ],
+          "lane": "vehicle"
+        },
+        {
+          "slug": "vehicle-visibility",
+          "title": "Vehicle Warning & Visibility",
+          "intro": "Keep critical escape tools reachable from the driver or passenger seat.",
+          "items": [
+            {
+              "key": "vehicle.visibility.vest",
+              "text": "Reflective vest",
+              "description": "Store where it can be reached without opening the trunk.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.visibility.flares",
+              "text": "Warning triangles or approved warning device",
+              "description": "Keep information about approved roadside visibility equipment and applicable local road rules; prioritize personal safety and qualified assistance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.vehicle-visibility.automotive-fire-safety-equipment",
+              "text": "Automotive fire-safety equipment information",
+              "description": "Evacuate first. Use an extinguisher only on a small, contained fire when you have a clear exit behind you. Know where it is and when to leave instead. Consult the local fire authority or a recognized training provider for additional guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.visibility.window-tool",
+              "text": "Seat-belt cutter and window breaker",
+              "description": "If carrying an emergency escape tool, consult the vehicle and tool manufacturers and recognized safety resources.",
+              "quick_start": true,
+              "active": true
+            }
+          ],
+          "lane": "vehicle"
+        },
+        {
+          "slug": "vehicle-survival",
+          "title": "Vehicle Supplies",
+          "intro": "Consider passenger needs, climate and travel circumstances.",
+          "items": [
+            {
+              "key": "vehicle.comfort.water",
+              "text": "Drinking water",
+              "description": "Use sealed containers suited to vehicle temperature swings; inspect and replace as needed.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.extra-vehicle-extras.additional-shelf-stable-snacks",
+              "text": "Shelf-stable snacks",
+              "description": "Choose heat-tolerant foods and rotate frequently.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.lights",
+              "text": "Flashlight or headlamp",
+              "description": "Include spare batteries or a charged unit.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.charger",
+              "text": "Phone charger and power bank",
+              "description": "Check compatibility and charge state.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.first-aid",
+              "text": "First-aid kit",
+              "description": "Include household-specific medical supplies.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.blankets",
+              "text": "Blanket or emergency layer",
+              "description": "Choose climate-appropriate insulation.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.ponchos",
+              "text": "Rain protection and sturdy footwear",
+              "description": "Keep footwear suitable for walking away from the vehicle.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.gloves",
+              "text": "Work gloves",
+              "description": "Bring work gloves if useful for handling personal supplies; contact qualified roadside assistance for vehicle recovery or roadside work.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.maps",
+              "text": "Paper map and printed alternate route",
+              "description": "Do not rely only on navigation apps.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.vehicle-survival.protective-equipment-local-hazards",
+              "text": "Protective equipment appropriate to local hazards, if needed",
+              "description": "Research protective equipment appropriate to local hazards and individual needs; consult official guidance and product information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.extra-vehicle-extras.heavy-duty-trash-bags",
+              "text": "Waterproof bags and heavy-duty trash bags",
+              "description": "For wet gear, waste and temporary containment.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.half-tank",
+              "text": "Fuel or charge minimum plan",
+              "description": "Have a vehicle fuel or charging plan based on travel needs, local conditions and manufacturer guidance; do not rely on a universal threshold.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.vehicle-survival.child-restraint-pet-transport-readiness",
+              "text": "Child restraint and pet transport readiness",
+              "description": "Confirm car seats are correctly installed and pets can be secured safely.",
+              "quick_start": false,
+              "active": true
+            }
+          ],
+          "lane": "vehicle"
+        },
+        {
+          "slug": "suitcase",
+          "title": "Suitcase Path",
+          "intro": "For a planned evacuation, bring household continuity supplies suited to individual needs.",
+          "items": [
+            {
+              "key": "vehicle.suitcase.ids",
+              "text": "ID and protected document copies",
+              "description": "Carry originals only when needed and safe; keep a second copy set separately.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.medication-in-current-labeled-packaging",
+              "text": "Medication in current labeled packaging",
+              "description": "Bring medication in its current labeled packaging. Discuss emergency supplies, prescription access and travel or storage requirements with the prescriber and pharmacist.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.profile",
+              "text": "Medical profile and emergency contacts",
+              "description": "Include allergies, conditions, doses, clinicians and pharmacy.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.clothes",
+              "text": "Trip-appropriate of clothing",
+              "description": "Adjust to climate, destination and access to laundry.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.toiletries",
+              "text": "Toiletry and hygiene kit",
+              "description": "Include household-specific products.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.comfort.bank",
+              "text": "Chargers, adapters and power bank",
+              "description": "Include only devices and connectors needed.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.work",
+              "text": "Work, school or professional essentials",
+              "description": "Prioritize irreplaceable equipment and documents.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.comfort",
+              "text": "Child comfort and activity items",
+              "description": "Include familiar comfort items and a small activity kit.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.pets",
+              "text": "Pet supplies and destination plan",
+              "description": "Confirm pet-friendly lodging or shelter arrangements before departure when possible.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.destination",
+              "text": "Destination and host information",
+              "description": "Include address, phone, check-in instructions and backup destination.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.route",
+              "text": "Primary and alternate evacuation route",
+              "description": "Use paper and offline maps; follow official instructions if routes change.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.valuables",
+              "text": "Small irreplaceable valuables",
+              "description": "Carry only what can be safely managed; photograph other possessions for insurance.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.special-weather-destination-gear",
+              "text": "Special weather and destination gear",
+              "description": "Include clothing, adapters or accessibility equipment required at the destination.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.extra-suitcase-extras.backup-payment-method",
+              "text": "Backup payment method and emergency cash",
+              "description": "Store separately from primary wallet.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.suitcase.laundry-repair-basics",
+              "text": "Laundry and repair basics",
+              "description": "Small detergent sheets, laundry bag and compact sewing/repair kit if useful.",
+              "quick_start": false,
+              "active": true
+            }
+          ],
+          "lane": "suitcase"
+        },
+        {
+          "slug": "pets",
+          "title": "Pet Evacuation Module",
+          "intro": "For each pet; do not leave pets behind when evacuation is required.",
+          "items": [
+            {
+              "key": "vehicle.pets.carrier",
+              "text": "Secure carrier or crate",
+              "description": "Label with owner contact details; make sure the animal can tolerate it.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.pets.leash",
+              "text": "Leash, harness, collar and current ID",
+              "description": "Include a current photo and microchip details where applicable.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.pets.household-specific-food-water",
+              "text": "Household-specific food and water plan",
+              "description": "Bring familiar pet food, water and feeding supplies based on each animal\u2019s needs; consult a veterinarian about individual requirements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.pets.meds",
+              "text": "Pet medications and medical records",
+              "description": "Include doses, veterinarian contact and vaccination records.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.pets.waste",
+              "text": "Waste, litter and cleanup supplies",
+              "description": "Pack bags, litter, scoop and absorbent pads as appropriate.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.pets.pet-friendly-destination-transport",
+              "text": "Pet-friendly destination and transport plan",
+              "description": "Identify hotels, shelters, friends or boarding options; confirm requirements.",
+              "quick_start": false,
+              "active": true
+            }
+          ],
+          "lane": "suitcase"
+        },
+        {
+          "slug": "babies",
+          "title": "Infant & Child Evacuation Module",
+          "intro": "Pack for age, feeding method and caregiver needs.",
+          "items": [
+            {
+              "key": "vehicle.babies.diapers",
+              "text": "Diapers, wipes and diaper cream",
+              "description": "Plan diapers, wipes and related supplies around the child\u2019s needs, trip circumstances and possible delays.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.babies.formula",
+              "text": "Formula, bottles and safe feeding supplies",
+              "description": "Bring formula, bottles and safe feeding supplies if needed. Consult the product manufacturer and the child\u2019s healthcare professional about preparation, water and storage guidance.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.babies.food",
+              "text": "Baby food and feeding utensils",
+              "description": "Choose familiar, age-appropriate foods.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.babies.extra-clothes-sleepwear-weather-layers",
+              "text": "Extra clothes, sleepwear and weather layers",
+              "description": "Include more than one change for infants.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.babies.carrier",
+              "text": "Baby carrier or stroller suited to evacuation",
+              "description": "Choose the safest option for the route and terrain.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.babies.comfort",
+              "text": "Pacifiers and familiar comfort item",
+              "description": "Include a backup if the child relies on one.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.babies.child-identification-reunification-card",
+              "text": "Child identification and reunification card",
+              "description": "Include caregiver contacts and authorized pickup information.",
+              "quick_start": false,
+              "active": true
+            }
+          ],
+          "lane": "suitcase"
+        },
+        {
+          "slug": "seniors",
+          "title": "Older Adult, Disability & Medical Support Module",
+          "intro": "Make the plan with the person who uses the supplies.",
+          "items": [
+            {
+              "key": "vehicle.seniors.medication-care-schedule",
+              "text": "Medication and care schedule",
+              "description": "Keep an up-to-date care and medication record; discuss emergency medication planning with the healthcare provider and pharmacist.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.seniors.devices",
+              "text": "Mobility aids and backup power",
+              "description": "Bring mobility aids and required accessories; discuss backup power, repairs and transport with the equipment provider.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.seniors.hearing-vision-communication-supports",
+              "text": "Hearing, vision and communication supports",
+              "description": "Pack glasses, hearing-aid supplies and communication aids.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.seniors.comfort",
+              "text": "Incontinence and skin-care supplies",
+              "description": "Include suitable products and disposal bags.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.seniors.caregiver-facility-support-network-contacts",
+              "text": "Caregiver, facility and support-network contacts",
+              "description": "Include backup caregivers and transport arrangements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.seniors.records",
+              "text": "Advance directives and concise medical summary",
+              "description": "Protect sensitive information and keep it accessible to responders when needed.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "vehicle.seniors.accessible-transport-destination",
+              "text": "Accessible transport and destination plan",
+              "description": "Confirm accessible vehicle, lodging, shelter and power needs.",
+              "quick_start": false,
+              "active": true
+            }
+          ],
+          "lane": "suitcase"
+        }
+      ]
+    },
+    {
+      "slug": "home-resilience",
+      "title": "60-Minute Home Resilience",
+      "time_label": "60 MIN",
+      "illustration_key": "cabin",
+      "access_tier": "core",
+      "sort_order": 40,
+      "description": "A focused home setup for sheltering in place, leaving safely and managing disruptions. Local hazards, building type, household needs and official instructions determine what is appropriate.",
+      "sections": [
+        {
+          "slug": "detection",
+          "title": "Fire, Smoke & Carbon Monoxide",
+          "intro": "Review alarm, fire-safety and exit-planning information from local fire authorities, applicable codes and equipment manufacturers.",
+          "items": [
+            {
+              "key": "home.safety.smoke",
+              "text": "Working smoke alarms",
+              "description": "Have working smoke alarms; consult the manufacturer and local fire authority about placement, testing and replacement.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.safety.co",
+              "text": "Working carbon monoxide alarms",
+              "description": "Have working carbon monoxide alarms; consult the manufacturer and local fire authority about placement, maintenance and replacement.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.detection.accessible-fire-safety-equipment-training",
+              "text": "Accessible fire-safety equipment and training information",
+              "description": "Have accessible fire-safety equipment. Evacuate first. Use an extinguisher only on a small, contained fire when you have a clear exit behind you. Know where it is and when to leave instead.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.safety.escape",
+              "text": "Two exit paths identified",
+              "description": "Identify available exit paths and consult the local fire authority about household-specific escape planning.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.safety.exits-clear",
+              "text": "Exit routes clear",
+              "description": "Keep exit routes accessible; consult qualified professionals about accessibility or building concerns.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.ready.shoes",
+              "text": "Shoes, light and gloves near beds",
+              "description": "Protect feet from broken glass and debris during nighttime evacuation.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.safety.meeting",
+              "text": "Household outdoor meeting point",
+              "description": "Have a household outdoor meeting point and make sure everyone knows the location.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.detection.local-hazards-evacuation-zones-alerts",
+              "text": "Local hazards, evacuation zones and alerts known",
+              "description": "Identify wildfire, flood, severe-weather and other relevant hazard zones; sign up for official alerts.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.detection.fire-safe-lighting",
+              "text": "Fire-safe lighting plan",
+              "description": "Use battery lights as the default; avoid relying on candles during outages.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "utilities",
+          "title": "Utilities & Earthquake Safety",
+          "intro": "Keep utility emergency contacts and official safety guidance accessible. Consult utilities and qualified professionals about unfamiliar or damaged systems.",
+          "items": [
+            {
+              "key": "home.utilities.water-utility-emergency",
+              "text": "Water utility emergency information",
+              "description": "Keep the water utility\u2019s official information and contact details available. Consult the utility or a qualified professional about shutoff questions.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.gas-tool",
+              "text": "Gas utility emergency information, if applicable",
+              "description": "Keep the gas utility\u2019s emergency contact information accessible. If you smell gas, leave the building and call the gas utility or 911 from outside. Do not turn gas back on yourself.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.electrical-system-professional-contacts",
+              "text": "Electrical-system information and professional contacts",
+              "description": "Keep electrical-system documentation accessible and consult a qualified electrician about panel identification, labeling or electrical concerns.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.practice",
+              "text": "Utility shutoff guidance recorded",
+              "description": "Keep utility emergency contacts and official shutoff guidance available. Consult the utility or a qualified professional; do not attempt unfamiliar or damaged systems.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.anchor",
+              "text": "Tall furniture and televisions secured",
+              "description": "Identify furniture and household items that may need professional anchoring; consult manufacturers and qualified installers about appropriate methods.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.water-heater-large-appliances-secured",
+              "text": "Water heater and large appliances secured",
+              "description": "Identify appliances that may need securing and consult manufacturers or qualified professionals about suitable installation and anchoring.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.heavy-objects-moved-away-from",
+              "text": "Heavy objects moved away from beds and seating",
+              "description": "Keep heavy and breakable items in safer storage locations; consult official earthquake-safety guidance for household-specific recommendations.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.utilities.drop-cover-hold-on-practiced",
+              "text": "Drop, Cover and Hold On practiced",
+              "description": "Know Drop, Cover and Hold On for earthquakes. Consult official earthquake preparedness guidance or recognized community education resources.",
+              "quick_start": true,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "lighting",
+          "title": "Light, Power & Communications",
+          "intro": "Prioritize life-sustaining equipment and essential information.",
+          "items": [
+            {
+              "key": "home.power.lanterns",
+              "text": "Flashlights or headlamps accessible",
+              "description": "Provide enough for household members and common areas.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.power.lantern",
+              "text": "Battery lantern",
+              "description": "Use safe battery-powered lighting.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.power.batteries",
+              "text": "Correct spare batteries and charging cables",
+              "description": "Match actual equipment.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.lighting.power-outage-device-inventory",
+              "text": "Power outage device inventory",
+              "description": "List medical devices, communications, refrigeration and other essential loads.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.power.backup",
+              "text": "Backup power plan",
+              "description": "Identify battery, vehicle, generator or community charging options.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.power.power-station",
+              "text": "Portable power station, if appropriate",
+              "description": "Identify potential backup power options and consult equipment manufacturers and qualified electrical professionals about suitability for household needs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.power.generator-plan",
+              "text": "Generator plan, if owned",
+              "description": "If a generator is part of the household plan, consult the manufacturer, local fire authority and utility about installation, fuel, maintenance and electrical safety. Never run a generator, grill, camp stove, or charcoal indoors, in a garage, or in any enclosed space.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.comms.alert",
+              "text": "Emergency alerts enabled",
+              "description": "Enable Wireless Emergency Alerts and local emergency management notifications.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.power.radio",
+              "text": "Weather radio",
+              "description": "Keep it powered and know how to receive local alerts.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.lighting.printed-contact-communication",
+              "text": "Printed contact and communication plan",
+              "description": "Include out-of-area contact and meeting points.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "water",
+          "title": "Water",
+          "intro": "Organize household water supplies and identify authoritative resources for source-specific water safety decisions.",
+          "items": [
+            {
+              "key": "home.water.baseline",
+              "text": "Household water needs assessment",
+              "description": "Consider household water needs and consult current local emergency and public-health guidance; do not rely on a universal quantity or duration.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.water.household-drinking-water-supplies",
+              "text": "Household drinking-water supplies",
+              "description": "Identify appropriate drinking-water supplies for household members and pets based on individual needs, storage capacity and current official guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.water.longer-term-household-water-planning",
+              "text": "Longer-term household water planning",
+              "description": "Consider longer-term household water planning based on available space, budget, local conditions and current public-health guidance.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.water.containers",
+              "text": "Food-grade water containers",
+              "description": "Identify purpose-made water storage containers and consult the container manufacturer and public-health guidance about suitability and care.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.water.storage",
+              "text": "Water storage location and rotation plan",
+              "description": "Keep information about stored-water sources and product recommendations; consult the container manufacturer and public-health authorities about inspection and replacement.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.water.filter",
+              "text": "Water treatment resources and guidance",
+              "description": "Keep current CDC and EPA guidance and product information available. Consult local public-health authorities about source-specific water safety; this checklist does not provide treatment methods.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.water.drinking-water-advisory-reference",
+              "text": "Drinking-water advisory and reference information",
+              "description": "Keep information about official drinking-water advisories and CDC/EPA guidance. Do not use household chemicals for water treatment based on this checklist.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.extra-water.water-dispensing-method",
+              "text": "Clean water dispensing method",
+              "description": "Have a suitable clean-water dispensing option; consult the container manufacturer and public-health authorities about safe handling.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.water.water-heater-emergency-applicable",
+              "text": "Water-heater emergency information, if applicable",
+              "description": "Consult the water-heater manufacturer, utility or a qualified professional about emergency water availability; do not attempt unfamiliar access procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.water.flood-chemical-contamination-warning",
+              "text": "Flood and chemical contamination warning",
+              "description": "Never walk, swim, or drive through floodwater. Do not assume floodwater or water suspected of fuel or chemical contamination is safe to drink. Consult local public-health authorities and current CDC/EPA guidance.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "food",
+          "title": "Food & Cooking",
+          "intro": "Bring ready-to-eat foods suited to household needs and consult official food-safety guidance.",
+          "items": [
+            {
+              "key": "home.food.ready-eat-household-food-supplies",
+              "text": "Ready-to-eat household food supplies",
+              "description": "Choose ready-to-eat, shelf-stable foods based on household size, dietary needs, storage capacity and current preparedness guidance.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.food.manual-opener",
+              "text": "Manual can opener",
+              "description": "Store with canned foods.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.food.allergy-medical-diet",
+              "text": "Allergy and medical-diet plan",
+              "description": "Keep safe alternatives and prevent cross-contact.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.food.infant-toddler-food",
+              "text": "Infant and toddler food plan",
+              "description": "Include formula, age-appropriate food and safe preparation supplies if needed.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.food.pet-food-reserve",
+              "text": "Pet food reserve",
+              "description": "Include familiar food and feeding supplies.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.food.longer-term-pantry-familiar-foods",
+              "text": "Longer-term pantry of familiar foods",
+              "description": "Build a familiar-food pantry according to household needs, budget, storage space and local conditions; rotate supplies as appropriate.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.food.rotation",
+              "text": "First-in, first-out rotation",
+              "description": "Keep food supplies organized and consult current official food-safety guidance about storage and rotation.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.food.cooking-equipment-fire-safety-resources",
+              "text": "Cooking equipment and fire-safety resources",
+              "description": "For fuel-burning or combustion cooking equipment, consult the manufacturer, local fire authority and official fire-safety guidance. Never run a generator, grill, camp stove, or charcoal indoors, in a garage, or in any enclosed space.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.food.food-thermometer-refrigerator-freezer-temperature",
+              "text": "Food thermometer and refrigerator/freezer temperature monitoring",
+              "description": "Keep refrigerator and freezer information available; consult current official food-safety guidance for outage decisions.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "home-readiness",
+          "title": "Household Emergency Supplies",
+          "intro": "Stage supplies where they can be reached safely.",
+          "items": [
+            {
+              "key": "home.ready.go-bags",
+              "text": "Go-bags accessible",
+              "description": "Keep them near the planned exit and make sure each person knows their bag.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.ready.tools",
+              "text": "Basic repair and cleanup supplies",
+              "description": "Have household repair and cleanup supplies appropriate to household needs; consult qualified professionals for structural or hazardous repairs.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.ready.plastic",
+              "text": "Plastic sheeting and duct tape",
+              "description": "Have plastic sheeting and duct tape for appropriate household needs; do not use them for structural repairs or unsafe sealing of combustion appliances.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.ready.sanitation",
+              "text": "Emergency sanitation supplies",
+              "description": "Identify sanitation supplies and keep local public-health and waste-disposal guidance available.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.ready.cash",
+              "text": "Cash reserve",
+              "description": "Keep an affordable amount in small bills, safely stored.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.ready.insurance",
+              "text": "Home inventory photographs",
+              "description": "Store securely off-site or in an encrypted backup.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.home-readiness.masks-protective-equipment",
+              "text": "Masks and protective equipment",
+              "description": "Research protective equipment appropriate to the specific hazard and individual needs; consult official guidance and product information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.extra-household-security.neighbor-check-in-plan",
+              "text": "Neighbor check-in plan",
+              "description": "Agree on a safe check-in method, especially for people who may need assistance.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "comfort",
+          "title": "Heat, Cold & Medical Continuity",
+          "intro": "Extreme heat can create serious health risks, including during power outages. Identify cooling resources and consult official public-health guidance.",
+          "items": [
+            {
+              "key": "home.comfort.cool-room",
+              "text": "Coolest room and cooling destination identified",
+              "description": "Know where to go if indoor temperatures become unsafe.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.comfort.heat",
+              "text": "Heat plan",
+              "description": "Confusion, fainting, or very high body temperature is a medical emergency. Call 911 and follow the dispatcher's instructions. Keep current official public-health information and emergency contacts accessible.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.comfort.warm-room",
+              "text": "Cold-weather warm-room plan",
+              "description": "Identify a safe room, layers and approved heating equipment.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.comfort.blankets",
+              "text": "Blankets and warm clothing accessible",
+              "description": "Keep enough for all household members.",
+              "quick_start": true,
+              "active": true
+            },
+            {
+              "key": "home.comfort.medication-temperature",
+              "text": "Medication temperature plan",
+              "description": "Ask a pharmacist, prescriber or medication manufacturer about medication storage requirements and outage planning.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.comfort.refrigerated-medication-backup",
+              "text": "Refrigerated medication backup plan",
+              "description": "Discuss approved backup storage options for temperature-sensitive medication with a pharmacist, prescriber and product manufacturer.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.comfort.medical-device-outage",
+              "text": "Medical-device outage plan",
+              "description": "Identify essential medical devices and discuss backup power, supplies, alternate care locations and continuity planning with the healthcare provider, equipment manufacturer and qualified electrical professional.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.extra-household-continuity.caregiver-backup-plan",
+              "text": "Caregiver and facility backup plan",
+              "description": "Include transport and support if routine care is interrupted.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.comfort.check-in-higher-risk-household",
+              "text": "Check-in plan for higher-risk household members",
+              "description": "Agree who checks on them and when during heat, cold or power outages.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "skills",
+          "title": "Skills, Plans & Continuity",
+          "intro": "Keep household plans and recognized training resources accessible; consult local emergency-management guidance.",
+          "items": [
+            {
+              "key": "home.extra-household-continuity.written-family-emergency-plan",
+              "text": "Written household emergency plan",
+              "description": "Include hazards, roles, contacts, evacuation and shelter-in-place decisions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.extra-household-continuity.family-meeting-locations",
+              "text": "Two meeting locations",
+              "description": "One near home and one outside the immediate neighborhood.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.extra-household-continuity.out-of-area-contact-plan",
+              "text": "Out-of-area contact plan",
+              "description": "Use one contact to relay status when local networks are overloaded.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.skills.school-childcare-reunification",
+              "text": "School and childcare reunification information",
+              "description": "Know pickup rules, emergency contacts and alternate authorized adults.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.skills.pet-evacuation-shelter",
+              "text": "Pet evacuation and shelter plan",
+              "description": "Know transport, pet-friendly destinations and supplies.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.extra-household-continuity.accessibility-and-disability-considerations",
+              "text": "Accessibility and disability plan",
+              "description": "Include communication, mobility, sensory, cognitive and medical support needs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.skills.paper-secure-digital-records",
+              "text": "Paper and secure digital records",
+              "description": "Keep accessible copies and protect private information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.skills.evacuation-route-practice",
+              "text": "Evacuation route practice",
+              "description": "Know primary and alternate evacuation routes; follow official instructions when routes change. Consult local emergency management for route-planning resources.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "home.skills.first-aid",
+              "text": "First aid and CPR training",
+              "description": "Take a recognized first-aid and CPR course. This checklist does not provide medical procedures or replace professional training; contact emergency services when immediate assistance is needed.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "off-grid",
+      "title": "Off-Grid Systems",
+      "time_label": "",
+      "illustration_key": "lantern",
+      "access_tier": "full",
+      "sort_order": 50,
+      "description": "Pro add-on. This checklist identifies low-tech backup supplies and resources. Consult utilities, manufacturers and qualified professionals about suitability, safety and installation.",
+      "sections": [
+        {
+          "slug": "low-tech",
+          "title": "Low-tech Preparedness",
+          "intro": "Identify manual alternatives and consult manufacturers or qualified professionals about suitability and safety.",
+          "items": [
+            {
+              "key": "offgrid.low-tech.non-electric-hand-tools",
+              "text": "Non-electric hand tools",
+              "description": "Hammer, screwdrivers, pliers, hand saw and other tools appropriate to the home.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.lowtech.manual-pump",
+              "text": "Manual water transfer method",
+              "description": "Have a suitable manual water-transfer option if needed; consult the manufacturer and public-health authorities about potable-water compatibility and use.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.lowtech.light",
+              "text": "Non-electric lighting plan",
+              "description": "Have suitable non-electric lighting; consult the manufacturer and local fire authority about any equipment involving flame or combustion.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.lowtech.analog",
+              "text": "Analog clock and paper records",
+              "description": "Keep essential schedules, instructions and contacts available without power.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.low-tech.basic-repair-kit",
+              "text": "Basic repair kit",
+              "description": "Have a basic repair kit for ordinary household needs; consult qualified professionals for structural or hazardous repairs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.low-tech.manual-can-opener-food-preparation",
+              "text": "Manual can opener and food-preparation tools",
+              "description": "Store with the food supply.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.low-tech.manual-communication-backup",
+              "text": "Manual communication backup",
+              "description": "Have a manual communication backup, including a paper contact list and radio; consult official emergency-management resources about household communication planning.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "cooking",
+          "title": "Alternative Cooking & Sanitation",
+          "intro": "Never run a generator, grill, camp stove, or charcoal indoors, in a garage, or in any enclosed space.",
+          "items": [
+            {
+              "key": "offgrid.cooking.alternative-cooking-equipment",
+              "text": "Alternative cooking equipment information",
+              "description": "For alternative cooking equipment, consult the manufacturer, local fire authority and official fire-safety resources about suitability and restrictions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.fuel-related-safety",
+              "text": "Fuel-related safety information",
+              "description": "For fuel-related safety, storage, handling and maintenance questions, consult the equipment manufacturer and local fire authority. This checklist does not provide fuel procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.cookware-appliance-compatibility",
+              "text": "Cookware and appliance compatibility information",
+              "description": "Consult the cookware and appliance manufacturers about compatibility.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.ventilation",
+              "text": "Carbon monoxide awareness and alarms",
+              "description": "Have working carbon-monoxide alarms and keep emergency contacts accessible; consult the manufacturer and local fire authority about alarm requirements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.fire-safety-equipment-training",
+              "text": "Fire-safety equipment and training information",
+              "description": "Have accessible fire-safety equipment. Evacuate first. Use an extinguisher only on a small, contained fire when you have a clear exit behind you. Know where it is and when to leave instead. Consult the local fire authority or a recognized training provider.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.house.laundry",
+              "text": "No-power laundry method",
+              "description": "Have laundry supplies suited to household needs; consult local public-health guidance about sanitation during utility interruptions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.limited-water-dishwashing-method",
+              "text": "Limited-water dishwashing method",
+              "description": "Have dishwashing and sanitation supplies suited to household needs; consult current public-health guidance for specific requirements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.manual-home-security",
+              "text": "Manual home security plan",
+              "description": "Have a household security plan and consult local public-safety resources; do not rely on improvised traps or hazards.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "offgrid.cooking.emergency-sanitation-procedure",
+              "text": "Emergency sanitation procedure",
+              "description": "Have emergency sanitation supplies and consult local public-health authorities about sanitation and waste-disposal guidance.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "water-purification",
+      "title": "Water Purification",
+      "time_label": "",
+      "illustration_key": "filter",
+      "access_tier": "full",
+      "sort_order": 60,
+      "description": "Pro add-on. This checklist covers household water planning and identifies authoritative resources. No single filter or treatment method makes every water source safe. Consult current CDC and EPA guidance, local health advisories and product manufacturers.",
+      "sections": [
+        {
+          "slug": "storage",
+          "title": "Water Storage Planning",
+          "intro": "Consider household needs, pets, health circumstances, storage capacity and local conditions; consult current public-health guidance.",
+          "items": [
+            {
+              "key": "water.storage.household-water-storage-needs-assessment",
+              "text": "Household water storage needs assessment",
+              "description": "Consider household water needs, pets, health needs, storage capacity and local conditions. Consult current local emergency and public-health guidance; do not rely on a universal quantity or duration.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.storage.use-food-grade-containers-designed",
+              "text": "Use food-grade containers designed for water",
+              "description": "Identify containers intended for drinking-water storage and review manufacturer and public-health guidance about suitability.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.storage.store-water-in-cool-dark",
+              "text": "Store water in a cool, dark location",
+              "description": "Consult the water-container manufacturer and public-health authorities about appropriate storage conditions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.storage.date",
+              "text": "Date and label every container",
+              "description": "Keep an inventory of stored water and relevant product or source information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.storage.use-sanitary-dispensing-method",
+              "text": "Use a sanitary dispensing method",
+              "description": "Have a suitable dispensing option; consult the container manufacturer and public-health authorities about safe handling.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.storage.separate-potable-non-potable-containers",
+              "text": "Separate potable and non-potable containers",
+              "description": "Identify and clearly distinguish drinking-water and non-drinking-water supplies using appropriate labels and records.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.storage.inspect-stored-water-containers",
+              "text": "Inspect stored water and containers",
+              "description": "Consult current manufacturer and public-health guidance about stored-water inspection and replacement.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "treatment",
+          "title": "Filtration & Purification",
+          "intro": "Research water-treatment resources for the source and suspected contaminants. Consult current CDC/EPA guidance and manufacturers; this checklist does not provide treatment procedures.",
+          "items": [
+            {
+              "key": "water.treatment.water-filter-research-product",
+              "text": "Water filter research and product information",
+              "description": "Research filters with independently documented performance for contaminants of concern. Consult current CDC/EPA guidance and product manufacturers; filter capabilities vary.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.treatment.backup-water-treatment-resource",
+              "text": "Backup water-treatment resource information",
+              "description": "Consult current CDC and EPA guidance, local public-health authorities and product manufacturers about source-specific water treatment options.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.treatment.official-emergency-drinking-water-guidance",
+              "text": "Official emergency drinking-water guidance",
+              "description": "Keep current CDC, EPA and local public-health guidance available for emergency drinking-water decisions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.treatment.chemical-water-treatment-reference",
+              "text": "Chemical water-treatment reference information",
+              "description": "Keep links to current CDC/EPA guidance and product information for drinking-water safety. Do not include chemical concentrations, dosage or contact-time instructions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.treatment.public-health-guidance-drinking-water",
+              "text": "Public-health guidance for drinking-water treatment",
+              "description": "Do not use household bleach or other chemicals for drinking-water treatment based on this checklist. Consult current CDC/EPA guidance and local public-health authorities for source-specific information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.treatment.water-clarity-public-health",
+              "text": "Water clarity and public-health information",
+              "description": "Consult current public-health guidance about water with visible sediment; appearance alone does not establish that water is safe.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.treatment.chemical-contamination-decision-rule",
+              "text": "Chemical contamination decision rule",
+              "description": "Do not assume water suspected of fuel, toxic chemical, heavy-metal or radioactive contamination can be made safe by ordinary boiling or disinfection. Contact local public-health authorities and consult current CDC/EPA guidance.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "hygiene",
+          "title": "Clean & Dirty Water Handling",
+          "intro": "Consult current CDC/EPA guidance and local public-health authorities about safe water handling.",
+          "items": [
+            {
+              "key": "water.hygiene.color",
+              "text": "Mark clean and untreated containers",
+              "description": "Have clear labels and records to distinguish drinking-water supplies from untreated or non-potable sources.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.hygiene.never-dip-used-cups-hands",
+              "text": "Never dip used cups or hands into stored drinking water",
+              "description": "Consult the container manufacturer and public-health authorities about protecting stored drinking water from contamination.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.hygiene.sanitize",
+              "text": "Clean and sanitize containers before refilling",
+              "description": "Consult current public-health guidance and container manufacturer information about cleaning and preparing water containers.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.hygiene.keep-water-treatment-log",
+              "text": "Keep a water-treatment log",
+              "description": "Keep a record of water sources, relevant advisories and products; consult public-health authorities for treatment decisions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.hygiene.rotation",
+              "text": "Rotate stored water",
+              "description": "Consult container manufacturers and local public-health authorities about stored-water inspection and replacement.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "collection",
+          "title": "Emergency Collection & Source Assessment",
+          "intro": "Do not improvise with floodwater or unknown sources.",
+          "items": [
+            {
+              "key": "water.collection.water-heater-emergency-applicable",
+              "text": "Water-heater emergency information, if applicable",
+              "description": "Consult the water-heater manufacturer, utility or qualified professional about whether stored water may be available; do not attempt access procedures based on this checklist.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.collect.ice",
+              "text": "Freezer ice as a reserve only when known clean",
+              "description": "Consider alternative water sources only when their safety is established by current public-health guidance or an appropriate authority.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.collection.rainwater-collection",
+              "text": "Rainwater collection plan",
+              "description": "Consult local rules and public-health guidance before considering rainwater as a water source; do not assume collected water is suitable for drinking.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.collection.avoid-floodwater-contaminated-runoff",
+              "text": "Avoid floodwater and contaminated runoff",
+              "description": "Never walk, swim, or drive through floodwater. Do not use floodwater or contaminated runoff as drinking water. Consult local public-health authorities and official water advisories.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.collection.assess-private-wells-after-flooding",
+              "text": "Assess private wells after flooding",
+              "description": "After flooding, consult the local health department and qualified well professionals about testing and any required follow-up before relying on private-well water.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "water.collection.identify-alternate-potable-water-sources",
+              "text": "Identify alternate potable-water sources",
+              "description": "Identify official drinking-water distribution points, approved bottled-water sources and local advisories.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "battery-solar",
+      "title": "Home Battery & Solar",
+      "time_label": "",
+      "illustration_key": "solar",
+      "access_tier": "full",
+      "sort_order": 70,
+      "description": "Pro add-on. Identify essential devices and discuss backup options with equipment manufacturers, healthcare providers and qualified electrical professionals. Do not rely on this checklist for electrical sizing or configuration.",
+      "sections": [
+        {
+          "slug": "loads",
+          "title": "Essential Load Planning",
+          "intro": "List and prioritize what must operate.",
+          "items": [
+            {
+              "key": "power.loads.list-essential-devices",
+              "text": "List essential devices",
+              "description": "Include medical equipment, communications, lighting, refrigeration and any critical accessibility equipment.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.loads.essential-device-manufacturer",
+              "text": "Essential device manufacturer information",
+              "description": "Record device names and manufacturer information; consult equipment providers and qualified professionals about electrical requirements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.loads.medical-household-power-requirements",
+              "text": "Medical and household power requirements",
+              "description": "Identify essential device power needs with the equipment manufacturer, healthcare provider and a qualified electrical professional; do not calculate or assume capacity from this checklist.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.loads.write-load-priority-order",
+              "text": "Write a load priority order",
+              "description": "Prioritize life-sustaining medical needs, communications, lighting and other essential services.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.loads.identify-loads-disconnect-first",
+              "text": "Identify loads to disconnect first",
+              "description": "List comfort and convenience devices that can be paused.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.loads.medical-device-continuity",
+              "text": "Medical-device continuity plan",
+              "description": "Discuss medical-device continuity, backup options, supplier contacts and alternate care arrangements with the healthcare provider and equipment manufacturer.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "capacity",
+          "title": "Battery & Power Station Options",
+          "intro": "Consult equipment manufacturers and qualified electrical professionals about product suitability and power needs.",
+          "items": [
+            {
+              "key": "power.capacity.battery-power-station-suitability-research",
+              "text": "Battery and power-station suitability research",
+              "description": "Consult equipment manufacturers and a qualified electrical professional about whether a battery or power station is suitable for the intended household needs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.capacity.power-equipment-compatibility",
+              "text": "Power equipment compatibility information",
+              "description": "Review manufacturer documentation and consult a qualified electrical professional about compatibility with intended devices.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.capacity.check-battery-chemistry-operating-limits",
+              "text": "Check battery chemistry and operating limits",
+              "description": "Consult the manufacturer about battery chemistry, operating limits, charging, storage and safety notices.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.cap.banks",
+              "text": "Keep phone power banks charged",
+              "description": "Consult the manufacturer about safe power-bank care and what to do with damaged or recalled units.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.capacity.label-store-compatible-cables",
+              "text": "Label and store compatible cables",
+              "description": "Keep required adapters with each device.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.cap.test",
+              "text": "Test discharge and recharge periodically",
+              "description": "Consult the manufacturer about recommended battery inspection, maintenance and replacement; this checklist does not provide maintenance procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.capacity.store-manuals-warranty",
+              "text": "Store manuals and warranty information",
+              "description": "Keep digital and printed copies accessible.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "solar",
+          "title": "Solar Input & Charging",
+          "intro": "Consult the solar-panel and power-station manufacturers or a qualified installer about system compatibility.",
+          "items": [
+            {
+              "key": "power.solar.solar-equipment-compatibility",
+              "text": "Solar equipment compatibility information",
+              "description": "Consult the power-station and solar-panel manufacturers or a qualified installer about compatibility and approved equipment.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.solar.test-panel-placement",
+              "text": "Test panel placement",
+              "description": "Consult manufacturer documentation and a qualified installer about appropriate solar equipment placement and installation.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.solar.account-shade-clouds-short-winter",
+              "text": "Account for shade, clouds and short winter days",
+              "description": "Consult the solar and power-station manufacturers or a qualified installer about expected performance under local conditions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.solar.use-only-approved-cables-adapters",
+              "text": "Use only approved cables and adapters",
+              "description": "Use only manufacturer-approved equipment; consult the manufacturer or qualified installer about cable and adapter compatibility.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.solar.protect-equipment-from-weather-theft",
+              "text": "Protect equipment from weather and theft",
+              "description": "Follow the manufacturer\u2019s operating and storage instructions.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "safe-use",
+          "title": "Safe Charging & Maintenance",
+          "intro": "Consult a licensed electrician for electrical questions, installation or home integration.",
+          "items": [
+            {
+              "key": "power.safe-use.charging-safety",
+              "text": "Charging safety information",
+              "description": "Consult manufacturer instructions and a qualified electrical professional about appropriate charging arrangements.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.safe-use.inspect-cords-plugs-batteries",
+              "text": "Inspect cords, plugs and batteries",
+              "description": "Consult the manufacturer and qualified service providers about inspection, maintenance or damaged electrical equipment.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.safe-use.electrical-system-compatibility-professional-advice",
+              "text": "Electrical system compatibility and professional advice",
+              "description": "Consult the equipment manufacturer and a qualified electrician about safe system compatibility and configuration.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.safe-use.keep-medical-device-charging-prioritized",
+              "text": "Keep medical-device charging prioritized",
+              "description": "Follow the provider\u2019s backup-power guidance.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.safe-use.qualified-electrician-consultation-home-integration",
+              "text": "Qualified electrician consultation for home integration",
+              "description": "Consult a licensed electrician about any home electrical integration or backup-power connection. Do not attempt electrical modifications based on this checklist.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "fuel",
+          "title": "Generator & Fuel Safety",
+          "intro": "Never run a generator, grill, camp stove, or charcoal indoors, in a garage, or in any enclosed space.",
+          "items": [
+            {
+              "key": "power.fuel.generator-safety-professional-guidance",
+              "text": "Generator safety information and professional guidance",
+              "description": "Never run a generator, grill, camp stove, or charcoal indoors, in a garage, or in any enclosed space. For other generator safety topics, consult current manufacturer, utility, fire-authority and official carbon-monoxide safety guidance.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.fuel.working-co-alarms",
+              "text": "Working CO alarms",
+              "description": "Identify carbon-monoxide alarms and review manufacturer and local fire-authority guidance about placement, maintenance and replacement.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.fuel.generator-fuel-safety",
+              "text": "Generator fuel safety information",
+              "description": "For generator fuel storage and handling, consult the generator manufacturer and local fire authority. This checklist does not provide fuel procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.fuel.generator-maintenance",
+              "text": "Generator maintenance information",
+              "description": "For generator refueling and maintenance, consult the generator manufacturer, local fire authority and qualified service professionals. This checklist does not provide operating or refueling procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.fuel.generator-weather-electrical-safety",
+              "text": "Generator weather and electrical safety information",
+              "description": "Review manufacturer and official safety guidance about weather exposure and electrical hazards; consult qualified professionals when needed.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.fuel.generator-electrical-accessory-compatibility",
+              "text": "Generator electrical accessory compatibility information",
+              "description": "Consult the generator manufacturer, a qualified electrician and applicable electrical requirements about compatible electrical accessories.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "power.fuel.generator-maintenance-professional-service",
+              "text": "Generator maintenance and professional service information",
+              "description": "For generator maintenance, consult the manufacturer and qualified service professionals. This checklist does not provide maintenance, operating or shutdown procedures.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cooling-heat",
+      "title": "Emergency Cooling / Heat Resilience",
+      "time_label": "",
+      "illustration_key": "compass",
+      "access_tier": "full",
+      "sort_order": 80,
+      "description": "Pro add-on. Extreme heat can become dangerous even indoors. Identify safe cooling resources, transportation options and emergency contacts. Confusion, fainting, or very high body temperature is a medical emergency. Call 911 and follow the dispatcher's instructions.",
+      "sections": [
+        {
+          "slug": "cool",
+          "title": "Heat Risk & Cooling Plan",
+          "intro": "Plan for household members at higher risk, including infants, older adults and people with chronic conditions.",
+          "items": [
+            {
+              "key": "climate.rooms.coolest",
+              "text": "Identify the coolest room",
+              "description": "Consider shade, lower heat gain and safe airflow.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.identify-air-conditioned-backup-location",
+              "text": "Identify an air-conditioned backup location",
+              "description": "Know local cooling centers, public facilities and transport options.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.create-heat-alert-check-in",
+              "text": "Create a heat alert and check-in plan",
+              "description": "Monitor official forecasts and check on higher-risk people at agreed intervals.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.water-hydration",
+              "text": "Water and hydration plan",
+              "description": "Consider household hydration needs and discuss individual fluid restrictions or medical concerns with a healthcare provider. Consult official public-health guidance during heat events.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.cooling-towels-supplies",
+              "text": "Cooling towels and supplies",
+              "description": "Have cooling supplies appropriate to household needs; consult official public-health guidance about heat-related health concerns. This checklist does not provide cooling treatment methods.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.lightweight-loose-clothing-sun-protection",
+              "text": "Lightweight, loose clothing and sun protection",
+              "description": "Include hats and shade for outdoor exposure.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.reduce-indoor-heat-gain",
+              "text": "Reduce indoor heat gain",
+              "description": "Consult official public-health and local emergency-management guidance about reducing indoor heat exposure.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.official-heat-health-emergency-contacts",
+              "text": "Official heat-health information and emergency contacts",
+              "description": "Confusion, fainting, or very high body temperature is a medical emergency. Call 911 and follow the dispatcher's instructions. Keep current official public-health information and emergency contacts accessible.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "rooms",
+          "title": "Battery-powered Cooling & Ventilation",
+          "intro": "Do not let a fan substitute for a safe cool environment.",
+          "items": [
+            {
+              "key": "climate.cool.fan",
+              "text": "Battery or USB fan for limited use",
+              "description": "Treat as supplemental comfort, not a solution to dangerous indoor heat.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.cool.power",
+              "text": "Power budget for fans and medical devices",
+              "description": "Identify devices that may need backup power and consult equipment manufacturers and qualified electrical professionals about options.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.rooms.night-ventilation-strategy",
+              "text": "Night ventilation strategy",
+              "description": "Consult official weather, air-quality and local safety guidance about ventilation during extreme weather or smoke events.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.rooms.block-sun",
+              "text": "Reflective or blackout window coverings",
+              "description": "Have suitable window coverings; consult local safety guidance and ensure household exits and required ventilation remain accessible.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.rooms.one-room",
+              "text": "One-room plan",
+              "description": "Consolidate activity only if the room remains safe and accessible.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.rooms.air-quality-monitoring",
+              "text": "Air quality monitoring plan",
+              "description": "Consult official air-quality alerts and local public-health guidance when making decisions about outdoor air and ventilation.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "blackout",
+          "title": "Medication, Food & Medical Continuity",
+          "intro": "Get product-specific advice before an outage.",
+          "items": [
+            {
+              "key": "climate.blackout.list-medications-affected-by-heat",
+              "text": "List medications affected by heat or refrigeration",
+              "description": "Ask a pharmacist, prescriber or medication manufacturer about medication storage requirements during heat or power interruptions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.blackout.refrigerator-freezer-outage",
+              "text": "Refrigerator/freezer outage plan",
+              "description": "Keep appliance and food-safety manufacturer information and current official food-safety guidance available for outage decisions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.blackout.backup-cooling-temperature-sensitive-medication",
+              "text": "Backup cooling for temperature-sensitive medication",
+              "description": "Discuss approved storage options with the pharmacist, prescriber and medication manufacturer; do not improvise cooling or storage methods.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.blackout.power-medical-devices",
+              "text": "Power plan for medical devices",
+              "description": "Identify essential medical devices and discuss backup power and continuity options with the healthcare provider, equipment manufacturer and qualified electrical professional.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.blackout.emergency-contacts-pharmacies-suppliers",
+              "text": "Emergency contacts for pharmacies and suppliers",
+              "description": "Include after-hours contacts and refill options.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.blackout.neighbor-caregiver-check-in",
+              "text": "Neighbor or caregiver check-in plan",
+              "description": "Identify who can assist with transport or supplies.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "heat",
+          "title": "Safe Warmth During Cold Outages",
+          "intro": "Review official fire-authority and public-health resources about heating equipment and carbon-monoxide safety.",
+          "items": [
+            {
+              "key": "climate.heat.layers",
+              "text": "Layered clothing and blankets",
+              "description": "Stage enough for everyone, including infants and people with limited mobility.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.heat.safe-warm-room",
+              "text": "Safe warm-room plan",
+              "description": "Identify suitable warming resources and consult equipment manufacturers, local fire authorities and qualified professionals about heating safety.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.heat.combustion-equipment-safety-awareness",
+              "text": "Combustion equipment safety awareness",
+              "description": "Keep official fire and carbon-monoxide safety resources available for information about combustion equipment. This checklist does not provide appliance operating instructions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.heat.working-co-alarms",
+              "text": "Working CO alarms",
+              "description": "Identify carbon-monoxide alarms and review manufacturer and local fire-authority guidance about placement, maintenance and replacement.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.heat.freeze-protection",
+              "text": "Freeze protection plan",
+              "description": "Consult local utility and public-authority guidance about freeze preparedness and household water systems; consult qualified professionals about utility or plumbing work.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "climate.heat.alternate-warming-location-transport",
+              "text": "Alternate warming location and transport",
+              "description": "Know where to go before conditions become unsafe.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "long-term-food",
+      "title": "Long-Term Food",
+      "time_label": "",
+      "illustration_key": "pine",
+      "access_tier": "full",
+      "sort_order": 90,
+      "description": "Pro add-on. Build a rotating pantry from foods the household already eats. Pantry planning should reflect household needs, storage space, budget, dietary requirements and local conditions; no single duration is appropriate for every household.",
+      "sections": [
+        {
+          "slug": "pantry",
+          "title": "Pantry Planning",
+          "intro": "Consider household food needs, budget, storage space and dietary requirements before purchasing supplies.",
+          "items": [
+            {
+              "key": "food.pantry.estimate-daily-food-needs-each",
+              "text": "Estimate daily food needs for each household member",
+              "description": "Consider household members\u2019 ages, activity, medical needs, allergies and dietary restrictions when organizing food supplies. Consult qualified professionals for individualized nutrition questions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.pantry.household-specific-pantry-planning-goal",
+              "text": "Household-specific pantry planning goal",
+              "description": "Consider a pantry goal that reflects household needs, budget, storage capacity, dietary requirements and local conditions; no single duration is appropriate for every household.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.pantry.ready-eat-food-supplies-household",
+              "text": "Ready-to-eat food supplies for household needs",
+              "description": "Consider keeping ready-to-eat foods that suit household needs and do not depend on cooking equipment; choose supplies based on individual circumstances.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.pantry.diet",
+              "text": "Account for allergies and medical diets",
+              "description": "Keep safe substitutes and clear labels.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.pantry.include-infants-children-older-adults",
+              "text": "Include infants, children and older adults",
+              "description": "Use age-appropriate foods and familiar textures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.pantry.include-pet-food-needs",
+              "text": "Include pet food needs",
+              "description": "Plan pet food and related supplies according to each animal\u2019s needs; consult a veterinarian about special diets, medications or health concerns.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.pantry.water-fuel-alongside-food",
+              "text": "Plan water and fuel alongside food",
+              "description": "Consider water and cooking-energy needs alongside food supplies; consult official preparedness guidance for household-specific planning.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "staples",
+          "title": "Long-term Staples",
+          "intro": "Bring familiar foods suited to household needs and dietary requirements.",
+          "items": [
+            {
+              "key": "food.staples.grains-starches",
+              "text": "Grains and starches",
+              "description": "Rice, oats, pasta, flour or other familiar staples stored dry and pest-proof.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.beans-protein-foods",
+              "text": "Beans and protein foods",
+              "description": "Dried or canned beans, lentils, nut butters, fish or meats suited to household preferences.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.cooking-oils-fats",
+              "text": "Cooking oils and fats",
+              "description": "Bring cooking oils and fats that suit household needs; consult product labeling for storage information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.salt-sugar-seasonings",
+              "text": "Salt, sugar and seasonings",
+              "description": "Bring salt, sugar and seasonings suited to household needs.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.shelf-stable-milk-alternatives",
+              "text": "Shelf-stable milk or alternatives",
+              "description": "Choose products that meet dietary needs and storage conditions.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.canned-fruits-vegetables",
+              "text": "Canned fruits and vegetables",
+              "description": "Choose familiar foods and rotate.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.morale-comfort-foods",
+              "text": "Morale and comfort foods",
+              "description": "Include coffee, tea, chocolate or child favorites where appropriate.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.staples.special-diet-medical-nutrition-products",
+              "text": "Special diet and medical nutrition products",
+              "description": "Follow clinician guidance and product storage instructions.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "rotation",
+          "title": "Rotation, Storage & Food Safety",
+          "intro": "Keep a pantry inventory and consult current official food-safety guidance.",
+          "items": [
+            {
+              "key": "food.rotation.date-packages-when-purchased-opened",
+              "text": "Date packages when purchased or opened",
+              "description": "Have an inventory of food supplies and relevant product information.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.rotate.fifo",
+              "text": "Use oldest safe stock first",
+              "description": "Consult current official food-safety guidance about food dates and discarding damaged, spoiled or unsafe food.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.rotate.pests",
+              "text": "Pest-resistant storage",
+              "description": "Have food-safe storage containers; consult food-safety guidance and product manufacturers about suitability.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.rotation.maintain-pantry-inventory",
+              "text": "Maintain a pantry inventory",
+              "description": "Keep a pantry inventory that reflects household needs, dietary coverage and available supplies.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.rotation.practice-one-preservation-method-before",
+              "text": "Practice one preservation method before relying on it",
+              "description": "For home food preservation, consult tested, authoritative food-safety resources and qualified extension or food-safety professionals. This checklist does not provide preservation procedures.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.rotation.maintain-safe-temperatures-during-outages",
+              "text": "Maintain safe temperatures during outages",
+              "description": "Consult current official food-safety guidance and appliance manufacturer information when assessing food after an outage.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.rotation.keep-non-food-chemicals-away",
+              "text": "Keep non-food chemicals away from food",
+              "description": "Keep non-food chemicals separate from food and water; consult product labels and local hazardous-material guidance for storage questions.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        },
+        {
+          "slug": "garden-prep",
+          "title": "Gardening & Manual Preparation",
+          "intro": "Supplemental planning topics; consult authoritative food-safety and gardening resources for specific practices.",
+          "items": [
+            {
+              "key": "food.grow.seeds",
+              "text": "Small seed kit for foods the household eats",
+              "description": "Bring seeds for foods the household uses; consult local extension or gardening resources about suitable varieties.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.grow.tools",
+              "text": "Hand tools for garden or patio growing",
+              "description": "Have garden or patio tools suited to household needs; consult product information for safe use and storage.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.garden-prep.non-potable-garden-water",
+              "text": "Non-potable garden water plan",
+              "description": "Consult local public-health and gardening guidance about non-potable water; do not divert drinking water needed for people or pets.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.garden-prep.manual-food-preparation-tools",
+              "text": "Manual food preparation tools",
+              "description": "Have manual food-preparation tools suited to household needs; consult product information for safe use.",
+              "quick_start": false,
+              "active": true
+            },
+            {
+              "key": "food.garden-prep.food-preparation-hygiene",
+              "text": "Food preparation and hygiene plan",
+              "description": "Have food-preparation and hygiene supplies; consult current public-health guidance about handwashing, clean surfaces and safe water.",
+              "quick_start": false,
+              "active": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
