@@ -81,17 +81,17 @@ export function TermsPage() {
 
       <h2>2. What the Service is</h2>
       <p>
-        {LEGAL.brandName} provides digital and printable preparedness checklists and household planning tools. The
-        content is general educational guidance only. It is not a substitute for official emergency instructions or
-        professional advice.
+        {LEGAL.brandName} provides digital preparedness checklists and household planning tools. The content is general
+        educational guidance only. It is not a substitute for official emergency instructions or professional advice.
       </p>
 
       <h2>3. Licenses and devices</h2>
       <p>
         Access is sold as a one-time lifetime license (Basic or Pro), not a subscription. One license covers one device.
-        You may purchase an additional Basic license for a second device from the license page after you activate, or use
-        Transfer / Deactivate to free the license and move it to a new device. Pro includes additional preparedness
-        checklists; Basic holders may upgrade to Pro for the price shown at checkout (same license key).
+        Use Transfer / Deactivate to free the license and move it to a new device, or purchase another Basic or Pro
+        license for a second device. Optional Group Sharing is a separate one-time purchase that temporarily syncs
+        checklists among licensed devices; it does not replace each participant’s own license. Pro includes additional
+        preparedness checklists; Basic holders may upgrade to Pro for the price shown at checkout (same license key).
       </p>
       <p>
         You are responsible for keeping your license key private and for activity on devices where you activate it. No
@@ -139,14 +139,14 @@ export function TermsPage() {
       </p>
       <h3>Printing</h3>
       <p>
-        A purchase is no longer refundable once any checklist tied to that license has been printed or saved as a PDF. We
-        record when the print window is opened from a checklist page. While you are still eligible for a refund, the app
-        asks you to confirm before printing.
+        The Service does not provide an in-app print or print-to-PDF feature. If you print a checklist with your
+        browser’s print tools within the refund window, that can still end refund eligibility. We may record when a
+        browser print dialog is opened from a checklist page.
       </p>
       <h3>Pro upgrades</h3>
       <p>
         Additional Pro checklists are included with Pro (or after a Basic-to-Pro upgrade). Refund requests follow the same
-        3-day, not-printed first-purchase rule.
+        3-day first-purchase rule.
       </p>
 
       <h2>7. User content</h2>
@@ -161,8 +161,8 @@ export function TermsPage() {
       <h2>8. Intellectual property</h2>
       <p>
         Checklists, copy, design, software, and the {LEGAL.brandName} brand are owned by{" "}
-        {displayLegal(LEGAL.legalName)}. We grant you a personal, non-commercial license to use the Service and to print
-        lists for your household. You may not resell, redistribute, scrape, or copy the Service for others.
+        {displayLegal(LEGAL.legalName)}. We grant you a personal, non-commercial license to use the Service for your
+        household. You may not resell, redistribute, scrape, or copy the Service for others.
       </p>
 
       <h2>9. Acceptable use and termination</h2>
@@ -252,7 +252,7 @@ export function PrivacyPage() {
         </li>
         <li>
           Device activation: a device identifier for the device where you activate a license, so one license stays tied
-          to one device unless you deactivate and transfer it or buy an additional license.
+          to one device unless you deactivate and transfer it or buy another license.
         </li>
         <li>
           Checklist information you create (checkmarks, short notes, custom items, contacts, and similar progress). That

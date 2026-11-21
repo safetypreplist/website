@@ -1,11 +1,6 @@
 import { money } from "./format";
 import type { ChatTopic } from "./liveAgent";
-import {
-  BASIC_ADDITIONAL_CENTS,
-  BASIC_LICENSE_CENTS,
-  PRO_LICENSE_CENTS,
-  UPGRADE_TO_PRO_CENTS,
-} from "./pricing";
+import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS, UPGRADE_TO_PRO_CENTS } from "./pricing";
 
 export type SupportFaq = {
   id: string;
@@ -179,10 +174,11 @@ export const SUPPORT_FAQS: SupportFaq[] = [
   },
   {
     id: "add-device",
-    question: "How do I add another device?",
-    answer: `One license covers one device. After you activate, open My license and use Add a Device for the in-app ${money(BASIC_ADDITIONAL_CENTS)} offer (a special price versus the regular ${money(BASIC_LICENSE_CENTS)} Basic license). That purchase creates a separate Basic license key for the additional device.`,
-    linkTo: "/license",
-    linkLabel: "My license",
+    question: "How do I use Safety Prep List on another device?",
+    answer:
+      "One license covers one device. Use Transfer / Deactivate to move your license to a replacement device, or buy another Basic or Pro license for a second device. Optional Group Sharing lets multiple licensed devices sync temporarily online.",
+    linkTo: "/app/transfer",
+    linkLabel: "Transfer / Deactivate",
     audience: "all",
     topic: "support",
   },
@@ -190,7 +186,7 @@ export const SUPPORT_FAQS: SupportFaq[] = [
     id: "receipts-where",
     question: "Where can I find my receipts?",
     answer:
-      "Open My license in the app. Purchase History lists verified transactions for that license, including original purchases, upgrades, and additional-device purchases.",
+      "Open My license in the app. Purchase History lists verified transactions for that license, including original purchases, upgrades, and Group Sharing purchases.",
     linkTo: "/app/license",
     linkLabel: "Open My license",
     audience: "member",
@@ -209,7 +205,7 @@ export const SUPPORT_FAQS: SupportFaq[] = [
   {
     id: "included",
     question: "What checklists are included?",
-    answer: `Basic includes the ${CHECKLISTS}. Pro adds ${PRO_LISTS}. Check items off on the activated device, add notes, add up to 5 of your own items per section, and print or share lists.`,
+    answer: `Basic includes the ${CHECKLISTS}. Pro adds ${PRO_LISTS}. Check items off on the activated device, add notes, and add up to 5 of your own items per section.`,
     audience: "visitor",
     topic: "sales",
   },

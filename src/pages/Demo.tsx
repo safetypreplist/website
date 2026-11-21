@@ -174,7 +174,7 @@ export function DemoPage() {
               <li>60-Minute Home Resilience</li>
             </ul>
             <p>
-              Add your own items, keep notes, print a paper backup, and use your checklists offline on one device. Basic
+              Add your own items, keep notes, and use your checklists offline on one device. Basic
               is $12.99 one time; Pro is $24.99 one time and includes additional preparedness checklists.
             </p>
             <div className="demo-actions">

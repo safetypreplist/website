@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./Brand";
 import { HeaderClock } from "./LocationStatus";
@@ -7,14 +8,31 @@ import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
 import { AppStatusBanners } from "./OfflineStatus";
+import { fetchGroupStatus } from "../lib/groupSharing";
 import { isProLicense } from "../lib/licenseClient";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { hasSurvivalVault, localProfile } = useApp();
+  const { hasSurvivalVault, localProfile, groupViewing, clearGroupViewing } = useApp();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const pro = hasSurvivalVault || isProLicense();
   const profileName = localProfile.displayName || null;
+  const [groupBadge, setGroupBadge] = useState(0);
+
+  useEffect(() => {
+    let live = true;
+    void fetchGroupStatus()
+      .then((data) => {
+        if (!live) return;
+        setGroupBadge(data.group?.status === "active" ? data.group.otherActiveMembers || 0 : 0);
+      })
+      .catch(() => {
+        if (live) setGroupBadge(0);
+      });
+    return () => {
+      live = false;
+    };
+  }, [location.pathname]);
 
   return (
     <div className={`app-shell${isAdminRoute ? " admin-console-shell" : ""}`}>
@@ -44,6 +62,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavLink data-onboarding="my-checklist" to="/app/lists" className={({ isActive }) => (isActive ? "active" : "")}>
           My Checklist
         </NavLink>
+        <NavLink
+          data-onboarding="group-sharing"
+          to="/app/group-sharing"
+          className={({ isActive }) => (isActive ? "active" : "")}
+        >
+          Group Sharing
+          {groupBadge > 0 ? (
+            <span className="nav-group-badge" aria-label={`${groupBadge} other active members`}>
+              {groupBadge > 9 ? "9+" : groupBadge}
+            </span>
+          ) : null}
+        </NavLink>
         <NavLink data-onboarding="contacts" to="/app/contacts" className={({ isActive }) => (isActive ? "active" : "")}>
           Emergency Contacts
         </NavLink>
@@ -71,6 +101,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
       <main className="app-main">
         {!isAdminRoute ? <AppStatusBanners /> : null}
+        {!isAdminRoute && groupViewing ? (
+          <div className="group-viewing-banner" role="status">
+            <p>
+              YOU ARE CURRENTLY VIEWING {groupViewing.ownerName.toUpperCase()}&apos;S CHECKLIST · Permission{" "}
+              {groupViewing.canEdit ? "EDIT" : "VIEW ONLY"}
+            </p>
+            <button className="btn btn-ghost" type="button" onClick={() => clearGroupViewing()}>
+              Return to my checklist
+            </button>
+          </div>
+        ) : null}
         {children}
       </main>
       <nav className="bottom-nav" aria-label="Mobile">

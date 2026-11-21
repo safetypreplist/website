@@ -74,13 +74,18 @@ function run<T>(store: string, mode: IDBTransactionMode, fn: (s: IDBObjectStore)
   );
 }
 
-async function getMeta<T>(key: string): Promise<T | null> {
+export async function getMeta<T>(key: string): Promise<T | null> {
   try {
     const row = (await run<MetaRow | undefined>(STORE_META, "readonly", (s) => s.get(key))) as MetaRow | undefined;
     return (row?.value as T) ?? null;
   } catch {
     return null;
   }
+}
+
+export async function setMeta(key: string, value: unknown): Promise<void> {
+  await ensureLocalStore();
+  await run(STORE_META, "readwrite", (s) => s.put({ key, value } satisfies MetaRow));
 }
 
 function mergeProgress(into: Record<string, ProgressRow>, rows: Record<string, ProgressRow>) {

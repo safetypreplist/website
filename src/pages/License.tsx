@@ -11,7 +11,7 @@ import {
 } from "../lib/licenseClient";
 import { downloadLicenseReceiptPdf } from "../lib/licenseReceipt";
 import { PHOTO_LIBRARY } from "../lib/photos";
-import { BASIC_ADDITIONAL_CENTS, BASIC_LICENSE_CENTS, UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
+import { UPGRADE_TO_PRO_CENTS } from "../lib/pricing";
 import { PRO_EXTRA_CHECKLISTS } from "../lib/copy";
 import { invokeFunction } from "../lib/supabase";
 
@@ -52,7 +52,6 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
   const [key, setKey] = useState(local?.key || "");
   const [busy, setBusy] = useState(false);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
-  const [addBusy, setAddBusy] = useState(false);
   const [receiptBusy, setReceiptBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<LicenseStatus | null>(null);
@@ -137,25 +136,6 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
     }
   }
 
-  async function addSecondDevice() {
-    if (!thisDeviceActive || !local?.key) return;
-    setAddBusy(true);
-    setError(null);
-    try {
-      const data = await invokeFunction<{ url?: string }>("create-checkout-session", {
-        product: "basic_additional",
-        licenseKey: local.key,
-        deviceId,
-        origin: window.location.origin,
-      });
-      if (!data?.url) throw new Error("Checkout did not return a Stripe URL.");
-      window.location.assign(data.url);
-    } catch (err) {
-      setAddBusy(false);
-      setError(err instanceof Error ? err.message : "Could not start additional license checkout.");
-    }
-  }
-
   async function activateHere() {
     if (!status) return;
     setBusy(true);
@@ -189,8 +169,6 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
 
   const showOffers = Boolean(status && thisDeviceActive);
   const showUpgrade = Boolean(showOffers && status?.product === "basic");
-  const showAddDevice = Boolean(showOffers);
-  const discountCents = BASIC_LICENSE_CENTS - BASIC_ADDITIONAL_CENTS;
 
   return (
     <div className={embedded ? "license-app" : "license-manage"}>
@@ -322,33 +300,6 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
                 onClick={() => void upgrade()}
               >
                 {upgradeBusy ? "Redirecting…" : "Upgrade to Pro"}
-              </button>
-            </article>
-          ) : null}
-
-          {showAddDevice ? (
-            <article
-              className={embedded ? "license-app-card account-card license-offer-card" : "license-manage-card license-offer-card"}
-              data-onboarding="second-device-offer"
-            >
-              <p className="eyebrow">In-app offer</p>
-              <h2>Add Another Device</h2>
-              <p>
-                Use Safety Prep List on an additional computer, phone, or tablet with its own lifetime Basic license.
-              </p>
-              <p className="license-offer-price">
-                {money(BASIC_ADDITIONAL_CENTS)} <span>one-time in-app offer</span>
-              </p>
-              <p className="muted">
-                Special in-app price — {money(discountCents)} off the regular {money(BASIC_LICENSE_CENTS)} Basic license.
-              </p>
-              <button
-                className="btn btn-primary btn-block"
-                type="button"
-                disabled={addBusy}
-                onClick={() => void addSecondDevice()}
-              >
-                {addBusy ? "Redirecting…" : "Add a Device"}
               </button>
             </article>
           ) : null}

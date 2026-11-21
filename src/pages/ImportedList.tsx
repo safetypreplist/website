@@ -46,7 +46,7 @@ export function ImportedListPage() {
 
   return (
     <div className="list-page">
-      <div className="print-actions">
+      <div className="list-toolbar">
         <Link className="btn btn-ghost" to="/app/lists">
           Back
         </Link>

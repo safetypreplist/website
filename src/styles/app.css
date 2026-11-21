@@ -6882,6 +6882,7 @@ html.has-guidance-ack .app-main {
   margin: 10px 0 12px;
 }
 
+.list-toolbar,
 .print-actions {
   display: flex;
   gap: 8px;
@@ -6889,10 +6890,12 @@ html.has-guidance-ack .app-main {
   align-items: center;
 }
 
+.list-menu,
 .print-menu {
   position: relative;
 }
 
+.list-menu-drop,
 .print-menu-drop {
   position: absolute;
   top: calc(100% + 6px);
@@ -6906,6 +6909,7 @@ html.has-guidance-ack .app-main {
   box-shadow: 0 14px 36px rgba(20, 29, 22, 0.16);
 }
 
+.list-menu-drop button,
 .print-menu-drop button {
   display: block;
   width: 100%;
@@ -6922,9 +6926,166 @@ html.has-guidance-ack .app-main {
   cursor: pointer;
 }
 
+.list-menu-drop button:hover,
+.list-menu-drop button:focus-visible,
 .print-menu-drop button:hover,
 .print-menu-drop button:focus-visible {
   background: var(--sand);
+}
+
+.list-refund-notice,
+.print-refund-notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--sand);
+}
+
+.nav-group-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.45rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #c75a2b;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.group-viewing-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #c75a2b;
+  color: #fff;
+}
+
+.group-viewing-banner p {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.group-viewing-banner .btn {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.group-sharing-page {
+  max-width: 720px;
+}
+
+.group-sharing-hero {
+  margin-bottom: 18px;
+}
+
+.group-sharing-lead {
+  max-width: 42rem;
+}
+
+.group-sharing-card {
+  margin-bottom: 16px;
+}
+
+.group-sharing-ticks {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 8px;
+}
+
+.group-pricing-table {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.group-pricing-row {
+  display: grid;
+  grid-template-columns: 1.1fr repeat(3, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.group-pricing-row.head {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted, #6a6f63);
+}
+
+.group-buy-form,
+.group-invite-form {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.group-offer-price {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 750;
+}
+
+.group-offer-price span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted, #6a6f63);
+}
+
+.group-member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.group-member-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.group-member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.group-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.group-wrong-device {
+  display: grid;
+  gap: 12px;
 }
 
 .section-tools {

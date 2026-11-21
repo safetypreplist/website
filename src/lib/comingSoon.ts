@@ -117,6 +117,7 @@ const OPEN_PATHS = [
   "/admin-login",
   "/thank-you",
   "/checkout",
+  "/group-invite",
 ];
 
 export function isOpenDuringComingSoon(pathname: string) {

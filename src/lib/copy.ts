@@ -6,7 +6,7 @@ export const FOOTER_TAGLINE = "Hope for the best, Prepare for the rest.";
 export const PAGE_TITLE = `Safety Prep List — ${HERO_TAGLINE}`;
 export const SITE_ORIGIN = "https://safetypreplist.com";
 export const SITE_DESCRIPTION =
-  "Practical emergency checklists as a one-time purchase. Basic $12.99 or Pro $24.99 — works offline on one device. Printable on phone, tablet, and desktop.";
+  "Practical emergency checklists as a one-time purchase. Basic $12.99 or Pro $24.99 — works offline on one device.";
 
 export const SCOPE_LINE =
   "Practical preparedness for natural disasters, local emergencies, outages, evacuations, and temporary disruptions.";

@@ -1,11 +1,11 @@
 import { json, preflight } from "../_shared/http.ts";
 import { comingSoonBlock } from "../_shared/comingSoon.ts";
+import { createGroupSharingCheckout } from "../_shared/groupSharing.ts";
 import { findLicenseByKey, normalizeLicenseKeyLoose } from "../_shared/licenses.ts";
 import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import {
   integrationIdentifier,
   isStripeConfigured,
-  isStripeTestMode,
   lookupForProduct,
   stripeErrorMessage,
   stripePriceId,
@@ -31,7 +31,8 @@ function siteUrl(requested: unknown, fallback: string) {
 
 function parseProduct(raw: unknown): LifetimeProduct | null {
   const value = String(raw || "").trim();
-  if (value === "basic" || value === "basic_additional" || value === "pro" || value === "upgrade_to_pro") {
+  // basic_additional is retired from new purchases; historical fulfill still accepts old sessions.
+  if (value === "basic" || value === "pro" || value === "upgrade_to_pro") {
     return value;
   }
   return null;
@@ -44,24 +45,50 @@ Deno.serve(async (req) => {
 
   try {
     if (!isStripeConfigured()) return json({ error: "Stripe is not configured yet." }, 503);
-    // Phase 1: Test Mode only. Do not create Live one-time prices until review.
-    if (!isStripeTestMode()) {
-      return json({ error: "Phase 1 checkout is limited to Stripe Test Mode." }, 503);
-    }
     const blocked = await comingSoonBlock(req);
     if (blocked) return blocked;
     const limited = await rateLimitBlock(`checkout:${clientIp(req)}`, 12, 600);
     if (limited) return limited;
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const product = parseProduct(body.product);
-    if (!product) {
-      return json({ error: "Choose Basic, Additional Basic, Pro, or Upgrade to Pro." }, 400);
+    const rawProduct = String(body.product || "").trim();
+    if (rawProduct === "basic_additional") {
+      return json(
+        {
+          error:
+            "Additional Device is no longer offered. Use Transfer / Deactivate to move a license, or buy another Basic or Pro license.",
+        },
+        410,
+      );
     }
+
+    const groupDevices = Number(body.groupDevices || body.devices || 0);
+    const groupDurationDays = Number(body.groupDurationDays || body.durationDays || 0);
+    const isGroupSharing =
+      rawProduct === "group_sharing" ||
+      /^spl_group_[2-4]_(7|14|30)d$/.test(rawProduct) ||
+      (groupDevices >= 2 && groupDevices <= 4 && [7, 14, 30].includes(groupDurationDays));
 
     const rawAppUrl = (Deno.env.get("APP_URL") || "https://safetypreplist.com").trim();
     const appUrl = siteUrl(body.origin, rawAppUrl);
     const admin = serviceClient();
+
+    if (isGroupSharing) {
+      return await createGroupSharingCheckout({
+        req,
+        admin,
+        appUrl,
+        body,
+        groupDevices,
+        groupDurationDays,
+        rawProduct,
+      });
+    }
+
+    const product = parseProduct(body.product);
+    if (!product) {
+      return json({ error: "Choose Basic, Pro, Upgrade to Pro, or Group Sharing." }, 400);
+    }
 
     let licenseKey: string | undefined;
     if (product === "upgrade_to_pro") {
@@ -70,28 +97,6 @@ Deno.serve(async (req) => {
       const license = await findLicenseByKey(admin, key);
       if (!license || license.status !== "active" || license.product !== "basic") {
         return json({ error: "That license is not an active Basic license." }, 400);
-      }
-      licenseKey = license.license_key;
-    }
-
-    if (product === "basic_additional") {
-      const key = normalizeLicenseKeyLoose(String(body.licenseKey || ""));
-      const deviceId = String(body.deviceId || "").trim();
-      if (!key.startsWith("SPL-") || !deviceId) {
-        return json({ error: "An activated license on this device is required to buy an additional license." }, 400);
-      }
-      const license = await findLicenseByKey(admin, key);
-      if (!license || license.status !== "active") {
-        return json({ error: "That license key is not active." }, 400);
-      }
-      const activeDevice = await admin
-        .from("license_devices")
-        .select("device_id")
-        .eq("license_id", license.id)
-        .eq("device_id", deviceId)
-        .maybeSingle();
-      if (!activeDevice.data) {
-        return json({ error: "Additional licenses can only be purchased from a device that already holds this key." }, 403);
       }
       licenseKey = license.license_key;
     }

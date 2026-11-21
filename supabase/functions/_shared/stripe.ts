@@ -1,21 +1,42 @@
 const API = "https://api.stripe.com/v1";
 const API_VERSION = "2026-09-30.endive";
 
-/** One-time license lookup keys (Stripe Test first; Live only after Phase 1 review). */
+/** One-time license lookup keys (same keys in Test and Live; objects are mode-specific). */
 export const PRICE_LOOKUP = {
   basicLifetime: "spl_basic_lifetime",
-  basicAdditional: "spl_basic_additional",
   proLifetime: "spl_pro_lifetime",
   upgradeBasicToPro: "spl_upgrade_basic_pro",
 } as const;
 
-export type LifetimeProduct = "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
+/** Group Sharing one-time prices (nine lookup keys on one Stripe product). */
+export const GROUP_SHARING_PRODUCT_ID = "spl_group_sharing";
+export const GROUP_SHARING_PRODUCT_NAME = "SafetyPrepList Group Sharing";
+
+export const GROUP_SHARING_PRICES = {
+  "spl_group_2_7d": { devices: 2, durationDays: 7, unit_amount: 599 },
+  "spl_group_2_14d": { devices: 2, durationDays: 14, unit_amount: 999 },
+  "spl_group_2_30d": { devices: 2, durationDays: 30, unit_amount: 1499 },
+  "spl_group_3_7d": { devices: 3, durationDays: 7, unit_amount: 799 },
+  "spl_group_3_14d": { devices: 3, durationDays: 14, unit_amount: 1299 },
+  "spl_group_3_30d": { devices: 3, durationDays: 30, unit_amount: 1799 },
+  "spl_group_4_7d": { devices: 4, durationDays: 7, unit_amount: 999 },
+  "spl_group_4_14d": { devices: 4, durationDays: 14, unit_amount: 1499 },
+  "spl_group_4_30d": { devices: 4, durationDays: 30, unit_amount: 1999 },
+} as const;
+
+export type GroupSharingLookup = keyof typeof GROUP_SHARING_PRICES;
+
+export type LifetimeProduct = "basic" | "pro" | "upgrade_to_pro";
 
 export function lookupForProduct(product: LifetimeProduct) {
   if (product === "basic") return PRICE_LOOKUP.basicLifetime;
-  if (product === "basic_additional") return PRICE_LOOKUP.basicAdditional;
   if (product === "pro") return PRICE_LOOKUP.proLifetime;
   return PRICE_LOOKUP.upgradeBasicToPro;
+}
+
+export function groupSharingLookup(devices: number, durationDays: number): GroupSharingLookup | null {
+  const key = `spl_group_${devices}_${durationDays}d`;
+  return key in GROUP_SHARING_PRICES ? (key as GroupSharingLookup) : null;
 }
 
 export function stripeSecret() {
@@ -29,12 +50,6 @@ export function stripeSecret() {
 export function isStripeConfigured() {
   const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
   return (key.startsWith("rk_") || key.startsWith("sk_")) && !key.includes("your_");
-}
-
-/** True when the configured secret is a Test Mode key. */
-export function isStripeTestMode() {
-  const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
-  return key.includes("_test_");
 }
 
 function flatten(value: unknown, key: string, out: URLSearchParams) {
@@ -104,9 +119,17 @@ async function parseStripe(res: Response) {
 
 const LOOKUP_ENV: Record<string, string> = {
   spl_basic_lifetime: "STRIPE_PRICE_BASIC",
-  spl_basic_additional: "STRIPE_PRICE_BASIC_ADDITIONAL",
   spl_pro_lifetime: "STRIPE_PRICE_PRO",
   spl_upgrade_basic_pro: "STRIPE_PRICE_UPGRADE",
+  spl_group_2_7d: "STRIPE_PRICE_GROUP_2_7D",
+  spl_group_2_14d: "STRIPE_PRICE_GROUP_2_14D",
+  spl_group_2_30d: "STRIPE_PRICE_GROUP_2_30D",
+  spl_group_3_7d: "STRIPE_PRICE_GROUP_3_7D",
+  spl_group_3_14d: "STRIPE_PRICE_GROUP_3_14D",
+  spl_group_3_30d: "STRIPE_PRICE_GROUP_3_30D",
+  spl_group_4_7d: "STRIPE_PRICE_GROUP_4_7D",
+  spl_group_4_14d: "STRIPE_PRICE_GROUP_4_14D",
+  spl_group_4_30d: "STRIPE_PRICE_GROUP_4_30D",
 };
 
 type CatalogPrice = {
@@ -129,13 +152,6 @@ const CATALOG: Record<string, CatalogPrice> = {
     unit_amount: 1299,
     type: "one_time",
   },
-  spl_basic_additional: {
-    lookup: "spl_basic_additional",
-    product: "spl_basic_additional",
-    productName: "Safety Prep List — Additional Basic license",
-    unit_amount: 999,
-    type: "one_time",
-  },
   spl_pro_lifetime: {
     lookup: "spl_pro_lifetime",
     product: "spl_pro",
@@ -150,6 +166,18 @@ const CATALOG: Record<string, CatalogPrice> = {
     unit_amount: 1200,
     type: "one_time",
   },
+  ...Object.fromEntries(
+    Object.entries(GROUP_SHARING_PRICES).map(([lookup, spec]) => [
+      lookup,
+      {
+        lookup,
+        product: GROUP_SHARING_PRODUCT_ID,
+        productName: GROUP_SHARING_PRODUCT_NAME,
+        unit_amount: spec.unit_amount,
+        type: "one_time" as const,
+      },
+    ]),
+  ),
 };
 
 async function priceByLookup(lookup: string) {

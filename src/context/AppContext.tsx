@@ -46,6 +46,26 @@ import {
   type LocalProfile as DeviceProfile,
   type LocalProfileInput,
 } from "../lib/localProfile";
+import { pushSharedChecklist } from "../lib/groupSharing";
+
+export type GroupViewingState = {
+  groupId: string;
+  ownerLicenseId: string;
+  ownerName: string;
+  permission: "own" | "view" | "edit";
+  canEdit: boolean;
+  items: Array<{ checklist_item_id: string; checked: boolean; note: string; updated_at: string }>;
+  customItems: Array<{
+    id: string;
+    section_id: string;
+    text: string;
+    description: string | null;
+    sort_order: number;
+    checked: boolean;
+    note: string;
+    updated_at: string;
+  }>;
+};
 
 export type OfflineStatus = {
   pending: number;
@@ -90,6 +110,9 @@ type AppState = {
   loading: boolean;
   demoMode: boolean;
   viewing: ViewingContext;
+  groupViewing: GroupViewingState | null;
+  setGroupViewing: (next: GroupViewingState | null) => void;
+  clearGroupViewing: () => void;
   myChecklist: null;
   connectedChecklists: [];
   familyMembers: [];
@@ -182,6 +205,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [sync, setSync] = useState<"idle" | "saving" | "waiting" | "error">("idle");
   const [localProfile, setLocalProfile] = useState<DeviceProfile>(() => loadLocalProfile());
   const [viewing, setViewing] = useState<ViewingContext>(() => viewingFromProfile(loadLocalProfile()));
+  const [groupViewing, setGroupViewingState] = useState<GroupViewingState | null>(null);
+  const [ownProgressCache, setOwnProgressCache] = useState<Record<string, ProgressRow> | null>(null);
+  const [ownCustomCache, setOwnCustomCache] = useState<CustomChecklistItem[] | null>(null);
   const [offline, setOffline] = useState<OfflineStatus>(emptyOffline);
   const [preferredState, setPreferredStateValue] = useState<string | null>(() => localStorage.getItem(PREFERRED_STATE_KEY));
   const [licenseProduct, setLicenseProduct] = useState<LicenseProduct | null>(() => getLicense()?.product ?? null);
@@ -301,7 +327,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const clearGroupViewing = useCallback(() => {
+    setGroupViewingState(null);
+    if (ownProgressCache) setProgress(ownProgressCache);
+    if (ownCustomCache) setCustomItems(ownCustomCache);
+    setOwnProgressCache(null);
+    setOwnCustomCache(null);
+    setViewing(viewingFromProfile(loadLocalProfile()));
+  }, [ownCustomCache, ownProgressCache]);
+
+  const setGroupViewing = useCallback(
+    (next: GroupViewingState | null) => {
+      if (!next) {
+        clearGroupViewing();
+        return;
+      }
+      setOwnProgressCache((prev) => prev || progress);
+      setOwnCustomCache((prev) => prev || customItems);
+      const mapped: Record<string, ProgressRow> = {};
+      for (const item of next.items) {
+        mapped[item.checklist_item_id] = {
+          id: `group:${item.checklist_item_id}`,
+          user_id: LOCAL_USER,
+          checklist_item_id: item.checklist_item_id,
+          checked: item.checked,
+          note: item.note || "",
+          updated_by_device_id: null,
+          updated_at: item.updated_at,
+        };
+      }
+      setProgress(mapped);
+      setCustomItems(
+        next.customItems.map((item) => ({
+          id: item.id,
+          user_id: LOCAL_USER,
+          section_id: item.section_id,
+          text: item.text,
+          description: item.description,
+          sort_order: item.sort_order,
+          checked: item.checked,
+          note: item.note,
+          created_at: item.updated_at,
+          updated_at: item.updated_at,
+        })),
+      );
+      setGroupViewingState(next);
+      setViewing({
+        kind: "personal",
+        checklistId: next.ownerLicenseId,
+        ownerUserId: next.ownerLicenseId,
+        publicId: next.ownerLicenseId,
+        title: checklistTitle(next.ownerName),
+        ownerName: next.ownerName,
+        avatarUrl: null,
+        permission: next.permission === "own" ? "own" : next.permission,
+        isOwn: next.permission === "own",
+        canEdit: next.canEdit,
+      });
+    },
+    [clearGroupViewing, customItems, progress],
+  );
+
   const saveProgress = useCallback(async (itemId: string, checked: boolean, note: string) => {
+    if (groupViewing && !groupViewing.canEdit) {
+      throw new Error("View only — edits are not allowed for this checklist.");
+    }
     const now = new Date().toISOString();
     const row: ProgressRow = {
       id: progress[itemId]?.id || newLocalId("prog"),
@@ -315,14 +405,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProgress((prev) => ({ ...prev, [itemId]: row }));
     setSync("saving");
     try {
-      await saveProgressRow(row);
+      if (groupViewing) {
+        await pushSharedChecklist(groupViewing.groupId, groupViewing.ownerLicenseId, [
+          { checklistItemId: itemId, checked, note: clipNote(note) },
+        ]);
+      } else {
+        await saveProgressRow(row);
+      }
       setSync("idle");
     } catch {
       setSync("error");
     }
-  }, [progress]);
+  }, [groupViewing, progress]);
 
   const saveProgressManyFn = useCallback(async (updates: { itemId: string; checked: boolean; note: string }[]) => {
+    if (groupViewing && !groupViewing.canEdit) {
+      throw new Error("View only — edits are not allowed for this checklist.");
+    }
     const now = new Date().toISOString();
     const rows: ProgressRow[] = updates.map((update) => ({
       id: progress[update.itemId]?.id || newLocalId("prog"),
@@ -340,12 +439,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     setSync("saving");
     try {
-      await saveProgressMany(rows);
+      if (groupViewing) {
+        await pushSharedChecklist(
+          groupViewing.groupId,
+          groupViewing.ownerLicenseId,
+          updates.map((u) => ({ checklistItemId: u.itemId, checked: u.checked, note: clipNote(u.note) })),
+        );
+      } else {
+        await saveProgressMany(rows);
+      }
       setSync("idle");
     } catch {
       setSync("error");
     }
-  }, [progress]);
+  }, [groupViewing, progress]);
 
   const addContact = useCallback(async (name: string, phone: string, label: string) => {
     const now = new Date().toISOString();
@@ -447,6 +554,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading: loading || !authReady,
       demoMode: false,
       viewing,
+      groupViewing,
+      setGroupViewing,
+      clearGroupViewing,
       myChecklist: null,
       connectedChecklists: [],
       familyMembers: [],
@@ -511,6 +621,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading,
       authReady,
       viewing,
+      groupViewing,
+      setGroupViewing,
+      clearGroupViewing,
       offline,
       saveProgress,
       saveProgressManyFn,

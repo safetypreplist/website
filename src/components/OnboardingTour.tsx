@@ -35,10 +35,10 @@ const DEFAULT_STEPS: Step[] = [
     path: "/app/lists/grab-go",
   },
   {
-    title: "Share or print",
-    body: "Share creates a quick PDF or file for yourself or a helper. Print makes a paper copy for offline use.",
-    selector: '[data-onboarding="share"]',
-    path: "/app/lists/grab-go",
+    title: "Group Sharing",
+    body: "Invite other licensed devices for a temporary online sync. Everyone needs their own license.",
+    selector: '[data-onboarding="group-sharing"]',
+    path: "/app",
   },
   {
     title: "Emergency Contacts",

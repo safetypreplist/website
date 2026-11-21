@@ -1,3 +1,4 @@
+import { fulfillGroupSharingSession } from "./groupSharing.ts";
 import {
   findLicenseByKey,
   normalizeLicenseKeyLoose,
@@ -18,9 +19,10 @@ export type LicenseFulfillResult =
       alreadyProcessed: boolean;
       licenseKey: string;
       product: LicenseProduct;
-      checkoutProduct: "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
+      checkoutProduct: "basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "group_sharing";
       licenseId: string;
       email: string | null;
+      groupId?: string;
     }
   | { ok: false; status: number; error: string };
 
@@ -95,6 +97,22 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
   }
 
   const productMeta = String(session.metadata?.product || "");
+  if (productMeta === "group_sharing" || String(session.metadata?.group_lookup || "").startsWith("spl_group_")) {
+    const groupResult = await fulfillGroupSharingSession(admin, session);
+    if (!groupResult.ok) return groupResult;
+    const host = await findLicenseByKey(admin, groupResult.licenseKey);
+    return {
+      ok: true,
+      alreadyProcessed: groupResult.alreadyProcessed,
+      licenseKey: groupResult.licenseKey,
+      product: (host?.product || "basic") as LicenseProduct,
+      checkoutProduct: "group_sharing",
+      licenseId: groupResult.licenseId,
+      email: groupResult.email,
+      groupId: groupResult.groupId,
+    };
+  }
+
   const existing = await admin.from("licenses").select("*").eq("stripe_session_id", session.id).maybeSingle();
   if (existing.data) {
     const row = existing.data as LicenseRow;

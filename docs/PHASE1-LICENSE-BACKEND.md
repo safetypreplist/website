@@ -1,7 +1,7 @@
 # Phase 1 — License backend (complete, awaiting review)
 
-**Stripe mode:** Test only (`create-checkout-session` refuses non-test keys).  
-**Live prices:** not changed.
+**Stripe mode (historical Phase 1):** originally Test only.  
+**Update:** Test Mode gate removed — see `docs/STRIPE.md` for Live setup. Coming Soon can still block purchases.
 
 ## Owner decisions applied
 1. Slim admin via `admin-licenses` + `ADMIN_SECRET` (view / revoke). No discount/checklist admin rebuild.

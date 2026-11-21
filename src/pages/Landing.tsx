@@ -11,7 +11,6 @@ import {
   IconNotes,
   IconOffgrid,
   IconPhone,
-  IconPrint,
   IconSolar,
   IconTablet,
   IconUser,
@@ -84,8 +83,7 @@ const planIncludes = [
   { label: "Works offline too", Icon: IconOffgrid },
   { label: "Add personal notes", Icon: IconNotes },
   { label: `Up to ${INCLUDED_CUSTOM_PER_SECTION} custom items per section`, Icon: IconChecklist },
-  { label: "Print any checklist", Icon: IconPrint },
-  { label: "Family sharing on the Family Plan", Icon: IconUser },
+  { label: "Optional Group Sharing", Icon: IconUser },
 ];
 
 export function LandingPage() {
@@ -161,11 +159,7 @@ export function LandingPage() {
               Know what to pack, what to store, and what to do next. Check items off, add personal notes, and keep your
               household organized in one place.
             </p>
-            <ul className="story-platforms" aria-label="Works as a printable list, and on desktop, tablet, and phone">
-              <li>
-                <IconPrint />
-                <span>Printable</span>
-              </li>
+            <ul className="story-platforms" aria-label="Works on desktop, tablet, and phone">
               <li>
                 <IconDesktop />
                 <span>Desktop</span>
