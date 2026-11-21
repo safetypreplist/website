@@ -1,6 +1,7 @@
 /** One-time lifetime licenses (public offer). Legacy annual/monthly constants kept for older screens. */
 export const BASIC_LICENSE_CENTS = 1299;
 export const PRO_LICENSE_CENTS = 2499;
+/** @deprecated Additional Device purchase retired — kept only for historical payment labels. */
 export const BASIC_ADDITIONAL_CENTS = 999;
 export const UPGRADE_TO_PRO_CENTS = 1200;
 

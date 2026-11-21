@@ -35,6 +35,8 @@ import { LicenseRecoveryPage } from "./pages/LicenseRecovery";
 import { ImportChecklistPage } from "./pages/ImportChecklist";
 import { ImportedListPage } from "./pages/ImportedList";
 import { AdminLoginPage } from "./pages/AdminLogin";
+import { GroupSharingPage } from "./pages/GroupSharing";
+import { GroupInvitePage } from "./pages/GroupInvite";
 
 function isInsideSystem(pathname: string) {
   return pathname === "/app" || pathname.startsWith("/app/") || pathname === "/admin" || pathname.startsWith("/admin/");
@@ -207,6 +209,15 @@ export default function App() {
           }
         />
         <Route
+          path="/app/group-sharing"
+          element={
+            <LicensedApp>
+              <GroupSharingPage />
+            </LicensedApp>
+          }
+        />
+        <Route path="/group-invite/:token" element={<GroupInvitePage />} />
+        <Route
           path="/app/transfer"
           element={
             <LicensedApp>
@@ -295,6 +306,7 @@ export default function App() {
         <Route path="/create-account" element={<Navigate to="/activate" replace />} />
         <Route path="/join" element={<Navigate to="/activate" replace />} />
         <Route path="/invite/:token" element={<Navigate to="/activate" replace />} />
+        {/* Legacy family invites redirect; Group Sharing uses /group-invite/:token */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <SupportChat />

@@ -286,7 +286,7 @@ export function HomeV2Page() {
             <ul className="hv2-ticks">
               <li>Check things off right on your phone or computer.</li>
               <li>Your checklist stays on your device. No account, no sign-in, no internet needed.</li>
-              <li>Print or save as PDF if you want a paper copy.</li>
+              <li>Optional Group Sharing lets licensed devices sync temporarily when online.</li>
             </ul>
             <p className="hv2-product-note">
               Wi-Fi is needed once, to activate. After that, go fully offline.

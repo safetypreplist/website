@@ -24,23 +24,13 @@ import {
   writePrepLane,
   type PrepLane,
 } from "../lib/listProgress";
-import { NOTE_SENSITIVITY_WARNING, printDisclaimer } from "../lib/legal";
-import {
-  PRINT_REFUND_WARNING,
-  loadRefundWindow,
-  printEndsRefund,
-  recordPrint,
-  type PrintSource,
-  type RefundWindow,
-} from "../lib/printTracking";
+import { NOTE_SENSITIVITY_WARNING } from "../lib/legal";
+import { loadRefundWindow, recordPrint, type RefundWindow } from "../lib/printTracking";
 import type { ChecklistItem, ProgressRow } from "../types";
 import {
   IMPORT_SHARE_HELP,
-  QUICK_SHARE_HELP,
   SHARE_IMPORT_ENABLED,
   buildSharePayload,
-  buildTextPdf,
-  shareOrDownloadFile,
   sharePayloadToFile,
   uploadShareForImport,
 } from "../lib/checklistShare";
@@ -60,19 +50,15 @@ export function SystemPage() {
   const [draft, setDraft] = useState("");
   const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
-  const [printOpen, setPrintOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
   const [shareNotice, setShareNotice] = useState("");
   const [lane, setLane] = useState<PrepLane>(() => readPrepLane());
   const [moreTimeOpen, setMoreTimeOpen] = useState(false);
   const [refundWindow, setRefundWindow] = useState<RefundWindow | null>(null);
-  const [printConfirm, setPrintConfirm] = useState<{ blank: boolean; source: PrintSource } | null>(null);
   const [printNotice, setPrintNotice] = useState(false);
-  const printMenuRef = useRef<HTMLDivElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
-  const ownPrint = useRef(false);
-  const printable = Boolean(system && !(system.access_tier === "full" && !hasSurvivalVault));
+  const shareable = Boolean(system && !(system.access_tier === "full" && !hasSurvivalVault));
 
   const lastSavedAt = useMemo(() => {
     const stamps = sections
@@ -192,14 +178,13 @@ export function SystemPage() {
   }, [openTip]);
 
   useEffect(() => {
-    if (!printOpen && !shareOpen) return;
+    if (!shareOpen) return;
     function onPointerDown(event: PointerEvent) {
-      if (!printMenuRef.current?.contains(event.target as Node)) setPrintOpen(false);
       if (!shareMenuRef.current?.contains(event.target as Node)) setShareOpen(false);
     }
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [printOpen, shareOpen]);
+  }, [shareOpen]);
 
   useEffect(() => {
     let live = true;
@@ -212,26 +197,18 @@ export function SystemPage() {
   }, []);
 
   useEffect(() => {
-    if (!printable) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "p") {
-        event.preventDefault();
-        startPrint(false, "shortcut");
-      }
-    }
-    // Printing from the browser's own menu can't be stopped, only recorded.
+    // Browser print cannot be blocked; still record for refund policy when the OS print dialog opens.
     function onBeforePrint() {
-      if (ownPrint.current) return;
       void recordPrint(slug || "", "browser");
-      if (printEndsRefund(refundWindow)) setPrintNotice(true);
-      markPrinted();
+      if (refundWindow?.refundableUntil && !refundWindow.printedAt && Date.parse(refundWindow.refundableUntil) > Date.now()) {
+        setPrintNotice(true);
+      }
+      setRefundWindow((refund) =>
+        refund && !refund.printedAt ? { ...refund, printedAt: new Date().toISOString() } : refund,
+      );
     }
-    window.addEventListener("keydown", onKeyDown);
     window.addEventListener("beforeprint", onBeforePrint);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("beforeprint", onBeforePrint);
-    };
+    return () => window.removeEventListener("beforeprint", onBeforePrint);
   });
 
   useEffect(() => {
@@ -263,11 +240,6 @@ export function SystemPage() {
   const bannerKey = SYSTEM_PHOTOS[system.slug];
   const bannerSrc = bannerKey ? PHOTO_LIBRARY[bannerKey] : "";
 
-  function markPrinted() {
-    setRefundWindow((refund) => (refund && !refund.printedAt ? { ...refund, printedAt: new Date().toISOString() } : refund));
-  }
-
-
   function collectShareItems() {
     if (!system) return [] as { text: string; checked: boolean; note: string }[];
     const rows: { text: string; checked: boolean; note: string }[] = [];
@@ -282,37 +254,6 @@ export function SystemPage() {
       }
     }
     return rows;
-  }
-
-  async function quickSharePdf() {
-    if (!system) return;
-    setShareOpen(false);
-    setShareBusy(true);
-    setShareNotice("");
-    try {
-      const lines: string[] = [
-        `Printed ${new Date().toLocaleDateString()}`,
-        "",
-      ];
-      for (const section of orderedSections) {
-        lines.push(section.title);
-        lines.push("-".repeat(Math.min(40, section.title.length + 4)));
-        for (const item of itemsForSection(catalog.items, customItems, section.id)) {
-          const row = progress[item.id];
-          const mark = row?.checked ? "[x]" : "[ ]";
-          lines.push(`${mark} ${item.text}`);
-          if (row?.note) lines.push(`    Note: ${row.note}`);
-        }
-        lines.push("");
-      }
-      const blob = buildTextPdf(system.title, lines);
-      const file = new File([blob], `${system.slug || "checklist"}.pdf`, { type: "application/pdf" });
-      await shareOrDownloadFile(file, system.title, QUICK_SHARE_HELP);
-    } catch (err) {
-      setShareNotice(err instanceof Error ? err.message : "Could not share PDF.");
-    } finally {
-      setShareBusy(false);
-    }
   }
 
   async function shareForImport() {
@@ -333,10 +274,15 @@ export function SystemPage() {
       await navigator.clipboard.writeText(url).catch(() => undefined);
       setShareNotice("Share link copied. Links expire after 3 days.");
     } catch (err) {
-      // Fallback: still allow downloading the JSON payload locally for testing.
       try {
         const payload = buildSharePayload({ title: system.title, items: collectShareItems() });
-        await shareOrDownloadFile(sharePayloadToFile(payload), system.title, IMPORT_SHARE_HELP);
+        const file = sharePayloadToFile(payload);
+        const url = URL.createObjectURL(file);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(url);
       } catch {
         /* ignore */
       }
@@ -346,91 +292,26 @@ export function SystemPage() {
     }
   }
 
-  function startPrint(blank: boolean, source: PrintSource) {
-    setPrintOpen(false);
-    if (printEndsRefund(refundWindow)) setPrintConfirm({ blank, source });
-    else runPrint(blank, source);
-  }
-
-  function runPrint(blank: boolean, source: PrintSource) {
-    setPrintConfirm(null);
-    ownPrint.current = true;
-    void recordPrint(slug || "", source, blank);
-    markPrinted();
-    // Let the confirmation close before the print window snapshots the page.
-    window.setTimeout(() => printList(blank), 60);
-  }
-
-  function printList(blank: boolean) {
-    const root = document.documentElement;
-    if (blank) root.classList.add("print-blank");
-    const cleanup = () => {
-      root.classList.remove("print-blank");
-      ownPrint.current = false;
-      window.removeEventListener("afterprint", cleanup);
-    };
-    window.addEventListener("afterprint", cleanup);
-    window.print();
-    window.setTimeout(cleanup, 1500);
-  }
-
   return (
     <div className="list-page">
-      <div className="print-header">
-        <h1>Safety Prep List: {system.title}</h1>
-        <p>Printed {new Date().toLocaleDateString()}</p>
-        <p className="print-legal-footer">{printDisclaimer()}</p>
-      </div>
-      <div className="print-actions">
-        <Link className="btn btn-ghost" to="/app">Back</Link>
-        <div className="print-menu" ref={printMenuRef}>
-          <button
-            className="btn btn-forest"
-            type="button"
-            data-onboarding="print"
-            aria-expanded={printOpen}
-            aria-haspopup="menu"
-            onClick={() => {
-              setShareOpen(false);
-              setPrintOpen((open) => !open);
-            }}
-          >
-            Print
-          </button>
-          {printOpen ? (
-            <div className="print-menu-drop" role="menu">
-              <button type="button" role="menuitem" onClick={() => startPrint(false, "button")}>
-                With current checkmarks
-              </button>
-              <button type="button" role="menuitem" onClick={() => startPrint(true, "button")}>
-                Blank checklist
-              </button>
-            </div>
-          ) : null}
-        </div>
-        <div className="print-menu" ref={shareMenuRef}>
+      <div className="list-toolbar">
+        <Link className="btn btn-ghost" to="/app">
+          Back
+        </Link>
+        <div className="list-menu" ref={shareMenuRef}>
           <button
             className="btn btn-ghost"
             type="button"
             data-onboarding="share"
             aria-expanded={shareOpen}
             aria-haspopup="menu"
-            disabled={shareBusy || !printable}
-            onClick={() => {
-              setPrintOpen(false);
-              setShareOpen((open) => !open);
-            }}
+            disabled={shareBusy || !shareable}
+            onClick={() => setShareOpen((open) => !open)}
           >
             {shareBusy ? "Sharing…" : "Share"}
           </button>
           {shareOpen ? (
-            <div className="print-menu-drop" role="menu" style={{ minWidth: 280 }}>
-              <button type="button" role="menuitem" onClick={() => void quickSharePdf()}>
-                Quick share (recommended)
-              </button>
-              <p className="muted" style={{ margin: "4px 12px 10px", fontSize: 12 }}>
-                {QUICK_SHARE_HELP}
-              </p>
+            <div className="list-menu-drop" role="menu" style={{ minWidth: 280 }}>
               <button
                 type="button"
                 role="menuitem"
@@ -453,10 +334,10 @@ export function SystemPage() {
         </p>
       </div>
       {printNotice ? (
-        <div className="print-refund-notice" role="status">
+        <div className="list-refund-notice" role="status">
           <p>
-            This checklist was printed. Under our <Link to="/refunds">refund policy</Link>, purchases can’t be refunded
-            once a checklist has been printed or saved as a PDF.
+            This checklist was printed from the browser. Under our <Link to="/refunds">refund policy</Link>, purchases
+            can’t be refunded once a checklist has been printed.
           </p>
           <button className="btn btn-ghost" type="button" onClick={() => setPrintNotice(false)}>
             Got it
@@ -464,7 +345,7 @@ export function SystemPage() {
         </div>
       ) : null}
       {shareNotice ? (
-        <div className="print-refund-notice" role="status">
+        <div className="list-refund-notice" role="status">
           <p>{shareNotice}</p>
           <button className="btn btn-ghost" type="button" onClick={() => setShareNotice("")}>
             Got it
@@ -648,16 +529,6 @@ export function SystemPage() {
             void removeCustomItem(removeItem.id);
             setRemoveItem(null);
           }}
-        />
-      ) : null}
-      {printConfirm ? (
-        <ConfirmDialog
-          title="Print this checklist?"
-          body={PRINT_REFUND_WARNING}
-          confirmLabel="Print"
-          cancelLabel="Not now"
-          onClose={() => setPrintConfirm(null)}
-          onConfirm={() => runPrint(printConfirm.blank, printConfirm.source)}
         />
       ) : null}
     </div>

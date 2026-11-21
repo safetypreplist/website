@@ -174,13 +174,15 @@ export function ThankYouPage() {
   const checkoutSession = params.get("session_id") || "";
   const [licenseKey, setLicenseKey] = useState("");
   const [product, setProduct] = useState<"basic" | "pro" | "">("");
-  const [checkoutProduct, setCheckoutProduct] = useState<"basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "">(
-    "",
-  );
+  const [checkoutProduct, setCheckoutProduct] = useState<
+    "basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "group_sharing" | ""
+  >("");
+  const [groupId, setGroupId] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(checkoutSession));
   const [activating, setActivating] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const kind = params.get("kind") || "";
 
   useEffect(() => {
     if (!checkoutSession) {
@@ -194,10 +196,19 @@ export function ThankYouPage() {
         const captured = await invokeFunction<{
           licenseKey?: string;
           product?: "basic" | "pro";
-          checkoutProduct?: "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
+          checkoutProduct?: "basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "group_sharing";
+          groupId?: string;
           error?: string;
         }>("checkout-status", { sessionId: checkoutSession });
         if (cancelled) return;
+        if (captured?.checkoutProduct === "group_sharing" || captured?.groupId) {
+          setCheckoutProduct("group_sharing");
+          setGroupId(captured.groupId || "");
+          setLicenseKey(captured.licenseKey || "");
+          setProduct(captured.product || "");
+          setBusy(false);
+          return;
+        }
         if (captured?.licenseKey) {
           setLicenseKey(captured.licenseKey);
           setProduct(captured.product || "");
@@ -226,7 +237,11 @@ export function ThankYouPage() {
       attempt += 1;
       if (attempt < 8) window.setTimeout(() => void poll(), Math.min(1500 * attempt, 6000));
       else {
-        setError("Payment is still confirming. Check your email for the license key.");
+        setError(
+          kind === "group"
+            ? "Payment is still confirming. Open Group Sharing in a minute to finish setup."
+            : "Payment is still confirming. Check your email for the license key.",
+        );
         setBusy(false);
       }
     }
@@ -234,7 +249,7 @@ export function ThankYouPage() {
     return () => {
       cancelled = true;
     };
-  }, [checkoutSession]);
+  }, [checkoutSession, kind]);
 
   async function activateNow() {
     if (!licenseKey) return;
@@ -292,7 +307,18 @@ export function ThankYouPage() {
             </>
           ) : null}
           {error ? <p className="form-error">{error}</p> : null}
-          {licenseKey ? (
+          {checkoutProduct === "group_sharing" ? (
+            <>
+              <h1>Group Sharing is ready</h1>
+              <p>Name your group and invite other licensed devices next.</p>
+              <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+                <Link className="btn btn-primary" to={`/app/group-sharing?setup=1${groupId ? `&group=${groupId}` : ""}`}>
+                  Open Group Sharing setup
+                </Link>
+              </div>
+            </>
+          ) : null}
+          {licenseKey && checkoutProduct !== "group_sharing" ? (
             <>
               <h1>Your license key</h1>
               <p>

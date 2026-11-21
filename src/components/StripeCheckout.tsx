@@ -4,7 +4,7 @@ import { storeScopeAcknowledgment } from "../lib/legalConsent";
 import { trackBeginCheckout } from "../lib/analytics";
 import { invokeFunction } from "../lib/supabase";
 
-export type CheckoutProduct = "basic" | "basic_additional" | "pro" | "upgrade_to_pro";
+export type CheckoutProduct = "basic" | "pro" | "upgrade_to_pro" | "group_sharing";
 
 type Props = {
   /** Lifetime product for create-checkout-session (Phase 1+). */
@@ -60,8 +60,8 @@ export function StripeCheckout({
           ? "Pro lifetime"
           : product === "upgrade_to_pro"
             ? "Upgrade to Pro"
-            : product === "basic_additional"
-              ? "Additional Basic license"
+            : product === "group_sharing"
+              ? "Group Sharing"
               : "Basic lifetime";
       trackBeginCheckout(itemName);
       beforeRedirect?.();

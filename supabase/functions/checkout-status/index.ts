@@ -14,6 +14,30 @@ Deno.serve(async (req) => {
     if (!sessionId.startsWith("cs_")) return json({ error: "Missing checkout session" }, 400);
 
     const admin = serviceClient();
+
+    const existingGroup = await admin
+      .from("sharing_groups")
+      .select("id, host_license_id, status")
+      .eq("stripe_session_id", sessionId)
+      .maybeSingle();
+    if (existingGroup.data) {
+      const host = await admin
+        .from("licenses")
+        .select("*")
+        .eq("id", (existingGroup.data as { host_license_id: string }).host_license_id)
+        .maybeSingle();
+      const row = host.data as LicenseRow | null;
+      return json({
+        alreadyProcessed: true,
+        licenseKey: row?.license_key || "",
+        product: row?.product || "basic",
+        checkoutProduct: "group_sharing",
+        groupId: (existingGroup.data as { id: string }).id,
+        licenseId: row?.id,
+        email: row?.email || null,
+      });
+    }
+
     const existing = await admin.from("licenses").select("*").eq("stripe_session_id", sessionId).maybeSingle();
     if (existing.data) {
       const row = existing.data as LicenseRow;
@@ -52,6 +76,7 @@ Deno.serve(async (req) => {
       licenseKey: result.licenseKey,
       product: result.product,
       checkoutProduct: result.checkoutProduct,
+      groupId: "groupId" in result ? result.groupId : undefined,
       licenseId: result.licenseId,
       email: result.email,
     });

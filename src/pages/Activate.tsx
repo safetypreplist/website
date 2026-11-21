@@ -160,7 +160,7 @@ export function ActivatePage() {
           </button>
         </form>
 
-        <p className="license-gate-assurance">Works offline after activation · Printable on any screen</p>
+        <p className="license-gate-assurance">Works offline after activation · One license, one device</p>
       </section>
 
         <p className="license-deactivate-link">

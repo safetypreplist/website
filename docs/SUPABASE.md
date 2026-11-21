@@ -73,11 +73,14 @@ From this repo:
 supabase functions deploy create-checkout-session
 supabase functions deploy checkout-status
 supabase functions deploy stripe-webhook
+supabase functions deploy group-sharing
 supabase functions deploy create-portal-session
 supabase functions deploy purchase-device-slot
 supabase functions deploy upgrade-plan
 supabase functions deploy subscribe-checklist
 ```
+
+Apply migration `0054_group_sharing.sql` (via `supabase db push`) before relying on Group Sharing. Tables are service-role only (RLS on, no anon policies).
 
 Then set secrets (see `supabase/functions/.env.example`):
 

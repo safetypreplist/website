@@ -3,7 +3,7 @@ import { serviceClient } from "./supabase.ts";
 
 type Admin = ReturnType<typeof serviceClient>;
 
-export type CheckoutProduct = "basic" | "pro" | "basic_additional" | "upgrade_to_pro";
+export type CheckoutProduct = "basic" | "pro" | "basic_additional" | "upgrade_to_pro" | "group_sharing";
 
 export type StripeSessionPayment = {
   id: string;
@@ -34,6 +34,7 @@ export function paymentDescription(product: CheckoutProduct) {
   if (product === "pro") return "Pro Plan Purchased";
   if (product === "upgrade_to_pro") return "Upgraded to Pro";
   if (product === "basic_additional") return "Additional Device Purchased";
+  if (product === "group_sharing") return "Group Sharing Purchased";
   return "Basic Plan Purchased";
 }
 
