@@ -5,7 +5,6 @@ import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import {
   integrationIdentifier,
   isStripeConfigured,
-  isStripeTestMode,
   lookupForProduct,
   stripeErrorMessage,
   stripePriceId,
@@ -44,10 +43,6 @@ Deno.serve(async (req) => {
 
   try {
     if (!isStripeConfigured()) return json({ error: "Stripe is not configured yet." }, 503);
-    // Phase 1: Test Mode only. Do not create Live one-time prices until review.
-    if (!isStripeTestMode()) {
-      return json({ error: "Phase 1 checkout is limited to Stripe Test Mode." }, 503);
-    }
     const blocked = await comingSoonBlock(req);
     if (blocked) return blocked;
     const limited = await rateLimitBlock(`checkout:${clientIp(req)}`, 12, 600);

@@ -1,7 +1,7 @@
 const API = "https://api.stripe.com/v1";
 const API_VERSION = "2026-09-30.endive";
 
-/** One-time license lookup keys (Stripe Test first; Live only after Phase 1 review). */
+/** One-time license lookup keys (same keys in Test and Live; objects are mode-specific). */
 export const PRICE_LOOKUP = {
   basicLifetime: "spl_basic_lifetime",
   basicAdditional: "spl_basic_additional",
@@ -29,12 +29,6 @@ export function stripeSecret() {
 export function isStripeConfigured() {
   const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
   return (key.startsWith("rk_") || key.startsWith("sk_")) && !key.includes("your_");
-}
-
-/** True when the configured secret is a Test Mode key. */
-export function isStripeTestMode() {
-  const key = Deno.env.get("STRIPE_SECRET_KEY") || "";
-  return key.includes("_test_");
 }
 
 function flatten(value: unknown, key: string, out: URLSearchParams) {
