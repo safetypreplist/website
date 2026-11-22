@@ -65,7 +65,49 @@ Deno.serve(async (req) => {
           .eq("license_id", id);
         withCounts.push({ ...row, devices_used: count ?? 0 });
       }
-      return json({ licenses: withCounts });
+
+      const groups: Array<Record<string, unknown>> = [];
+      const { data: groupRows } = await admin
+        .from("sharing_groups")
+        .select("id, name, status, max_devices, duration_days, expires_at, created_at, host_license_id")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      for (const group of groupRows || []) {
+        const g = group as {
+          id: string;
+          name: string | null;
+          status: string;
+          max_devices: number;
+          duration_days: number;
+          expires_at: string | null;
+          created_at: string;
+          host_license_id: string;
+        };
+        const host = await admin
+          .from("licenses")
+          .select("license_key, email")
+          .eq("id", g.host_license_id)
+          .maybeSingle();
+        const { count: memberCount } = await admin
+          .from("sharing_group_members")
+          .select("id", { count: "exact", head: true })
+          .eq("group_id", g.id)
+          .in("invite_status", ["accepted", "pending"]);
+        groups.push({
+          id: g.id,
+          name: g.name,
+          status: g.status,
+          max_devices: g.max_devices,
+          duration_days: g.duration_days,
+          expires_at: g.expires_at,
+          created_at: g.created_at,
+          host_license_key: (host.data as { license_key?: string } | null)?.license_key || null,
+          host_email: (host.data as { email?: string | null } | null)?.email || null,
+          member_count: memberCount ?? 0,
+        });
+      }
+
+      return json({ licenses: withCounts, groups });
     }
 
     const licenseId = String(body.licenseId || "").trim();

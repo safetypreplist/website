@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
 import {
   composeDisplayName,
+  isValidProfileEmail,
   lookupZipCode,
   normalizeZipCode,
   splitFullName,
@@ -24,6 +25,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   const { localProfile, saveLocalProfile } = useApp();
   const fileRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState(composeDisplayName(localProfile.firstName, localProfile.lastName));
+  const [email, setEmail] = useState(localProfile.email || "");
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(localProfile.avatarDataUrl);
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
   const [zip, setZip] = useState("");
@@ -35,6 +37,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
 
   useEffect(() => {
     setFullName(composeDisplayName(localProfile.firstName, localProfile.lastName));
+    setEmail(localProfile.email || "");
     setAvatarDataUrl(localProfile.avatarDataUrl);
     setLocation(localProfile.location);
   }, [localProfile]);
@@ -136,6 +139,11 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       setError("Enter your full name to continue.");
       return;
     }
+    if (!isValidProfileEmail(email)) {
+      setSaving(false);
+      setError("Enter an email for invites and receipts. This is not a login account.");
+      return;
+    }
 
     let nextLocation = location;
     if (!nextLocation && needsZip) {
@@ -166,6 +174,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       await saveLocalProfile({
         firstName,
         lastName,
+        email,
         avatarDataUrl,
         location: nextLocation,
       });
@@ -251,6 +260,22 @@ export function OnboardingProfileStep({ onContinue }: Props) {
                 maxLength={80}
                 required
               />
+            </label>
+
+            <label className="account-field">
+              <span>Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                maxLength={120}
+                required
+              />
+              <p className="muted onboarding-location-hint">
+                For invites and receipts only — not a login. Offline access stays on this device. If you lose this
+                browser, use Transfer / Deactivate or Recover My License.
+              </p>
             </label>
 
             <div className="onboarding-location-block">

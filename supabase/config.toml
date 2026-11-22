@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.license-payments]
 verify_jwt = false
+
+[functions.group-sharing]
+verify_jwt = false

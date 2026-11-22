@@ -10,6 +10,8 @@ export type LocalProfile = {
   lastName: string;
   /** Derived full name for checklist titles and greetings. */
   displayName: string;
+  /** Contact email on this device for invites/receipts — not a login account. */
+  email: string;
   avatarDataUrl: string | null;
   location: LocalProfileLocation | null;
 };
@@ -20,16 +22,32 @@ const EMPTY: LocalProfile = {
   firstName: "",
   lastName: "",
   displayName: "",
+  email: "",
   avatarDataUrl: null,
   location: null,
 };
+
+export function normalizeProfileEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function isValidProfileEmail(value: string) {
+  const email = normalizeProfileEmail(value);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export function composeDisplayName(firstName: string, lastName: string) {
   return [firstName.trim(), lastName.trim()].filter(Boolean).join(" ").trim();
 }
 
-export function isLocalProfileComplete(profile: Pick<LocalProfile, "firstName" | "lastName" | "location">) {
-  return Boolean(composeDisplayName(profile.firstName, profile.lastName) && profile.location?.place);
+export function isLocalProfileComplete(
+  profile: Pick<LocalProfile, "firstName" | "lastName" | "email" | "location">,
+) {
+  return Boolean(
+    composeDisplayName(profile.firstName, profile.lastName) &&
+      isValidProfileEmail(profile.email) &&
+      profile.location?.place,
+  );
 }
 
 /** Compact place label for dashboard chrome, e.g. "Henderson, NV". */
@@ -87,10 +105,15 @@ export function loadLocalProfile(): LocalProfile {
       typeof parsed.lastName === "string" && parsed.lastName.trim()
         ? parsed.lastName.trim()
         : split.lastName;
+    const email =
+      typeof parsed.email === "string" && isValidProfileEmail(parsed.email)
+        ? normalizeProfileEmail(parsed.email)
+        : "";
     return {
       firstName,
       lastName,
       displayName: composeDisplayName(firstName, lastName) || legacyName,
+      email,
       avatarDataUrl:
         typeof parsed.avatarDataUrl === "string" && parsed.avatarDataUrl.startsWith("data:")
           ? parsed.avatarDataUrl
@@ -107,10 +130,14 @@ export type LocalProfileInput = Omit<LocalProfile, "displayName"> & { displayNam
 export function saveLocalProfile(profile: LocalProfileInput) {
   const firstName = profile.firstName.trim();
   const lastName = profile.lastName.trim();
+  const email = isValidProfileEmail(profile.email || "")
+    ? normalizeProfileEmail(profile.email || "")
+    : "";
   const next: LocalProfile = {
     firstName,
     lastName,
     displayName: composeDisplayName(firstName, lastName),
+    email,
     avatarDataUrl: profile.avatarDataUrl,
     location: profile.location,
   };

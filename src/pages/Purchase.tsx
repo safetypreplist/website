@@ -1,5 +1,6 @@
 import { Navigate, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { AppSplash } from "../components/AppSplash";
 import { BrandMark } from "../components/Brand";
 import { Confetti } from "../components/Confetti";
 import { LegalAgreement } from "../components/LegalAgreement";
@@ -172,17 +173,19 @@ export function ThankYouPage() {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const checkoutSession = params.get("session_id") || "";
+  const kindHint = (params.get("kind") || "").toLowerCase();
+  const expectGroup = kindHint === "group" || kindHint === "group_sharing";
   const [licenseKey, setLicenseKey] = useState("");
   const [product, setProduct] = useState<"basic" | "pro" | "">("");
   const [checkoutProduct, setCheckoutProduct] = useState<
     "basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "group_sharing" | ""
-  >("");
+  >(expectGroup ? "group_sharing" : "");
   const [groupId, setGroupId] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(checkoutSession));
   const [activating, setActivating] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const kind = params.get("kind") || "";
+  const [redirectingGroup, setRedirectingGroup] = useState(false);
 
   useEffect(() => {
     if (!checkoutSession) {
@@ -207,6 +210,13 @@ export function ThankYouPage() {
           setLicenseKey(captured.licenseKey || "");
           setProduct(captured.product || "");
           setBusy(false);
+          setRedirectingGroup(true);
+          const setupPath = `/app/group-sharing?setup=1${
+            captured.groupId ? `&group=${encodeURIComponent(captured.groupId)}` : ""
+          }`;
+          window.setTimeout(() => {
+            if (!cancelled) navigate(setupPath, { replace: true });
+          }, 900);
           return;
         }
         if (captured?.licenseKey) {
@@ -226,19 +236,25 @@ export function ThankYouPage() {
       } catch (err) {
         if (cancelled) return;
         attempt += 1;
-        if (attempt < 8) {
+        if (attempt < 10) {
           window.setTimeout(() => void poll(), Math.min(1500 * attempt, 6000));
           return;
         }
-        setError(err instanceof Error ? err.message : "Could not load your license key.");
+        setError(
+          err instanceof Error
+            ? err.message
+            : expectGroup
+              ? "Could not confirm Group Sharing yet."
+              : "Could not load your license key.",
+        );
         setBusy(false);
         return;
       }
       attempt += 1;
-      if (attempt < 8) window.setTimeout(() => void poll(), Math.min(1500 * attempt, 6000));
+      if (attempt < 10) window.setTimeout(() => void poll(), Math.min(1500 * attempt, 6000));
       else {
         setError(
-          kind === "group"
+          expectGroup
             ? "Payment is still confirming. Open Group Sharing in a minute to finish setup."
             : "Payment is still confirming. Check your email for the license key.",
         );
@@ -249,7 +265,7 @@ export function ThankYouPage() {
     return () => {
       cancelled = true;
     };
-  }, [checkoutSession, kind]);
+  }, [checkoutSession, expectGroup, navigate]);
 
   async function activateNow() {
     if (!licenseKey) return;
@@ -293,26 +309,38 @@ export function ThankYouPage() {
     );
   }
 
+  if (busy || redirectingGroup) {
+    return (
+      <div className="marketing-page thank-you-loading">
+        <AppSplash />
+        <p className="thank-you-loading-copy muted" role="status">
+          {expectGroup || checkoutProduct === "group_sharing"
+            ? redirectingGroup
+              ? "Group Sharing is ready — opening setup…"
+              : "Confirming your Group Sharing purchase…"
+            : "Confirming your purchase and preparing your license key…"}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="marketing-page">
-      <Confetti fire={Boolean(licenseKey)} />
+      <Confetti fire={Boolean(licenseKey) || checkoutProduct === "group_sharing"} />
       <PublicHeader />
       <main className="section cream">
         <div className="wrap legal-page" style={{ maxWidth: 560 }}>
           <p className="eyebrow">Purchase complete</p>
-          {busy ? (
-            <>
-              <h1>Thank you for your purchase</h1>
-              <p className="muted">Thank you for your purchase. Now loading your license key.</p>
-            </>
-          ) : null}
           {error ? <p className="form-error">{error}</p> : null}
           {checkoutProduct === "group_sharing" ? (
             <>
               <h1>Group Sharing is ready</h1>
               <p>Name your group and invite other licensed devices next.</p>
               <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-                <Link className="btn btn-primary" to={`/app/group-sharing?setup=1${groupId ? `&group=${groupId}` : ""}`}>
+                <Link
+                  className="btn btn-primary"
+                  to={`/app/group-sharing?setup=1${groupId ? `&group=${encodeURIComponent(groupId)}` : ""}`}
+                >
                   Open Group Sharing setup
                 </Link>
               </div>
@@ -342,10 +370,7 @@ export function ThankYouPage() {
               </p>
               <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
                 {checkoutProduct === "basic_additional" && isLicensed() ? (
-                  <Link
-                    className="btn btn-primary"
-                    to={`/activate?key=${encodeURIComponent(licenseKey)}`}
-                  >
+                  <Link className="btn btn-primary" to={`/activate?key=${encodeURIComponent(licenseKey)}`}>
                     Open Activate with this key
                   </Link>
                 ) : (
@@ -367,6 +392,19 @@ export function ThankYouPage() {
                 ) : null}
               </div>
             </>
+          ) : null}
+          {!licenseKey && checkoutProduct !== "group_sharing" && error ? (
+            <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+              {expectGroup ? (
+                <Link className="btn btn-primary" to="/app/group-sharing">
+                  Open Group Sharing
+                </Link>
+              ) : (
+                <Link className="btn btn-primary" to="/activate">
+                  Go to Activate
+                </Link>
+              )}
+            </div>
           ) : null}
         </div>
       </main>

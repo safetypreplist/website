@@ -14,13 +14,42 @@ Deno.serve(async (req) => {
     if (limited) return limited;
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const key = normalizeLicenseKeyLoose(String(body.key || ""));
+    const key = normalizeLicenseKeyLoose(String(body.key || body.licenseKey || ""));
     if (!key.startsWith("SPL-")) return json({ error: "That license key is not valid." }, 403);
 
     const admin = serviceClient();
     let license = await findLicenseByKey(admin, key);
     if (!license || license.status !== "active") {
       return json({ error: "That license key is not valid." }, 403);
+    }
+
+    const action = String(body.action || "status");
+    if (action === "update_contact") {
+      const deviceId = String(body.deviceId || "").trim();
+      const email = String(body.email || "").trim().toLowerCase();
+      if (!deviceId || deviceId.length > 128) {
+        return json({ error: "Activated device is required to update contact email." }, 400);
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ error: "Enter a valid email address." }, 400);
+      }
+      const device = await admin
+        .from("license_devices")
+        .select("device_id")
+        .eq("license_id", license.id)
+        .eq("device_id", deviceId)
+        .maybeSingle();
+      if (!device.data) {
+        return json({ error: "Open Profile on the device where this license is activated." }, 403);
+      }
+      const updated = await admin
+        .from("licenses")
+        .update({ email })
+        .eq("id", license.id)
+        .select("id, email")
+        .maybeSingle();
+      if (!updated.data) return json({ error: "Could not save contact email." }, 500);
+      return json({ ok: true, email: (updated.data as { email: string | null }).email });
     }
 
     if (license.amount_cents == null && license.stripe_session_id) {

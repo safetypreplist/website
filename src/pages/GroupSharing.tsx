@@ -179,7 +179,8 @@ export function GroupSharingPage() {
 
   if (loading) {
     return (
-      <div className="group-sharing-page">
+      <div className="group-sharing-page group-sharing-loading" role="status" aria-label="Loading Group Sharing">
+        <div className="group-sharing-loader" aria-hidden="true" />
         <p className="muted">Loading Group Sharing…</p>
       </div>
     );
@@ -188,22 +189,32 @@ export function GroupSharingPage() {
   if (!group) {
     return (
       <div className="group-sharing-page">
-        <header className="group-sharing-hero">
-          <p className="eyebrow">Group Sharing</p>
-          <h1 className="page-title">Share checklists for a short window</h1>
-          <p className="muted group-sharing-lead">
-            Optional, paid, temporary sync so licensed households or teams can view (or edit) each other’s checklists
-            online. Personal data stays on each device; Group Sharing only runs while the session is active.
-          </p>
+        <header className="group-sharing-hero group-sharing-hero-promo">
+          <div className="group-sharing-hero-copy">
+            <p className="eyebrow">Group Sharing</p>
+            <h1 className="page-title">Host your own Group Sharing</h1>
+            <p className="muted group-sharing-lead">
+              Friends and household members can share checklists for a short window. Everyone still needs their own
+              Safety Prep List license on their device — Group Sharing is temporary sync, not a shared login.
+            </p>
+          </div>
+          <figure className="group-sharing-hero-media">
+            <img
+              src="/images/group-sharing-host.jpg"
+              width={960}
+              height={720}
+              alt="People reviewing preparedness checklists together at a kitchen table"
+            />
+          </figure>
         </header>
 
         <section className="account-card group-sharing-card">
           <h2>How it works</h2>
           <ul className="group-sharing-ticks">
             <li>Every participant needs their own valid Basic or Pro license on their device.</li>
-            <li>The organizer pays once and becomes the host automatically.</li>
-            <li>Invite up to 3 other licensed devices (4 total including the host).</li>
-            <li>Internet is required while sharing. Offline personal checklists are unchanged.</li>
+            <li>You pay once and become the host automatically.</li>
+            <li>Invite up to 3 other licensed devices (4 total including you).</li>
+            <li>Internet is required while sharing. Offline personal checklists stay unchanged.</li>
             <li>When the session ends or expires, shared access stops. Licenses stay active.</li>
           </ul>
         </section>
@@ -278,9 +289,12 @@ export function GroupSharingPage() {
     return (
       <div className="group-sharing-page" id="group-setup">
         <header className="group-sharing-hero">
-          <p className="eyebrow">Group Sharing</p>
-          <h1 className="page-title">Name your group</h1>
-          <p className="muted">Your license is the host. Invite others after setup.</p>
+          <p className="eyebrow">Purchase confirmed</p>
+          <h1 className="page-title">Thank you — set up your group</h1>
+          <p className="muted">
+            Group Sharing is active on your license until you finish setup and the session window runs. Name the group,
+            then invite licensed friends.
+          </p>
         </header>
         <section className="account-card group-sharing-card">
           <form onSubmit={(e) => void finishSetup(e)}>
@@ -304,7 +318,7 @@ export function GroupSharingPage() {
               </p>
             ) : null}
             <button className="btn btn-primary" type="submit" disabled={busy}>
-              {busy ? "Saving…" : "Start group"}
+              {busy ? "Saving…" : "Start group & invite"}
             </button>
           </form>
         </section>
