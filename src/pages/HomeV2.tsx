@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandMark } from "../components/Brand";
-import { ProfileAvatar } from "../components/ProfileAvatar";
 import { PublicFooter } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import { isLicensed } from "../lib/licenseClient";
-import { loadLocalProfile } from "../lib/localProfile";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   BASIC_LICENSE_CENTS,
@@ -108,7 +106,6 @@ export function HomeV2Page() {
   }, []);
 
   const licensed = useMemo(() => isLicensed(), []);
-  const localProfile = useMemo(() => loadLocalProfile(), []);
 
   function playStoryVideo() {
     const video = videoRef.current;
@@ -136,16 +133,11 @@ export function HomeV2Page() {
             <Link
               className="hv2-nav-cta-licensed"
               to="/app"
-              aria-label="Enter your checklist"
+              aria-label="Enter checklist"
             >
-              <ProfileAvatar
-                className="hv2-nav-avatar"
-                name={localProfile.displayName || "Licensed"}
-                avatarUrl={localProfile.avatarDataUrl}
-              />
-              <span className="hv2-nav-cta-licensed-copy">
-                <span className="hv2-nav-cta-licensed-status">Licensed</span>
-                <span className="hv2-nav-cta-licensed-action">My checklist</span>
+              <span className="hv2-nav-cta-licensed-label">Enter checklist</span>
+              <span className="hv2-nav-cta-licensed-arrow" aria-hidden="true">
+                →
               </span>
             </Link>
           ) : (
