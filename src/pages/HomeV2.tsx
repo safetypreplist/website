@@ -133,13 +133,20 @@ export function HomeV2Page() {
             </Link>
           </nav>
           {licensed ? (
-            <Link className="hv2-nav-cta-licensed" to="/app">
+            <Link
+              className="hv2-nav-cta-licensed"
+              to="/app"
+              aria-label="Enter your checklist"
+            >
               <ProfileAvatar
                 className="hv2-nav-avatar"
                 name={localProfile.displayName || "Licensed"}
                 avatarUrl={localProfile.avatarDataUrl}
               />
-              <span>Go to checklist</span>
+              <span className="hv2-nav-cta-licensed-copy">
+                <span className="hv2-nav-cta-licensed-status">Licensed</span>
+                <span className="hv2-nav-cta-licensed-action">My checklist</span>
+              </span>
             </Link>
           ) : (
             <Link className="hv2-nav-cta" to="/checkout?product=basic">
