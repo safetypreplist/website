@@ -1,5 +1,6 @@
 import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ActivateQrDialog, useActivateQr } from "../components/ActivateQrDialog";
 import { BrandMark } from "../components/Brand";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { activate, getLicense, isLicensed, takeActivateMessage } from "../lib/licenseClient";
@@ -38,6 +39,9 @@ export function ActivatePage() {
   const [error, setError] = useState<string | null>(null);
   const [deviceTaken, setDeviceTaken] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showPhoneQr, setShowPhoneQr] = useState(false);
+  const phoneQr = useActivateQr(key.trim(), 168);
+  const canShowPhoneQr = /^SPL-/i.test(key.trim());
 
   useEffect(() => {
     const stored = takeActivateMessage();
@@ -156,11 +160,34 @@ export function ActivatePage() {
             </div>
           ) : null}
           <button className="btn btn-primary btn-block" type="submit" disabled={busy || !key.trim()}>
-            {busy ? "Activating…" : "Activate on this device"}
+            {busy ? "Activating…" : "Activate on this device now"}
           </button>
         </form>
 
-        <p className="license-gate-assurance">Works offline after activation · One license, one device</p>
+        <div className="license-gate-phone">
+          <p className="eyebrow">Need your phone instead?</p>
+          <p className="muted">
+            Activating binds this license to whichever device you confirm on. Prefer your phone? Scan the QR after
+            entering your key — it opens Activate there with the key filled in.
+          </p>
+          {canShowPhoneQr ? (
+            <button className="activate-qr-inline" type="button" onClick={() => setShowPhoneQr(true)}>
+              <span className="activate-qr-inline-label">Open on phone</span>
+              <span className="activate-qr-inline-frame">
+                {phoneQr.qrSrc ? (
+                  <img src={phoneQr.qrSrc} width={168} height={168} alt="" />
+                ) : (
+                  <span className="muted">Preparing…</span>
+                )}
+              </span>
+              <span className="activate-qr-inline-cta">Scan to activate on phone</span>
+            </button>
+          ) : (
+            <p className="muted">Enter your license key above to generate a phone QR.</p>
+          )}
+        </div>
+
+        <p className="license-gate-assurance">Works offline after activation · One license, one device · No login account</p>
       </section>
 
         <p className="license-deactivate-link">
@@ -176,6 +203,9 @@ export function ActivatePage() {
         {" · "}
         <Link to="/#pricing">Buy a license</Link>
       </p>
+      {showPhoneQr && canShowPhoneQr ? (
+        <ActivateQrDialog licenseKey={key.trim()} onClose={() => setShowPhoneQr(false)} />
+      ) : null}
     </GateShell>
   );
 }

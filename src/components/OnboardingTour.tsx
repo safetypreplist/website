@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { isLocalProfileComplete } from "../lib/localProfile";
-import { AppIconRow } from "./InstallSteps";
 import { OnboardingProfileStep } from "./OnboardingProfileStep";
 import { supabase } from "../lib/supabase";
 
@@ -326,7 +325,7 @@ function blockTourScroll(event: Event) {
   event.preventDefault();
 }
 
-type OnboardingMode = "profile" | "welcome" | "offline" | "choice" | "tour" | "done";
+type OnboardingMode = "profile" | "welcome" | "choice" | "tour" | "done";
 
 export function OnboardingTour() {
   const { profile, localProfile } = useApp();
@@ -713,40 +712,8 @@ export function OnboardingTour() {
             checklist.
           </p>
           <div className="onboarding-actions onboarding-actions-stacked">
-            <button className="btn btn-primary" type="button" onClick={() => setMode("offline")}>
-              Continue onboarding
-            </button>
-          </div>
-        </div>
-      ) : mode === "offline" ? (
-        <div
-          className="onboarding-welcome-card onboarding-offline-card"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="onboarding-offline-title"
-        >
-          <img
-            className="onboarding-phone"
-            src="/images/iphone-home.jpg"
-            width={1024}
-            height={682}
-            alt="The Safety Prep List app icon on an iPhone Home Screen"
-          />
-          <div className="onboarding-offline-head">
-            <div>
-              <p className="eyebrow">Use it anywhere</p>
-              <h2 id="onboarding-offline-title">Put it on your Home Screen</h2>
-              <p className="onboarding-copy">
-                Your checklist is already saved on this device. Add the app icon so you can open it in one tap.
-              </p>
-            </div>
-          </div>
-          <div className="onboarding-options">
-            <AppIconRow />
-          </div>
-          <div className="onboarding-actions">
             <button className="btn btn-primary" type="button" onClick={() => setMode("choice")}>
-              Continue
+              Continue onboarding
             </button>
           </div>
         </div>

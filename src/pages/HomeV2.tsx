@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandMark } from "../components/Brand";
+import { ProfileAvatar } from "../components/ProfileAvatar";
 import { PublicFooter } from "../components/PublicChrome";
 import { money } from "../lib/format";
+import { isLicensed } from "../lib/licenseClient";
+import { loadLocalProfile } from "../lib/localProfile";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import {
   BASIC_LICENSE_CENTS,
@@ -104,6 +107,9 @@ export function HomeV2Page() {
     void video.play().catch(() => undefined);
   }, []);
 
+  const licensed = useMemo(() => isLicensed(), []);
+  const localProfile = useMemo(() => loadLocalProfile(), []);
+
   function playStoryVideo() {
     const video = videoRef.current;
     if (!video) return;
@@ -126,9 +132,20 @@ export function HomeV2Page() {
               Activate
             </Link>
           </nav>
-          <Link className="hv2-nav-cta" to="/checkout?product=basic">
-            Get started
-          </Link>
+          {licensed ? (
+            <Link className="hv2-nav-cta hv2-nav-cta-licensed" to="/app">
+              <ProfileAvatar
+                className="hv2-nav-avatar"
+                name={localProfile.displayName || "Licensed"}
+                avatarUrl={localProfile.avatarDataUrl}
+              />
+              <span>Go to checklist</span>
+            </Link>
+          ) : (
+            <Link className="hv2-nav-cta" to="/checkout?product=basic">
+              Get started
+            </Link>
+          )}
         </div>
       </header>
 

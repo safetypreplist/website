@@ -19,6 +19,7 @@ import type {
 } from "../types";
 import { isOnline } from "../lib/offline";
 import {
+  getDeviceId,
   getLicense,
   isLicensed,
   refreshLocalLicenseProduct,
@@ -38,9 +39,10 @@ import {
   saveProgressMany,
   saveProgressRow,
 } from "../lib/localStore";
-import { supabase } from "../lib/supabase";
+import { invokeFunction, supabase } from "../lib/supabase";
 import { checklistTitle } from "../lib/identity";
 import {
+  isValidProfileEmail,
   loadLocalProfile,
   saveLocalProfile as persistLocalProfile,
   type LocalProfile as DeviceProfile,
@@ -521,6 +523,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (saved.location?.stateCode) {
         localStorage.setItem(PREFERRED_STATE_KEY, saved.location.stateCode);
         setPreferredStateValue(saved.location.stateCode);
+      }
+      // Attach contact email to the activated license for invites/receipts — no login account.
+      const license = getLicense();
+      if (license?.key && isValidProfileEmail(saved.email)) {
+        try {
+          await invokeFunction("license-status", {
+            action: "update_contact",
+            key: license.key,
+            deviceId: getDeviceId(),
+            email: saved.email,
+          });
+        } catch {
+          /* Local profile still saved; license email sync can retry on next save. */
+        }
       }
     },
     [],

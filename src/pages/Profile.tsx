@@ -2,7 +2,13 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { ProfileAvatar } from "../components/ProfileAvatar";
 import { useApp } from "../context/AppContext";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
-import { composeDisplayName, searchPlaces, type GeocodeHit, type LocalProfileLocation } from "../lib/localProfile";
+import {
+  composeDisplayName,
+  isValidProfileEmail,
+  searchPlaces,
+  type GeocodeHit,
+  type LocalProfileLocation,
+} from "../lib/localProfile";
 import { getCurrentPosition, lookupIpLocation, reverseGeocode } from "../lib/weather";
 
 export function ProfilePage() {
@@ -10,6 +16,7 @@ export function ProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [firstName, setFirstName] = useState(localProfile.firstName);
   const [lastName, setLastName] = useState(localProfile.lastName);
+  const [email, setEmail] = useState(localProfile.email || "");
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(localProfile.avatarDataUrl);
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
   const [query, setQuery] = useState(localProfile.location?.place || "");
@@ -23,6 +30,7 @@ export function ProfilePage() {
   useEffect(() => {
     setFirstName(localProfile.firstName);
     setLastName(localProfile.lastName);
+    setEmail(localProfile.email || "");
     setAvatarDataUrl(localProfile.avatarDataUrl);
     setLocation(localProfile.location);
     setQuery(localProfile.location?.place || "");
@@ -125,6 +133,11 @@ export function ProfilePage() {
       setError("First name and last name are required.");
       return;
     }
+    if (!isValidProfileEmail(email)) {
+      setSaving(false);
+      setError("Enter a valid email for invites and receipts. This is not a login.");
+      return;
+    }
     if (!location) {
       setSaving(false);
       setError("Choose a location so weather and local resources know where you are.");
@@ -134,10 +147,11 @@ export function ProfilePage() {
       await saveLocalProfile({
         firstName: first,
         lastName: last,
+        email,
         avatarDataUrl,
         location,
       });
-      setMessage("Profile saved on this device.");
+      setMessage("Profile saved on this device. Email is attached to your license for invites and receipts — not a login.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save your profile.");
     } finally {
@@ -152,8 +166,9 @@ export function ProfilePage() {
       <p className="eyebrow">Profile</p>
       <h1 className="page-title">Your profile</h1>
       <p className="muted help-lead">
-        Your name, location, and optional photo stay on this device. The same avatar appears beside My Checklist, in the
-        top-right corner, and on your homepage.
+        Photo, name, email, and location stay on this device. Email attaches to your license for invites and receipts —
+        there is no login account. Offline access continues here. If you lose this browser, use Transfer / Deactivate or
+        Recover My License, then activate again.
       </p>
 
       <form className="account-card" onSubmit={onSave}>
@@ -215,6 +230,20 @@ export function ProfilePage() {
             />
           </label>
         </div>
+
+        <label className="account-field">
+          <span>Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            maxLength={120}
+            required
+          />
+          <p className="muted">Used for Group Sharing invites and purchase recovery — not a password login.</p>
+        </label>
 
         <div className="account-field">
           <span>Location</span>

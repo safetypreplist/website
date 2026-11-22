@@ -128,10 +128,15 @@ function parseLocalProfile(raw: unknown): LocalProfile | null {
       ? raw.lastName.trim()
       : parts.slice(1).join(" ");
   const displayName = [firstName, lastName].filter(Boolean).join(" ").trim() || legacyName;
+  const email =
+    typeof raw.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw.email.trim())
+      ? raw.email.trim().toLowerCase()
+      : "";
   return {
     firstName,
     lastName,
     displayName,
+    email,
     avatarDataUrl: typeof raw.avatarDataUrl === "string" && raw.avatarDataUrl.startsWith("data:") ? raw.avatarDataUrl : null,
     location: location && location.place && Number.isFinite(location.lat) && Number.isFinite(location.lon) ? location : null,
   };
