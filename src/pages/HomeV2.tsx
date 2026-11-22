@@ -133,7 +133,7 @@ export function HomeV2Page() {
             </Link>
           </nav>
           {licensed ? (
-            <Link className="hv2-nav-cta hv2-nav-cta-licensed" to="/app">
+            <Link className="hv2-nav-cta-licensed" to="/app">
               <ProfileAvatar
                 className="hv2-nav-avatar"
                 name={localProfile.displayName || "Licensed"}
