@@ -291,7 +291,7 @@ export function HomeV2Page() {
         <div className="hv2-wrap hv2-product-grid hv2-reveal">
           <div className="hv2-product-copy">
             <h2>
-              Works Anywhere.
+              Yours Forever.
               <span className="hv2-heading-accent">No Wi-Fi Needed.</span>
             </h2>
             <p>
