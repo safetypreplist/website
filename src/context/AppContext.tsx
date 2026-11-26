@@ -135,7 +135,12 @@ type AppState = {
   signOut: () => Promise<void>;
   addContact: (name: string, phone: string, label: string) => Promise<void>;
   removeContact: (id: string) => Promise<void>;
-  addCustomItem: (sectionId: string, text: string, description?: string | null) => Promise<void>;
+  addCustomItem: (
+    sectionId: string,
+    text: string,
+    description?: string | null,
+    placement?: "priority" | null,
+  ) => Promise<void>;
   removeCustomItem: (id: string) => Promise<void>;
   renameDevice: () => Promise<void>;
   removeDevice: () => Promise<void>;
@@ -476,23 +481,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await deleteLocalContact(id);
   }, []);
 
-  const addCustomItem = useCallback(async (sectionId: string, text: string, description?: string | null) => {
-    const now = new Date().toISOString();
-    const item: CustomChecklistItem = {
-      id: newLocalId("custom"),
-      user_id: LOCAL_USER,
-      section_id: sectionId,
-      text: text.trim(),
-      description: description?.trim() || null,
-      sort_order: Date.now(),
-      checked: false,
-      note: "",
-      created_at: now,
-      updated_at: now,
-    };
-    setCustomItems((prev) => [...prev, item]);
-    await saveCustomItem(item);
-  }, []);
+  const addCustomItem = useCallback(
+    async (sectionId: string, text: string, description?: string | null, placement?: "priority" | null) => {
+      const now = new Date().toISOString();
+      const item: CustomChecklistItem = {
+        id: newLocalId("custom"),
+        user_id: LOCAL_USER,
+        section_id: sectionId,
+        text: text.trim(),
+        description: description?.trim() || null,
+        sort_order: Date.now(),
+        checked: false,
+        note: "",
+        created_at: now,
+        updated_at: now,
+        ...(placement ? { placement } : {}),
+      };
+      setCustomItems((prev) => [...prev, item]);
+      await saveCustomItem(item);
+    },
+    [],
+  );
 
   const removeCustomItem = useCallback(async (id: string) => {
     setCustomItems((prev) => prev.filter((row) => row.id !== id));

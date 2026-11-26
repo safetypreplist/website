@@ -35,6 +35,8 @@ import {
   uploadShareForImport,
 } from "../lib/checklistShare";
 
+type AddTarget = { id: string; title: string; priority?: boolean };
+
 export function SystemPage() {
   const { slug } = useParams();
   const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } =
@@ -48,7 +50,7 @@ export function SystemPage() {
   const [openTip, setOpenTip] = useState<string | null>(null);
   const [openNoteTip, setOpenNoteTip] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [addingTo, setAddingTo] = useState<{ id: string; title: string } | null>(null);
+  const [addingTo, setAddingTo] = useState<AddTarget | null>(null);
   const [removeItem, setRemoveItem] = useState<{ id: string; text: string } | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
@@ -87,6 +89,10 @@ export function SystemPage() {
 
   const qsMinutes = quickStartMinutes(system?.time_label);
   const timed = isTimedSystem(system);
+  const priorityCustomIds = useMemo(
+    () => new Set(customItems.filter((item) => item.placement === "priority").map((item) => item.id)),
+    [customItems],
+  );
 
   const primaryGroups = useMemo(() => {
     if (!system || !timed) return [];
@@ -106,15 +112,23 @@ export function SystemPage() {
       ];
     }
     return orderedSections
-      .map((section) => ({
-        key: section.id,
-        title: section.title,
-        intro: section.intro || quickStartIntro(qsMinutes ?? 0),
-        items: itemsForSection(catalog.items, customItems, section.id).filter(isPrimaryItem),
-        sectionId: section.id,
-      }))
+      .map((section) => {
+        const all = itemsForSection(catalog.items, customItems, section.id);
+        const primary = all.filter(isPrimaryItem);
+        return {
+          key: section.id,
+          title: section.title,
+          intro: section.intro || quickStartIntro(qsMinutes ?? 0),
+          items: primary.length ? [...primary, ...all.filter((item) => priorityCustomIds.has(item.id))] : [],
+          sectionId: section.id,
+        };
+      })
       .filter((group) => group.items.length);
-  }, [catalog.items, customItems, lane, orderedSections, qsMinutes, system, timed]);
+  }, [catalog.items, customItems, lane, orderedSections, priorityCustomIds, qsMinutes, system, timed]);
+  const prioritySectionIds = useMemo(
+    () => new Set(primaryGroups.map((group) => group.sectionId).filter(Boolean)),
+    [primaryGroups],
+  );
 
   const moreGroups = useMemo(() => {
     if (!system) return [];
@@ -129,7 +143,10 @@ export function SystemPage() {
               : section.title,
         intro: section.intro,
         items: itemsForSection(catalog.items, customItems, section.id).filter(
-          (item) => !isExtendedItem(item) && (!timed || !isPrimaryItem(item)),
+          (item) =>
+            !isExtendedItem(item) &&
+            (!timed || !isPrimaryItem(item)) &&
+            !(priorityCustomIds.has(item.id) && prioritySectionIds.has(section.id)),
         ),
         sectionId: section.id,
       }))
@@ -153,7 +170,7 @@ export function SystemPage() {
         sectionId: orderedSections[0]?.id ?? null,
       },
     ];
-  }, [catalog.items, customItems, lane, orderedSections, system, timed]);
+  }, [catalog.items, customItems, lane, orderedSections, priorityCustomIds, prioritySectionIds, system, timed]);
 
   const extendedGroups = useMemo(
     () =>
@@ -312,23 +329,31 @@ export function SystemPage() {
           </button>
           {shareOpen ? (
             <div className="list-menu-drop" role="menu" style={{ minWidth: 280 }}>
-              <button
-                type="button"
-                role="menuitem"
-                disabled={!SHARE_IMPORT_ENABLED}
-                onClick={() => void shareForImport()}
-              >
-                Share checklist for import{SHARE_IMPORT_ENABLED ? "" : " (coming soon)"}
-              </button>
-              <p className="muted" style={{ margin: "4px 12px 10px", fontSize: 12 }}>
-                {IMPORT_SHARE_HELP}
-              </p>
+              {SHARE_IMPORT_ENABLED ? (
+                <>
+                  <button type="button" role="menuitem" onClick={() => void shareForImport()}>
+                    Share checklist for import
+                  </button>
+                  <p className="muted" style={{ margin: "4px 12px 10px", fontSize: 12 }}>
+                    {IMPORT_SHARE_HELP}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Link role="menuitem" to="/app/group-sharing" onClick={() => setShareOpen(false)}>
+                    Share with Group Sharing
+                  </Link>
+                  <p className="muted" style={{ margin: "4px 12px 10px", fontSize: 12 }}>
+                    Sync your checklist temporarily with other licensed devices.
+                  </p>
+                </>
+              )}
             </div>
           ) : null}
         </div>
         <p className={`list-saved ${sync === "waiting" ? "wait" : ""}`}>
           <b>
-            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Changes waiting to sync" : lastSavedAt ? "Synced" : ""}
+            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Changes waiting to save" : lastSavedAt ? "Saved on this device" : ""}
           </b>
           {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
         </p>
@@ -409,6 +434,7 @@ export function SystemPage() {
           intro={group.intro}
           items={group.items}
           sectionId={group.sectionId}
+          priority
           customIds={customIds}
           canEdit={viewing.canEdit}
           progress={progress}
@@ -513,7 +539,7 @@ export function SystemPage() {
           cap={customItemCap()}
           onClose={() => setAddingTo(null)}
           onAdd={async (text, description) => {
-            await addCustomItem(addingTo.id, text, description);
+            await addCustomItem(addingTo.id, text, description, addingTo.priority ? "priority" : null);
             setAddingTo(null);
           }}
         />
@@ -540,6 +566,7 @@ function ListGroup({
   intro,
   items,
   sectionId,
+  priority = false,
   customIds,
   canEdit,
   progress,
@@ -559,6 +586,7 @@ function ListGroup({
   intro: string | null;
   items: ChecklistItem[];
   sectionId: string | null;
+  priority?: boolean;
   customIds: Set<string>;
   canEdit: boolean;
   progress: Record<string, ProgressRow | undefined>;
@@ -570,7 +598,7 @@ function ListGroup({
   setOpenTip: (value: string | null | ((current: string | null) => string | null)) => void;
   setOpenNoteTip: (value: string | null | ((current: string | null) => string | null)) => void;
   setDraft: (value: string) => void;
-  setAddingTo: (value: { id: string; title: string } | null) => void;
+  setAddingTo: (value: AddTarget | null) => void;
   setRemoveItem: (value: { id: string; text: string } | null) => void;
   saveProgress: (itemId: string, checked: boolean, note: string) => void | Promise<void>;
 }) {
@@ -586,7 +614,7 @@ function ListGroup({
             className="add-item-btn"
             type="button"
             aria-label={`Add item to ${title}`}
-            onClick={() => setAddingTo({ id: sectionId, title })}
+            onClick={() => setAddingTo({ id: sectionId, title, priority })}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 6.5v11M6.5 12h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />

@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useApp, type OfflineStatus } from "../context/AppContext";
 
 export function syncLabel(offline: OfflineStatus, online: boolean) {
-  if (offline.pending > 0) return "Changes waiting to sync";
+  if (offline.pending > 0) return "Changes waiting to save";
   if (!online || offline.usingSavedCopy) return offline.savedAt ? "Available offline" : "Offline";
-  return "Synced";
+  return "Saved on this device";
 }
 
 const NOTICE_MS = { offline: 7000, online: 4000 };

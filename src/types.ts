@@ -158,6 +158,8 @@ export type CustomChecklistItem = {
   note: string;
   created_at: string;
   updated_at: string;
+  /** Added from a priority group, so it stays under that heading instead of the extras below. */
+  placement?: "priority" | null;
 };
 
 export type ProgressRow = {

@@ -48,17 +48,17 @@ export function DashboardPage() {
     .sort((a, b) => a.sort_order - b.sort_order);
   const startSystems = isHousehold ? systems : timedSystems(catalog.systems);
   const lane = readPrepLane();
-
-  const visibleItems = startSystems.flatMap((system) =>
-    trackedItems(system, catalog.sections, catalog.items, customItems, lane),
-  );
-  const done = visibleItems.filter((item) => progress[item.id]?.checked).length;
-  const pct = percent(done, visibleItems.length);
   const continueLists = isHousehold
     ? systems
     : hasSurvivalVault
       ? [...startSystems, ...proSystems(catalog.systems)]
       : startSystems;
+
+  const visibleItems = continueLists.flatMap((system) =>
+    trackedItems(system, catalog.sections, catalog.items, customItems, lane),
+  );
+  const done = visibleItems.filter((item) => progress[item.id]?.checked).length;
+  const pct = percent(done, visibleItems.length);
   const continueSystem = entitled ? findContinueSystem(continueLists, catalog, customItems, progress) : null;
   const checklistHeading = viewing.title === "Survival Vault" ? "My Checklist" : viewing.title;
   const placeLabel = locationDisplayLabel(localProfile.location);

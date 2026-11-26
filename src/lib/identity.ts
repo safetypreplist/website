@@ -33,6 +33,7 @@ export function personName(profile?: Pick<Profile, "display_name" | "first_name"
 
 export function checklistTitle(name?: string | null) {
   const n = (name || "My").trim() || "My";
+  if (n === "My") return "My Checklist";
   return /s$/i.test(n) ? `${n}' Checklist` : `${n}'s Checklist`;
 }
 

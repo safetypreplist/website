@@ -7014,6 +7014,7 @@ html.has-guidance-ack .app-main {
 }
 
 .list-menu-drop button,
+.list-menu-drop a,
 .print-menu-drop button {
   display: block;
   width: 100%;
@@ -7032,6 +7033,8 @@ html.has-guidance-ack .app-main {
 
 .list-menu-drop button:hover,
 .list-menu-drop button:focus-visible,
+.list-menu-drop a:hover,
+.list-menu-drop a:focus-visible,
 .print-menu-drop button:hover,
 .print-menu-drop button:focus-visible {
   background: var(--sand);
