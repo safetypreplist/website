@@ -14,6 +14,8 @@ export type LocalProfile = {
   email: string;
   avatarDataUrl: string | null;
   location: LocalProfileLocation | null;
+  /** User chose to continue without a location; they can add one later in Profile. */
+  locationSkipped: boolean;
 };
 
 const PROFILE_KEY = "spl.localProfile.v1";
@@ -25,6 +27,7 @@ const EMPTY: LocalProfile = {
   email: "",
   avatarDataUrl: null,
   location: null,
+  locationSkipped: false,
 };
 
 export function normalizeProfileEmail(value: string) {
@@ -41,12 +44,12 @@ export function composeDisplayName(firstName: string, lastName: string) {
 }
 
 export function isLocalProfileComplete(
-  profile: Pick<LocalProfile, "firstName" | "lastName" | "email" | "location">,
+  profile: Pick<LocalProfile, "firstName" | "lastName" | "email" | "location" | "locationSkipped">,
 ) {
   return Boolean(
     composeDisplayName(profile.firstName, profile.lastName) &&
       isValidProfileEmail(profile.email) &&
-      profile.location?.place,
+      (profile.location?.place || profile.locationSkipped),
   );
 }
 
@@ -119,13 +122,17 @@ export function loadLocalProfile(): LocalProfile {
           ? parsed.avatarDataUrl
           : null,
       location: normalizeLocation(parsed.location),
+      locationSkipped: parsed.locationSkipped === true,
     };
   } catch {
     return { ...EMPTY };
   }
 }
 
-export type LocalProfileInput = Omit<LocalProfile, "displayName"> & { displayName?: string };
+export type LocalProfileInput = Omit<LocalProfile, "displayName" | "locationSkipped"> & {
+  displayName?: string;
+  locationSkipped?: boolean;
+};
 
 export function saveLocalProfile(profile: LocalProfileInput) {
   const firstName = profile.firstName.trim();
@@ -140,9 +147,31 @@ export function saveLocalProfile(profile: LocalProfileInput) {
     email,
     avatarDataUrl: profile.avatarDataUrl,
     location: profile.location,
+    locationSkipped: !profile.location && Boolean(profile.locationSkipped ?? loadLocalProfile().locationSkipped),
   };
   localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
   return next;
+}
+
+const CHECKOUT_EMAIL_KEY = "spl.checkout.email";
+
+/** Email the buyer gave Stripe, so first-run onboarding can prefill it. */
+export function rememberCheckoutEmail(email: string) {
+  if (!isValidProfileEmail(email)) return;
+  try {
+    localStorage.setItem(CHECKOUT_EMAIL_KEY, normalizeProfileEmail(email));
+  } catch {
+    /* prefill is a convenience only */
+  }
+}
+
+export function checkoutEmail() {
+  try {
+    const value = localStorage.getItem(CHECKOUT_EMAIL_KEY) || "";
+    return isValidProfileEmail(value) ? value : "";
+  } catch {
+    return "";
+  }
 }
 
 export function clearLocalProfileAvatar(profile: LocalProfile) {

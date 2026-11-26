@@ -9,7 +9,7 @@ import {
   type GeocodeHit,
   type LocalProfileLocation,
 } from "../lib/localProfile";
-import { getCurrentPosition, lookupIpLocation, reverseGeocode } from "../lib/weather";
+import { locateDevice, lookupIpLocation } from "../lib/weather";
 
 export function ProfilePage() {
   const { localProfile, saveLocalProfile } = useApp();
@@ -80,33 +80,14 @@ export function ProfilePage() {
     setError("");
     setMessage("");
     try {
+      let next: LocalProfileLocation;
       try {
-        const position = await getCurrentPosition();
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const geo = await reverseGeocode(lat, lon);
-        const next: LocalProfileLocation = {
-          place: geo.place,
-          lat,
-          lon,
-          stateCode: geo.stateCode,
-        };
-        setLocation(next);
-        setQuery(geo.place);
-        setHits([]);
-        return;
+        next = await locateDevice();
       } catch {
-        /* fall through to network estimate */
+        next = await lookupIpLocation();
       }
-      const ip = await lookupIpLocation();
-      const next: LocalProfileLocation = {
-        place: ip.place,
-        lat: ip.lat,
-        lon: ip.lon,
-        stateCode: ip.stateCode,
-      };
       setLocation(next);
-      setQuery(ip.place);
+      setQuery(next.place);
       setHits([]);
     } catch {
       setError("Could not read your current location. Search for a city or ZIP instead.");
@@ -138,9 +119,9 @@ export function ProfilePage() {
       setError("Enter a valid email for invites and receipts. This is not a login.");
       return;
     }
-    if (!location) {
+    if (!location && query.trim()) {
       setSaving(false);
-      setError("Choose a location so weather and local resources know where you are.");
+      setError("Pick a place from the list, or clear the location field.");
       return;
     }
     try {
@@ -150,6 +131,7 @@ export function ProfilePage() {
         email,
         avatarDataUrl,
         location,
+        locationSkipped: !location,
       });
       setMessage("Profile saved on this device. Email is attached to your license for invites and receipts — not a login.");
     } catch (err) {
@@ -255,7 +237,6 @@ export function ProfilePage() {
             }}
             placeholder="City or town"
             autoComplete="address-level2"
-            required
           />
           {searching ? <p className="muted">Searching…</p> : null}
           {hits.length ? (
@@ -287,7 +268,11 @@ export function ProfilePage() {
               </button>
             ) : null}
           </div>
-          {location ? <p className="muted">Weather will use {location.place}.</p> : null}
+          {location ? (
+            <p className="muted">Weather will use {location.place}.</p>
+          ) : (
+            <p className="muted">Optional. Add a location for local time, weather, and safety resources.</p>
+          )}
         </div>
 
         {error ? <p className="form-error">{error}</p> : null}

@@ -349,4 +349,36 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
   });
 }
 
+async function geolocationPermissionState(): Promise<PermissionState | null> {
+  try {
+    const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+    return status?.state ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Find this device's place without leaving the user waiting on a slow GPS fix.
+ * A precise fix gets a short window (longer while the permission prompt is open);
+ * after that we fall back to the network estimate. Permission denials still throw.
+ */
+export async function locateDevice(): Promise<{ place: string; lat: number; lon: number; stateCode: string | null }> {
+  const permission = await geolocationPermissionState();
+  const windowMs = permission === "granted" ? 5000 : 20000;
+  try {
+    const position = await Promise.race([
+      getCurrentPosition(),
+      new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("Location timed out")), windowMs)),
+    ]);
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    const geo = await reverseGeocode(lat, lon);
+    return { place: geo.place, lat, lon, stateCode: geo.stateCode };
+  } catch (err) {
+    if (isGeolocationPermissionDenied(err)) throw err;
+    return lookupIpLocation();
+  }
+}
+
 export { isGeolocationPermissionDenied };

@@ -3,6 +3,7 @@ import { ProfileAvatar } from "./ProfileAvatar";
 import { useApp } from "../context/AppContext";
 import { blobToDataUrl, compressAvatar } from "../lib/avatar";
 import {
+  checkoutEmail,
   composeDisplayName,
   isValidProfileEmail,
   lookupZipCode,
@@ -10,12 +11,7 @@ import {
   splitFullName,
   type LocalProfileLocation,
 } from "../lib/localProfile";
-import {
-  getCurrentPosition,
-  isGeolocationPermissionDenied,
-  lookupIpLocation,
-  reverseGeocode,
-} from "../lib/weather";
+import { isGeolocationPermissionDenied, locateDevice } from "../lib/weather";
 
 type Props = {
   onContinue: () => void;
@@ -25,22 +21,46 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   const { localProfile, saveLocalProfile } = useApp();
   const fileRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState(composeDisplayName(localProfile.firstName, localProfile.lastName));
-  const [email, setEmail] = useState(localProfile.email || "");
+  const [email, setEmail] = useState(localProfile.email || checkoutEmail());
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(localProfile.avatarDataUrl);
   const [location, setLocation] = useState<LocalProfileLocation | null>(localProfile.location);
   const [zip, setZip] = useState("");
   const [lookingUpZip, setLookingUpZip] = useState(false);
   const [locating, setLocating] = useState(false);
   const [needsZip, setNeedsZip] = useState(false);
+  const [skipLocation, setSkipLocation] = useState(localProfile.locationSkipped && !localProfile.location);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const locateRun = useRef(0);
 
   useEffect(() => {
     setFullName(composeDisplayName(localProfile.firstName, localProfile.lastName));
-    setEmail(localProfile.email || "");
+    setEmail(localProfile.email || checkoutEmail());
     setAvatarDataUrl(localProfile.avatarDataUrl);
     setLocation(localProfile.location);
   }, [localProfile]);
+
+  function stopLocating() {
+    locateRun.current += 1;
+    setLocating(false);
+  }
+
+  function enterZipInstead() {
+    stopLocating();
+    setSkipLocation(false);
+    setNeedsZip(true);
+    setLocation(null);
+    setError("");
+  }
+
+  function skipForNow() {
+    stopLocating();
+    setNeedsZip(false);
+    setZip("");
+    setLocation(null);
+    setSkipLocation(true);
+    setError("");
+  }
 
   useEffect(() => {
     if (!needsZip) return;
@@ -86,46 +106,27 @@ export function OnboardingProfileStep({ onContinue }: Props) {
   }
 
   async function allowLocation() {
+    const run = ++locateRun.current;
     setLocating(true);
     setError("");
     setNeedsZip(false);
+    setSkipLocation(false);
     try {
-      const position = await getCurrentPosition();
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const geo = await reverseGeocode(lat, lon);
-      setLocation({
-        place: geo.place,
-        lat,
-        lon,
-        stateCode: geo.stateCode,
-      });
+      const hit = await locateDevice();
+      if (run !== locateRun.current) return;
+      setLocation(hit);
       setZip("");
     } catch (err) {
-      if (!isGeolocationPermissionDenied(err)) {
-        try {
-          const ip = await lookupIpLocation();
-          setLocation({
-            place: ip.place,
-            lat: ip.lat,
-            lon: ip.lon,
-            stateCode: ip.stateCode,
-          });
-          setZip("");
-          return;
-        } catch {
-          /* show ZIP fallback below */
-        }
-      }
+      if (run !== locateRun.current) return;
       setNeedsZip(true);
       setLocation(null);
       setError(
         isGeolocationPermissionDenied(err)
-          ? "Location permission was blocked for this site. Enter your ZIP code, or turn location back on in your browser settings and try again."
-          : "Could not get your location. Enter your ZIP code instead.",
+          ? "Location permission was blocked for this site. Enter your ZIP code, skip for now, or turn location back on in your browser settings."
+          : "Could not get your location. Enter your ZIP code or skip for now.",
       );
     } finally {
-      setLocating(false);
+      if (run === locateRun.current) setLocating(false);
     }
   }
 
@@ -145,29 +146,26 @@ export function OnboardingProfileStep({ onContinue }: Props) {
       return;
     }
 
-    let nextLocation = location;
-    if (!nextLocation && needsZip) {
+    // Never hold the user on a pending location lookup — they can add it later in Profile.
+    if (locating) stopLocating();
+    let nextLocation = locating ? null : location;
+    if (!nextLocation && needsZip && zip.trim()) {
       const code = normalizeZipCode(zip);
-      if (code.length === 5) {
-        try {
-          nextLocation = await lookupZipCode(code);
-          setLocation(nextLocation);
-        } catch (err) {
-          setSaving(false);
-          setError(err instanceof Error ? err.message : "Enter a valid ZIP code to continue.");
-          return;
-        }
+      if (code.length !== 5) {
+        setSaving(false);
+        setError("Enter a 5-digit ZIP code, or choose Skip for now.");
+        return;
       }
-    }
-
-    if (!nextLocation) {
-      setSaving(false);
-      setError(
-        needsZip
-          ? "Enter your ZIP code to continue."
-          : "Allow location access to personalize safety resources, time, and weather.",
-      );
-      return;
+      try {
+        nextLocation = await lookupZipCode(code);
+        setLocation(nextLocation);
+      } catch (err) {
+        setSaving(false);
+        setError(
+          `${err instanceof Error ? err.message : "Could not find that ZIP code."} Try again, or choose Skip for now.`,
+        );
+        return;
+      }
     }
 
     try {
@@ -177,6 +175,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
         email,
         avatarDataUrl,
         location: nextLocation,
+        locationSkipped: !nextLocation,
       });
       onContinue();
     } catch (err) {
@@ -298,6 +297,16 @@ export function OnboardingProfileStep({ onContinue }: Props) {
                     {locating ? "Updating…" : "Update"}
                   </button>
                 </div>
+              ) : skipLocation ? (
+                <div className="onboarding-location-ready onboarding-location-skipped" role="status">
+                  <div>
+                    <strong>Location skipped</strong>
+                    <p>Add it any time in Profile for local weather and safety resources.</p>
+                  </div>
+                  <button className="btn btn-ghost" type="button" onClick={() => void allowLocation()}>
+                    Use location
+                  </button>
+                </div>
               ) : (
                 <button
                   className="btn btn-ghost onboarding-location-cta"
@@ -308,10 +317,26 @@ export function OnboardingProfileStep({ onContinue }: Props) {
                   {locating ? "Locating…" : "Allow location access"}
                 </button>
               )}
-              {!location && !needsZip ? (
+              {!location && !needsZip && !skipLocation ? (
                 <p className="muted onboarding-location-hint">
-                  Powers local safety resources, time, and weather on this device.
+                  {locating
+                    ? "Waiting for your browser. You don't have to wait — enter a ZIP or skip for now."
+                    : "Optional. Powers local safety resources, time, and weather on this device."}
                 </p>
+              ) : null}
+              {!location || needsZip ? (
+                <div className="onboarding-location-alt">
+                  {!needsZip ? (
+                    <button className="onboarding-location-link" type="button" onClick={enterZipInstead}>
+                      Enter ZIP instead
+                    </button>
+                  ) : null}
+                  {!skipLocation ? (
+                    <button className="onboarding-location-link" type="button" onClick={skipForNow}>
+                      Skip for now
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
             </div>
 
@@ -328,7 +353,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
                   }}
                   inputMode="numeric"
                   autoComplete="postal-code"
-                  required
+                  autoFocus
                 />
                 {lookingUpZip ? <p className="muted onboarding-location-hint">Looking up ZIP…</p> : null}
                 {location && !lookingUpZip ? (
@@ -342,7 +367,7 @@ export function OnboardingProfileStep({ onContinue }: Props) {
         {error ? <p className="form-error">{error}</p> : null}
 
         <div className="onboarding-actions onboarding-actions-stacked">
-          <button className="btn btn-primary" type="submit" disabled={saving || locating || lookingUpZip}>
+          <button className="btn btn-primary" type="submit" disabled={saving}>
             {saving ? "Saving…" : "Continue"}
           </button>
         </div>

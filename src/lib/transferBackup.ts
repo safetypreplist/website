@@ -132,13 +132,16 @@ function parseLocalProfile(raw: unknown): LocalProfile | null {
     typeof raw.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw.email.trim())
       ? raw.email.trim().toLowerCase()
       : "";
+  const validLocation =
+    location && location.place && Number.isFinite(location.lat) && Number.isFinite(location.lon) ? location : null;
   return {
     firstName,
     lastName,
     displayName,
     email,
     avatarDataUrl: typeof raw.avatarDataUrl === "string" && raw.avatarDataUrl.startsWith("data:") ? raw.avatarDataUrl : null,
-    location: location && location.place && Number.isFinite(location.lat) && Number.isFinite(location.lon) ? location : null,
+    location: validLocation,
+    locationSkipped: !validLocation && raw.locationSkipped === true,
   };
 }
 

@@ -10709,6 +10709,32 @@ html.tour-scroll-lock body {
   padding: 5px 9px;
   font-size: 12px;
 }
+.onboarding-location-skipped {
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-color: rgba(30, 42, 31, 0.12);
+  background: rgba(244, 240, 229, 0.7);
+}
+.onboarding-location-alt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 0 2px;
+}
+.onboarding-location-link {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--forest);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.onboarding-location-link:hover {
+  color: var(--ink);
+}
 .onboarding-location-fallback {
   display: grid;
   gap: 8px;
@@ -10795,6 +10821,12 @@ html.tour-scroll-lock body {
   .onboarding-location-ready .btn {
     grid-column: 2;
     justify-self: start;
+  }
+  .onboarding-location-skipped {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .onboarding-location-skipped .btn {
+    grid-column: 1;
   }
 }
 
