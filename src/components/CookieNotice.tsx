@@ -38,7 +38,7 @@ export function CookieNotice() {
         <div className="cookie-notice-copy">
           <p className="eyebrow" id="cookie-notice-title">Cookie Policy</p>
           <p>
-            We use essential cookies to keep you signed in. Accept also turns on Google Analytics and Contentsquare. See the <Link to="/privacy">Privacy Policy</Link>.
+            We use essential cookies and storage to keep your license and preferences working on this device. Accept also turns on Google Analytics and Contentsquare. See the <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>
         <div className="cookie-notice-actions">

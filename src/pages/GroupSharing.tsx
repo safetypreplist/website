@@ -292,8 +292,8 @@ export function GroupSharingPage() {
           <p className="eyebrow">Purchase confirmed</p>
           <h1 className="page-title">Thank you — set up your group</h1>
           <p className="muted">
-            Group Sharing is active on your license until you finish setup and the session window runs. Name the group,
-            then invite licensed friends.
+            Your Group Sharing pass is ready. Name your group below to start your access window, then invite other
+            licensed devices.
           </p>
         </header>
         <section className="account-card group-sharing-card">

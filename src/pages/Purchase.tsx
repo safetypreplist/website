@@ -8,7 +8,8 @@ import { ScopeAcknowledgment } from "../components/ScopeAcknowledgment";
 import { StripeCheckout } from "../components/StripeCheckout";
 import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
-import { activate, isLicensed, setLocalProduct } from "../lib/licenseClient";
+import { activate, getLicense, isLicensed, setLocalProduct } from "../lib/licenseClient";
+import { rememberCheckoutEmail } from "../lib/localProfile";
 import { PHOTO_LIBRARY } from "../lib/photos";
 import { BASIC_LICENSE_CENTS, PRO_LICENSE_CENTS } from "../lib/pricing";
 import { SCOPE_LINE } from "../lib/copy";
@@ -27,7 +28,7 @@ const BASIC_FEATURES = [
 
 const PRO_FEATURES = [
   "Everything in Basic",
-  "Off-grid, water, power, and long-term food",
+  "Off-grid, water, power, emergency cooling, and long-term food",
   "Works offline on one device",
   "Lifetime access — one-time purchase",
 ] as const;
@@ -69,7 +70,7 @@ export function PricingPage() {
 }
 
 export function CheckoutPage() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const raw = (params.get("product") || "").toLowerCase();
   const fromVault = params.get("vault") === "1" || params.get("household") === "1" || params.get("plan") === "pro";
   const initial: "basic" | "pro" = raw === "pro" || fromVault ? "pro" : "basic";
@@ -81,6 +82,21 @@ export function CheckoutPage() {
   useEffect(() => {
     setProduct(initial);
   }, [initial]);
+
+  function chooseProduct(next: "basic" | "pro") {
+    setProduct(next);
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current);
+        updated.delete("plan");
+        updated.delete("vault");
+        updated.delete("household");
+        updated.set("product", next);
+        return updated;
+      },
+      { replace: true },
+    );
+  }
 
   const amount = product === "pro" ? PRO_LICENSE_CENTS : BASIC_LICENSE_CENTS;
   const title = product === "pro" ? "Pro" : "Basic";
@@ -105,7 +121,7 @@ export function CheckoutPage() {
               type="button"
               className={product === "basic" ? "is-active" : ""}
               aria-pressed={product === "basic"}
-              onClick={() => setProduct("basic")}
+              onClick={() => chooseProduct("basic")}
             >
               Basic
             </button>
@@ -113,7 +129,7 @@ export function CheckoutPage() {
               type="button"
               className={product === "pro" ? "is-active" : ""}
               aria-pressed={product === "pro"}
-              onClick={() => setProduct("pro")}
+              onClick={() => chooseProduct("pro")}
             >
               Pro
             </button>
@@ -181,11 +197,25 @@ export function ThankYouPage() {
     "basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "group_sharing" | ""
   >(expectGroup ? "group_sharing" : "");
   const [groupId, setGroupId] = useState("");
+  const [buyerEmail, setBuyerEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(checkoutSession));
   const [activating, setActivating] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [redirectingGroup, setRedirectingGroup] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const isUpgrade = checkoutProduct === "upgrade_to_pro";
+  const upgradedHere = isUpgrade && isLicensed() && getLicense()?.key === licenseKey;
+
+  async function copyKey() {
+    try {
+      await navigator.clipboard.writeText(licenseKey);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   useEffect(() => {
     if (!checkoutSession) {
@@ -201,9 +231,14 @@ export function ThankYouPage() {
           product?: "basic" | "pro";
           checkoutProduct?: "basic" | "basic_additional" | "pro" | "upgrade_to_pro" | "group_sharing";
           groupId?: string;
+          email?: string | null;
           error?: string;
         }>("checkout-status", { sessionId: checkoutSession });
         if (cancelled) return;
+        if (captured?.email) {
+          setBuyerEmail(captured.email);
+          rememberCheckoutEmail(captured.email);
+        }
         if (captured?.checkoutProduct === "group_sharing" || captured?.groupId) {
           setCheckoutProduct("group_sharing");
           setGroupId(captured.groupId || "");
@@ -348,28 +383,39 @@ export function ThankYouPage() {
           ) : null}
           {licenseKey && checkoutProduct !== "group_sharing" ? (
             <>
-              <h1>Your license key</h1>
+              <h1>{isUpgrade ? "You're upgraded to Pro" : "Your license key"}</h1>
               <p>
-                {checkoutProduct === "basic_additional"
-                  ? "Your additional device license is ready."
-                  : product === "pro"
-                    ? "Pro license is ready."
-                    : product === "basic"
-                      ? "Basic license is ready."
-                      : "Your license is ready."}
+                {isUpgrade
+                  ? "Your Pro checklists are unlocked. Your license key stays the same."
+                  : checkoutProduct === "basic_additional"
+                    ? "Your additional device license is ready."
+                    : product === "pro"
+                      ? "Pro license is ready."
+                      : product === "basic"
+                        ? "Basic license is ready."
+                        : "Your license is ready."}
               </p>
-              <p
-                style={{
-                  fontFamily: "Consolas, Monaco, monospace",
-                  fontSize: 22,
-                  letterSpacing: "0.04em",
-                  fontWeight: 700,
-                }}
-              >
-                {licenseKey}
-              </p>
+              <div className="thank-you-key">
+                <p
+                  style={{
+                    fontFamily: "Consolas, Monaco, monospace",
+                    fontSize: 22,
+                    letterSpacing: "0.04em",
+                    fontWeight: 700,
+                  }}
+                >
+                  {licenseKey}
+                </p>
+                <button className="btn btn-ghost" type="button" onClick={() => void copyKey()}>
+                  {copied ? "Copied" : "Copy key"}
+                </button>
+              </div>
               <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-                {checkoutProduct === "basic_additional" && isLicensed() ? (
+                {upgradedHere ? (
+                  <Link className="btn btn-primary" to="/app">
+                    Return to my checklist
+                  </Link>
+                ) : checkoutProduct === "basic_additional" && isLicensed() ? (
                   <Link className="btn btn-primary" to={`/activate?key=${encodeURIComponent(licenseKey)}`}>
                     Open Activate with this key
                   </Link>
@@ -385,7 +431,14 @@ export function ThankYouPage() {
                 </button>
                 {showDetails ? (
                   <p className="muted" style={{ marginTop: 10 }}>
-                    We&apos;ve also emailed this key to you. One license covers one device. You can open{" "}
+                    {isUpgrade
+                      ? buyerEmail
+                        ? `A confirmation is on its way to ${buyerEmail}. `
+                        : ""
+                      : buyerEmail
+                        ? `We've also emailed this key to ${buyerEmail}. `
+                        : "Save this key somewhere safe. "}
+                    One license covers one device. You can open{" "}
                     <Link to={`/activate?key=${encodeURIComponent(licenseKey)}`}>Activate</Link> on another browser with
                     the key already filled in.
                   </p>

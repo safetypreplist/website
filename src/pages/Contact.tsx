@@ -107,9 +107,16 @@ export function ContactPage() {
                   }
                 />
               </label>
-              <label className="contact-honey" aria-hidden="true">
+              <label className="contact-honey" aria-hidden="true" inert>
                 Company
-                <input tabIndex={-1} autoComplete="off" value={company} onChange={(event) => setCompany(event.target.value)} />
+                <input
+                  name="company"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  autoComplete="off"
+                  value={company}
+                  onChange={(event) => setCompany(event.target.value)}
+                />
               </label>
               {error ? <p className="form-error">{error}</p> : null}
               <button className="btn btn-primary" type="submit" disabled={sending}>

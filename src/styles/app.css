@@ -2319,11 +2319,24 @@ a.amount {
   left: -9999px;
   height: 0;
   overflow: hidden;
+  visibility: hidden;
 }
 
 .legal-page p {
   color: var(--ink-soft);
   margin-bottom: 16px;
+}
+
+.thank-you-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.thank-you-key p {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .legal-page a {
