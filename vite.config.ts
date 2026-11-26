@@ -53,10 +53,31 @@ export default defineConfig({
         globIgnores: ["**/__*", "**/404.html", "downloads/**"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
-        // Every route is the same single-page app, so the precached index.html opens any page offline.
-        navigateFallback: "index.html",
-        navigateFallbackDenylist: [/\/[^/?]+\.[a-z0-9]+$/i],
+        // Pages always come from the network so a new deploy shows up on the next visit. Offline, every route
+        // falls back to the precached index.html (each one is the same single-page app). Page HTML is never
+        // runtime-cached: an old copy would point at script files the precache has already replaced.
+        navigateFallback: null,
+        directoryIndex: null,
         runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) =>
+              request.mode === "navigate" &&
+              url.origin === self.location.origin &&
+              !/\/[^/?]+\.[a-z0-9]+$/i.test(url.pathname),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "spl-pages",
+              networkTimeoutSeconds: 3,
+              plugins: [
+                {
+                  cacheWillUpdate: async () => null,
+                  cachedResponseWillBeUsed: async ({ cachedResponse }) =>
+                    cachedResponse || (await caches.match("/index.html", { ignoreSearch: true })) || null,
+                },
+              ],
+              precacheFallback: { fallbackURL: "index.html" },
+            },
+          },
           {
             urlPattern: ({ request, url }) => request.destination === "image" && url.origin === self.location.origin,
             handler: "CacheFirst",

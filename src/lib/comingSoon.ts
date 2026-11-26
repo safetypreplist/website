@@ -55,6 +55,7 @@ function writeCache(setting: ComingSoonSetting) {
 /** Reads the setting. A missing row means "off". If the request fails, the last value this browser saw is used. */
 export async function fetchComingSoon(): Promise<ComingSoonSetting> {
   if (!isSupabaseConfigured()) return parseComingSoon(null);
+  if (typeof navigator !== "undefined" && !navigator.onLine) return readCache() ?? parseComingSoon(null);
   try {
     const request = supabase.from("app_config").select("value").eq("key", COMING_SOON_KEY).maybeSingle();
     const result = await Promise.race([
@@ -75,9 +76,11 @@ export function announceComingSoonChange() {
 }
 
 export function useComingSoon() {
-  const [state, setState] = useState<{ ready: boolean; setting: ComingSoonSetting }>({
-    ready: false,
-    setting: parseComingSoon(null),
+  // A setting this browser already saw opens the app right away (no waiting on a dead connection);
+  // the live value still replaces it as soon as the request returns.
+  const [state, setState] = useState<{ ready: boolean; setting: ComingSoonSetting }>(() => {
+    const cached = readCache();
+    return { ready: cached !== null, setting: cached ?? parseComingSoon(null) };
   });
 
   const refresh = useCallback(async () => {
