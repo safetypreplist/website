@@ -337,11 +337,11 @@ export function HomeV2Page() {
           <div className="hv2-devices" aria-hidden="false">
             <div className="hv2-device hv2-device-tablet">
               <div className="hv2-device-bezel">
-                <img src="/images/hv2-tablet.webp" alt="Safety Prep List dashboard on tablet" />
+                <img src="/images/hv2-tablet-v2.webp" alt="Safety Prep List dashboard on tablet" />
               </div>
             </div>
             <div className="hv2-device hv2-device-phone">
-              <img src="/images/hv2-phone.png" alt="Safety Prep List on phone" />
+              <img src="/images/hv2-phone-v2.png" alt="Safety Prep List on phone" />
             </div>
           </div>
         </div>
