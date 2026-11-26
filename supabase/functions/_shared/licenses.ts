@@ -80,7 +80,7 @@ export async function sendLicenseEmail(opts: {
   const logo = escapeHtml(`${appUrl}/brand/logo.png`);
   const supportSafe = escapeHtml(support);
   const oneDevice =
-    "No account is required. One license covers one device. Need another device? After you activate, you can add a second device license from your license page inside the app, or use Transfer / Deactivate to move this license.";
+    "No account is required. One license covers one device. Moving to a new device? Use Transfer / Deactivate in the app to move this license.";
 
   const intro = opts.additional
     ? "You purchased an additional Basic license for another device. Open Activate on that device — your key is included in the link."
