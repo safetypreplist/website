@@ -7,7 +7,7 @@ import {
   type LicenseProduct,
   type LicenseRow,
 } from "./licenses.ts";
-import { recordLicensePayment, type CheckoutProduct } from "./payments.ts";
+import { ensureInitialPurchaseRow, recordLicensePayment, type CheckoutProduct } from "./payments.ts";
 import { stripeRequest } from "./stripe.ts";
 import { serviceClient } from "./supabase.ts";
 
@@ -179,10 +179,8 @@ export async function fulfillCheckoutSession(admin: Admin, session: StripeSessio
       license.amount_cents != null && license.amount_cents !== 1200
         ? license.amount_cents
         : 1299;
-    await recordLicensePayment(admin, {
+    await ensureInitialPurchaseRow(admin, {
       licenseId: row.id,
-      stripeSessionId: `legacy:${row.id}:initial`,
-      checkoutProduct: "basic",
       amountCents: initialCents,
       paidAt: license.created_at,
     });

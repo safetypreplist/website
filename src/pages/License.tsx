@@ -4,9 +4,11 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import {
   activate,
+  fetchLicenseStatus,
   getDeviceId,
   getLicense,
   isLicensed,
+  isRateLimitError,
   setLocalProduct,
 } from "../lib/licenseClient";
 import { downloadLicenseReceiptPdf } from "../lib/licenseReceipt";
@@ -45,17 +47,57 @@ function formatDate(iso: string) {
   }
 }
 
+const PANEL_CACHE_PREFIX = "spl.license.panel.v1:";
+const RATE_LIMIT_MESSAGE =
+  "Too many license checks from this network right now. Your checklists still work. Wait a few minutes, then try again.";
+
+function readPanelCache(key: string): { status: LicenseStatus; payments: LicensePayment[] } | null {
+  try {
+    const raw = sessionStorage.getItem(PANEL_CACHE_PREFIX + key.trim().toUpperCase());
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePanelCache(key: string, status: LicenseStatus, payments: LicensePayment[]) {
+  try {
+    sessionStorage.setItem(PANEL_CACHE_PREFIX + key.trim().toUpperCase(), JSON.stringify({ status, payments }));
+  } catch {
+    /* cache is a convenience only */
+  }
+}
+
+/**
+ * Upgrades used to add a synthetic "legacy:<id>:initial" Basic line even when the real
+ * Basic checkout row already existed. Hide that placeholder whenever a real first purchase is on record.
+ */
+function visiblePayments(payments: LicensePayment[]) {
+  const isFirstPurchase = (row: LicensePayment) =>
+    row.checkoutProduct === "basic" || row.checkoutProduct === "pro" || row.checkoutProduct === "basic_additional";
+  const hasRealFirst = payments.some((row) => isFirstPurchase(row) && !row.stripeSessionId.startsWith("legacy:"));
+  if (!hasRealFirst) return payments;
+  return payments.filter((row) => !(isFirstPurchase(row) && row.stripeSessionId.startsWith("legacy:")));
+}
+
 function LicensePanel({ embedded }: { embedded?: boolean }) {
   const local = getLicense();
   const licensedHere = isLicensed();
   const deviceId = getDeviceId();
+  const ownKey = embedded && licensedHere && local?.key ? local.key : "";
   const [key, setKey] = useState(local?.key || "");
+  const [editingKey, setEditingKey] = useState(!ownKey);
   const [busy, setBusy] = useState(false);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
   const [receiptBusy, setReceiptBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<LicenseStatus | null>(null);
-  const [payments, setPayments] = useState<LicensePayment[]>([]);
+  const [retryable, setRetryable] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<LicenseStatus | null>(() => (local?.key ? readPanelCache(local.key)?.status ?? null : null));
+  const [payments, setPayments] = useState<LicensePayment[]>(() =>
+    local?.key ? readPanelCache(local.key)?.payments ?? [] : [],
+  );
 
   useEffect(() => {
     const trimmed = key.trim();
@@ -63,56 +105,77 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
       setStatus(null);
       setPayments([]);
       setError(null);
+      setRetryable(false);
       return;
     }
     let live = true;
+    const cached = readPanelCache(trimmed);
+    if (cached) {
+      setStatus(cached.status);
+      setPayments(cached.payments);
+    }
+    const syncLocalProduct = (statusData: LicenseStatus) => {
+      if (licensedHere && local?.key && statusData.product && statusData.licenseKey === local.key) {
+        setLocalProduct(statusData.product);
+      }
+    };
     const timer = window.setTimeout(() => {
       setBusy(true);
       setError(null);
-      void Promise.all([
-        invokeFunction<LicenseStatus>("license-status", { key: trimmed }),
-        invokeFunction<{ payments?: LicensePayment[] }>("license-payments", { key: trimmed }),
-      ])
-        .then(([statusData, paymentsData]) => {
+      setRetryable(false);
+      const fresh = reloadTick > 0;
+      void fetchLicenseStatus(trimmed, { fresh })
+        .then(async (statusData) => {
           if (!live) return;
-          setStatus(statusData);
-          setPayments(paymentsData.payments || []);
-          if (licensedHere && local?.key && statusData.product && statusData.licenseKey === local.key) {
-            setLocalProduct(statusData.product);
-          }
-          setBusy(false);
-        })
-        .catch(async (err) => {
-          if (!live) return;
-          // Keep license details visible even if purchase history fails to load.
+          setStatus(statusData as LicenseStatus);
+          syncLocalProduct(statusData as LicenseStatus);
           try {
-            const statusData = await invokeFunction<LicenseStatus>("license-status", { key: trimmed });
+            const paymentsData = await invokeFunction<{ payments?: LicensePayment[] }>("license-payments", { key: trimmed });
             if (!live) return;
-            setStatus(statusData);
-            setPayments([]);
+            const rows = paymentsData.payments || [];
+            setPayments(rows);
+            writePanelCache(trimmed, statusData as LicenseStatus, rows);
+          } catch (err) {
+            if (!live) return;
+            // Keep license details visible even if purchase history fails to load.
+            const limited = isRateLimitError(err);
+            setRetryable(true);
             setError(
-              err instanceof Error
-                ? `${err.message} Purchase history could not be loaded.`
-                : "Could not load purchase history for that license.",
+              limited
+                ? RATE_LIMIT_MESSAGE
+                : `${err instanceof Error ? err.message : "Something went wrong."} Purchase history could not be loaded.`,
             );
-            if (licensedHere && local?.key && statusData.product && statusData.licenseKey === local.key) {
-              setLocalProduct(statusData.product);
-            }
-          } catch (statusErr) {
-            if (!live) return;
+          }
+        })
+        .catch((err) => {
+          if (!live) return;
+          const limited = isRateLimitError(err);
+          if (!cached && !limited) {
             setStatus(null);
             setPayments([]);
-            setError(statusErr instanceof Error ? statusErr.message : "Could not load that license.");
-          } finally {
-            if (live) setBusy(false);
           }
+          setRetryable(limited || !(err instanceof Error && err.message.toLowerCase().includes("not valid")));
+          setError(limited ? RATE_LIMIT_MESSAGE : err instanceof Error ? err.message : "Could not load that license.");
+        })
+        .finally(() => {
+          if (live) setBusy(false);
         });
-    }, 400);
+    }, reloadTick > 0 ? 0 : 400);
     return () => {
       live = false;
       window.clearTimeout(timer);
     };
-  }, [key]);
+  }, [key, reloadTick]);
+
+  async function copyKey(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   const thisDeviceActive =
     Boolean(licensedHere && local?.key && status?.licenseKey === local.key) &&
@@ -181,22 +244,41 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
       </header>
 
       <section className={embedded ? "license-app-card account-card" : "license-manage-card"}>
-        <label className="field">
-          <span>License key</span>
-          <input
-            className="license-key-input"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="SPL-XXXX-XXXX-XXXX-XXXX"
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </label>
+        {editingKey ? (
+          <label className="field">
+            <span>{ownKey ? "Look up another license key" : "License key"}</span>
+            <input
+              className="license-key-input"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="SPL-XXXX-XXXX-XXXX-XXXX"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </label>
+        ) : null}
+        {ownKey ? (
+          <button
+            className="license-key-toggle"
+            type="button"
+            onClick={() => {
+              if (editingKey) setKey(ownKey);
+              setEditingKey((value) => !value);
+            }}
+          >
+            {editingKey ? "Back to this device's license" : "Look up a different license key"}
+          </button>
+        ) : null}
         {busy && !status ? <p className="muted license-manage-status">Loading license details…</p> : null}
         {error ? (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
+          <div className="license-error-row" role="alert">
+            <p className="form-error">{error}</p>
+            {retryable ? (
+              <button className="btn btn-ghost" type="button" disabled={busy} onClick={() => setReloadTick((n) => n + 1)}>
+                {busy ? "Checking…" : "Try again"}
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         {status ? (
@@ -208,8 +290,11 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
             <dl className="license-manage-facts">
               <div>
                 <dt>License key</dt>
-                <dd>
+                <dd className="license-key-readonly">
                   <code>{status.licenseKey}</code>
+                  <button className="btn btn-ghost" type="button" onClick={() => void copyKey(status.licenseKey)}>
+                    {copied ? "Copied" : "Copy"}
+                  </button>
                 </dd>
               </div>
               <div>
@@ -252,7 +337,7 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
             <p className="muted">No purchase records are available yet for this license.</p>
           ) : (
             <ul className="license-history-list">
-              {payments.map((payment) => (
+              {visiblePayments(payments).map((payment) => (
                 <li key={payment.id}>
                   <div>
                     <p className="license-history-date">{formatDate(payment.paidAt)}</p>

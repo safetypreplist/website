@@ -3194,6 +3194,46 @@ html.has-guidance-ack .app-main {
   margin: 14px 0 0;
 }
 
+.license-key-toggle {
+  margin-top: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--forest);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.license-error-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 12px;
+}
+
+.license-error-row .form-error {
+  margin: 0;
+  flex: 1 1 240px;
+}
+
+.license-key-readonly {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.license-key-readonly .btn {
+  min-height: 0;
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
 .license-manage-details {
   margin-top: 24px;
   display: grid;

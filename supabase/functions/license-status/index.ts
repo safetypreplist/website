@@ -10,11 +10,15 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    const limited = await rateLimitBlock(`license-status:${clientIp(req)}`, 30, 600);
-    if (limited) return limited;
-
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const key = normalizeLicenseKeyLoose(String(body.key || body.licenseKey || ""));
+    // Households share one IP: keep a roomy network-wide cap plus a per-license cap.
+    const ip = clientIp(req);
+    const limited =
+      (await rateLimitBlock(`license-status:${ip}`, 120, 600)) ||
+      (await rateLimitBlock(`license-status:${ip}:${key.slice(0, 40)}`, 40, 600));
+    if (limited) return limited;
+
     if (!key.startsWith("SPL-")) return json({ error: "That license key is not valid." }, 403);
 
     const admin = serviceClient();

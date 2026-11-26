@@ -1,6 +1,7 @@
 import { json, preflight } from "../_shared/http.ts";
 import { findLicenseByKey, normalizeLicenseKeyLoose } from "../_shared/licenses.ts";
 import {
+  ensureInitialPurchaseRow,
   paymentDescription,
   recordLicensePayment,
   retrieveCheckoutSessionForPayment,
@@ -15,11 +16,15 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    const limited = await rateLimitBlock(`license-payments:${clientIp(req)}`, 30, 600);
-    if (limited) return limited;
-
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const key = normalizeLicenseKeyLoose(String(body.key || ""));
+    // Households share one IP: keep a roomy network-wide cap plus a per-license cap.
+    const ip = clientIp(req);
+    const limited =
+      (await rateLimitBlock(`license-payments:${ip}`, 120, 600)) ||
+      (await rateLimitBlock(`license-payments:${ip}:${key.slice(0, 40)}`, 40, 600));
+    if (limited) return limited;
+
     if (!key.startsWith("SPL-")) return json({ error: "That license key is not valid." }, 403);
 
     const admin = serviceClient();
@@ -56,10 +61,8 @@ Deno.serve(async (req) => {
             license.amount_cents != null && license.amount_cents !== 1200
               ? license.amount_cents
               : 1299;
-          await recordLicensePayment(admin, {
+          await ensureInitialPurchaseRow(admin, {
             licenseId: license.id,
-            stripeSessionId: `legacy:${license.id}:initial`,
-            checkoutProduct: "basic",
             amountCents: initialCents,
             paidAt: license.created_at,
           });

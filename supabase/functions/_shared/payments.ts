@@ -122,3 +122,30 @@ export async function recordLicensePayment(
   }
   return inserted.data;
 }
+
+/**
+ * Seed a placeholder first-purchase line only when the license has no first purchase on record.
+ * The real Basic checkout row (keyed by its own Stripe session) must not be duplicated on upgrade.
+ */
+export async function ensureInitialPurchaseRow(
+  admin: Admin,
+  opts: { licenseId: string; amountCents: number; paidAt?: string | null },
+) {
+  const { count, error } = await admin
+    .from("license_payments")
+    .select("id", { count: "exact", head: true })
+    .eq("license_id", opts.licenseId)
+    .in("checkout_product", ["basic", "pro", "basic_additional"]);
+  if (error) {
+    console.error(error);
+    return null;
+  }
+  if ((count || 0) > 0) return null;
+  return recordLicensePayment(admin, {
+    licenseId: opts.licenseId,
+    stripeSessionId: `legacy:${opts.licenseId}:initial`,
+    checkoutProduct: "basic",
+    amountCents: opts.amountCents,
+    paidAt: opts.paidAt,
+  });
+}

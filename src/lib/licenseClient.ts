@@ -19,11 +19,48 @@ type ActivateResponse = {
   error?: string;
 };
 
-type LicenseStatusResponse = {
+export type LicenseStatusResponse = {
   product: LicenseProduct;
+  amountCents?: number | null;
+  purchasedAt?: string;
   licenseKey: string;
   devices: Array<{ deviceId: string; activatedAt: string }>;
 };
+
+const STATUS_MAX_AGE_MS = 60_000;
+const statusCache = new Map<string, { at: number; data: LicenseStatusResponse }>();
+const statusInFlight = new Map<string, Promise<LicenseStatusResponse>>();
+
+/**
+ * license-status is rate limited per IP, and every app route checks it.
+ * Share one recent answer (and any in-flight request) so normal navigation never trips the limit.
+ */
+export function fetchLicenseStatus(key: string, options?: { fresh?: boolean }): Promise<LicenseStatusResponse> {
+  const cacheKey = key.trim().toUpperCase();
+  const cached = statusCache.get(cacheKey);
+  if (!options?.fresh && cached && Date.now() - cached.at < STATUS_MAX_AGE_MS) return Promise.resolve(cached.data);
+  const pending = statusInFlight.get(cacheKey);
+  if (pending) return pending;
+  const request = invokeFunction<LicenseStatusResponse>("license-status", { key: key.trim() })
+    .then((data) => {
+      statusCache.set(cacheKey, { at: Date.now(), data });
+      return data;
+    })
+    .finally(() => {
+      statusInFlight.delete(cacheKey);
+    });
+  statusInFlight.set(cacheKey, request);
+  return request;
+}
+
+export function forgetLicenseStatus() {
+  statusCache.clear();
+}
+
+export function isRateLimitError(err: unknown) {
+  const message = err instanceof Error ? err.message.toLowerCase() : "";
+  return message.includes("wait a moment") || message.includes("429") || message.includes("too many");
+}
 
 function syncStoredProduct(product: LicenseProduct) {
   const current = readStored();
@@ -44,6 +81,7 @@ function readStored(): StoredLicense | null {
 }
 
 function writeStored(license: StoredLicense | null) {
+  statusCache.clear();
   if (!license) {
     localStorage.removeItem(LICENSE_KEY);
     return;
@@ -150,7 +188,7 @@ export async function confirmLocalLicenseActive(): Promise<"ok" | "moved" | "inv
   if (!license) return "skip";
   if (typeof navigator !== "undefined" && !navigator.onLine) return "ok";
   try {
-    const data = await invokeFunction<LicenseStatusResponse>("license-status", { key: license.key });
+    const data = await fetchLicenseStatus(license.key);
     if (data.product === "basic" || data.product === "pro") {
       syncStoredProduct(data.product);
     }
@@ -178,7 +216,7 @@ export async function refreshLocalLicenseProduct(): Promise<LicenseProduct | nul
   if (!license) return null;
   if (typeof navigator !== "undefined" && !navigator.onLine) return license.product;
   try {
-    const data = await invokeFunction<LicenseStatusResponse>("license-status", { key: license.key });
+    const data = await fetchLicenseStatus(license.key);
     if (data.product === "basic" || data.product === "pro") {
       syncStoredProduct(data.product);
       return data.product;
