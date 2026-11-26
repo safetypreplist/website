@@ -5,10 +5,12 @@ import { GUIDANCE_ACK, LEGAL_VERSIONS } from "../lib/legal";
 import {
   hasCurrentLegalAcceptance,
   hasGuidanceAck,
+  latestLocalAcceptance,
   recordLegalAcceptance,
   storeGuidanceAck,
 } from "../lib/legalConsent";
 import { LegalAgreement } from "./LegalAgreement";
+import { isOnboardingPending, ONBOARDING_CHANGE_EVENT } from "./OnboardingTour";
 
 export function LegalNotices() {
   const licensed = isLicensed();
@@ -20,11 +22,11 @@ export function LegalNotices() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!licensed) {
-      setNeedsTerms(false);
-      return;
-    }
-    setNeedsTerms(!hasCurrentLegalAcceptance());
+    // Hold any re-prompt until first-run onboarding is finished so it never stacks on the tour.
+    const check = () => setNeedsTerms(licensed && !hasCurrentLegalAcceptance() && !isOnboardingPending());
+    check();
+    window.addEventListener(ONBOARDING_CHANGE_EVENT, check);
+    return () => window.removeEventListener(ONBOARDING_CHANGE_EVENT, check);
   }, [licensed]);
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export function LegalNotices() {
     return (
       <div className="modal-backdrop" role="presentation">
         <div className="modal-panel sheet-panel" role="dialog" aria-modal="true" aria-labelledby="terms-update-title">
-          <h2 id="terms-update-title">We updated our terms</h2>
+          <h2 id="terms-update-title">{latestLocalAcceptance() ? "We updated our terms" : "Please review our terms"}</h2>
           <p className="muted">
             Please review the{" "}
             <Link to="/terms" target="_blank" rel="noreferrer">

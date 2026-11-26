@@ -3,7 +3,16 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { supabase } from "../lib/supabase";
 import { SAFETY_CATEGORY_LABELS, US_STATES, money } from "../lib/format";
-import { COPY_KEY, DEFAULT_STEPS, DEFAULT_VIDEO_URL, VIDEO_CACHE_KEY, loadCopy, startOnboardingPreview, type TourCopy } from "../components/OnboardingTour";
+import {
+  COPY_KEY,
+  DEFAULT_STEPS,
+  DEFAULT_VIDEO_URL,
+  VIDEO_CACHE_KEY,
+  loadCopy,
+  resolveTourCopy,
+  startOnboardingPreview,
+  type TourCopy,
+} from "../components/OnboardingTour";
 import { AdminAccounts } from "../components/AdminAccounts";
 import { AdminLicenses } from "../components/AdminLicenses";
 import { AdminTransfers } from "../components/AdminTransfers";
@@ -477,8 +486,8 @@ function OnboardingSettings({ onSaved }: { onSaved: (message: string) => void })
   useEffect(() => {
     void supabase.from("app_config").select("key, value").in("key", ["onboarding_copy", "onboarding_video_url"]).then(({ data }) => {
       for (const row of data || []) {
-        if (row.key === "onboarding_copy" && Array.isArray(row.value) && row.value.length) {
-          setCopy(row.value as TourCopy);
+        if (row.key === "onboarding_copy") {
+          setCopy(resolveTourCopy(row.value));
         }
         if (row.key === "onboarding_video_url") {
           const value = row.value;

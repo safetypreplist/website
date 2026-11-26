@@ -1,3 +1,4 @@
+import { isRetiredAccountCopy } from "./copy";
 import { supportFaqsForHelp, type SupportFaq } from "./supportFaqs";
 
 export type HelpFaq = {
@@ -50,6 +51,12 @@ export function parseFaqs(value: unknown): HelpFaq[] {
 export function withNewDefaults(saved: HelpFaq[]): HelpFaq[] {
   if (!saved.length) return DEFAULT_FAQS;
   const defaultIds = new Set(DEFAULT_FAQS.map((item) => item.id));
-  const custom = saved.filter((item) => !defaultIds.has(item.id));
+  const defaultQuestions = new Set(DEFAULT_FAQS.map((item) => item.question.trim().toLowerCase()));
+  const custom = saved.filter(
+    (item) =>
+      !defaultIds.has(item.id) &&
+      !defaultQuestions.has(item.question.trim().toLowerCase()) &&
+      !isRetiredAccountCopy(item.question, item.answer),
+  );
   return [...DEFAULT_FAQS, ...custom];
 }

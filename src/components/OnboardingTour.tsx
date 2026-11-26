@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { isRetiredAccountCopy } from "../lib/copy";
 import { isLocalProfileComplete } from "../lib/localProfile";
 import { OnboardingProfileStep } from "./OnboardingProfileStep";
 import { supabase } from "../lib/supabase";
@@ -35,7 +36,7 @@ const DEFAULT_STEPS: Step[] = [
   },
   {
     title: "Group Sharing",
-    body: "Invite other licensed devices for a temporary online sync. Everyone needs their own license.",
+    body: "Invite other licensed devices for a temporary online sync. Everyone needs their own license. On phones, it's under More.",
     selector: '[data-onboarding="group-sharing"]',
     path: "/app",
   },
@@ -73,7 +74,21 @@ const PREVIEW_EVENT = "spl:preview-onboarding";
 const REPLAY_KEY = "spl.onboarding.replay";
 const REPLAY_EVENT = "spl:replay-onboarding";
 const HOLD_KEY = "spl.onboarding.active";
+const DONE_KEY = "spl.onboarding.v1.local";
+export const ONBOARDING_CHANGE_EVENT = "spl:onboarding-change";
 const ESTIMATED_CARD_H = 236;
+
+let onboardingVisible = false;
+
+/** True while first-run onboarding is open or still owed on this device; other prompts wait for it. */
+export function isOnboardingPending() {
+  return onboardingVisible || localStorage.getItem(DONE_KEY) !== "done";
+}
+
+function announceOnboarding(visible: boolean) {
+  onboardingVisible = visible;
+  window.dispatchEvent(new Event(ONBOARDING_CHANGE_EVENT));
+}
 const TOUR_GAP = 18;
 
 type Placement = "below" | "above" | "right" | "left";
@@ -83,11 +98,28 @@ type TourFrame = {
   fallback?: boolean;
 };
 
+function defaultCopy(): TourCopy {
+  return DEFAULT_STEPS.map(({ title, body }) => ({ title, body }));
+}
+
+/** Saved copy only applies when it lines up with today's stops; stale lines fall back per step. */
+export function resolveTourCopy(raw: unknown): TourCopy {
+  const defaults = defaultCopy();
+  if (!Array.isArray(raw) || raw.length !== defaults.length) return defaults;
+  return defaults.map((fallback, index) => {
+    const row = raw[index] as Partial<Record<"title" | "body", unknown>> | null;
+    const title = typeof row?.title === "string" ? row.title.trim() : "";
+    const body = typeof row?.body === "string" ? row.body.trim() : "";
+    if (!title || !body || isRetiredAccountCopy(title, body)) return fallback;
+    return { title, body };
+  });
+}
+
 function loadCopy(): TourCopy {
   try {
-    return JSON.parse(localStorage.getItem(COPY_KEY) || "null") || DEFAULT_STEPS.map(({ title, body }) => ({ title, body }));
+    return resolveTourCopy(JSON.parse(localStorage.getItem(COPY_KEY) || "null"));
   } catch {
-    return DEFAULT_STEPS.map(({ title, body }) => ({ title, body }));
+    return defaultCopy();
   }
 }
 
@@ -189,6 +221,10 @@ function highlightRoot(node: HTMLElement, selector: string) {
   if (selector.includes("progress")) {
     const readiness = node.closest(".readiness");
     if (readiness instanceof HTMLElement) return readiness;
+  }
+  if (selector.includes('"profile"') && isPhoneTour()) {
+    const photo = node.querySelector(".account-photo");
+    if (photo instanceof HTMLElement) return photo;
   }
   return node;
 }
@@ -331,7 +367,7 @@ export function OnboardingTour() {
   const { profile, localProfile } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
-  const storageKey = profile ? "spl.onboarding.v1.local" : "";
+  const storageKey = profile ? DONE_KEY : "";
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<OnboardingMode>("profile");
   const [stepIndex, setStepIndex] = useState(0);
@@ -346,17 +382,22 @@ export function OnboardingTour() {
   openRef.current = open;
   const step = { ...(DEFAULT_STEPS[stepIndex] ?? DEFAULT_STEPS[0]), ...copy[stepIndex] };
   const video = onboardingVideoSrc(videoUrl);
+  const visible = open && Boolean(profile);
+
+  useEffect(() => {
+    announceOnboarding(visible);
+  }, [visible]);
+
+  useEffect(() => () => announceOnboarding(false), []);
 
   useEffect(() => {
     void supabase.from("app_config").select("key, value").in("key", ["onboarding_copy", "onboarding_video_url"]).then(({ data, error }) => {
       if (error || !data) return;
       for (const row of data) {
-        if (row.key === "onboarding_copy" && Array.isArray(row.value)) {
-          const stored = row.value as TourCopy;
-          if (stored.length) {
-            setCopy(stored);
-            localStorage.setItem(COPY_KEY, JSON.stringify(stored));
-          }
+        if (row.key === "onboarding_copy") {
+          const resolved = resolveTourCopy(row.value);
+          setCopy(resolved);
+          localStorage.setItem(COPY_KEY, JSON.stringify(resolved));
         }
         if (row.key === "onboarding_video_url") {
           const url = configString(row.value);
@@ -478,7 +519,8 @@ export function OnboardingTour() {
         }
 
         target.classList.add("onboarding-target-highlight");
-        if (chromeSelector) target.classList.add("onboarding-chrome-target");
+        // Lifting page content above the tour layer would hide the tour card underneath it.
+        if (chromeSelector && !target.closest(".app-main")) target.classList.add("onboarding-chrome-target");
         const item = step.selector.includes("check-item") ? target.closest(".check-item") : null;
         if (item instanceof HTMLElement) {
           demoItem = item;

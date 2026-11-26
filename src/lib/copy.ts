@@ -68,6 +68,14 @@ export const OFFICIAL_GUIDANCE_DISCLAIMER =
 export const QUICK_START_BANNER =
   "This is a priority session. It does not mean every preparedness item can be finished in these minutes.";
 
+const RETIRED_ACCOUNT_COPY =
+  /\b(account|password|log ?in|logins?|sign ?in|family plan|checklist id|across devices|my devices)\b/i;
+
+/** Owner-saved copy from the retired account-based app must not reach the license-based, local-first app. */
+export function isRetiredAccountCopy(...texts: string[]) {
+  return texts.some((text) => RETIRED_ACCOUNT_COPY.test(text));
+}
+
 export function quickStartIntro(minutes: number) {
   return `About ${minutes} minutes for the priority items, once supplies are gathered. ${QUICK_START_BANNER}`;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LEGAL_VERSIONS } from "../lib/legal";
-import { storeScopeAcknowledgment } from "../lib/legalConsent";
+import { recordLegalAcceptance, storeScopeAcknowledgment } from "../lib/legalConsent";
 import { trackBeginCheckout } from "../lib/analytics";
 import { invokeFunction } from "../lib/supabase";
 
@@ -13,6 +13,8 @@ type Props = {
   from?: string;
   returnPath?: string;
   beforeRedirect?: () => void;
+  /** Buyer checked the Terms box on this screen — remember it so the app doesn't ask again after purchase. */
+  recordTermsAcceptance?: boolean;
   onError: (message: string) => void;
   /** @deprecated Prefer `product`. Mapped for leftover Purchase page wiring. */
   productSlug?: string;
@@ -32,6 +34,7 @@ export function StripeCheckout({
   from,
   returnPath,
   beforeRedirect,
+  recordTermsAcceptance = false,
   onError,
   productSlug,
   includeHousehold = false,
@@ -42,6 +45,7 @@ export function StripeCheckout({
   async function start() {
     setBusy(true);
     try {
+      if (recordTermsAcceptance) await recordLegalAcceptance("checkout");
       const data = await invokeFunction<{ url?: string }>("create-checkout-session", {
         product,
         ...(licenseKey ? { licenseKey } : {}),

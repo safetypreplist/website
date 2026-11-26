@@ -224,7 +224,7 @@ export const SUPPORT_FAQS: SupportFaq[] = [
     id: "profile-edit",
     question: "How do I edit my profile?",
     answer:
-      "Open Profile in the app sidebar (under Help). First name, last name, and location are required. Changes save on this device only—no SafetyPrepList account login is required for your profile.",
+      "Open Profile in the app sidebar (under More on phones). First and last name are required; location is optional. Changes save on this device only—there is no SafetyPrepList login for your profile.",
     linkTo: "/app/profile",
     linkLabel: "Open Profile",
     audience: "member",

@@ -149,7 +149,7 @@ export function CheckoutPage() {
           <ScopeAcknowledgment checked={scopeAck} onChange={setScopeAck} />
           {error ? <p className="form-error">{error}</p> : null}
           {agreed && scopeAck ? (
-            <StripeCheckout key={product} product={product} onError={setError} />
+            <StripeCheckout key={product} product={product} recordTermsAcceptance onError={setError} />
           ) : (
             <p className="form-error checkout-locked">
               {!agreed && !scopeAck
