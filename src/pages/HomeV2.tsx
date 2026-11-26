@@ -95,6 +95,8 @@ export function HomeV2Page() {
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStarted, setVideoStarted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
   const basicPrice = money(BASIC_LICENSE_CENTS);
   const proPrice = money(PRO_LICENSE_CENTS);
 
@@ -121,12 +123,21 @@ export function HomeV2Page() {
           <span>Safety Prep List</span>
         </Link>
         <div className="hv2-nav-end">
-          <nav className="hv2-nav-links" aria-label="Page">
-            <a href="#included">What’s included</a>
-            <a href="#pricing">Pricing</a>
-            <Link to="/demo">Try a sample</Link>
-            <Link className="hv2-nav-login" to="/activate">
+          <nav id="hv2-nav-links" className={`hv2-nav-links${menuOpen ? " is-open" : ""}`} aria-label="Page">
+            <a href="#included" onClick={closeMenu}>
+              What’s included
+            </a>
+            <a href="#pricing" onClick={closeMenu}>
+              Pricing
+            </a>
+            <Link to="/demo" onClick={closeMenu}>
+              Try a sample
+            </Link>
+            <Link className="hv2-nav-login" to="/activate" onClick={closeMenu}>
               Activate
+            </Link>
+            <Link className="hv2-nav-mobile-only" to="/contact" onClick={closeMenu}>
+              Contact
             </Link>
           </nav>
           {licensed ? (
@@ -145,6 +156,16 @@ export function HomeV2Page() {
               Get started
             </Link>
           )}
+          <button
+            className="hv2-menu-toggle"
+            type="button"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="hv2-nav-links"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
+          </button>
         </div>
       </header>
 

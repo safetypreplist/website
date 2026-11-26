@@ -11,6 +11,8 @@ import { AppStatusBanners } from "./OfflineStatus";
 import { fetchGroupStatus } from "../lib/groupSharing";
 import { isProLicense } from "../lib/licenseClient";
 
+const MORE_PATHS = ["/app/group-sharing", "/app/transfer", "/app/help", "/app/profile"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { hasSurvivalVault, localProfile, groupViewing, clearGroupViewing } = useApp();
   const location = useLocation();
@@ -18,6 +20,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pro = hasSurvivalVault || isProLicense();
   const profileName = localProfile.displayName || null;
   const [groupBadge, setGroupBadge] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreActive = MORE_PATHS.some((path) => location.pathname.startsWith(path));
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMoreOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [moreOpen]);
 
   useEffect(() => {
     let live = true;
@@ -135,7 +152,46 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <KeyIcon />
           License
         </NavLink>
+        <button
+          className={`bottom-nav-more${moreOpen || moreActive ? " active" : ""}`}
+          data-onboarding="group-sharing"
+          type="button"
+          aria-expanded={moreOpen}
+          aria-controls="bottom-nav-more-sheet"
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          <MoreIcon />
+          More
+          {groupBadge > 0 ? <span className="bottom-nav-dot" aria-hidden="true" /> : null}
+        </button>
       </nav>
+      {moreOpen ? (
+        <div className="bottom-more-backdrop" role="presentation" onClick={() => setMoreOpen(false)}>
+          <nav
+            id="bottom-nav-more-sheet"
+            className="bottom-more-sheet"
+            aria-label="More"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <NavLink to="/app/group-sharing">
+              Group Sharing
+              {groupBadge > 0 ? (
+                <span className="nav-group-badge" aria-label={`${groupBadge} other active members`}>
+                  {groupBadge > 9 ? "9+" : groupBadge}
+                </span>
+              ) : null}
+            </NavLink>
+            <NavLink to="/app/transfer">Transfer / Deactivate</NavLink>
+            <NavLink to="/app/help">Help &amp; chat</NavLink>
+            <NavLink to="/app/profile">Profile</NavLink>
+            {!pro ? (
+              <Link className="bottom-more-upgrade" to="/app/license">
+                Upgrade to Pro
+              </Link>
+            ) : null}
+          </nav>
+        </div>
+      ) : null}
       <LegalNotices />
       <OnboardingTour />
     </div>
@@ -170,6 +226,13 @@ function ShieldIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M12 3 20 7v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7Z" />
+    </svg>
+  );
+}
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 7h16M4 12h16M4 17h16" />
     </svg>
   );
 }
