@@ -77,14 +77,19 @@ Deno.serve(async (req) => {
       .select("device_id, activated_at")
       .eq("license_id", license.id)
       .order("activated_at", { ascending: true });
+    const rows = (devices || []) as Array<{ device_id: string; activated_at: string }>;
 
+    // Callers that say which device they are get a yes/no and never see another device's id
+    // (that id is what deactivate-license checks). Older app versions don't send one yet.
+    const askingDevice = String(body.deviceId || "").trim().slice(0, 128);
     return json({
       product: license.product,
       amountCents: license.amount_cents,
       purchasedAt: license.created_at,
       licenseKey: license.license_key,
-      devices: ((devices || []) as Array<{ device_id: string; activated_at: string }>).map((row) => ({
-        deviceId: row.device_id,
+      ...(askingDevice ? { thisDevice: rows.some((row) => row.device_id === askingDevice) } : {}),
+      devices: rows.map((row, index) => ({
+        deviceId: !askingDevice || row.device_id === askingDevice ? row.device_id : `other-device-${index + 1}`,
         activatedAt: row.activated_at,
       })),
     });

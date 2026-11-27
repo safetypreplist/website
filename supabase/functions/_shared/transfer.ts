@@ -102,17 +102,17 @@ export async function sendDeactivateConfirmEmail(opts: {
             <td style="padding:32px;font-family:Arial,Helvetica,sans-serif;color:#1E2A1F;">
               <p style="margin:0 0 18px;"><img src="${logo}" width="64" alt="Safety Prep List" style="display:inline-block;width:64px;height:auto;border:0;"></p>
               <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#556B2F;font-weight:bold;">Safety Prep List</p>
-              <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;">Confirm license deactivation</h1>
+              <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;">Move your license to a new device</h1>
               <p style="margin:0 0 18px;font-size:16px;line-height:1.55;">
-                Someone requested deactivation of your ${escapeHtml(opts.product)} license so it can be moved to another device.
-                If that was you, confirm below. This link works once and expires in 24 hours.
+                Someone asked to move your ${escapeHtml(opts.product)} license to a new device because the old one can't be used.
+                If that was you, open this link on the new device. It works once and expires in 24 hours.
               </p>
               <p style="margin:22px 0;text-align:center;">
-                <a href="${confirm}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">Confirm License Deactivation</a>
+                <a href="${confirm}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">Move my license here</a>
               </p>
               <p style="margin:0;font-size:14px;line-height:1.55;color:#4D5348;">
-                Your temporary cloud backup (if you created one) is kept for 48 hours and is not deleted by this step.
-                Checklist data on a device without internet may still open until that device reconnects.
+                The old device stops opening your checklist the next time it goes online. A cloud backup made in the last
+                48 hours is offered on the new device after it activates. If you did not ask for this, ignore this email.
               </p>
               <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#556B2F;">Questions? ${escapeHtml(support)}</p>
             </td>
@@ -123,10 +123,10 @@ export async function sendDeactivateConfirmEmail(opts: {
   </table>
 </body>
 </html>`;
-  const text = `Confirm license deactivation\n\nOpen this link once to free your license for a new device:\n${opts.confirmUrl}\n\nThis link expires in 24 hours. If you did not request this, ignore this email.`;
+  const text = `Move your license to a new device\n\nOpen this link once, on the new device, to move your license there:\n${opts.confirmUrl}\n\nThis link expires in 24 hours. If you did not ask for this, ignore this email.`;
   return await sendEmail({
     to: opts.to,
-    subject: "Confirm Safety Prep List license deactivation",
+    subject: "Move your Safety Prep List license to a new device",
     html,
     text,
   });
@@ -161,7 +161,7 @@ export async function sendLicenseRecoveryEmail(opts: {
                 <a href="${recover}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">View my license key</a>
               </p>
               <p style="margin:0;font-size:14px;line-height:1.55;color:#4D5348;">
-                Your license may still be activated on another device. After you recover your key, you can deactivate the existing activation, then activate on the device you want to use.
+                If your license is still in use on another device, enter your key on the device you want to use and Activate shows you how to move it there.
               </p>
               <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#556B2F;">Questions? ${escapeHtml(support)}</p>
             </td>

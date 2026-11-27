@@ -3,8 +3,9 @@ import { findLicenseByKey, normalizeLicenseKeyLoose } from "../_shared/licenses.
 import { clientIp, rateLimitBlock } from "../_shared/rateLimit.ts";
 import { serviceClient } from "../_shared/supabase.ts";
 
+// Older app versions look for "active on another device"; keep that phrase.
 const DEVICE_TAKEN =
-  "This license is active on another device. Deactivate & transfer it first, then activate on this device.";
+  "This license is active on another device. Move it from that device (Move to a new device), then activate here.";
 
 Deno.serve(async (req) => {
   const opt = preflight(req);
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
       return json({ error: "Could not activate license." }, 500);
     }
     if ((count ?? 0) >= 1) {
-      return json({ error: DEVICE_TAKEN }, 409);
+      return json({ error: DEVICE_TAKEN, code: "device_taken" }, 409);
     }
 
     const inserted = await admin.from("license_devices").insert({
@@ -73,7 +74,7 @@ Deno.serve(async (req) => {
         .from("license_devices")
         .select("device_id", { count: "exact", head: true })
         .eq("license_id", license.id);
-      if ((afterRace ?? 0) >= 1) return json({ error: DEVICE_TAKEN }, 409);
+      if ((afterRace ?? 0) >= 1) return json({ error: DEVICE_TAKEN, code: "device_taken" }, 409);
       console.error(inserted.error);
       return json({ error: "Could not activate license." }, 500);
     }

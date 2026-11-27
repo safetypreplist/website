@@ -43,6 +43,11 @@ Deno.serve(async (req) => {
       return json({ error: "Could not deactivate device." }, 500);
     }
 
+    await admin
+      .from("licenses")
+      .update({ last_deactivated_at: new Date().toISOString() })
+      .eq("id", license.id);
+
     console.log(
       JSON.stringify({
         event: "license_deactivate",
