@@ -1,4 +1,5 @@
 import { escapeHtml, sendEmail } from "./email.ts";
+import { canRenewGroup, renewedExpiry, seatSummary } from "./groupRules.ts";
 import { json } from "./http.ts";
 import { findLicenseByKey, normalizeLicenseKeyLoose, type LicenseRow } from "./licenses.ts";
 import { clientIp, rateLimitBlock } from "./rateLimit.ts";
@@ -47,15 +48,64 @@ export type SharingMemberRow = {
   invite_sent_at: string | null;
   responded_at: string | null;
   created_at: string;
+  invite_email_status?: "sent" | "failed" | "not_sent" | null;
+  invite_email_error?: string | null;
 };
 
 function configuredBase() {
   return (Deno.env.get("APP_URL")?.trim() || "https://safetypreplist.com").replace(/\/+$/, "");
 }
 
-export function newInviteToken() {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
+function base64Url(bytes: Uint8Array) {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function newInviteToken() {
+  return base64Url(crypto.getRandomValues(new Uint8Array(32)));
+}
+
+function inviteSecret() {
+  const secret = Deno.env.get("GROUP_INVITE_SECRET")?.trim() || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
+  if (!secret) throw new Error("Group invite secret missing");
+  return secret;
+}
+
+/**
+ * Invite tokens are derived from the invite row and its send time, so the host can copy the same link
+ * later without the raw token ever being stored. Resending (new send time) replaces the link.
+ */
+export async function inviteTokenFor(memberId: string, sentAt: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(inviteSecret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const stamp = String(Date.parse(sentAt));
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`group-invite:${memberId}:${stamp}`));
+  return base64Url(new Uint8Array(sig));
+}
+
+export function inviteUrlFor(token: string, appUrl?: string) {
+  const base = (appUrl || configuredBase()).replace(/\/+$/, "");
+  return `${base}/group-invite/${encodeURIComponent(token)}`;
+}
+
+/** Only our own site may be used as the link base in invite emails. */
+export function safeAppOrigin(raw: unknown) {
+  const value = String(raw || "").trim();
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    const allowed = new URL(configuredBase());
+    const bare = (host: string) => host.replace(/^www\./, "");
+    if (url.protocol === "https:" && bare(url.hostname) === bare(allowed.hostname)) return url.origin;
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return url.origin;
+  } catch {
+    /* ignore malformed origins */
+  }
+  return undefined;
 }
 
 export async function sha256Hex(value: string) {
@@ -118,19 +168,46 @@ export async function createGroupSharingCheckout(opts: {
   );
   if ("error" in auth) return json({ error: auth.error }, auth.status);
 
-  const existing = await opts.admin
+  const renewGroupId = String(opts.body.renewGroupId || "").trim();
+  const { data: openGroups } = await opts.admin
     .from("sharing_groups")
-    .select("id, status, expires_at")
+    .select("id, status")
     .eq("host_license_id", auth.license.id)
-    .in("status", ["pending_setup", "active"])
-    .maybeSingle();
-  if (existing.data) {
-    return json({ error: "You already have an active or unpaid Group Sharing session. Finish or end it first." }, 409);
+    .in("status", ["pending_setup", "active"]);
+  const open = (openGroups || []) as Array<{ id: string; status: string }>;
+
+  if (renewGroupId) {
+    const { data: target } = await opts.admin.from("sharing_groups").select("*").eq("id", renewGroupId).maybeSingle();
+    const group = target as SharingGroupRow | null;
+    if (!group || group.host_license_id !== auth.license.id) {
+      return json({ error: "Only the host can renew this Group Sharing group." }, 403);
+    }
+    if (!canRenewGroup(group)) {
+      return json({ error: "This group can no longer be renewed. Start a new Group Sharing group instead." }, 400);
+    }
+    if (open.some((row) => row.id !== group.id)) {
+      return json({ error: "You already host another active Group Sharing group." }, 409);
+    }
+    if (plan.devices !== group.max_devices) {
+      return json({ error: `Renewal keeps your group size (${group.max_devices} devices).` }, 400);
+    }
+  } else {
+    if (open.length) {
+      const active = open.some((row) => row.status === "active");
+      return json({
+        error: active
+          ? "You already host an active Group Sharing group. Use Renew on the Group Sharing page to add time."
+          : "You already have a Group Sharing purchase waiting for setup. Open Group Sharing to name your group.",
+      }, 409);
+    }
+    const membership = await activeMembershipElsewhere(opts.admin, auth.license.id, null);
+    if (membership) {
+      return json({ error: "You're a member of another active group. Leave it before hosting your own." }, 409);
+    }
   }
 
   const priceId = await stripePriceId(lookup);
-  const successUrl = `${opts.appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}&kind=group`;
-  const renewGroupId = String(opts.body.renewGroupId || "").trim();
+  const successUrl = `${opts.appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}&kind=group${renewGroupId ? "&renew=1" : ""}`;
 
   const session = await stripeRequest<{ id: string; url?: string }>("POST", "/checkout/sessions", {
     mode: "payment",
@@ -205,6 +282,7 @@ export async function fulfillGroupSharingSession(
     return { ok: false, status: 402, error: "Stripe has not confirmed this payment yet." };
   }
 
+  const renewGroupId = String(session.metadata?.renew_group_id || "").trim();
   const existing = await admin.from("sharing_groups").select("*").eq("stripe_session_id", session.id).maybeSingle();
   if (existing.data) {
     const row = existing.data as SharingGroupRow;
@@ -236,13 +314,12 @@ export async function fulfillGroupSharingSession(
     return { ok: false, status: 400, error: "Group Sharing requires an active host license." };
   }
 
-  const renewGroupId = String(session.metadata?.renew_group_id || "").trim();
   if (renewGroupId) {
-    const renewed = await renewGroup(admin, renewGroupId, host, days, maxDevices, session.id);
+    const renewed = await renewGroup(admin, renewGroupId, host, days, session);
     if (!renewed.ok) return renewed;
     return {
       ok: true,
-      alreadyProcessed: false,
+      alreadyProcessed: renewed.alreadyProcessed,
       groupId: renewed.groupId,
       checkoutProduct: "group_sharing",
       licenseKey: host.license_key,
@@ -324,49 +401,111 @@ export async function fulfillGroupSharingSession(
   };
 }
 
+/**
+ * Renewal extends the same group (same members, same size). The payment row for the renewal session is
+ * claimed first, so a webhook and the thank-you page can never add the time twice.
+ */
 async function renewGroup(
   admin: Admin,
   groupId: string,
   host: LicenseRow,
   durationDays: number,
-  maxDevices: number,
-  sessionId: string,
-): Promise<{ ok: true; groupId: string } | { ok: false; status: number; error: string }> {
+  session: { id: string; amount_total?: number | null },
+): Promise<{ ok: true; groupId: string; alreadyProcessed: boolean } | { ok: false; status: number; error: string }> {
   const { data: group } = await admin.from("sharing_groups").select("*").eq("id", groupId).maybeSingle();
   if (!group) return { ok: false, status: 404, error: "Group not found for renewal." };
   const row = group as SharingGroupRow;
   if (row.host_license_id !== host.id) {
     return { ok: false, status: 403, error: "Only the host can renew Group Sharing." };
   }
-  const base = row.expires_at && Date.parse(row.expires_at) > Date.now() ? new Date(row.expires_at) : new Date();
-  base.setUTCDate(base.getUTCDate() + durationDays);
+
+  const claimed = await admin.from("license_payments").select("id").eq("license_id", host.id).eq(
+    "stripe_session_id",
+    session.id,
+  ).maybeSingle();
+  if (claimed.data) return { ok: true, groupId, alreadyProcessed: true };
+  if (row.status === "pending_setup") {
+    return { ok: false, status: 409, error: "Finish Group Sharing setup before renewing." };
+  }
+
+  const { data: otherOpen } = await admin
+    .from("sharing_groups")
+    .select("id")
+    .eq("host_license_id", host.id)
+    .in("status", ["pending_setup", "active"])
+    .neq("id", groupId);
+  if ((otherOpen || []).length) {
+    return { ok: false, status: 409, error: "Another Group Sharing group is already active for this license." };
+  }
+
+  const claim = await admin.from("license_payments").insert({
+    license_id: host.id,
+    stripe_session_id: session.id,
+    checkout_product: "group_sharing",
+    description: `Group Sharing renewal · ${row.max_devices} devices · ${durationDays} days`,
+    amount_cents: typeof session.amount_total === "number" ? session.amount_total : 0,
+    currency: "usd",
+    paid_at: new Date().toISOString(),
+  });
+  if (claim.error) {
+    if ((claim.error as { code?: string }).code === "23505") return { ok: true, groupId, alreadyProcessed: true };
+    console.error(claim.error);
+    return { ok: false, status: 500, error: "Could not record the Group Sharing renewal." };
+  }
+
+  const wasExpired = row.status !== "active";
   const updated = await admin
     .from("sharing_groups")
     .update({
       status: "active",
-      expires_at: base.toISOString(),
-      duration_days: durationDays,
-      max_devices: maxDevices,
-      stripe_session_id: sessionId,
+      expires_at: renewedExpiry(row.status === "active" ? row.expires_at : null, durationDays),
       ended_at: null,
     })
     .eq("id", groupId)
     .select("id")
     .maybeSingle();
   if (!updated.data) return { ok: false, status: 500, error: "Could not renew Group Sharing." };
-  await admin.from("license_payments").upsert(
-    {
-      license_id: host.id,
-      stripe_session_id: sessionId,
-      checkout_product: "group_sharing",
-      description: `Group Sharing renewal · ${maxDevices} devices · ${durationDays} days`,
-      amount_cents: 0,
-      currency: "usd",
-      paid_at: new Date().toISOString(),
-    },
-    { onConflict: "license_id,stripe_session_id" },
-  );
-  return { ok: true, groupId };
+
+  if (wasExpired) {
+    // Members who joined another group while this one was expired stay with that group.
+    const { data: members } = await admin
+      .from("sharing_group_members")
+      .select("id, license_id, role")
+      .eq("group_id", groupId)
+      .eq("invite_status", "accepted");
+    for (const member of (members || []) as Array<{ id: string; license_id: string | null; role: string }>) {
+      if (member.role === "host" || !member.license_id) continue;
+      if (await activeMembershipElsewhere(admin, member.license_id, groupId)) {
+        await admin.from("sharing_group_members").update({ invite_status: "expired" }).eq("id", member.id);
+      }
+    }
+  }
+  return { ok: true, groupId, alreadyProcessed: false };
+}
+
+/** The open group (hosted or joined) a license already belongs to, other than `exceptGroupId`. */
+export async function activeMembershipElsewhere(admin: Admin, licenseId: string, exceptGroupId: string | null) {
+  const { data: rows } = await admin
+    .from("sharing_group_members")
+    .select("group_id")
+    .eq("license_id", licenseId)
+    .eq("invite_status", "accepted");
+  const groupIds = ((rows || []) as Array<{ group_id: string }>)
+    .map((row) => row.group_id)
+    .filter((id) => id !== exceptGroupId);
+  if (!groupIds.length) return null;
+  const { data: open } = await admin
+    .from("sharing_groups")
+    .select("id")
+    .in("id", groupIds)
+    .in("status", ["pending_setup", "active"])
+    .limit(1)
+    .maybeSingle();
+  return (open as { id: string } | null)?.id || null;
+}
+
+export function groupSeats(members: SharingMemberRow[], maxDevices: number) {
+  return seatSummary(members, maxDevices);
 }
 
 export async function expireDueGroups(admin: Admin) {
@@ -401,11 +540,9 @@ export async function sendGroupInviteEmail(opts: {
   hostName: string;
   groupName: string;
   permission: GroupPermission;
-  token: string;
-  appUrl?: string;
+  link: string;
 }) {
-  const base = (opts.appUrl || configuredBase()).replace(/\/+$/, "");
-  const link = `${base}/group-invite/${encodeURIComponent(opts.token)}`;
+  const link = opts.link;
   const host = escapeHtml(opts.hostName || "A Safety Prep List customer");
   const group = escapeHtml(opts.groupName || "Group Sharing");
   const permission = opts.permission === "edit" ? "Edit" : "View only";
@@ -421,9 +558,10 @@ export async function sendGroupInviteEmail(opts: {
         <a href="${safeLink}" style="display:inline-block;background:#C75A2B;color:#FBF8F1;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:999px;">Review invitation</a>
       </p>
       <p style="font-size:13px;line-height:1.5;color:#4D5348;">If the button doesn’t work, copy this address into your browser:<br><span style="word-break:break-all;color:#556B2F;">${safeLink}</span></p>
+      <p style="font-size:13px;line-height:1.5;color:#4D5348;">If this is the email on your license, the invitation also waits for you under Group Sharing in the app on that device.</p>
     </div>
   </div>`;
-  const text = `${opts.hostName} invited you to ${opts.groupName || "Group Sharing"} (${permission}).\n\nOpen this link on the device where your license is activated:\n${link}\n\nAccepting is not automatic — you must confirm on that device.`;
+  const text = `${opts.hostName} invited you to ${opts.groupName || "Group Sharing"} (${permission}).\n\nOpen this link on the device where your license is activated:\n${link}\n\nAccepting is not automatic — you must confirm on that device.\n\nIf this is the email on your license, the invitation also waits for you under Group Sharing in the app on that device.`;
   return sendEmail({
     to: opts.to,
     subject: "Accept Group Invitation — Safety Prep List",
