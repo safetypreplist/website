@@ -58,7 +58,7 @@ import {
   type GroupStatusResponse,
   type SharedChecklist,
 } from "../lib/groupSharing";
-import { customItemsSignature, planOwnSync } from "../lib/groupSync";
+import { customItemsSignature, planOwnSync, shouldPublishCustoms } from "../lib/groupSync";
 
 export type GroupViewingState = {
   groupId: string;
@@ -236,6 +236,7 @@ function sharedCustomItems(items: SharedChecklist["customItems"]): CustomCheckli
   }));
 }
 
+const CUSTOMS_PUBLISHED_KEY = "spl.group.customsPublished.v1";
 const OWN_SYNC_DELAY_MS = 1500;
 const OWN_SYNC_INTERVAL_MS = 45_000;
 const VIEWING_REFRESH_MS = 20_000;
@@ -289,6 +290,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProgress(nextProgress);
     setCustomItems(nextCustoms);
     setContacts(nextContacts);
+    // A restored backup brings its profile and state along; pick them up without a reload.
+    const savedProfile = loadLocalProfile();
+    setLocalProfile((prev) => (JSON.stringify(prev) === JSON.stringify(savedProfile) ? prev : savedProfile));
+    setViewing((prev) => {
+      if (prev.checklistId !== "local") return prev;
+      const next = { ...viewingFromProfile(savedProfile), kind: prev.kind };
+      return next.ownerName === prev.ownerName && next.avatarUrl === prev.avatarUrl ? prev : next;
+    });
+    const savedState = localStorage.getItem(PREFERRED_STATE_KEY);
+    if (savedState) setPreferredStateValue(savedState);
     setOffline((prev) => ({
       ...prev,
       usingSavedCopy: !navigator.onLine,
@@ -471,7 +482,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       }
       const signature = customItemsSignature(localCustoms);
-      const publishCustoms = signature !== publishedCustoms.current;
+      const publishCustoms = shouldPublishCustoms({
+        signature,
+        lastPublished: publishedCustoms.current,
+        localCount: localCustoms.length,
+        publishedHereBefore: localStorage.getItem(CUSTOMS_PUBLISHED_KEY) === ownGroupId,
+      });
       if (plan.toRemote.length || publishCustoms) {
         await pushSharedChecklist(
           ownGroupId,
@@ -487,7 +503,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }))
             : undefined,
         );
-        publishedCustoms.current = signature;
+        if (publishCustoms) {
+          publishedCustoms.current = signature;
+          localStorage.setItem(CUSTOMS_PUBLISHED_KEY, ownGroupId);
+        }
       }
     } catch {
       /* Shared copy catches up on the next sync. */

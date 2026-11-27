@@ -37,6 +37,21 @@ export function planOwnSync(local: Record<string, LocalRow | undefined>, remote:
   return plan;
 }
 
+/**
+ * A device that has never published custom items to this group and has none of its own has nothing to add.
+ * Publishing its empty list would wipe the copy another device published (for example right after a move,
+ * before the backup is restored).
+ */
+export function shouldPublishCustoms(opts: {
+  signature: string;
+  lastPublished: string | null;
+  localCount: number;
+  publishedHereBefore: boolean;
+}) {
+  if (opts.signature === opts.lastPublished) return false;
+  return opts.localCount > 0 || opts.publishedHereBefore;
+}
+
 export function customItemsSignature(
   items: Array<{ id: string; section_id: string; text: string; description: string | null; sort_order: number }>,
 ) {
