@@ -38,7 +38,10 @@ export function DashboardPage() {
     viewing,
     hasSurvivalVault,
     localProfile,
+    groupStatus,
   } = useApp();
+  const groupInvite = groupStatus?.pendingInvites?.[0] ?? null;
+  const groupInviteCount = groupStatus?.pendingInvites?.length ?? 0;
   const entitled = hasPlanAccess(profile);
   const personalSystems = catalog.systems.filter((s) => s.access_tier === "core");
   const householdSystems = catalog.systems.filter((s) => s.access_tier === "full");
@@ -65,6 +68,21 @@ export function DashboardPage() {
 
   return (
     <div className="dash-home">
+      {groupInvite && viewing.isOwn ? (
+        <div className="home-group-invite" role="status">
+          <p>
+            <strong>
+              {groupInviteCount > 1
+                ? `You have ${groupInviteCount} Group Sharing invitations.`
+                : `${groupInvite.hostName} invited you to ${groupInvite.groupName}.`}
+            </strong>{" "}
+            Review it to accept or decline — nothing is shared until you accept.
+          </p>
+          <Link className="btn btn-primary" to="/app/group-sharing">
+            Review invitation
+          </Link>
+        </div>
+      ) : null}
       {viewing.isOwn ? (
         <Link className="dash-identity" to="/app/profile" aria-label="Edit profile">
           <ProfileAvatar className="dash-avatar" name={viewing.ownerName === "My" ? null : viewing.ownerName} avatarUrl={viewing.avatarUrl} />

@@ -191,6 +191,7 @@ export function ThankYouPage() {
   const checkoutSession = params.get("session_id") || "";
   const kindHint = (params.get("kind") || "").toLowerCase();
   const expectGroup = kindHint === "group" || kindHint === "group_sharing";
+  const isRenewal = expectGroup && params.get("renew") === "1";
   const [licenseKey, setLicenseKey] = useState("");
   const [product, setProduct] = useState<"basic" | "pro" | "">("");
   const [checkoutProduct, setCheckoutProduct] = useState<
@@ -246,9 +247,11 @@ export function ThankYouPage() {
           setProduct(captured.product || "");
           setBusy(false);
           setRedirectingGroup(true);
-          const setupPath = `/app/group-sharing?setup=1${
-            captured.groupId ? `&group=${encodeURIComponent(captured.groupId)}` : ""
-          }`;
+          const setupPath = isRenewal
+            ? "/app/group-sharing?renewed=1"
+            : `/app/group-sharing?setup=1${
+                captured.groupId ? `&group=${encodeURIComponent(captured.groupId)}` : ""
+              }`;
           window.setTimeout(() => {
             if (!cancelled) navigate(setupPath, { replace: true });
           }, 900);
@@ -300,7 +303,7 @@ export function ThankYouPage() {
     return () => {
       cancelled = true;
     };
-  }, [checkoutSession, expectGroup, navigate]);
+  }, [checkoutSession, expectGroup, isRenewal, navigate]);
 
   async function activateNow() {
     if (!licenseKey) return;
@@ -350,9 +353,13 @@ export function ThankYouPage() {
         <AppSplash />
         <p className="thank-you-loading-copy muted" role="status">
           {expectGroup || checkoutProduct === "group_sharing"
-            ? redirectingGroup
-              ? "Group Sharing is ready — opening setup…"
-              : "Confirming your Group Sharing purchase…"
+            ? isRenewal
+              ? redirectingGroup
+                ? "Renewal confirmed — opening Group Sharing…"
+                : "Confirming your Group Sharing renewal…"
+              : redirectingGroup
+                ? "Group Sharing is ready — opening setup…"
+                : "Confirming your Group Sharing purchase…"
             : "Confirming your purchase and preparing your license key…"}
         </p>
       </div>
@@ -367,7 +374,17 @@ export function ThankYouPage() {
         <div className="wrap legal-page" style={{ maxWidth: 560 }}>
           <p className="eyebrow">Purchase complete</p>
           {error ? <p className="form-error">{error}</p> : null}
-          {checkoutProduct === "group_sharing" ? (
+          {checkoutProduct === "group_sharing" && isRenewal ? (
+            <>
+              <h1>Group Sharing renewed</h1>
+              <p>Your group keeps its members and settings.</p>
+              <div className="toolbar" style={{ gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+                <Link className="btn btn-primary" to="/app/group-sharing?renewed=1">
+                  Open Group Sharing
+                </Link>
+              </div>
+            </>
+          ) : checkoutProduct === "group_sharing" ? (
             <>
               <h1>Group Sharing is ready</h1>
               <p>Name your group and invite other licensed devices next.</p>

@@ -7096,16 +7096,194 @@ html.has-guidance-ack .app-main {
   color: #fff;
 }
 
+.group-viewing-banner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .group-viewing-banner p {
+  flex: 1 1 16rem;
+  min-width: 0;
   margin: 0;
+  display: grid;
+  gap: 2px;
   font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.group-viewing-title {
+  font-weight: 750;
+}
+
+.group-viewing-permission {
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.92;
 }
 
 .group-viewing-banner .btn {
+  flex: 0 0 auto;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 0 18px;
+  white-space: normal;
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 520px) {
+  .group-viewing-banner .btn {
+    flex: 1 1 100%;
+  }
+}
+
+.group-notice {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #b9cdb4;
+  background: #eef4ea;
+  color: #24402c;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.group-notice.is-warning {
+  border-color: #e3c39a;
+  background: #fbf1e3;
+  color: #6b3d12;
+}
+
+.group-notice .btn {
+  margin-top: 8px;
+}
+
+.group-invite-inbox {
+  border: 2px solid #c75a2b;
+}
+
+.group-invite-inbox .group-invite-card + .group-invite-card {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.group-invite-card h3 {
+  margin: 0 0 4px;
+}
+
+.group-invite-card ul {
+  margin: 8px 0 12px;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 4px;
+}
+
+.group-member-meta {
+  margin: 2px 0 0;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.group-member-email-status.is-failed {
+  color: #9a3c12;
+  font-weight: 600;
+}
+
+.group-member-list li > div:first-child {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.group-member-actions .btn {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.group-member-actions select {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 0 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+}
+
+.group-seat-line {
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.group-consent-line {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 6px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.group-consent-line input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: #c75a2b;
+}
+
+.group-invite-fields {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.group-invite-fields:disabled {
+  opacity: 0.6;
+}
+
+.group-link-field {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.group-renew-choice {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+
+.home-group-invite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid #c75a2b;
+  background: #fbf1e3;
+}
+
+.home-group-invite p {
+  flex: 1 1 16rem;
+  min-width: 0;
+  margin: 0;
 }
 
 .group-sharing-page {

@@ -8,18 +8,25 @@ import { useApp } from "../context/AppContext";
 import { LegalNotices } from "./LegalNotices";
 import { OnboardingTour } from "./OnboardingTour";
 import { AppStatusBanners } from "./OfflineStatus";
-import { fetchGroupStatus } from "../lib/groupSharing";
 import { isProLicense } from "../lib/licenseClient";
 
 const MORE_PATHS = ["/app/group-sharing", "/app/transfer", "/app/help", "/app/profile"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { hasSurvivalVault, localProfile, groupViewing, clearGroupViewing } = useApp();
+  const { hasSurvivalVault, localProfile, groupViewing, groupStatus, refreshGroupStatus } = useApp();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const pro = hasSurvivalVault || isProLicense();
   const profileName = localProfile.displayName || null;
-  const [groupBadge, setGroupBadge] = useState(0);
+  const pendingInvites = groupStatus?.pendingInvites?.length || 0;
+  const activeMembers = groupStatus?.group?.status === "active" ? groupStatus.group.otherActiveMembers || 0 : 0;
+  const groupBadge = pendingInvites + activeMembers;
+  const groupBadgeLabel = [
+    pendingInvites ? `${pendingInvites} Group Sharing invitation${pendingInvites === 1 ? "" : "s"} waiting` : "",
+    activeMembers ? `${activeMembers} other active member${activeMembers === 1 ? "" : "s"}` : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = MORE_PATHS.some((path) => location.pathname.startsWith(path));
 
@@ -37,19 +44,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [moreOpen]);
 
   useEffect(() => {
-    let live = true;
-    void fetchGroupStatus()
-      .then((data) => {
-        if (!live) return;
-        setGroupBadge(data.group?.status === "active" ? data.group.otherActiveMembers || 0 : 0);
-      })
-      .catch(() => {
-        if (live) setGroupBadge(0);
-      });
-    return () => {
-      live = false;
-    };
-  }, [location.pathname]);
+    if (isAdminRoute) return;
+    void refreshGroupStatus();
+  }, [isAdminRoute, location.pathname, refreshGroupStatus]);
 
   return (
     <div className={`app-shell${isAdminRoute ? " admin-console-shell" : ""}`}>
@@ -86,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           Group Sharing
           {groupBadge > 0 ? (
-            <span className="nav-group-badge" aria-label={`${groupBadge} other active members`}>
+            <span className="nav-group-badge" role="img" aria-label={groupBadgeLabel}>
               {groupBadge > 9 ? "9+" : groupBadge}
             </span>
           ) : null}
@@ -118,17 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
       <main className="app-main">
         {!isAdminRoute ? <AppStatusBanners /> : null}
-        {!isAdminRoute && groupViewing ? (
-          <div className="group-viewing-banner" role="status">
-            <p>
-              YOU ARE CURRENTLY VIEWING {groupViewing.ownerName.toUpperCase()}&apos;S CHECKLIST · Permission{" "}
-              {groupViewing.canEdit ? "EDIT" : "VIEW ONLY"}
-            </p>
-            <button className="btn btn-ghost" type="button" onClick={() => clearGroupViewing()}>
-              Return to my checklist
-            </button>
-          </div>
-        ) : null}
+        {!isAdminRoute && groupViewing ? <GroupViewingBanner /> : null}
         {children}
       </main>
       <nav className="bottom-nav" aria-label="Mobile">
@@ -162,7 +149,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           <MoreIcon />
           More
-          {groupBadge > 0 ? <span className="bottom-nav-dot" aria-hidden="true" /> : null}
+          {groupBadge > 0 ? <span className="bottom-nav-dot" role="img" aria-label={groupBadgeLabel} /> : null}
         </button>
       </nav>
       {moreOpen ? (
@@ -176,7 +163,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <NavLink to="/app/group-sharing">
               Group Sharing
               {groupBadge > 0 ? (
-                <span className="nav-group-badge" aria-label={`${groupBadge} other active members`}>
+                <span className="nav-group-badge" role="img" aria-label={groupBadgeLabel}>
                   {groupBadge > 9 ? "9+" : groupBadge}
                 </span>
               ) : null}
@@ -194,6 +181,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
       <LegalNotices />
       <OnboardingTour />
+    </div>
+  );
+}
+
+function GroupViewingBanner() {
+  const { groupViewing, clearGroupViewing } = useApp();
+  if (!groupViewing) return null;
+  return (
+    <div className="group-viewing-banner" role="status">
+      <p>
+        <span className="group-viewing-title">You are viewing {groupViewing.ownerName}&apos;s checklist</span>
+        <span className="group-viewing-permission">
+          {groupViewing.canEdit ? "Edit — your changes sync to their list" : "View only"}
+        </span>
+      </p>
+      <button className="btn btn-ghost" type="button" onClick={() => clearGroupViewing()}>
+        Return to my checklist
+      </button>
     </div>
   );
 }

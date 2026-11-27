@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
@@ -48,7 +49,16 @@ import {
   type LocalProfile as DeviceProfile,
   type LocalProfileInput,
 } from "../lib/localProfile";
-import { pushSharedChecklist } from "../lib/groupSharing";
+import {
+  fetchGroupStatus,
+  forgetGroupStatus,
+  onGroupStatus,
+  pullSharedChecklist,
+  pushSharedChecklist,
+  type GroupStatusResponse,
+  type SharedChecklist,
+} from "../lib/groupSharing";
+import { customItemsSignature, planOwnSync } from "../lib/groupSync";
 
 export type GroupViewingState = {
   groupId: string;
@@ -115,6 +125,8 @@ type AppState = {
   groupViewing: GroupViewingState | null;
   setGroupViewing: (next: GroupViewingState | null) => void;
   clearGroupViewing: () => void;
+  groupStatus: GroupStatusResponse | null;
+  refreshGroupStatus: (fresh?: boolean) => Promise<GroupStatusResponse | null>;
   myChecklist: null;
   connectedChecklists: [];
   familyMembers: [];
@@ -192,6 +204,41 @@ const LOCAL_USER = "local";
 function clipNote(note: string) {
   return note.slice(0, 100);
 }
+
+function sharedProgress(items: SharedChecklist["items"]) {
+  const mapped: Record<string, ProgressRow> = {};
+  for (const item of items) {
+    mapped[item.checklist_item_id] = {
+      id: `group:${item.checklist_item_id}`,
+      user_id: LOCAL_USER,
+      checklist_item_id: item.checklist_item_id,
+      checked: item.checked,
+      note: item.note || "",
+      updated_by_device_id: null,
+      updated_at: item.updated_at,
+    };
+  }
+  return mapped;
+}
+
+function sharedCustomItems(items: SharedChecklist["customItems"]): CustomChecklistItem[] {
+  return items.map((item) => ({
+    id: item.id,
+    user_id: LOCAL_USER,
+    section_id: item.section_id,
+    text: item.text,
+    description: item.description,
+    sort_order: item.sort_order,
+    checked: item.checked,
+    note: item.note,
+    created_at: item.updated_at,
+    updated_at: item.updated_at,
+  }));
+}
+
+const OWN_SYNC_DELAY_MS = 1500;
+const OWN_SYNC_INTERVAL_MS = 45_000;
+const VIEWING_REFRESH_MS = 20_000;
 
 async function fetchProfileRole(userId: string): Promise<"customer" | "owner"> {
   const { data } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
@@ -351,33 +398,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       setOwnProgressCache((prev) => prev || progress);
       setOwnCustomCache((prev) => prev || customItems);
-      const mapped: Record<string, ProgressRow> = {};
-      for (const item of next.items) {
-        mapped[item.checklist_item_id] = {
-          id: `group:${item.checklist_item_id}`,
-          user_id: LOCAL_USER,
-          checklist_item_id: item.checklist_item_id,
-          checked: item.checked,
-          note: item.note || "",
-          updated_by_device_id: null,
-          updated_at: item.updated_at,
-        };
-      }
-      setProgress(mapped);
-      setCustomItems(
-        next.customItems.map((item) => ({
-          id: item.id,
-          user_id: LOCAL_USER,
-          section_id: item.section_id,
-          text: item.text,
-          description: item.description,
-          sort_order: item.sort_order,
-          checked: item.checked,
-          note: item.note,
-          created_at: item.updated_at,
-          updated_at: item.updated_at,
-        })),
-      );
+      setProgress(sharedProgress(next.items));
+      setCustomItems(sharedCustomItems(next.customItems));
       setGroupViewingState(next);
       setViewing({
         kind: "personal",
@@ -394,6 +416,150 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [clearGroupViewing, customItems, progress],
   );
+
+  const [groupStatus, setGroupStatus] = useState<GroupStatusResponse | null>(null);
+  useEffect(() => onGroupStatus(setGroupStatus), []);
+
+  const refreshGroupStatus = useCallback(async (fresh = false) => {
+    if (!isLicensed() || (typeof navigator !== "undefined" && !navigator.onLine)) return null;
+    try {
+      return await fetchGroupStatus({ fresh });
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const sharedGroup = groupStatus?.group ?? null;
+  const ownGroupId = sharedGroup?.status === "active" && sharedGroup.me ? sharedGroup.id : null;
+  const ownLicenseId = ownGroupId ? sharedGroup?.me?.licenseId ?? null : null;
+  const groupViewingRef = useRef(groupViewing);
+  groupViewingRef.current = groupViewing;
+  const ownSyncBusy = useRef(false);
+  const ownSyncTimer = useRef<number | null>(null);
+  const publishedCustoms = useRef<string | null>(null);
+
+  // While this device is in an active group, keep its shared copy current and take in edits from
+  // members with Edit permission. Personal data stays on the device; only the shared copy is sent.
+  const syncOwnToGroup = useCallback(async () => {
+    if (!ownGroupId || !ownLicenseId || groupViewingRef.current || ownSyncBusy.current) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    ownSyncBusy.current = true;
+    try {
+      const [remote, localProgress, localCustoms] = await Promise.all([
+        pullSharedChecklist(ownGroupId, ownLicenseId),
+        loadProgress(),
+        loadCustomItems(),
+      ]);
+      const plan = planOwnSync(localProgress, remote.items);
+      if (plan.toLocal.length) {
+        const rows: ProgressRow[] = plan.toLocal.map((update) => ({
+          id: localProgress[update.itemId]?.id || newLocalId("prog"),
+          user_id: LOCAL_USER,
+          checklist_item_id: update.itemId,
+          checked: update.checked,
+          note: clipNote(update.note),
+          updated_by_device_id: null,
+          updated_at: update.updatedAt,
+        }));
+        await saveProgressMany(rows);
+        if (!groupViewingRef.current) {
+          setProgress((prev) => {
+            const next = { ...prev };
+            for (const row of rows) next[row.checklist_item_id] = row;
+            return next;
+          });
+        }
+      }
+      const signature = customItemsSignature(localCustoms);
+      const publishCustoms = signature !== publishedCustoms.current;
+      if (plan.toRemote.length || publishCustoms) {
+        await pushSharedChecklist(
+          ownGroupId,
+          ownLicenseId,
+          plan.toRemote,
+          publishCustoms
+            ? localCustoms.map((item) => ({
+              id: item.id,
+              sectionId: item.section_id,
+              text: item.text,
+              description: item.description,
+              sortOrder: item.sort_order,
+            }))
+            : undefined,
+        );
+        publishedCustoms.current = signature;
+      }
+    } catch {
+      /* Shared copy catches up on the next sync. */
+    } finally {
+      ownSyncBusy.current = false;
+    }
+  }, [ownGroupId, ownLicenseId]);
+
+  const syncOwnRef = useRef(syncOwnToGroup);
+  syncOwnRef.current = syncOwnToGroup;
+
+  const scheduleOwnSync = useCallback(() => {
+    if (ownSyncTimer.current) window.clearTimeout(ownSyncTimer.current);
+    ownSyncTimer.current = window.setTimeout(() => {
+      ownSyncTimer.current = null;
+      void syncOwnRef.current();
+    }, OWN_SYNC_DELAY_MS);
+  }, []);
+
+  useEffect(() => {
+    publishedCustoms.current = null;
+    if (!ownGroupId) return;
+    void syncOwnRef.current();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void syncOwnRef.current();
+    }, OWN_SYNC_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [ownGroupId, ownLicenseId]);
+
+  useEffect(() => {
+    if (!groupViewing && ownGroupId) scheduleOwnSync();
+  }, [groupViewing, ownGroupId, scheduleOwnSync]);
+
+  // Leave shared viewing when that group is no longer available to this device.
+  useEffect(() => {
+    if (!groupViewing || !groupStatus) return;
+    const group = groupStatus.group;
+    if (!group || group.id !== groupViewing.groupId || group.status !== "active") clearGroupViewing();
+  }, [clearGroupViewing, groupStatus, groupViewing]);
+
+  const viewingGroupId = groupViewing?.groupId ?? null;
+  const viewingOwnerId = groupViewing?.ownerLicenseId ?? null;
+  useEffect(() => {
+    if (!viewingGroupId || !viewingOwnerId) return;
+    let live = true;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== "visible" || !navigator.onLine) return;
+      void pullSharedChecklist(viewingGroupId, viewingOwnerId)
+        .then((data) => {
+          const current = groupViewingRef.current;
+          if (!live || !current || current.ownerLicenseId !== viewingOwnerId) return;
+          setProgress(sharedProgress(data.items));
+          setCustomItems(sharedCustomItems(data.customItems));
+          setGroupViewingState({
+            ...current,
+            canEdit: data.canEdit,
+            permission: data.permission === "own" ? "own" : data.permission,
+            items: data.items,
+            customItems: data.customItems,
+          });
+          setViewing((prev) => ({ ...prev, canEdit: data.canEdit }));
+        })
+        .catch(() => {
+          forgetGroupStatus();
+          void fetchGroupStatus({ fresh: true }).catch(() => undefined);
+        });
+    }, VIEWING_REFRESH_MS);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [viewingGroupId, viewingOwnerId]);
 
   const saveProgress = useCallback(async (itemId: string, checked: boolean, note: string) => {
     if (groupViewing && !groupViewing.canEdit) {
@@ -418,12 +584,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ]);
       } else {
         await saveProgressRow(row);
+        if (ownGroupId) scheduleOwnSync();
       }
       setSync("idle");
     } catch {
       setSync("error");
     }
-  }, [groupViewing, progress]);
+  }, [groupViewing, ownGroupId, progress, scheduleOwnSync]);
 
   const saveProgressManyFn = useCallback(async (updates: { itemId: string; checked: boolean; note: string }[]) => {
     if (groupViewing && !groupViewing.canEdit) {
@@ -454,12 +621,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         );
       } else {
         await saveProgressMany(rows);
+        if (ownGroupId) scheduleOwnSync();
       }
       setSync("idle");
     } catch {
       setSync("error");
     }
-  }, [groupViewing, progress]);
+  }, [groupViewing, ownGroupId, progress, scheduleOwnSync]);
 
   const addContact = useCallback(async (name: string, phone: string, label: string) => {
     const now = new Date().toISOString();
@@ -499,14 +667,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       setCustomItems((prev) => [...prev, item]);
       await saveCustomItem(item);
+      scheduleOwnSync();
     },
-    [],
+    [scheduleOwnSync],
   );
 
   const removeCustomItem = useCallback(async (id: string) => {
     setCustomItems((prev) => prev.filter((row) => row.id !== id));
     await deleteLocalCustom(id);
-  }, []);
+    scheduleOwnSync();
+  }, [scheduleOwnSync]);
 
   const switchChecklist = useCallback(async (kind: ViewingContext["kind"]) => {
     setViewing((prev) => ({
@@ -582,6 +752,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       groupViewing,
       setGroupViewing,
       clearGroupViewing,
+      groupStatus,
+      refreshGroupStatus,
       myChecklist: null,
       connectedChecklists: [],
       familyMembers: [],
@@ -649,6 +821,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       groupViewing,
       setGroupViewing,
       clearGroupViewing,
+      groupStatus,
+      refreshGroupStatus,
       offline,
       saveProgress,
       saveProgressManyFn,

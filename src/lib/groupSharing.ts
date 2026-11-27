@@ -1,8 +1,10 @@
 import { getDeviceId, getLicense } from "./licenseClient";
+import { loadLocalProfile } from "./localProfile";
 import { invokeFunction } from "./supabase";
 
 export type GroupPermission = "view" | "edit";
 export type GroupInviteStatus = "pending" | "accepted" | "declined" | "expired" | "revoked";
+export type InviteEmailStatus = "sent" | "failed" | "not_sent";
 
 export type GroupPricingRow = {
   devices: number;
@@ -18,13 +20,17 @@ export type GroupMember = {
   permissionAccepted: boolean;
   inviteStatus: GroupInviteStatus;
   displayName: string;
+  isYou?: boolean;
   invitedEmail: string | null;
   invitedLicenseKey: string | null;
   licenseProduct: string | null;
   licenseId: string | null;
   inviteSentAt: string | null;
   respondedAt: string | null;
+  emailStatus?: InviteEmailStatus | null;
 };
+
+export type GroupSeats = { used: number; accepted: number; pending: number; max: number; full: boolean };
 
 export type GroupSession = {
   id: string;
@@ -38,7 +44,50 @@ export type GroupSession = {
   isHost: boolean;
   memberCount: number;
   otherActiveMembers: number;
+  seats?: GroupSeats;
+  me?: {
+    memberId: string;
+    licenseId: string;
+    role: "host" | "member";
+    permission: GroupPermission;
+    permissionAccepted: boolean;
+  } | null;
   members: GroupMember[];
+};
+
+export type PendingGroupInvite = {
+  id: string;
+  groupId: string;
+  groupName: string;
+  hostName: string;
+  permission: GroupPermission;
+  expiresAt: string | null;
+  invitedAt: string | null;
+};
+
+export type RenewableGroup = {
+  id: string;
+  name: string | null;
+  maxDevices: number;
+  durationDays: number;
+  expiredAt: string | null;
+};
+
+export type GroupStatusResponse = {
+  group: GroupSession | null;
+  pendingInvites?: PendingGroupInvite[];
+  renewable?: RenewableGroup | null;
+  pricing?: GroupPricingRow[];
+};
+
+export type InviteResponse = {
+  group: GroupSession | null;
+  emailSent?: boolean;
+  emailStatus?: InviteEmailStatus;
+  emailError?: string | null;
+  inviteUrl?: string;
+  inviteeLicensed?: boolean | null;
+  memberId?: string;
 };
 
 export const GROUP_SHARING_PRICES: GroupPricingRow[] = [
@@ -53,6 +102,14 @@ export const GROUP_SHARING_PRICES: GroupPricingRow[] = [
   { devices: 4, durationDays: 30, cents: 1999, lookup: "spl_group_4_30d" },
 ];
 
+function myName() {
+  try {
+    return loadLocalProfile().displayName.trim().slice(0, 80) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function authBody(extra: Record<string, unknown> = {}) {
   const license = getLicense();
   if (!license?.key) throw new Error("Activate a license to use Group Sharing.");
@@ -60,12 +117,61 @@ function authBody(extra: Record<string, unknown> = {}) {
     licenseKey: license.key,
     deviceId: getDeviceId(),
     origin: typeof window !== "undefined" ? window.location.origin : undefined,
+    myName: myName(),
     ...extra,
   };
 }
 
-export async function fetchGroupStatus() {
-  return invokeFunction<{ group: GroupSession | null; pricing?: GroupPricingRow[] }>("group-sharing", authBody({ action: "status" }));
+const STATUS_MAX_AGE_MS = 20_000;
+let statusCache: { key: string; at: number; data: GroupStatusResponse } | null = null;
+let statusInFlight: { key: string; promise: Promise<GroupStatusResponse> } | null = null;
+const statusListeners = new Set<(data: GroupStatusResponse) => void>();
+
+/** Every app route shows the Group Sharing badge, so share one recent status answer between them. */
+export function fetchGroupStatus(options?: { fresh?: boolean }): Promise<GroupStatusResponse> {
+  const key = getLicense()?.key || "";
+  if (!options?.fresh && statusCache && statusCache.key === key && Date.now() - statusCache.at < STATUS_MAX_AGE_MS) {
+    return Promise.resolve(statusCache.data);
+  }
+  if (statusInFlight && statusInFlight.key === key) return statusInFlight.promise;
+  const promise = invokeFunction<GroupStatusResponse>("group-sharing", authBody({ action: "status" }))
+    .then((data) => {
+      rememberGroupStatus(data);
+      return data;
+    })
+    .finally(() => {
+      statusInFlight = null;
+    });
+  statusInFlight = { key, promise };
+  return promise;
+}
+
+function rememberGroupStatus(data: GroupStatusResponse) {
+  statusCache = { key: getLicense()?.key || "", at: Date.now(), data };
+  for (const listener of statusListeners) listener(data);
+}
+
+/** After a change, update the shared status so the badge and Home banner follow right away. */
+function updateCachedGroup(group: GroupSession | null, patch?: Partial<GroupStatusResponse>) {
+  const prev = statusCache?.data || { group: null };
+  rememberGroupStatus({ ...prev, group, ...patch });
+}
+
+export function forgetGroupStatus() {
+  statusCache = null;
+}
+
+export function onGroupStatus(listener: (data: GroupStatusResponse) => void) {
+  statusListeners.add(listener);
+  return () => {
+    statusListeners.delete(listener);
+  };
+}
+
+async function withGroup<T extends { group?: GroupSession | null }>(request: Promise<T>) {
+  const data = await request;
+  if ("group" in data) updateCachedGroup(data.group ?? null);
+  return data;
 }
 
 export async function startGroupCheckout(devices: number, durationDays: number, renewGroupId?: string) {
@@ -80,7 +186,9 @@ export async function startGroupCheckout(devices: number, durationDays: number, 
 }
 
 export async function setupGroup(groupId: string, name: string) {
-  return invokeFunction<{ group: GroupSession | null }>("group-sharing", authBody({ action: "setup", groupId, name }));
+  return withGroup(
+    invokeFunction<{ group: GroupSession | null }>("group-sharing", authBody({ action: "setup", groupId, name })),
+  );
 }
 
 export async function inviteToGroup(opts: {
@@ -90,40 +198,50 @@ export async function inviteToGroup(opts: {
   permission: GroupPermission;
   displayName?: string;
 }) {
-  return invokeFunction<{ group: GroupSession | null; emailSent?: boolean; emailError?: string }>(
-    "group-sharing",
-    authBody({ action: "invite", ...opts }),
-  );
+  return withGroup(invokeFunction<InviteResponse>("group-sharing", authBody({ action: "invite", ...opts })));
 }
 
 export async function resendInvite(groupId: string, memberId: string) {
-  return invokeFunction<{ group: GroupSession | null; emailSent?: boolean }>(
-    "group-sharing",
-    authBody({ action: "resend", groupId, memberId }),
+  return withGroup(
+    invokeFunction<InviteResponse>("group-sharing", authBody({ action: "resend", groupId, memberId })),
   );
 }
 
+export async function fetchInviteLink(groupId: string, memberId: string) {
+  return invokeFunction<{ inviteUrl: string }>("group-sharing", authBody({ action: "invite_link", groupId, memberId }));
+}
+
 export async function revokeMember(groupId: string, memberId: string) {
-  return invokeFunction<{ group: GroupSession | null }>("group-sharing", authBody({ action: "revoke", groupId, memberId }));
+  return withGroup(
+    invokeFunction<{ group: GroupSession | null }>("group-sharing", authBody({ action: "revoke", groupId, memberId })),
+  );
 }
 
 export async function setMemberPermission(groupId: string, memberId: string, permission: GroupPermission) {
-  return invokeFunction<{ group: GroupSession | null }>(
-    "group-sharing",
-    authBody({ action: "set_permission", groupId, memberId, permission }),
+  return withGroup(
+    invokeFunction<{ group: GroupSession | null }>(
+      "group-sharing",
+      authBody({ action: "set_permission", groupId, memberId, permission }),
+    ),
   );
 }
 
 export async function acceptPermissionChange(groupId: string) {
-  return invokeFunction<{ group: GroupSession | null }>("group-sharing", authBody({ action: "accept_permission", groupId }));
+  return withGroup(
+    invokeFunction<{ group: GroupSession | null }>("group-sharing", authBody({ action: "accept_permission", groupId })),
+  );
 }
 
 export async function endGroup(groupId: string) {
-  return invokeFunction<{ ended?: boolean }>("group-sharing", authBody({ action: "end", groupId }));
+  const data = await invokeFunction<{ ended?: boolean }>("group-sharing", authBody({ action: "end", groupId }));
+  forgetGroupStatus();
+  return data;
 }
 
 export async function leaveGroup(groupId: string) {
-  return invokeFunction<{ left?: boolean }>("group-sharing", authBody({ action: "leave", groupId }));
+  const data = await invokeFunction<{ left?: boolean }>("group-sharing", authBody({ action: "leave", groupId }));
+  forgetGroupStatus();
+  return data;
 }
 
 export async function previewInvite(token: string) {
@@ -133,52 +251,81 @@ export async function previewInvite(token: string) {
     hostName?: string;
     permission?: GroupPermission;
     expiresAt?: string | null;
+    groupStatus?: GroupSession["status"];
     requiresDevice?: boolean;
   }>("group-sharing", { action: "invite_preview", token });
 }
 
 export async function respondToInvite(token: string, accept: boolean) {
-  return invokeFunction<{ inviteStatus: GroupInviteStatus; group?: GroupSession | null; code?: string }>(
+  const data = await invokeFunction<{ inviteStatus: GroupInviteStatus; group?: GroupSession | null; code?: string }>(
     "group-sharing",
     authBody({ action: accept ? "accept" : "decline", token }),
   );
+  forgetGroupStatus();
+  return data;
 }
 
+/** Answer an invite shown inside the app (matched to this verified license on the server). */
+export async function respondToInviteInApp(memberId: string, accept: boolean) {
+  const data = await invokeFunction<{ inviteStatus: GroupInviteStatus; group?: GroupSession | null }>(
+    "group-sharing",
+    authBody({ action: accept ? "accept_invite" : "decline_invite", memberId }),
+  );
+  forgetGroupStatus();
+  return data;
+}
+
+export type SharedChecklist = {
+  ownerLicenseId: string;
+  ownerName: string;
+  permission: "own" | GroupPermission;
+  canEdit: boolean;
+  items: Array<{ checklist_item_id: string; checked: boolean; note: string; updated_at: string }>;
+  customItems: Array<{
+    id: string;
+    section_id: string;
+    text: string;
+    description: string | null;
+    sort_order: number;
+    checked: boolean;
+    note: string;
+    updated_at: string;
+  }>;
+};
+
 export async function pullSharedChecklist(groupId: string, ownerLicenseId: string) {
-  return invokeFunction<{
-    ownerLicenseId: string;
-    ownerName: string;
-    permission: "own" | GroupPermission;
-    canEdit: boolean;
-    items: Array<{ checklist_item_id: string; checked: boolean; note: string; updated_at: string }>;
-    customItems: Array<{
-      id: string;
-      section_id: string;
-      text: string;
-      description: string | null;
-      sort_order: number;
-      checked: boolean;
-      note: string;
-      updated_at: string;
-    }>;
-  }>("group-sharing", authBody({ action: "pull", groupId, ownerLicenseId }));
+  return invokeFunction<SharedChecklist>("group-sharing", authBody({ action: "pull", groupId, ownerLicenseId }));
 }
 
 export async function pushSharedChecklist(
   groupId: string,
   ownerLicenseId: string,
   items: Array<{ checklistItemId: string; checked: boolean; note: string }>,
+  customItems?: Array<{ id: string; sectionId: string; text: string; description: string | null; sortOrder: number }>,
 ) {
-  return invokeFunction<{ ok?: boolean }>("group-sharing", authBody({ action: "push", groupId, ownerLicenseId, items }));
+  return invokeFunction<{ ok?: boolean }>(
+    "group-sharing",
+    authBody({ action: "push", groupId, ownerLicenseId, items, ...(customItems ? { customItems } : {}) }),
+  );
+}
+
+/** Seats = host + accepted members + invites still waiting (falls back for older servers). */
+export function seatsFor(group: GroupSession): GroupSeats {
+  if (group.seats) return group.seats;
+  const accepted = group.members.filter((m) => m.inviteStatus === "accepted").length;
+  const pending = group.members.filter((m) => m.inviteStatus === "pending").length;
+  const used = accepted + pending;
+  return { used, accepted, pending, max: group.maxDevices, full: used >= group.maxDevices };
 }
 
 export function formatRemaining(ms: number | null | undefined) {
   if (ms == null) return "Not started";
   if (ms <= 0) return "Expired";
   const hours = Math.floor(ms / 3_600_000);
-  const days = Math.floor(hours / 24);
-  if (days >= 2) return `${days} days left`;
-  if (days === 1) return `${hours} hours left`;
+  if (hours >= 48) {
+    const days = Math.round(ms / 86_400_000);
+    return `${days} days left`;
+  }
   if (hours >= 1) return `${hours} hour${hours === 1 ? "" : "s"} left`;
   const minutes = Math.max(1, Math.floor(ms / 60_000));
   return `${minutes} min left`;

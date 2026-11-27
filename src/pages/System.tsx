@@ -39,8 +39,19 @@ type AddTarget = { id: string; title: string; priority?: boolean };
 
 export function SystemPage() {
   const { slug } = useParams();
-  const { catalog, progress, saveProgress, sync, customItems, addCustomItem, removeCustomItem, hasSurvivalVault, viewing } =
-    useApp();
+  const {
+    catalog,
+    progress,
+    saveProgress,
+    sync,
+    customItems,
+    addCustomItem,
+    removeCustomItem,
+    hasSurvivalVault,
+    viewing,
+    groupViewing,
+  } = useApp();
+  const canCustomize = viewing.canEdit && !groupViewing;
   const system = catalog.systems.find((s) => s.slug === slug);
   const sections = useMemo(
     () => catalog.sections.filter((s) => s.system_id === system?.id).sort((a, b) => a.sort_order - b.sort_order),
@@ -351,12 +362,14 @@ export function SystemPage() {
             </div>
           ) : null}
         </div>
-        <p className={`list-saved ${sync === "waiting" ? "wait" : ""}`}>
-          <b>
-            {sync === "saving" ? "Saving…" : sync === "waiting" ? "Changes waiting to save" : lastSavedAt ? "Saved on this device" : ""}
-          </b>
-          {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
-        </p>
+        {groupViewing ? null : (
+          <p className={`list-saved ${sync === "waiting" ? "wait" : ""}`}>
+            <b>
+              {sync === "saving" ? "Saving…" : sync === "waiting" ? "Changes waiting to save" : lastSavedAt ? "Saved on this device" : ""}
+            </b>
+            {lastSavedAt ? <span>{formatDateTime(lastSavedAt)}</span> : null}
+          </p>
+        )}
       </div>
       {printNotice ? (
         <div className="list-refund-notice" role="status">
@@ -437,6 +450,7 @@ export function SystemPage() {
           priority
           customIds={customIds}
           canEdit={viewing.canEdit}
+          canCustomize={canCustomize}
           progress={progress}
           openNote={openNote}
           openTip={openTip}
@@ -460,6 +474,7 @@ export function SystemPage() {
           sectionId={group.sectionId}
           customIds={customIds}
           canEdit={viewing.canEdit}
+          canCustomize={canCustomize}
           progress={progress}
           openNote={openNote}
           openTip={openTip}
@@ -509,6 +524,7 @@ export function SystemPage() {
                   sectionId={null}
                   customIds={customIds}
                   canEdit={viewing.canEdit}
+                  canCustomize={canCustomize}
                   progress={progress}
                   openNote={openNote}
                   openTip={openTip}
@@ -569,6 +585,7 @@ function ListGroup({
   priority = false,
   customIds,
   canEdit,
+  canCustomize,
   progress,
   openNote,
   openTip,
@@ -589,6 +606,7 @@ function ListGroup({
   priority?: boolean;
   customIds: Set<string>;
   canEdit: boolean;
+  canCustomize: boolean;
   progress: Record<string, ProgressRow | undefined>;
   openNote: string | null;
   openTip: string | null;
@@ -609,7 +627,7 @@ function ListGroup({
           <h3>{title}</h3>
           {intro ? <SectionTip text={intro} sectionTitle={title} /> : null}
         </div>
-        {canEdit && sectionId ? (
+        {canCustomize && sectionId ? (
           <button
             className="add-item-btn"
             type="button"
@@ -670,7 +688,7 @@ function ListGroup({
                     }}
                   />
                 ) : null}
-                {isCustom && canEdit ? (
+                {isCustom && canCustomize ? (
                   <button
                     className="custom-remove"
                     type="button"
