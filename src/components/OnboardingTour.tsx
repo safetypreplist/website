@@ -60,7 +60,7 @@ const DEFAULT_STEPS: Step[] = [
   },
   {
     title: "Your license",
-    body: "Open License to see your key, move devices with Transfer / Deactivate, or review upgrade options.",
+    body: "Open License to see your key, review upgrade options, or move to a new device.",
     selector: '[data-onboarding="license"]',
     path: "/app",
   },
@@ -83,6 +83,11 @@ let onboardingVisible = false;
 /** True while first-run onboarding is open or still owed on this device; other prompts wait for it. */
 export function isOnboardingPending() {
   return onboardingVisible || localStorage.getItem(DONE_KEY) !== "done";
+}
+
+/** A restored backup means this person already knows the app; skip the first-run tour on this device. */
+export function markOnboardingSeen() {
+  localStorage.setItem(DONE_KEY, "done");
 }
 
 function announceOnboarding(visible: boolean) {

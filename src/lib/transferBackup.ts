@@ -88,7 +88,7 @@ export function transferBackupByteSize(payload: TransferBackupPayload) {
 export function parseTransferBackup(raw: unknown): TransferBackupPayload {
   const data = typeof raw === "string" ? (JSON.parse(raw) as unknown) : raw;
   if (!isRecord(data)) throw new Error("That backup file is not valid.");
-  if (data.kind !== TRANSFER_BACKUP_KIND) throw new Error("That file is not a Safety Prep List transfer backup.");
+  if (data.kind !== TRANSFER_BACKUP_KIND) throw new Error("That file is not a Safety Prep List backup.");
   if (data.version !== TRANSFER_BACKUP_VERSION) throw new Error("That backup version is not supported.");
   if (!Array.isArray(data.progress) || !Array.isArray(data.customItems) || !Array.isArray(data.contacts)) {
     throw new Error("That backup is missing checklist data.");
@@ -153,7 +153,7 @@ export async function downloadTransferBackupFile(payload?: TransferBackupPayload
   const handoff = await shareOrDownloadFile(
     file,
     "Safety Prep List backup",
-    "Save this file somewhere you can open from your new device, then use Transfer / Deactivate → Import a Backup File.",
+    "Save this file somewhere you can open from your new device, then use Move to a new device → Restore from a file.",
   );
   if (handoff === "aborted") {
     throw new Error("Backup was cancelled before it was saved. Try Download again and keep the file.");

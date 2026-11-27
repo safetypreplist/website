@@ -43,13 +43,13 @@ const EXACT: Record<string, Meta> = {
     index: true,
   },
   "/deactivate": {
-    title: "Deactivate & Transfer — Safety Prep List",
-    description: "Back up your checklists and confirm license deactivation by email.",
+    title: "Move to a New Device — Safety Prep List",
+    description: "Move your Safety Prep List license and checklist to a new device.",
     index: false,
   },
   "/transfer": {
-    title: "Transfer Your License — Safety Prep List",
-    description: "Move Safety Prep List to a new device after deactivation.",
+    title: "Move to a New Device — Safety Prep List",
+    description: "Move your Safety Prep List license and checklist to a new device.",
     index: false,
   },
   "/admin-login": {
@@ -68,8 +68,8 @@ const EXACT: Record<string, Meta> = {
     index: true,
   },
   "/license-recovery": {
-    title: "Recover Your License — Safety Prep List",
-    description: "Securely recover your Safety Prep List license key using your purchase email.",
+    title: "Find Your License Key — Safety Prep List",
+    description: "Find your Safety Prep List license key with a secure link sent to your purchase email.",
     index: false,
   },
   "/import": {
@@ -100,7 +100,7 @@ const PREFIX: Array<[string, Meta]> = [
   ["/app/safety", { title: "Safety Resources — Safety Prep List", description: "Official emergency-management websites.", index: false }],
   ["/app/help", { title: "Help — Safety Prep List", description: "Help for Safety Prep List.", index: false }],
   ["/app/license", { title: "My License — Safety Prep List", description: "View your Safety Prep List license, devices, and upgrade options.", index: false }],
-  ["/app/transfer", { title: "Transfer / Deactivate — Safety Prep List", description: "Back up, deactivate, and restore personalized checklist data.", index: false }],
+  ["/app/transfer", { title: "Move to a New Device — Safety Prep List", description: "Back up your checklist and move your license to a new device.", index: false }],
   ["/app/profile", { title: "Profile — Safety Prep List", description: "Your name, photo, and location on this device.", index: false }],
   ["/app/group-sharing", { title: "Group Sharing — Safety Prep List", description: "Temporarily sync checklists with other licensed devices.", index: false }],
   ["/app/imports", { title: "Shared Copy — Safety Prep List", description: "A checklist someone shared with you.", index: false }],

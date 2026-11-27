@@ -103,7 +103,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           License
         </NavLink>
         <NavLink to="/app/transfer" className={({ isActive }) => (isActive ? "active" : "")}>
-          Transfer / Deactivate
+          Move to a new device
         </NavLink>
         <NavLink to="/app/help" className={({ isActive }) => (isActive ? "active" : "")}>
           Help
@@ -168,7 +168,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
               ) : null}
             </NavLink>
-            <NavLink to="/app/transfer">Transfer / Deactivate</NavLink>
+            <NavLink to="/app/transfer">Move to a new device</NavLink>
             <NavLink to="/app/help">Help &amp; chat</NavLink>
             <NavLink to="/app/profile">Profile</NavLink>
             {!pro ? (

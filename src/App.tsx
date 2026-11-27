@@ -27,8 +27,7 @@ import { DashboardPage, ListsPage } from "./pages/Dashboard";
 import { SafetyPage } from "./pages/Safety";
 import { SystemPage } from "./pages/System";
 import { ActivatePage } from "./pages/Activate";
-import { DeactivatePage } from "./pages/Deactivate";
-import { TransferPage } from "./pages/Transfer";
+import { MoveRedirect, TransferPage } from "./pages/Transfer";
 import { AppTransferPage } from "./pages/AppTransfer";
 import { AppLicensePage, LicensePage } from "./pages/License";
 import { LicenseRecoveryPage } from "./pages/LicenseRecovery";
@@ -91,9 +90,6 @@ function RequireLicense({ children }: { children: React.ReactNode }) {
       const result = await confirmLocalLicenseActive();
       if (!live) return;
       if (result === "moved") {
-        setActivateMessage(
-          "This license is active on another device. Enter the license key here to move it to this device.",
-        );
         await refreshAccount();
         setRedirectTo("/activate?reason=moved");
       } else if (result === "invalid") {
@@ -187,7 +183,7 @@ export default function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/thank-you" element={<ThankYouPage />} />
         <Route path="/activate" element={<ActivatePage />} />
-        <Route path="/deactivate" element={<DeactivatePage />} />
+        <Route path="/deactivate" element={<MoveRedirect />} />
         <Route path="/transfer" element={<TransferPage />} />
         <Route path="/license" element={<LicensePage />} />
         <Route path="/license-recovery" element={<LicenseRecoveryPage />} />

@@ -149,8 +149,8 @@ export function ProfilePage() {
       <h1 className="page-title">Your profile</h1>
       <p className="muted help-lead">
         Photo, name, email, and location stay on this device. Email attaches to your license for invites and receipts —
-        there is no login account. Offline access continues here. If you lose this browser, use Transfer / Deactivate or
-        Recover My License, then activate again.
+        there is no login account. Offline access continues here. Changing devices? Use Move to a new
+        device. Lost your key? Use Forgot your key on the Activate page.
       </p>
 
       <form className="account-card" onSubmit={onSave}>

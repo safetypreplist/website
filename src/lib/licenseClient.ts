@@ -3,6 +3,7 @@ import { invokeFunction } from "./supabase";
 const DEVICE_KEY = "spl.license.deviceId.v1";
 const LICENSE_KEY = "spl.license.session.v1";
 export const ACTIVATE_MESSAGE_KEY = "spl.activate.message";
+const MOVED_KEY = "spl.activate.movedKey";
 
 export type LicenseProduct = "basic" | "pro";
 
@@ -25,7 +26,16 @@ export type LicenseStatusResponse = {
   purchasedAt?: string;
   licenseKey: string;
   devices: Array<{ deviceId: string; activatedAt: string }>;
+  /** Sent by servers that know which device is asking; older servers leave it out. */
+  thisDevice?: boolean;
 };
+
+/** Whether the license is active on this device, from a license-status answer. */
+export function activeOnThisDevice(data: Pick<LicenseStatusResponse, "devices" | "thisDevice">) {
+  if (typeof data.thisDevice === "boolean") return data.thisDevice;
+  const deviceId = getDeviceId();
+  return data.devices.some((row) => row.deviceId === deviceId);
+}
 
 const STATUS_MAX_AGE_MS = 60_000;
 const statusCache = new Map<string, { at: number; data: LicenseStatusResponse }>();
@@ -41,7 +51,7 @@ export function fetchLicenseStatus(key: string, options?: { fresh?: boolean }): 
   if (!options?.fresh && cached && Date.now() - cached.at < STATUS_MAX_AGE_MS) return Promise.resolve(cached.data);
   const pending = statusInFlight.get(cacheKey);
   if (pending) return pending;
-  const request = invokeFunction<LicenseStatusResponse>("license-status", { key: key.trim() })
+  const request = invokeFunction<LicenseStatusResponse>("license-status", { key: key.trim(), deviceId: getDeviceId() })
     .then((data) => {
       statusCache.set(cacheKey, { at: Date.now(), data });
       return data;
@@ -122,6 +132,23 @@ export function takeActivateMessage() {
   return message;
 }
 
+/** Keeps the key of a license that moved away so this device can still ask to move it back. */
+function rememberMovedKey(key: string) {
+  try {
+    sessionStorage.setItem(MOVED_KEY, key);
+  } catch {
+    /* private mode */
+  }
+}
+
+export function movedLicenseKey() {
+  try {
+    return sessionStorage.getItem(MOVED_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
 export function isProLicense() {
   return readStored()?.product === "pro";
 }
@@ -155,30 +182,6 @@ export async function deactivate(options?: { key?: string; deviceId?: string }) 
   }
 }
 
-type LicenseDevicesResponse = {
-  licenseKey: string;
-  devices: Array<{ deviceId: string; activatedAt: string }>;
-};
-
-/** Release every active device for a license key so it can be activated elsewhere. */
-export async function releaseLicenseDevices(key: string): Promise<{ released: number; licenseKey: string }> {
-  const trimmed = key.trim();
-  if (!trimmed) throw new Error("Enter your license key.");
-  const data = await invokeFunction<LicenseDevicesResponse>("license-status", { key: trimmed });
-  const devices = data.devices || [];
-  for (const device of devices) {
-    await invokeFunction("deactivate-license", {
-      key: data.licenseKey || trimmed,
-      deviceId: device.deviceId,
-    });
-  }
-  const local = readStored();
-  if (local && local.key.toUpperCase() === (data.licenseKey || trimmed).toUpperCase()) {
-    writeStored(null);
-  }
-  return { released: devices.length, licenseKey: data.licenseKey || trimmed.toUpperCase() };
-}
-
 /**
  * When online, confirm this device is still the active one for the stored key.
  * Returns "moved" if another device holds the license, "invalid" if the key is revoked/invalid.
@@ -192,9 +195,8 @@ export async function confirmLocalLicenseActive(): Promise<"ok" | "moved" | "inv
     if (data.product === "basic" || data.product === "pro") {
       syncStoredProduct(data.product);
     }
-    const deviceId = getDeviceId();
-    const activeHere = data.devices.some((row) => row.deviceId === deviceId);
-    if (!activeHere) {
+    if (!activeOnThisDevice(data)) {
+      rememberMovedKey(license.key);
       writeStored(null);
       return "moved";
     }

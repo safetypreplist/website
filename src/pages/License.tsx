@@ -4,6 +4,7 @@ import { PublicFooter, PublicHeader } from "../components/PublicChrome";
 import { money } from "../lib/format";
 import {
   activate,
+  activeOnThisDevice,
   fetchLicenseStatus,
   getDeviceId,
   getLicense,
@@ -23,6 +24,7 @@ type LicenseStatus = {
   purchasedAt: string;
   licenseKey: string;
   devices: Array<{ deviceId: string; activatedAt: string }>;
+  thisDevice?: boolean;
 };
 
 type LicensePayment = {
@@ -179,7 +181,7 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
 
   const thisDeviceActive =
     Boolean(licensedHere && local?.key && status?.licenseKey === local.key) &&
-    Boolean(status?.devices.some((d) => d.deviceId === deviceId));
+    Boolean(status && activeOnThisDevice(status));
 
   async function upgrade() {
     if (!status || status.product !== "basic") return;
@@ -304,7 +306,8 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
                     ? "No device activated yet"
                     : status.devices.map((device) => (
                         <span key={device.deviceId} className="license-manage-device">
-                          {device.deviceId.slice(0, 8)}… · {formatDate(device.activatedAt)}
+                          {device.deviceId.startsWith("other-device-") ? "Another device" : `${device.deviceId.slice(0, 8)}…`} ·{" "}
+                          {formatDate(device.activatedAt)}
                           {device.deviceId === deviceId ? " · this device" : ""}
                         </span>
                       ))}
@@ -392,22 +395,19 @@ function LicensePanel({ embedded }: { embedded?: boolean }) {
       ) : null}
 
       <aside className={embedded ? "license-app-aside account-card" : "license-manage-aside"}>
-        <p className="eyebrow">Moving devices?</p>
-        <p>Back up your checklists, then deactivate this license and activate on your new device.</p>
-        <Link className={embedded ? "btn btn-forest" : "btn btn-ghost"} to={embedded ? "/app/transfer" : "/deactivate"}>
-          Transfer / Deactivate
+        <p className="eyebrow">New phone or computer?</p>
+        <p>Move your license and your checklist to it in about a minute.</p>
+        <Link className={embedded ? "btn btn-forest" : "btn btn-ghost"} to={embedded ? "/app/transfer" : "/activate"}>
+          Move to a new device
         </Link>
       </aside>
 
       {!embedded ? (
         <aside className="license-manage-aside license-recovery-aside">
           <p className="eyebrow">Forgot your license key?</p>
-          <p>
-            Need help recovering your license? You can securely retrieve your license using the email associated with
-            your original purchase.
-          </p>
+          <p>We can email a secure link to the address on your original purchase so you can see your key.</p>
           <Link className="btn btn-primary" to="/license-recovery">
-            Recover My License
+            Find my key
           </Link>
         </aside>
       ) : null}

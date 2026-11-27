@@ -16,8 +16,6 @@ type RecoveredLicense = {
 const GENERIC_SENT =
   "If that email is associated with a purchase, we sent a secure recovery link. Check your inbox and spam folder.";
 
-const DEVICE_NOTE =
-  "Your license may still be activated on another device. To use it on your current device, you'll need to reset its activation by deactivating the existing activation first. Once deactivated, you can activate your license on the device you want to use.";
 
 export function LicenseRecoveryPage() {
   const [params] = useSearchParams();
@@ -106,14 +104,13 @@ export function LicenseRecoveryPage() {
       <main className="license-gate-shell">
         <section className="license-gate-panel">
           <BrandMark className="brand-mark license-gate-mark" />
-          <p className="eyebrow">License recovery</p>
+          <p className="eyebrow">Forgot your key?</p>
 
           {step === "request" ? (
             <>
-              <h1>Recover your license</h1>
+              <h1>Find your license key</h1>
               <p className="license-gate-lead">
-                Enter the email from your original purchase. We&apos;ll send a secure link so you can retrieve your
-                license key.
+                Enter the email from your original purchase. We&apos;ll send a secure link that shows your key.
               </p>
               <form onSubmit={(e) => void requestRecovery(e)} className="license-gate-form">
                 <label className="field">
@@ -133,7 +130,7 @@ export function LicenseRecoveryPage() {
                   </p>
                 ) : null}
                 <button className="btn btn-primary btn-block" type="submit" disabled={busy || !email.trim()}>
-                  {busy ? "Sending…" : "Recover My License"}
+                  {busy ? "Sending…" : "Email me my key"}
                 </button>
               </form>
             </>
@@ -188,39 +185,24 @@ export function LicenseRecoveryPage() {
                       </div>
                       <div>
                         <span>Activation</span>
-                        <strong>{item.deviceActive ? "Active on a device" : "Not activated"}</strong>
+                        <strong>{item.deviceActive ? "In use on a device" : "Not activated yet"}</strong>
                       </div>
                     </div>
                     <div className="license-gate-actions">
                       <button className="btn btn-ghost" type="button" onClick={() => void copyKey(item.licenseKey)}>
                         {copiedKey === item.licenseKey ? "Copied" : "Copy key"}
                       </button>
-                      {item.deviceActive ? (
-                        <Link
-                          className="btn btn-primary"
-                          to={`/deactivate?key=${encodeURIComponent(item.licenseKey)}`}
-                        >
-                          Deactivate
-                        </Link>
-                      ) : (
-                        <Link className="btn btn-primary" to={`/activate?key=${encodeURIComponent(item.licenseKey)}`}>
-                          Activate on this device
-                        </Link>
-                      )}
+                      <Link className="btn btn-primary" to={`/activate#key=${encodeURIComponent(item.licenseKey)}`}>
+                        Use it on this device
+                      </Link>
                     </div>
                   </article>
                 ))}
               </div>
 
-              <div className="license-gate-notice" role="status">
-                <p style={{ margin: 0 }}>{DEVICE_NOTE}</p>
-              </div>
-
               {licenses.some((item) => item.deviceActive) ? (
-                <p className="license-gate-lead" style={{ marginTop: 16 }}>
-                  After you deactivate, return here or open{" "}
-                  <Link to={`/activate?key=${encodeURIComponent(licenses[0].licenseKey)}`}>Activate</Link> on this
-                  device.
+                <p className="license-gate-notice" role="status">
+                  In use on another device? Tap Use it on this device and Activate shows you how to move it here.
                 </p>
               ) : null}
             </>
@@ -242,8 +224,6 @@ export function LicenseRecoveryPage() {
 
         <p className="muted license-gate-foot">
           <Link to="/activate">Activate</Link>
-          {" · "}
-          <Link to="/deactivate">Deactivate</Link>
           {" · "}
           <Link to="/license">License details</Link>
           {" · "}

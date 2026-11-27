@@ -322,8 +322,8 @@ export function ThankYouPage() {
       setActivating(false);
       const message = err instanceof Error ? err.message : "Could not activate on this device.";
       setError(
-        message.toLowerCase().includes("already active on another device")
-          ? "This license is already active on another device. Use Deactivate & transfer with your license key, then activate here."
+        message.toLowerCase().includes("active on another device")
+          ? "This license is already in use on another device. On that device choose Move to a new device, then activate here."
           : message,
       );
     }

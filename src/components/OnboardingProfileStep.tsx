@@ -272,8 +272,8 @@ export function OnboardingProfileStep({ onContinue }: Props) {
                 required
               />
               <p className="muted onboarding-location-hint">
-                For invites and receipts only — not a login. Offline access stays on this device. If you lose this
-                browser, use Transfer / Deactivate or Recover My License.
+                For invites and receipts only — not a login. Offline access stays on this device. If you change
+                devices, use Move to a new device; if you lose your key, use Forgot your key.
               </p>
             </label>
 

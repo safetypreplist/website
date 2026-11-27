@@ -1,13 +1,27 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { moveLinkForKey } from "../lib/moveLicense";
 
-export function activateUrlForKey(licenseKey: string) {
-  const origin = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, "");
-  return `${origin}/activate?key=${encodeURIComponent(licenseKey)}`;
+const PHONE_QUERY = "(max-width: 760px), (pointer: coarse)";
+
+/** Phones and tablets: showing a QR "for your phone" there makes no sense. */
+export function usePhoneLike() {
+  const [phoneLike, setPhoneLike] = useState(
+    () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(PHONE_QUERY).matches,
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia(PHONE_QUERY);
+    const sync = () => setPhoneLike(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  return phoneLike;
 }
 
 export function useActivateQr(licenseKey: string, size = 280) {
-  const activateUrl = activateUrlForKey(licenseKey);
+  const activateUrl = moveLinkForKey(licenseKey);
   const [qrSrc, setQrSrc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,23 +49,22 @@ export function useActivateQr(licenseKey: string, size = 280) {
   return { activateUrl, qrSrc, error };
 }
 
-/** Compact QR shown inside Transfer Step 3. */
+/** QR shown on the old device once the license is ready to move. */
 export function ActivateQrInline({ licenseKey, onExpand }: { licenseKey: string; onExpand: () => void }) {
-  const { qrSrc, error } = useActivateQr(licenseKey, 168);
+  const { qrSrc, error } = useActivateQr(licenseKey, 200);
 
   return (
-    <button className="activate-qr-inline" type="button" onClick={onExpand} aria-label="Show larger QR code to activate on phone or tablet">
-      <span className="activate-qr-inline-label">Need your phone?</span>
+    <button className="activate-qr-inline" type="button" onClick={onExpand} aria-label="Show a larger QR code">
       <span className="activate-qr-inline-frame">
         {qrSrc ? (
-          <img src={qrSrc} width={168} height={168} alt="" />
+          <img src={qrSrc} width={200} height={200} alt="QR code that opens Safety Prep List with your license key" />
         ) : error ? (
-          <span className="muted">Tap to open QR</span>
+          <span className="muted">Tap to open the link</span>
         ) : (
           <span className="muted">…</span>
         )}
       </span>
-      <span className="activate-qr-inline-cta">Scan to activate</span>
+      <span className="activate-qr-inline-cta">Scan with your phone&apos;s camera</span>
     </button>
   );
 }
@@ -84,15 +97,15 @@ export function ActivateQrDialog({ licenseKey, onClose }: { licenseKey: string; 
         <button className="modal-close" type="button" onClick={onClose}>
           Close
         </button>
-        <p className="eyebrow">Activate on phone or tablet</p>
-        <h2 id="activate-qr-title">Scan this QR code</h2>
+        <p className="eyebrow">Use it on your phone</p>
+        <h2 id="activate-qr-title">Scan this code</h2>
         <p className="muted activate-qr-lead">
-          Point your phone or tablet camera at the code. It opens Activate with your license key ready to go.
+          Point your phone&apos;s camera at the code. Safety Prep List opens with your key filled in — tap Activate.
         </p>
 
         <div className="activate-qr-frame">
           {qrSrc ? (
-            <img src={qrSrc} width={280} height={280} alt="QR code that opens Activate with your license key" />
+            <img src={qrSrc} width={280} height={280} alt="QR code that opens Safety Prep List with your license key" />
           ) : error ? (
             <p className="form-error" role="alert">
               {error} Use the link below instead.
@@ -103,7 +116,7 @@ export function ActivateQrDialog({ licenseKey, onClose }: { licenseKey: string; 
         </div>
 
         <p className="activate-qr-hint muted">
-          Or open this link on the new device:
+          Or open this link on your phone:
           <br />
           <a href={activateUrl}>{activateUrl}</a>
         </p>
